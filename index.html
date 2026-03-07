@@ -3,367 +3,253 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>VEXIUM.AI — Build. Ship. Earn.</title>
+  <title>Vexium — Build. Ship.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    a{color:inherit;text-decoration:none}
+    a:visited{color:inherit}
     :root{
-      --bg:#04040a;
-      --s1:#09090f;
-      --s2:#0f0f18;
-      --b1:#161620;
-      --b2:#20202e;
-      --b3:#2e2e42;
-      --a1:#3b82f6;
-      --a2:#818cf8;
-      --text:#f0f0f8;
-      --sub:#666688;
-      --dim:#2a2a40;
+      --bg:#020209;
+      --s1:#06060f;
+      --s2:#09091a;
+      --b1:#111125;
+      --b2:#18182e;
+      --b3:#22223a;
+      --a1:#4f6ef7;
+      --a2:#9b79fc;
+      --text:#f0f0ff;
+      --sub:#6060a0;
+      --dim:#1a1a35;
       --sans:'Plus Jakarta Sans',sans-serif;
       --mono:'JetBrains Mono','Fira Code',monospace;
     }
     html{scroll-behavior:smooth}
     body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
-    body::before{
-      content:'';position:absolute;top:0;right:0;
-      width:65vw;height:100vh;
-      background:radial-gradient(ellipse at 80% 20%,rgba(129,140,248,.08) 0%,transparent 60%);
-      pointer-events:none;z-index:0;
-    }
 
-    /* NAV */
+    /* ── NAV ── */
     nav{
       position:fixed;top:0;left:0;right:0;z-index:300;
-      height:58px;padding:0 52px;
+      height:56px;padding:0 48px;
       display:flex;align-items:center;justify-content:space-between;
-      background:rgba(4,4,10,.9);backdrop-filter:blur(24px);
+      background:rgba(2,2,9,.85);backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(255,255,255,.04);
     }
-    .logo{font-size:17px;font-weight:800;letter-spacing:.5px;text-decoration:none;display:flex;align-items:baseline}
-    .logo-v{color:#fff}
-    .logo-ai{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .nav-r{display:flex;align-items:center;gap:6px}
-    .nl{font-size:13px;font-weight:500;color:var(--sub);text-decoration:none;padding:6px 12px;border-radius:7px;transition:all .15s}
-    .nl:hover{color:var(--text);background:rgba(255,255,255,.05)}
-    .nc{margin-left:6px;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 18px rgba(59,130,246,.25);transition:all .2s}
-    .nc:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(59,130,246,.5)}
+    .logo{color:var(--text);display:flex;align-items:center;gap:9px;text-decoration:none}
+    .logo img{width:22px;height:22px;border-radius:5px}
+    .logo-t{color:var(--text);font-family:var(--sans);font-size:16px;font-weight:800;letter-spacing:.2px}
+    .logo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-r{display:flex;align-items:center;gap:4px}
+    .nl{font-size:13px;font-weight:500;color:var(--sub);text-decoration:none;padding:6px 14px;border-radius:7px;transition:all .15s}
+    .nl:hover{color:var(--text);background:rgba(255,255,255,.04)}
+    .nc{margin-left:8px;padding:8px 22px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));transition:all .2s;box-shadow:0 0 20px rgba(79,110,247,.3)}
+    .nc:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.5)}
 
-    /* HERO */
+    /* ── HERO ── */
     .hero{
-      min-height:100vh;
-      display:grid;grid-template-columns:1fr 1.1fr;
-      align-items:center;padding:58px 52px 0;gap:40px;
+      height:100vh;
+      display:grid;grid-template-columns:1fr 1fr;
+      align-items:center;
+      padding:0 3vw;gap:2vw;
       position:relative;z-index:1;
     }
-    .hero-l{display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+    .hero::before{
+      content:'';position:absolute;
+      top:-10%;right:-5%;
+      width:70vw;height:90vh;
+      background:radial-gradient(ellipse at 70% 30%,rgba(155,121,252,.07) 0%,transparent 55%);
+      pointer-events:none;z-index:0;
+    }
+    .hero-l{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;position:relative;z-index:1}
 
-    .badge{
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+    .hero-logo{
+      position:relative;
+      margin-bottom:clamp(20px,3.5vh,36px);
+      opacity:0;animation:fadeUp .5s .05s ease forwards;
+    }
+    .hero-logo::before{
+      content:'';position:absolute;
+      top:50%;left:50%;transform:translate(-50%,-50%);
+      width:140%;height:140%;
+      background:radial-gradient(circle,rgba(155,121,252,.18) 0%,rgba(79,110,247,.08) 40%,transparent 70%);
+      pointer-events:none;border-radius:50%;
+    }
+    .hero-logo img{width:clamp(160px,38vh,420px);height:clamp(160px,38vh,420px);border-radius:3vh;position:relative}
+
+    .hero-tag{
       display:inline-flex;align-items:center;gap:7px;
-      background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.18);
-      border-radius:999px;padding:7px 16px;margin-bottom:28px;
-      font-size:11px;font-weight:700;color:#a5b4fc;letter-spacing:.4px;
-      opacity:0;animation:up .5s .05s ease forwards;
+      background:rgba(79,110,247,.07);border:1px solid rgba(79,110,247,.18);
+      border-radius:999px;padding:5px 14px 5px 10px;
+      margin-bottom:clamp(14px,2vh,22px);
+      opacity:0;animation:fadeUp .5s .12s ease forwards;
     }
-    .bdot{width:5px;height:5px;border-radius:50%;background:var(--a2);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+    .hero-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--a2);animation:pulse 2s infinite}
+    .hero-tag-t{font-size:11px;font-weight:700;color:#818cf8;letter-spacing:.4px}
 
-    h1{
-      font-size:clamp(50px,5.5vw,80px);font-weight:800;
-      letter-spacing:-3px;line-height:.93;margin-bottom:20px;
-      opacity:0;animation:up .55s .12s ease forwards;
+    .hero-head{
+      font-family:var(--sans);
+      font-size:clamp(26px,4vh,42px);
+      font-weight:800;
+      letter-spacing:-1.5px;
+      line-height:1.1;
+      color:var(--text);
+      margin-bottom:clamp(8px,1.2vh,14px);
+      opacity:0;animation:fadeUp .5s .2s ease forwards;
     }
-    .grd{display:block;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-head span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-    .hsub{
-      font-size:16px;line-height:1.65;color:var(--sub);
-      margin-bottom:36px;max-width:380px;
-      opacity:0;animation:up .55s .2s ease forwards;
+    .hero-sub{
+      font-size:clamp(12px,1.6vh,15px);
+      font-weight:400;
+      color:var(--sub);
+      line-height:1.6;
+      margin-bottom:clamp(24px,4vh,44px);
+      opacity:0;animation:fadeUp .5s .26s ease forwards;
+      max-width:320px;
     }
 
-    .hbtns{display:flex;gap:10px;flex-wrap:wrap;opacity:0;animation:up .55s .28s ease forwards}
-    .bp{padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;color:#fff;transition:all .2s;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 36px rgba(59,130,246,.3)}
-    .bp:hover{transform:translateY(-2px);box-shadow:0 0 56px rgba(59,130,246,.55)}
-    .bg2{padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;color:var(--sub);border:1px solid var(--b2);background:rgba(255,255,255,.02);transition:all .2s}
-    .bg2:hover{color:var(--text);border-color:var(--b3);background:rgba(255,255,255,.05)}
-
-    .hnote{margin-top:14px;font-size:12px;color:var(--dim);opacity:0;animation:up .55s .34s ease forwards}
-
-    @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .hbtns{display:flex;gap:10px;opacity:0;animation:fadeUp .55s .32s ease forwards}
+    .btn-p{padding:clamp(10px,1.6vh,14px) clamp(20px,2.5vw,32px);border-radius:10px;font-size:clamp(12px,1.6vh,14px);font-weight:700;text-decoration:none;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 30px rgba(79,110,247,.3);transition:all .2s}
+    .btn-p:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(79,110,247,.5)}
+    .btn-g{padding:clamp(10px,1.6vh,14px) clamp(20px,2.5vw,32px);border-radius:10px;font-size:clamp(12px,1.6vh,14px);font-weight:600;text-decoration:none;color:var(--sub);border:1px solid var(--b2);background:rgba(255,255,255,.02);transition:all .2s}
+    .btn-g:hover{color:var(--text);border-color:var(--b3);background:rgba(255,255,255,.04)}
 
     /* ── MOCKUP ── */
-    .hero-r{display:flex;align-items:center;justify-content:center;opacity:0;animation:up .6s .26s ease forwards}
-    .mscene{width:100%;max-width:min(680px,48vw)}
-    .mtilt{border-radius:16px;transform:perspective(1000px) rotateX(0) rotateY(0) scale(1);will-change:transform}
+    .hero-r{display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeUp .65s .22s ease forwards;position:relative;z-index:1}
+    .mscene{width:100%;max-width:min(660px,46vw)}
+    .mtilt{border-radius:14px;transform:perspective(1200px) rotateX(0) rotateY(0) scale(1);will-change:transform;transition:transform .05s linear}
     .mshell{
-      background:var(--s1);border:1px solid var(--b2);border-radius:16px;overflow:hidden;
-      box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 50px 100px rgba(0,0,0,.8),0 0 70px rgba(129,140,248,.08);
-    }
-
-    /* title bar */
-    .mbar{height:40px;background:#060610;padding:0 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b1)}
-    .mdots{display:flex;gap:6px}
-    .md{width:10px;height:10px;border-radius:50%}
-    .md.r{background:#ff5f56}.md.y{background:#ffbd2e}.md.g{background:#27c93f}
-    .mtitle{font-family:var(--mono);font-size:11px;color:var(--sub);margin-left:8px}
-
-    /* editor layout */
-    .mbody{display:flex;flex-direction:column;min-height:min(420px,32vw)}
-    .meditor-wrap{display:flex;flex:1;overflow:hidden}
-
-    /* sidebar */
-    .msidebar{
-      width:130px;background:var(--s1);border-right:1px solid var(--b1);
-      padding:10px 0;flex-shrink:0;
-    }
-    .msb-head{
-      padding:4px 12px 10px;font-size:9px;font-weight:700;
-      letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);
-    }
-    .mfile{
-      display:flex;align-items:center;gap:6px;
-      padding:5px 12px;font-family:var(--mono);font-size:10px;
-      color:var(--sub);cursor:default;transition:background .1s;
-    }
-    .mfile.active{background:rgba(59,130,246,.07);color:var(--text)}
-    .mfile.active::before{
-      content:'';display:block;position:absolute;
-    }
-    .mfile-active-bar{
-      position:relative;
-    }
-    .mfile-active-bar::after{
-      content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--a1);border-radius:0 1px 1px 0;
-    }
-    .mfile-ico{
-      width:12px;height:12px;border-radius:2px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:7px;font-weight:800;flex-shrink:0;
-    }
-    .mfile-ico.html{background:rgba(59,130,246,.2);color:#93c5fd}
-    .mfile-ico.css{background:rgba(129,140,248,.2);color:#a5b4fc}
-    .mfile-ico.js{background:rgba(251,191,36,.15);color:#fcd34d}
-
-    /* code area */
-    .mcode-area{flex:1;background:var(--s1);padding:14px 16px;overflow:hidden;position:relative}
-
-    /* tab bar */
-    .mtabs{
-      display:flex;border-bottom:1px solid var(--b1);
-      background:#060610;
-    }
-    .mtab{
-      padding:0 14px;height:32px;display:flex;align-items:center;
-      font-family:var(--mono);font-size:10px;color:var(--sub);
-      border-right:1px solid var(--b1);border-top:2px solid transparent;
-      white-space:nowrap;
-    }
-    .mtab.on{color:var(--text);border-top-color:var(--a1);background:rgba(59,130,246,.04)}
-    .mtab-dot{
-      width:4px;height:4px;border-radius:50%;
-      background:var(--a2);margin-right:6px;
-    }
-
-    /* code lines */
-    .mline{
-      font-family:var(--mono);font-size:11px;line-height:1.9;
-      display:flex;gap:12px;
-    }
-    .mln{color:var(--dim);width:14px;text-align:right;flex-shrink:0;user-select:none}
-    .mc{display:block}
-    /* syntax colors — same palette as editor.html */
-    .ck{color:#f472b6}  /* keyword / attr name */
-    .ct{color:#93c5fd}  /* tag */
-    .cs{color:#6ee7b7}  /* string */
-    .cc{color:#2e2e50;font-style:italic} /* comment */
-    .cn{color:#fcd34d}  /* number */
-    .cw{color:var(--text)} /* plain */
-
-    /* cursor blink */
-    .mcursor{
-      display:inline-block;width:1.5px;height:12px;
-      background:var(--a2);vertical-align:middle;
-      animation:blink 1s step-end infinite;margin-left:1px;
-    }
-    @keyframes blink{50%{opacity:0}}
-
-    /* highlighted line */
-    .mline.hl .mc{background:rgba(59,130,246,.06);border-radius:2px;padding:0 2px}
-
-    /* status bar */
-    .mstatus{
-      height:22px;background:#030308;border-top:1px solid var(--b1);
-      display:flex;align-items:center;padding:0 12px;gap:16px;
-    }
-    .mstat{font-family:var(--mono);font-size:10px;color:var(--dim);display:flex;align-items:center;gap:4px}
-    .mstat .acc{color:var(--a1)}
-    .mstat-save{
-      margin-left:auto;font-size:9px;font-weight:700;
-      color:var(--a2);background:rgba(129,140,248,.08);
-      border-radius:3px;padding:1px 6px;
-    }
-
-    /* preview strip below editor */
-    .mpreview-strip{
-      border-top:1px solid var(--b1);background:#fff;
-      height:min(100px,8vw);display:flex;align-items:stretch;
+      background:var(--s1);
+      border:1px solid var(--b2);
+      border-radius:14px;
       overflow:hidden;
-    }
-    .mpreview-bar{
-      width:100%;display:flex;flex-direction:column;
-    }
-    .mpreview-topbar{
-      height:22px;background:#f5f5f5;border-bottom:1px solid #e0e0e0;
-      display:flex;align-items:center;padding:0 10px;gap:6px;
-    }
-    .mpreview-url{
-      flex:1;background:#fff;border:1px solid #d0d0d0;border-radius:3px;
-      padding:2px 8px;font-size:9px;font-family:var(--mono);color:#666;
-    }
-    .mpreview-content{
-      flex:1;display:flex;align-items:center;padding:0 16px;gap:20px;
-      background:#fff;
-    }
-    .mpreview-h1{font-size:13px;font-weight:800;color:#111;letter-spacing:-.3px}
-    .mpreview-p{font-size:10px;color:#888;margin-top:2px}
-    .mpreview-btn{
-      padding:5px 12px;background:linear-gradient(135deg,#3b82f6,#818cf8);
-      color:#fff;border-radius:6px;font-size:10px;font-weight:700;
-      white-space:nowrap;flex-shrink:0;margin-left:auto;
+      box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 60px 120px rgba(0,0,0,.85),0 0 80px rgba(79,110,247,.07);
     }
 
-    /* HOW IT WORKS */
-    .how{position:relative;z-index:1;padding:130px 52px}
-    .how-in{max-width:1060px;margin:0 auto}
-    .eye{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
-    .sech{font-size:clamp(28px,3.2vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.08;margin-bottom:56px}
-    .sech em{font-style:normal;color:var(--dim)}
+    /* window chrome */
+    .mbar{height:38px;background:#03030a;padding:0 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b1)}
+    .mdots{display:flex;gap:6px}
+    .md{width:9px;height:9px;border-radius:50%}
+    .md.r{background:#ff5f56}.md.y{background:#ffbd2e}.md.g{background:#27c93f}
+    .mbar-title{font-family:var(--mono);font-size:10px;color:var(--sub);margin-left:6px}
 
-    .steps-wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-    .step-pills{display:flex;flex-direction:column;gap:4px}
-    .spill{
-      display:flex;align-items:center;gap:16px;
-      padding:18px 20px;border-radius:12px;cursor:pointer;
-      border:1px solid transparent;transition:all .25s;
-      position:relative;overflow:hidden;
+    /* topbar inside editor mockup */
+    .m-topbar{
+      height:36px;background:#04040c;border-bottom:1px solid var(--b1);
+      display:flex;align-items:center;padding:0 12px;gap:8px;
     }
-    .spill::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--a1),var(--a2));transform:scaleY(0);transform-origin:bottom;transition:transform .25s}
-    .spill.active{background:var(--s2);border-color:var(--b2)}
-    .spill.active::before{transform:scaleY(1)}
-    .spill:hover:not(.active){background:rgba(255,255,255,.02)}
-    .spill-num{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--dim);background:var(--b1);flex-shrink:0;transition:all .25s}
-    .spill.active .spill-num{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
-    .spill-text h4{font-size:15px;font-weight:700;margin-bottom:3px;color:var(--sub);transition:color .25s}
-    .spill.active .spill-text h4{color:var(--text)}
-    .spill-text p{font-size:12px;color:var(--dim);line-height:1.5;transition:color .25s}
-    .spill.active .spill-text p{color:var(--sub)}
-    .spill-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--b1)}
-    .spill-progress-fill{height:100%;background:linear-gradient(90deg,var(--a1),var(--a2));width:0%;transition:width .05s linear}
+    .m-tb-logo{display:flex;align-items:center;gap:6px}
+    .m-tb-logo img{width:14px;height:14px;border-radius:3px}
+    .m-tb-logoname{font-family:var(--sans);font-size:10px;font-weight:800;color:var(--text)}
+    .m-tb-logoname span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .m-tb-sep{width:1px;height:14px;background:var(--b2)}
+    .m-tb-proj{font-size:9px;font-weight:700;color:var(--sub)}
+    .m-tb-modes{display:flex;gap:2px;background:var(--b1);border-radius:5px;padding:2px;margin-left:auto}
+    .m-tb-mode{padding:2px 10px;border-radius:3px;font-size:9px;font-weight:700;color:var(--sub)}
+    .m-tb-mode.on{background:var(--b2);color:var(--text)}
+    .m-tb-r{display:flex;gap:4px;margin-left:8px}
+    .m-tb-btn{padding:3px 9px;border-radius:4px;font-size:9px;font-weight:700;color:var(--sub);border:1px solid transparent}
+    .m-tb-btn.primary{background:var(--a1);color:#fff;border-color:transparent}
 
-    .step-visual{border-radius:16px;overflow:hidden;border:1px solid var(--b2);background:var(--s1);min-height:340px;position:relative}
-    .svis{position:absolute;inset:0;display:flex;flex-direction:column;padding:28px;opacity:0;transform:translateY(10px);transition:all .35s ease;pointer-events:none}
-    .svis.show{opacity:1;transform:translateY(0);pointer-events:auto}
+    /* editor body */
+    .mbody{display:flex;min-height:min(360px,28vw)}
+    /* sidebar */
+    .msb{width:110px;background:var(--s1);border-right:1px solid var(--b1);padding:8px 0;flex-shrink:0}
+    .msb-head{padding:3px 10px 8px;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub)}
+    .mfile{display:flex;align-items:center;gap:5px;padding:4px 10px;font-family:var(--mono);font-size:9px;color:var(--sub);position:relative}
+    .mfile.on{background:rgba(79,110,247,.07);color:var(--text)}
+    .mfile.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--a1);border-radius:0 1px 1px 0}
+    .mf-ico{width:10px;height:10px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;flex-shrink:0}
+    .mf-ico.h{background:rgba(79,110,247,.2);color:#93c5fd}
+    .mf-ico.c{background:rgba(155,121,252,.2);color:#c4b5fd}
+    .mf-ico.j{background:rgba(251,191,36,.15);color:#fcd34d}
+    /* tabs */
+    .mtabs{display:flex;border-bottom:1px solid var(--b1);background:#03030a}
+    .mtab{padding:0 12px;height:28px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--sub);border-right:1px solid var(--b1);border-top:2px solid transparent;gap:5px}
+    .mtab.on{color:var(--text);border-top-color:var(--a1);background:rgba(79,110,247,.04)}
+    .mtab-dot{width:4px;height:4px;border-radius:50%;background:var(--a2)}
+    /* code */
+    .mcode{flex:1;padding:10px 12px;overflow:hidden;position:relative;background:var(--s1)}
+    .mline{font-family:var(--mono);font-size:9.5px;line-height:1.85;display:flex;gap:10px}
+    .mln{color:var(--dim);width:12px;text-align:right;flex-shrink:0;user-select:none}
+    .ck{color:#f472b6}.ct{color:#60a5fa}.cs{color:#6ee7b7}.cc{color:#1e1e38;font-style:italic}.cw{color:var(--text)}.cn{color:#fbbf24}
+    .mline.hl .mcode-inner{background:rgba(79,110,247,.06);border-radius:2px;padding:0 2px}
+    .mcursor{display:inline-block;width:1.5px;height:10px;background:var(--a2);vertical-align:middle;animation:blink 1s step-end infinite;margin-left:1px}
+    @keyframes blink{50%{opacity:0}}
+    /* mini preview */
+    .mpreview{width:140px;border-left:1px solid var(--b1);background:#fff;display:flex;flex-direction:column;flex-shrink:0}
+    .mprev-bar{height:22px;background:#f0f0f5;border-bottom:1px solid #e0e0e8;display:flex;align-items:center;padding:0 8px;gap:5px}
+    .mprev-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.4)}
+    .mprev-url{flex:1;background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 5px;font-size:8px;font-family:monospace;color:#888;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .mprev-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px;font-family:'Plus Jakarta Sans',sans-serif;gap:5px}
+    .mprev-h{font-size:10px;font-weight:800;color:#111;letter-spacing:-.2px}
+    .mprev-p{font-size:8px;color:#888;line-height:1.4}
+    .mprev-btn{padding:3px 8px;background:linear-gradient(135deg,#4f6ef7,#9b79fc);color:#fff;border-radius:4px;font-size:7px;font-weight:700;display:inline-block;align-self:flex-start}
+    /* status */
+    .mstatus{height:20px;background:#01010a;border-top:1px solid var(--b1);display:flex;align-items:center;padding:0 10px;gap:14px}
+    .mst{font-family:var(--mono);font-size:9px;color:var(--sub)}
+    .mst .a{color:var(--a1)}
+    .mst-save{margin-left:auto;font-size:8px;font-weight:700;color:var(--a2);background:rgba(155,121,252,.08);border-radius:2px;padding:1px 5px}
 
-    /* Visual 1: create project */
-    .vis1-prompt{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
-    .vis1-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
-    .vis1-modal{background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:18px 20px}
-    .vis1-modal-title{font-size:13px;font-weight:700;margin-bottom:14px}
-    .vis1-field{margin-bottom:10px}
-    .vis1-label-sm{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:5px}
-    .vis1-input{background:var(--bg);border:1px solid var(--b2);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:var(--mono);display:flex;align-items:center;gap:6px}
-    .vis1-input.focused{border-color:rgba(59,130,246,.4)}
-    .vis1-emojis{display:flex;gap:6px}
-    .vis1-emoji{font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:2px solid transparent}
-    .vis1-emoji.sel{background:rgba(59,130,246,.12);border-color:var(--a1)}
-    .vis1-btn{margin-top:14px;padding:9px;border-radius:8px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:12px;font-weight:700;text-align:center}
+    /* ── FEATURES ── */
+    .features{padding:140px 48px 100px;position:relative;z-index:1}
+    .features-in{max-width:1040px;margin:0 auto}
+    .sec-eye{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+    .sec-h{font-family:var(--sans);font-size:clamp(28px,3vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.06;margin-bottom:60px}
+    .sec-h em{font-style:normal;color:var(--sub)}
+    .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border:1px solid var(--b1);border-radius:12px;overflow:hidden;background:var(--b1)}
+    .fc{background:var(--s1);padding:28px 24px;transition:background .2s;position:relative;overflow:hidden}
+    .fc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--a1),var(--a2));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+    .fc:hover{background:var(--s2)}
+    .fc:hover::after{transform:scaleX(1)}
+    .fc-ico{width:36px;height:36px;border-radius:8px;background:rgba(79,110,247,.07);border:1px solid rgba(79,110,247,.12);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+    .fc-ico svg{width:16px;height:16px;stroke:var(--a2);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .fc-t{font-size:13px;font-weight:700;margin-bottom:5px}
+    .fc-d{font-size:12px;color:var(--sub);line-height:1.65}
 
-    /* Visual 2: editor */
-    .vis2{flex:1;display:flex;flex-direction:column;gap:0;overflow:hidden;border-radius:8px;border:1px solid var(--b2)}
-    .vis2-topbar{height:30px;background:#060610;border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 10px;gap:8px}
-    .vis2-dot{width:7px;height:7px;border-radius:50%}
-    .vis2-tabs{display:flex;margin-left:4px}
-    .vis2-tab{padding:0 10px;height:30px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--sub);border-right:1px solid var(--b1);border-top:1.5px solid transparent}
-    .vis2-tab.on{color:var(--text);border-top-color:var(--a1);background:rgba(59,130,246,.04)}
-    .vis2-body{flex:1;display:flex;overflow:hidden}
-    .vis2-files{width:90px;background:var(--s2);border-right:1px solid var(--b1);padding:6px 0}
-    .vis2-file{padding:4px 8px;font-family:var(--mono);font-size:9px;color:var(--sub);display:flex;align-items:center;gap:4px}
-    .vis2-file.on{background:rgba(59,130,246,.07);color:var(--text)}
-    .vis2-fdot{width:4px;height:4px;border-radius:50%;background:var(--a1);flex-shrink:0}
-    .vis2-code{flex:1;padding:10px 12px;font-family:var(--mono);font-size:9.5px;line-height:1.8;overflow:hidden}
-    .vis2-preview{width:130px;border-left:1px solid var(--b1);background:#fff;display:flex;align-items:center;justify-content:center}
-    .vis2-prev-in{padding:10px;font-family:sans-serif;text-align:center}
-    .vis2-prev-in h2{font-size:10px;font-weight:800;color:#111;margin-bottom:4px;background:linear-gradient(135deg,#3b82f6,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .vis2-prev-in p{font-size:8px;color:#888;margin-bottom:6px}
-    .vis2-prev-btn{padding:3px 8px;background:linear-gradient(135deg,#3b82f6,#818cf8);color:#fff;border-radius:4px;font-size:8px;font-weight:700;display:inline-block}
+    /* ── HOW ── */
+    .how{padding:0 48px 120px;position:relative;z-index:1}
+    .how-in{max-width:1040px;margin:0 auto}
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-top:60px}
+    .step{background:var(--s1);padding:28px 22px;transition:background .2s}
+    .step:hover{background:var(--s2)}
+    .step-n{font-family:var(--sans);font-size:11px;font-weight:800;color:var(--a1);letter-spacing:1px;margin-bottom:14px}
+    .step-t{font-size:14px;font-weight:700;margin-bottom:6px}
+    .step-d{font-size:12px;color:var(--sub);line-height:1.6}
 
-    /* Visual 3: share */
-    .vis3{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px}
-    .vis3-card{background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:14px 16px}
-    .vis3-card-title{font-size:11px;font-weight:700;margin-bottom:4px}
-    .vis3-card-sub{font-size:11px;color:var(--sub);line-height:1.55}
-    .vis3-link{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--b2);border-radius:8px}
-    .vis3-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 7px rgba(34,197,94,.5);flex-shrink:0;animation:pulse 2s infinite}
-    .vis3-url{font-family:var(--mono);font-size:10px;color:var(--a2)}
-    .vis3-copy{margin-left:auto;font-size:9px;font-weight:700;color:var(--sub);background:var(--b2);border-radius:4px;padding:2px 8px;white-space:nowrap}
-    .vis3-views{display:flex;gap:8px}
-    .vis3-stat{flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:8px}
-    .vis3-stat-l{font-size:10px;color:var(--sub)}
-    .vis3-stat-n{font-size:18px;font-weight:800;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.5px}
+    /* ── CTA ── */
+    .cta{padding:100px 48px 140px;text-align:center;position:relative;z-index:1}
+    .cta::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(79,110,247,.07) 0%,transparent 65%);pointer-events:none}
+    .cta-in{position:relative;max-width:540px;margin:0 auto}
+    .cta-h{font-family:var(--sans);font-size:clamp(32px,4vw,58px);font-weight:800;letter-spacing:-2px;line-height:1.04;margin-bottom:16px}
+    .cta-h span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .cta-sub{font-size:15px;color:var(--sub);margin-bottom:40px}
+    .cta-note{margin-top:14px;font-size:11px;color:var(--b3)}
 
-    /* Visual 4: earnings */
-    .vis4{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px}
-    .vis4-url{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:8px}
-    .vis4-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.5);animation:pulse 2s infinite}
-    .vis4-link{font-family:var(--mono);font-size:11px;color:var(--a2)}
-    .vis4-stat{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:8px}
-    .vis4-stat-label{font-size:12px;color:var(--sub)}
-    .vis4-stat-val{font-size:16px;font-weight:800;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-
-    /* FEATURES */
-    .feats{position:relative;z-index:1;padding:0 52px 120px}
-    .feats-in{max-width:1060px;margin:0 auto}
-    .fgwrap{border:1px solid var(--b1);border-radius:14px;overflow:hidden}
-    .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1)}
-    .feat{background:var(--s1);padding:32px 26px;transition:background .2s;position:relative;overflow:hidden}
-    .feat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--a1),var(--a2));transform:scaleX(0);transform-origin:left;transition:transform .3s}
-    .feat:hover{background:var(--s2)}
-    .feat:hover::after{transform:scaleX(1)}
-    .ficon{width:40px;height:40px;border-radius:9px;background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-    .ficon svg{width:18px;height:18px;stroke:var(--a2);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-    .ft{font-size:14px;font-weight:700;margin-bottom:6px}
-    .fd{font-size:12px;color:var(--sub);line-height:1.7}
-
-    /* CTA */
-    .cta{position:relative;z-index:1;padding:120px 52px;text-align:center}
-    .cta::before{content:'';position:absolute;top:-20%;left:50%;transform:translateX(-50%);width:700px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(129,140,248,.07) 0%,transparent 65%);pointer-events:none}
-    .cta-in{position:relative;max-width:580px;margin:0 auto}
-    .cta h2{font-size:clamp(34px,4vw,60px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:14px}
-    .cta h2 span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .cta p{font-size:15px;color:var(--sub);margin-bottom:40px}
-    .ctanote{margin-top:14px;font-size:11px;color:var(--dim)}
-
-    /* FOOTER */
-    footer{border-top:1px solid var(--b1);padding:24px 52px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
-    .flogo{font-size:15px;font-weight:800;letter-spacing:.5px;display:flex;align-items:baseline}
-    .flogo-v{color:#fff}
-    .flogo-ai{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    footer span{font-size:12px;color:var(--dim)}
+    /* ── FOOTER ── */
+    footer{border-top:1px solid var(--b1);padding:22px 48px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+    .flogo{color:var(--text);display:flex;align-items:center;gap:8px;text-decoration:none}
+    .flogo img{width:18px;height:18px;border-radius:4px}
+    .flogo-t{color:var(--text);font-family:var(--sans);font-size:14px;font-weight:800}
+    .flogo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    footer .fr{display:flex;gap:20px;align-items:center}
     footer a{color:var(--sub);text-decoration:none;font-size:12px;transition:color .15s}
     footer a:hover{color:var(--text)}
+    footer span{font-size:12px;color:var(--b3)}
 
-    @media(max-width:960px){
+    @media(max-width:900px){
       nav{padding:0 20px}
       .nl{display:none}
-      .hero{grid-template-columns:1fr;padding:80px 24px 48px}
+      .hero{grid-template-columns:1fr;padding:80px 24px 40px}
       .hero-r{display:none}
-      .how{padding:80px 24px}
-      .steps-wrap{grid-template-columns:1fr}
-      .step-visual{display:none}
-      .feats{padding:0 24px 80px}
+      .features,.how{padding-left:24px;padding-right:24px}
       .fgrid{grid-template-columns:1fr}
-      .cta{padding:80px 24px}
+      .steps{grid-template-columns:1fr 1fr}
+      .cta{padding-left:24px;padding-right:24px}
       footer{flex-direction:column;gap:10px;padding:20px;text-align:center}
     }
   </style>
@@ -371,25 +257,33 @@
 <body>
 
 <nav>
-  <a href="index.html" class="logo"><span class="logo-v">VEXIUM</span><span class="logo-ai">.AI</span></a>
+  <a href="index.html" class="logo">
+    <img src="vexium_logo.png" alt="Vexium"/>
+    <span class="logo-t">VEXIUM<span>.AI</span></span>
+  </a>
   <div class="nav-r">
-    <a href="#how" class="nl">How it works</a>
     <a href="#features" class="nl">Features</a>
-    <a href="auth.html?tab=signup" class="nc" id="navCta">Get started →</a>
+    <a href="#how" class="nl">How it works</a>
+    <a href="auth.html" class="nc" id="navCta">Get started →</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-l">
-    <div class="badge"><div class="bdot"></div>Free forever · No credit card</div>
-    <h1>Code it.<br><span class="grd">Ship it. Earn.</span></h1>
-    <p class="hsub">A real VS Code–quality editor in your browser, live preview, and a community of builders who are doing the same thing you are.</p>
-    <div class="hbtns">
-      <a href="auth.html?tab=signup" class="bp" id="heroCta">Start building free →</a>
-      <a href="#how" class="bg2">How it works</a>
+    <div class="hero-logo">
+      <img src="vexium_logo.png" alt="Vexium"/>
     </div>
-    <p class="hnote">Free forever &nbsp;·&nbsp; No setup required</p>
+    <div class="hero-tag">
+      <div class="hero-tag-dot"></div>
+      <span class="hero-tag-t">Free forever · No setup required</span>
+    </div>
+    <h1 class="hero-head">Your next big thing<br>starts <span>right here.</span></h1>
+    <p class="hero-sub">A real code editor, live preview, and shareable links — all in your browser. No installs, no friction, just building.</p>
+    <div class="hbtns">
+      <a href="auth.html" class="btn-p" id="heroCta">Start building free →</a>
+      <a href="#features" class="btn-g">See how it works</a>
+    </div>
   </div>
 
   <!-- EDITOR MOCKUP -->
@@ -398,289 +292,157 @@
       <div class="mtilt" id="mtilt">
         <div class="mshell">
 
-          <!-- window bar -->
+          <!-- OS window bar -->
           <div class="mbar">
             <div class="mdots">
-              <div class="md r"></div>
-              <div class="md y"></div>
-              <div class="md g"></div>
+              <div class="md r"></div><div class="md y"></div><div class="md g"></div>
             </div>
-            <div class="mtitle">my-saas — VEXIUM.AI</div>
+            <div class="mbar-title">editor.html — Vexium</div>
           </div>
 
-          <!-- editor body -->
+          <!-- App topbar -->
+          <div class="m-topbar">
+            <div class="m-tb-logo">
+              <img src="vexium_logo.png" alt="V"/>
+              <span class="m-tb-logoname">VEXIUM<span>.AI</span></span>
+            </div>
+            <div class="m-tb-sep"></div>
+            <span class="m-tb-proj">my-saas</span>
+            <div class="m-tb-modes">
+              <div class="m-tb-mode on">Editor</div>
+              <div class="m-tb-mode">AI ✦</div>
+            </div>
+            <div class="m-tb-r">
+              <div class="m-tb-btn">Preview</div>
+              <div class="m-tb-btn primary">Save</div>
+            </div>
+          </div>
+
+          <!-- Tab bar -->
+          <div class="mtabs">
+            <div class="mtab on"><div class="mtab-dot"></div>index.html</div>
+            <div class="mtab">style.css</div>
+            <div class="mtab">app.js</div>
+          </div>
+
+          <!-- Editor body -->
           <div class="mbody">
-
-            <!-- tab bar -->
-            <div class="mtabs">
-              <div class="mtab on"><div class="mtab-dot"></div>index.html</div>
-              <div class="mtab">style.css</div>
-              <div class="mtab">app.js</div>
+            <!-- Sidebar -->
+            <div class="msb">
+              <div class="msb-head">Files</div>
+              <div class="mfile on"><div class="mf-ico h">H</div>index.html</div>
+              <div class="mfile"><div class="mf-ico c">C</div>style.css</div>
+              <div class="mfile"><div class="mf-ico j">J</div>app.js</div>
+              <div class="mfile"><div class="mf-ico j">J</div>data.json</div>
             </div>
 
-            <!-- sidebar + code + preview -->
-            <div class="meditor-wrap">
-
-              <!-- file tree -->
-              <div class="msidebar">
-                <div class="msb-head">Files</div>
-                <div class="mfile mfile-active-bar active">
-                  <div class="mfile-ico html">H</div>
-                  index.html
-                </div>
-                <div class="mfile">
-                  <div class="mfile-ico css">C</div>
-                  style.css
-                </div>
-                <div class="mfile">
-                  <div class="mfile-ico js">J</div>
-                  app.js
-                </div>
-                <div class="mfile">
-                  <div class="mfile-ico js">J</div>
-                  data.json
-                </div>
-              </div>
-
-              <!-- code lines -->
-              <div class="mcode-area">
-                <div class="mline"><span class="mln">1</span><span class="mc"><span class="cc">&lt;!-- Landing page --&gt;</span></span></div>
-                <div class="mline hl"><span class="mln">2</span><span class="mc"><span class="ct">&lt;section</span> <span class="ck">class</span>=<span class="cs">"hero"</span><span class="ct">&gt;</span></span></div>
-                <div class="mline"><span class="mln">3</span><span class="mc">&nbsp;&nbsp;<span class="ct">&lt;h1</span> <span class="ck">class</span>=<span class="cs">"title"</span><span class="ct">&gt;</span></span></div>
-                <div class="mline"><span class="mln">4</span><span class="mc">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cw">Build Faster.</span> <span class="ck">Get Paid</span><span class="cw">.</span></span></div>
-                <div class="mline"><span class="mln">5</span><span class="mc">&nbsp;&nbsp;<span class="ct">&lt;/h1&gt;</span></span></div>
-                <div class="mline"><span class="mln">6</span><span class="mc">&nbsp;&nbsp;<span class="ct">&lt;p</span> <span class="ck">class</span>=<span class="cs">"sub"</span><span class="ct">&gt;</span><span class="cw">The tool your</span></span></div>
-                <div class="mline"><span class="mln">7</span><span class="mc">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cw">customers need.</span><span class="ct">&lt;/p&gt;</span></span></div>
-                <div class="mline"><span class="mln">8</span><span class="mc">&nbsp;&nbsp;<span class="ct">&lt;button</span> <span class="ck">onclick</span>=<span class="cs">"signup()"</span><span class="ct">&gt;</span></span></div>
-                <div class="mline hl"><span class="mln">9</span><span class="mc">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cw">Get started →<span class="mcursor"></span></span></span></div>
-                <div class="mline"><span class="mln">10</span><span class="mc">&nbsp;&nbsp;<span class="ct">&lt;/button&gt;</span></span></div>
-                <div class="mline"><span class="mln">11</span><span class="mc"><span class="ct">&lt;/section&gt;</span></span></div>
-              </div>
-
-              <!-- mini live preview -->
-              <div style="width:160px;border-left:1px solid var(--b1);background:#fff;display:flex;flex-direction:column;flex-shrink:0">
-                <div style="height:22px;background:#f5f5f5;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 8px;gap:5px">
-                  <div style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.4)"></div>
-                  <div style="flex:1;background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 6px;font-size:8px;font-family:monospace;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">localhost</div>
-                </div>
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:12px 12px 12px;font-family:sans-serif;gap:7px">
-                  <div style="font-size:11px;font-weight:800;color:#111;letter-spacing:-.3px;line-height:1.2">Build Faster.<br><span style="background:linear-gradient(135deg,#3b82f6,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Get Paid.</span></div>
-                  <div style="font-size:8.5px;color:#888;line-height:1.5">The tool your customers need.</div>
-                  <div style="padding:4px 9px;background:linear-gradient(135deg,#3b82f6,#818cf8);color:#fff;border-radius:5px;font-size:8px;font-weight:700;display:inline-block;align-self:flex-start">Get started →</div>
-                </div>
-              </div>
-
-            </div><!-- /meditor-wrap -->
-
-            <!-- status bar -->
-            <div class="mstatus">
-              <div class="mstat">Ln <span class="acc">9</span></div>
-              <div class="mstat">Col <span class="acc">22</span></div>
-              <div class="mstat" style="color:var(--sub)">HTML</div>
-              <div class="mstat-save">✓ Saved</div>
+            <!-- Code -->
+            <div class="mcode">
+              <div class="mline"><span class="mln">1</span><span><span class="cc">&lt;!-- hero section --&gt;</span></span></div>
+              <div class="mline hl"><span class="mln">2</span><span class="mcode-inner"><span class="ct">&lt;section</span> <span class="ck">class</span>=<span class="cs">"hero"</span><span class="ct">&gt;</span></span></div>
+              <div class="mline"><span class="mln">3</span><span>&nbsp;&nbsp;<span class="ct">&lt;h1&gt;</span><span class="cw">Build Fast.</span><span class="ct">&lt;/h1&gt;</span></span></div>
+              <div class="mline"><span class="mln">4</span><span>&nbsp;&nbsp;<span class="ct">&lt;p</span> <span class="ck">class</span>=<span class="cs">"sub"</span><span class="ct">&gt;</span></span></div>
+              <div class="mline"><span class="mln">5</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cw">Your product.</span></span></div>
+              <div class="mline"><span class="mln">6</span><span>&nbsp;&nbsp;<span class="ct">&lt;/p&gt;</span></span></div>
+              <div class="mline"><span class="mln">7</span><span>&nbsp;&nbsp;<span class="ct">&lt;button</span> <span class="ck">onclick</span>=<span class="cs">"launch()"</span><span class="ct">&gt;</span></span></div>
+              <div class="mline hl"><span class="mln">8</span><span class="mcode-inner"><span class="cw">&nbsp;&nbsp;&nbsp;&nbsp;Get started<span class="mcursor"></span></span></span></div>
+              <div class="mline"><span class="mln">9</span><span>&nbsp;&nbsp;<span class="ct">&lt;/button&gt;</span></span></div>
+              <div class="mline"><span class="mln">10</span><span><span class="ct">&lt;/section&gt;</span></span></div>
             </div>
 
-          </div><!-- /mbody -->
-        </div><!-- /mshell -->
-      </div><!-- /mtilt -->
-    </div><!-- /mscene -->
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="how" id="how">
-  <div class="how-in">
-    <div class="eye">How it works</div>
-    <h2 class="sech">From idea<br><em>to income.</em></h2>
-
-    <div class="steps-wrap">
-      <div class="step-pills" id="stepPills">
-        <div class="spill active" data-step="0" onclick="goStep(0)">
-          <div class="spill-num">1</div>
-          <div class="spill-text">
-            <h4>Create a project</h4>
-            <p>Name it, pick an emoji, start with a clean slate.</p>
-          </div>
-          <div class="spill-progress"><div class="spill-progress-fill" id="prog0"></div></div>
-        </div>
-        <div class="spill" data-step="1" onclick="goStep(1)">
-          <div class="spill-num">2</div>
-          <div class="spill-text">
-            <h4>Build with the editor</h4>
-            <p>Monaco editor, live preview, multi-file. Ship fast.</p>
-          </div>
-          <div class="spill-progress"><div class="spill-progress-fill" id="prog1"></div></div>
-        </div>
-        <div class="spill" data-step="2" onclick="goStep(2)">
-          <div class="spill-num">3</div>
-          <div class="spill-text">
-            <h4>Share your work</h4>
-            <p>Get a live link. Show clients, get feedback, go viral.</p>
-          </div>
-          <div class="spill-progress"><div class="spill-progress-fill" id="prog2"></div></div>
-        </div>
-        <div class="spill" data-step="3" onclick="goStep(3)">
-          <div class="spill-num">4</div>
-          <div class="spill-text">
-            <h4>Get paid</h4>
-            <p>Add payments, sell the project, or land clients with it.</p>
-          </div>
-          <div class="spill-progress"><div class="spill-progress-fill" id="prog3"></div></div>
-        </div>
-      </div>
-
-      <div class="step-visual">
-
-        <!-- step 1: create project -->
-        <div class="svis show" id="svis0">
-          <div class="vis1-prompt">
-            <div class="vis1-label">New Project</div>
-            <div class="vis1-modal">
-              <div class="vis1-modal-title">Create project</div>
-              <div class="vis1-field">
-                <div class="vis1-label-sm">Icon</div>
-                <div class="vis1-emojis">
-                  <div class="vis1-emoji">🚀</div>
-                  <div class="vis1-emoji sel">💻</div>
-                  <div class="vis1-emoji">🎨</div>
-                  <div class="vis1-emoji">⚡</div>
-                  <div class="vis1-emoji">🔥</div>
-                </div>
+            <!-- Mini preview -->
+            <div class="mpreview">
+              <div class="mprev-bar">
+                <div class="mprev-dot"></div>
+                <div class="mprev-url">localhost</div>
               </div>
-              <div class="vis1-field" style="margin-bottom:0">
-                <div class="vis1-label-sm">Project Name</div>
-                <div class="vis1-input focused">my-saas-app<span class="vis1-cursor" style="display:inline-block;width:1.5px;height:11px;background:var(--a2);vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite"></span></div>
-              </div>
-              <div class="vis1-btn">Create →</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- step 2: editor -->
-        <div class="svis" id="svis1">
-          <div class="vis1-label" style="margin-bottom:10px">Your editor</div>
-          <div class="vis2" style="flex:1">
-            <div class="vis2-topbar">
-              <div class="vis2-dot" style="background:#ff5f56"></div>
-              <div class="vis2-dot" style="background:#ffbd2e"></div>
-              <div class="vis2-dot" style="background:#27c93f"></div>
-              <div class="vis2-tabs">
-                <div class="vis2-tab on">index.html</div>
-                <div class="vis2-tab">style.css</div>
-              </div>
-            </div>
-            <div class="vis2-body">
-              <div class="vis2-files">
-                <div class="vis2-file on"><div class="vis2-fdot"></div>index.html</div>
-                <div class="vis2-file">style.css</div>
-                <div class="vis2-file">app.js</div>
-              </div>
-              <div class="vis2-code">
-                <div><span style="color:#2e2e50;font-style:italic">&lt;!-- hero --&gt;</span></div>
-                <div><span style="color:#93c5fd">&lt;section</span> <span style="color:#f472b6">class</span>=<span style="color:#6ee7b7">"hero"</span><span style="color:#93c5fd">&gt;</span></div>
-                <div>&nbsp;&nbsp;<span style="color:#93c5fd">&lt;h1&gt;</span><span style="color:var(--text)">Get Paid.</span><span style="color:#93c5fd">&lt;/h1&gt;</span></div>
-                <div>&nbsp;&nbsp;<span style="color:#93c5fd">&lt;button&gt;</span></div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--text)">Start free<span style="display:inline-block;width:1.5px;height:10px;background:var(--a2);vertical-align:middle;margin-left:1px;animation:blink 1s step-end infinite"></span></span></div>
-                <div>&nbsp;&nbsp;<span style="color:#93c5fd">&lt;/button&gt;</span></div>
-                <div><span style="color:#93c5fd">&lt;/section&gt;</span></div>
-              </div>
-              <div class="vis2-preview">
-                <div class="vis2-prev-in">
-                  <h2>Get Paid.</h2>
-                  <p>Your product here</p>
-                  <div class="vis2-prev-btn">Start free</div>
-                </div>
+              <div class="mprev-body">
+                <div class="mprev-h">Build Fast.</div>
+                <div class="mprev-p">Your product here</div>
+                <div class="mprev-btn">Get started</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- step 3: share -->
-        <div class="svis" id="svis2">
-          <div class="vis3">
-            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:4px">Shared link</div>
-            <div class="vis3-link">
-              <div class="vis3-dot"></div>
-              <div class="vis3-url">vexium.ai/view/my-saas-app</div>
-              <div class="vis3-copy">Copy</div>
-            </div>
-            <div class="vis3-card">
-              <div class="vis3-card-title">My SaaS App</div>
-              <div class="vis3-card-sub">Anyone with this link can preview your project live in their browser — no install needed.</div>
-            </div>
-            <div class="vis3-views">
-              <div class="vis3-stat"><div class="vis3-stat-l">Views today</div><div class="vis3-stat-n">142</div></div>
-              <div class="vis3-stat"><div class="vis3-stat-l">Unique visitors</div><div class="vis3-stat-n">89</div></div>
-            </div>
+          <!-- Status bar -->
+          <div class="mstatus">
+            <div class="mst">Ln <span class="a">8</span></div>
+            <div class="mst">Col <span class="a">18</span></div>
+            <div class="mst" style="color:var(--sub)">HTML</div>
+            <div class="mst-save">✓ Saved</div>
           </div>
-        </div>
 
-        <!-- step 4: earn -->
-        <div class="svis" id="svis3">
-          <div class="vis4">
-            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:4px">Live and earning</div>
-            <div class="vis4-url">
-              <div class="vis4-dot"></div>
-              <div class="vis4-link">mysaas.vexium.ai</div>
-              <div style="font-size:10px;color:#22c55e;font-weight:700;margin-left:auto">LIVE</div>
-            </div>
-            <div class="vis4-stat">
-              <div class="vis4-stat-label">Monthly revenue</div>
-              <div class="vis4-stat-val">$1,620</div>
-            </div>
-            <div class="vis4-stat">
-              <div class="vis4-stat-label">Paying customers</div>
-              <div class="vis4-stat-val">31</div>
-            </div>
-            <div class="vis4-stat">
-              <div class="vis4-stat-label">Days since launch</div>
-              <div class="vis4-stat-val">18</div>
-            </div>
-          </div>
         </div>
-
       </div>
     </div>
   </div>
 </section>
 
 <!-- FEATURES -->
-<section class="feats" id="features">
-  <div class="feats-in">
-    <div class="eye" style="margin-bottom:12px">Everything included</div>
-    <h2 class="sech" style="margin-bottom:40px">Built to make<br><em>you money.</em></h2>
-    <div class="fgwrap">
-      <div class="fgrid">
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-          <div class="ft">Monaco code editor</div>
-          <div class="fd">The same engine behind VS Code. Full syntax highlighting, IntelliSense, and multi-file tabs in your browser.</div>
-        </div>
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-          <div class="ft">Live preview</div>
-          <div class="fd">See your work as you build it. CSS, JS, and HTML inline side-by-side. No reloads, no lag.</div>
-        </div>
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-          <div class="ft">Shareable links</div>
-          <div class="fd">Every project gets a live link you can share with anyone. Show clients, get feedback, or launch it as a product.</div>
-        </div>
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div class="ft">Builder community</div>
-          <div class="fd">Follow other builders, share projects publicly, find collaborators. Build in public and grow an audience.</div>
-        </div>
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
-          <div class="ft">AI assistant (coming soon)</div>
-          <div class="fd">Describe what you want and watch it get built. The AI understands your full codebase and writes working code.</div>
-        </div>
-        <div class="feat">
-          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <div class="ft">Free forever</div>
-          <div class="fd">Unlimited projects, unlimited builds, forever free. No trial. No card. We make money when you upgrade to Pro.</div>
-        </div>
+<section class="features" id="features">
+  <div class="features-in">
+    <div class="sec-eye">Everything included</div>
+    <h2 class="sec-h">Built for<br><em>builders.</em></h2>
+    <div class="fgrid">
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <div class="fc-t">Monaco editor</div>
+        <div class="fc-d">The engine behind VS Code. Full syntax highlighting, IntelliSense, multi-file tabs — all in your browser.</div>
+      </div>
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="fc-t">Live preview</div>
+        <div class="fc-d">See changes instantly. HTML, CSS, JS side by side with console output and zero lag.</div>
+      </div>
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div class="fc-t">Shareable links</div>
+        <div class="fc-d">Every project gets a live link. Share with clients, get feedback, or launch it as a product instantly.</div>
+      </div>
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="fc-t">Cloud save</div>
+        <div class="fc-d">Projects auto-save to Supabase. Work across devices. Your code is always safe.</div>
+      </div>
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div class="fc-t">AI assistant</div>
+        <div class="fc-d">Describe what you want and watch it get built. The AI understands your full codebase. Coming soon.</div>
+      </div>
+      <div class="fc">
+        <div class="fc-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <div class="fc-t">Multi-file projects</div>
+        <div class="fc-d">HTML, CSS, JS, JSON — all in one project. Organize files, set a main file, build real things.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-in">
+    <div class="sec-eye">How it works</div>
+    <h2 class="sec-h">From idea<br><em>to shipped.</em></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-t">Create a project</div>
+        <div class="step-d">Name it, pick an emoji, get a clean editor with starter files ready to go.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-t">Build with the editor</div>
+        <div class="step-d">Write code with live preview. Monaco editor, console output, file tree. Ship fast.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-t">Share instantly</div>
+        <div class="step-d">Get a live link. Show clients, get feedback, go viral — no deploy step needed.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">04</div>
+        <div class="step-t">Own your work</div>
+        <div class="step-d">Everything saves to the cloud. Build in public or keep it private. Your call.</div>
       </div>
     </div>
   </div>
@@ -689,94 +451,63 @@
 <!-- CTA -->
 <section class="cta">
   <div class="cta-in">
-    <h2>Your next product.<br><span>Built today.</span></h2>
-    <p>Free forever. No credit card. Start building in 30 seconds.</p>
-    <a href="auth.html?tab=signup" class="bp" id="ctaBtn" style="font-size:15px;padding:16px 44px;display:inline-block">Start building free →</a>
-    <p class="ctanote">Free forever · No credit card needed</p>
+    <h2 class="cta-h">Your next product.<br><span>Built today.</span></h2>
+    <p class="cta-sub">Free forever. No credit card. Start building in 30 seconds.</p>
+    <a href="auth.html" class="btn-p" id="ctaBtn" style="font-size:15px;padding:15px 44px;display:inline-block">Start building free →</a>
+    <p class="cta-note">Free · No card · No setup</p>
   </div>
 </section>
 
 <footer>
-  <div class="flogo"><span class="flogo-v">VEXIUM</span><span class="flogo-ai">.AI</span></div>
-  <span>Build something.</span>
-  <a href="https://madebyliamm.github.io/MadeByLiam/" target="_blank">Made by Liam</a>
+  <a href="index.html" class="flogo">
+    <img src="vexium_logo.png" alt="V"/>
+    <span class="flogo-t">VEXIUM<span>.AI</span></span>
+  </a>
+  <div class="fr">
+    <span>© 2026 Vexium</span>
+    <a href="https://madebyliamm.github.io/MadeByLiam/" target="_blank">Made by Liam</a>
+  </div>
 </footer>
 
-<script src="config.js"></script>
+<script src="config.js" onerror="console.log('config not loaded')"></script>
 <script>
-  // Auth check
-  (async()=>{
-    try{
+// Auth state
+(async()=>{
+  try{
+    if(typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined'){
       const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
       const{data}=await sb.auth.getSession();
-      if(data.session){
+      if(data?.session){
         ['navCta','heroCta','ctaBtn'].forEach(id=>{
           const el=document.getElementById(id);
-          if(el){el.textContent='Open Home →';el.href='home.html';}
+          if(el){el.textContent='Open Vexium →';el.href='home.html';}
         });
       }
-    }catch(e){}
-  })();
-
-  // Tilt effect (exact copy from original)
-  const scene=document.getElementById('mscene');
-  const tilt=document.getElementById('mtilt');
-  if(scene&&tilt){
-    let tx=0,ty=0,cx=0,cy=0,raf=null;
-    scene.addEventListener('mousemove',e=>{
-      const r=scene.getBoundingClientRect();
-      const nx=((e.clientX-r.left)/r.width)*2-1;
-      const ny=((e.clientY-r.top)/r.height)*2-1;
-      tx=-ny*9;ty=nx*13;
-      if(!raf)loop();
-    });
-    scene.addEventListener('mouseleave',()=>{tx=0;ty=0;if(!raf)loop();});
-    function loop(){
-      cx+=(tx-cx)*.16;cy+=(ty-cy)*.16;
-      const s=(Math.abs(tx)+Math.abs(ty)>1)?1.035:1;
-      tilt.style.transform=`perspective(1000px) rotateX(${cx}deg) rotateY(${cy}deg) scale(${s})`;
-      if(Math.abs(tx-cx)>.01||Math.abs(ty-cy)>.01){raf=requestAnimationFrame(loop);}
-      else{tilt.style.transform=`perspective(1000px) rotateX(${tx}deg) rotateY(${cy}deg) scale(${tx===0?1:1.035})`;raf=null;}
     }
+  }catch(e){}
+})();
+
+// Smooth tilt on mockup
+const scene=document.getElementById('mscene');
+const tilt=document.getElementById('mtilt');
+if(scene&&tilt){
+  let tx=0,ty=0,cx=0,cy=0,raf=null;
+  scene.addEventListener('mousemove',e=>{
+    const r=scene.getBoundingClientRect();
+    const nx=((e.clientX-r.left)/r.width)*2-1;
+    const ny=((e.clientY-r.top)/r.height)*2-1;
+    tx=-ny*8;ty=nx*12;
+    if(!raf)loop();
+  });
+  scene.addEventListener('mouseleave',()=>{tx=0;ty=0;if(!raf)loop();});
+  function loop(){
+    cx+=(tx-cx)*.14;cy+=(ty-cy)*.14;
+    const s=(Math.abs(cx)+Math.abs(cy)>1)?1.03:1;
+    tilt.style.transform=`perspective(1200px) rotateX(${cx}deg) rotateY(${cy}deg) scale(${s})`;
+    if(Math.abs(tx-cx)>.01||Math.abs(ty-cy)>.01){raf=requestAnimationFrame(loop);}
+    else{raf=null;}
   }
-
-  // Steps auto-advance (exact copy from original)
-  let currentStep=0;
-  const DURATION=4000;
-  let startTime=null;
-  let rafStep=null;
-
-  function goStep(n,resetTimer=true){
-    document.querySelectorAll('.spill').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.svis').forEach(v=>v.classList.remove('show'));
-    document.querySelectorAll('.spill-progress-fill').forEach(f=>{f.style.width='0%';f.style.transition='none'});
-    currentStep=n;
-    document.querySelector(`.spill[data-step="${n}"]`).classList.add('active');
-    document.getElementById(`svis${n}`).classList.add('show');
-    if(resetTimer){
-      if(rafStep)cancelAnimationFrame(rafStep);
-      startTime=null;
-      animateProgress(n);
-    }
-  }
-
-  function animateProgress(step){
-    const fill=document.getElementById(`prog${step}`);
-    if(!fill)return;
-    fill.style.transition='none';
-    fill.style.width='0%';
-    function tick(ts){
-      if(!startTime)startTime=ts;
-      const elapsed=ts-startTime;
-      const pct=Math.min((elapsed/DURATION)*100,100);
-      fill.style.width=pct+'%';
-      if(pct<100){rafStep=requestAnimationFrame(tick);}
-      else{goStep((step+1)%4);}
-    }
-    rafStep=requestAnimationFrame(tick);
-  }
-
-  goStep(0);
+}
 </script>
 </body>
 </html>

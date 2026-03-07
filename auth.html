@@ -2,131 +2,306 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Vexium — Sign in</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#020208;--s1:#06060f;--s2:#0a0a16;--b1:#13131e;--b2:#1c1c2e;--b3:#26263a;--a1:#4f6ef7;--a2:#9b79fc;--a3:#06d6a0;--text:#f2f2ff;--sub:#7070a0;--err:#ef4444;--sans:'Plus Jakarta Sans',sans-serif;--display:'Syne',sans-serif;}
+    a{color:inherit;text-decoration:none}
+    a:visited{color:inherit}
+    :root{
+      --bg:#020209;--s1:#06060f;--s2:#09091a;--b1:#111125;--b2:#18182e;--b3:#22223a;
+      --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;--err:#ef4444;--ok:#22c55e;
+      --sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono','Fira Code',monospace;
+    }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
-    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden}
-    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(79,110,247,.07),transparent);pointer-events:none}
-    .logo{display:flex;align-items:center;gap:8px;text-decoration:none;margin-bottom:32px}
-    .logo img{width:28px;height:28px;border-radius:7px}
-    .logo-t{font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)}
-    .g{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .card{background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:36px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
-    .tabs{display:flex;gap:4px;background:var(--b1);border-radius:11px;padding:4px;margin-bottom:28px}
-    .tab{flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;border:none;color:var(--sub);font-family:var(--sans);transition:all .15s;text-align:center}
-    .tab.on{background:var(--b2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-    .field{margin-bottom:16px}
-    .field label{display:block;font-size:10px;font-weight:700;color:var(--sub);margin-bottom:7px;letter-spacing:.8px;text-transform:uppercase}
-    .field input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--sans);transition:all .15s}
-    .field input:focus{border-color:rgba(79,110,247,.5);background:var(--b1);box-shadow:0 0 0 3px rgba(79,110,247,.08)}
-    .field input::placeholder{color:var(--sub)}
-    .hint{font-size:11px;color:var(--sub);margin-top:5px}
-    .submit{width:100%;padding:13px;border-radius:11px;font-size:14px;font-weight:700;color:#fff;border:none;cursor:pointer;font-family:var(--sans);background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 24px rgba(79,110,247,.25);transition:all .2s;margin-top:6px}
-    .submit:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.4)}
-    .submit:disabled{opacity:.5;transform:none;cursor:not-allowed}
-    .msg{border-radius:9px;padding:11px 14px;font-size:13px;margin-bottom:16px;display:none}
-    .msg.show{display:block}
-    .msg.err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
-    .msg.ok{background:rgba(6,214,160,.07);border:1px solid rgba(6,214,160,.2);color:#5eead4}
-    .back{text-align:center;margin-top:20px;font-size:12px;color:var(--sub)}
-    .back a{color:var(--sub);text-decoration:none}
-    .back a:hover{color:var(--text)}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+    body::before{content:'';position:absolute;top:-20%;left:50%;transform:translateX(-50%);width:700px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(79,110,247,.07) 0%,transparent 60%);pointer-events:none}
+
+    /* BACK */
+    .back{position:fixed;top:20px;left:20px;display:flex;align-items:center;gap:6px;color:var(--sub);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px;transition:all .15s}
+    .back:hover{color:var(--text);background:rgba(255,255,255,.04)}
+    .back svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
+
+    /* CARD */
+    .card{
+      width:100%;max-width:380px;
+      background:var(--s1);
+      border:1px solid var(--b2);
+      border-radius:16px;
+      padding:36px 32px;
+      position:relative;z-index:1;
+      box-shadow:0 40px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03) inset;
+    }
+
+    /* LOGO */
+    .card-logo{color:var(--text);display:flex;align-items:center;gap:9px;margin-bottom:28px;justify-content:center}
+    .card-logo img{width:26px;height:26px;border-radius:6px}
+    .card-logo-t{color:var(--text);font-family:var(--sans);font-size:18px;font-weight:800}
+    .card-logo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    /* TABS */
+    .tabs{display:flex;gap:0;background:var(--b1);border-radius:9px;padding:3px;margin-bottom:28px}
+    .tab{flex:1;padding:8px;border-radius:7px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;color:var(--sub);transition:all .15s;user-select:none}
+    .tab.on{background:var(--b2);color:var(--text)}
+
+    /* FORM */
+    .field{margin-bottom:14px}
+    label{display:block;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+    .inp-wrap{position:relative}
+    input{
+      width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;
+      padding:11px 14px;color:var(--text);font-size:14px;outline:none;
+      font-family:var(--sans);transition:border-color .15s;
+    }
+    input:focus{border-color:rgba(79,110,247,.4)}
+    input::placeholder{color:var(--sub)}
+    .inp-suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--sub);pointer-events:none;font-family:'JetBrains Mono',monospace}
+
+    /* SUBMIT */
+    .submit{
+      width:100%;padding:12px;border-radius:9px;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      color:#fff;font-size:14px;font-weight:700;
+      border:none;cursor:pointer;font-family:var(--sans);
+      box-shadow:0 0 24px rgba(79,110,247,.3);
+      transition:all .2s;margin-top:6px;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .submit:hover{transform:translateY(-1px);box-shadow:0 0 40px rgba(79,110,247,.5)}
+    .submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+    /* DIVIDER */
+    .div{display:flex;align-items:center;gap:12px;margin:20px 0}
+    .div-line{flex:1;height:1px;background:var(--b2)}
+    .div-txt{font-size:11px;color:var(--sub)}
+
+    /* GUEST */
+    .guest{
+      width:100%;padding:11px;border-radius:9px;
+      background:transparent;border:1px solid var(--b2);
+      color:var(--sub);font-size:13px;font-weight:600;
+      cursor:pointer;font-family:var(--sans);transition:all .15s;
+    }
+    .guest:hover{background:rgba(255,255,255,.03);color:var(--text);border-color:var(--b3)}
+
+    /* ERROR/SUCCESS */
+    .msg{font-size:12px;text-align:center;margin-top:12px;min-height:16px;line-height:1.5}
+    .msg.err{color:var(--err)}
+    .msg.ok{color:var(--ok)}
+
+    /* SPINNER */
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+
+    /* NOTE */
+    .note{font-size:11px;color:var(--sub);text-align:center;margin-top:18px;line-height:1.6}
   </style>
 </head>
 <body>
-<a href="index.html" class="logo">
-  <img src="vexium_logo.png" alt="V"/>
-  <span class="logo-t">VEXIUM<span class="g">.AI</span></span>
+
+<a href="index.html" class="back">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  Back
 </a>
+
 <div class="card">
+  <div class="card-logo">
+    <img src="vexium_logo.png" alt="V"/>
+    <span class="card-logo-t">VEXIUM<span>.AI</span></span>
+  </div>
+
   <div class="tabs">
-    <button class="tab on" id="tsi" onclick="sw('signin')">Sign in</button>
-    <button class="tab" id="tsu" onclick="sw('signup')">Create account</button>
+    <div class="tab on" id="tabSignup" onclick="switchTab('signup')">Sign up</div>
+    <div class="tab" id="tabSignin" onclick="switchTab('signin')">Sign in</div>
   </div>
-  <div id="msgEl" class="msg"></div>
-  <div id="siForm">
-    <div class="field"><label>Username</label><input type="text" id="siU" placeholder="your_username" autocomplete="username" autocapitalize="none" spellcheck="false"/></div>
-    <div class="field"><label>Password</label><input type="password" id="siP" placeholder="••••••••" autocomplete="current-password"/></div>
-    <button class="submit" id="siBtn" onclick="signIn()">Sign in →</button>
-  </div>
-  <div id="suForm" style="display:none">
+
+  <div id="formSignup">
     <div class="field">
       <label>Username</label>
-      <input type="text" id="suU" placeholder="coolbuilder" autocomplete="username" autocapitalize="none" spellcheck="false" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"/>
-      <div class="hint">Letters, numbers, underscores. No spaces.</div>
+      <div class="inp-wrap">
+        <input type="text" id="signupUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      </div>
     </div>
-    <div class="field"><label>Password</label><input type="password" id="suP" placeholder="At least 6 characters" autocomplete="new-password"/></div>
-    <button class="submit" id="suBtn" onclick="signUp()">Create account →</button>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="signupPass" placeholder="••••••••"/>
+    </div>
+    <button type="button" class="submit" id="btnSignup" onclick="doSignup()">
+      <span id="signupLabel">Create account →</span>
+    </button>
   </div>
+
+  <div id="formSignin" style="display:none">
+    <div class="field">
+      <label>Username</label>
+      <div class="inp-wrap">
+        <input type="text" id="signinUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="signinPass" placeholder="••••••••"/>
+    </div>
+    <button type="button" class="submit" id="btnSignin" onclick="doSignin()">
+      <span id="signinLabel">Sign in →</span>
+    </button>
+  </div>
+
+  <div class="div"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+  <button type="button" class="guest" onclick="doGuest(event)">Continue without account</button>
+
+  <div class="msg" id="msgBox"></div>
 </div>
-<div class="back"><a href="index.html">← Back to Vexium</a></div>
+
+<p class="note">By signing up you agree to our terms. No email required.</p>
+
+<script src="config.js" onerror="window._noConfig=true"></script>
 <script>
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const params = new URLSearchParams(location.search);
-  if (params.get('tab') === 'signup') sw('signup');
+  let sb = null;
+  try {
+    if (!window._noConfig && typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  } catch(e) {}
 
-  function sw(t) {
-    document.getElementById('tsi').classList.toggle('on', t==='signin');
-    document.getElementById('tsu').classList.toggle('on', t==='signup');
-    document.getElementById('siForm').style.display = t==='signin' ? '' : 'none';
-    document.getElementById('suForm').style.display = t==='signup' ? '' : 'none';
-    hide();
-    setTimeout(() => document.getElementById(t==='signin'?'siU':'suU').focus(), 40);
-  }
-  function msg(text, type) {
-    const el = document.getElementById('msgEl');
-    el.textContent = text; el.className = 'msg show ' + type;
-  }
-  function hide() { document.getElementById('msgEl').className = 'msg'; }
+  const FAKE_DOMAIN = '@vexium.ai';
 
-  async function signIn() {
-    const u = document.getElementById('siU').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
-    const p = document.getElementById('siP').value;
-    if (!u) { msg('Enter your username.','err'); return; }
-    if (!p) { msg('Enter your password.','err'); return; }
-    const btn = document.getElementById('siBtn');
-    btn.disabled=true; btn.textContent='Signing in…'; hide();
-    const { error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
-    if (error) {
-      btn.disabled=false; btn.textContent='Sign in →';
-      msg(error.message.includes('Invalid')||error.message.includes('credentials') ? 'Wrong username or password.' : error.message,'err');
-    } else { location.href='home.html'; }
+  // Check already logged in
+  (async()=>{
+    if (!sb) return;
+    try {
+      const { data } = await sb.auth.getSession();
+      if (data?.session) window.location.href = 'home.html';
+    } catch(e) {}
+    // check tab from URL
+    const p = new URLSearchParams(location.search);
+    if (p.get('tab') === 'signin') switchTab('signin');
+  })();
+
+  function switchTab(tab) {
+    const su = tab === 'signup';
+    document.getElementById('tabSignup').classList.toggle('on', su);
+    document.getElementById('tabSignin').classList.toggle('on', !su);
+    document.getElementById('formSignup').style.display = su ? '' : 'none';
+    document.getElementById('formSignin').style.display = su ? 'none' : '';
+    setMsg('', '');
   }
 
-  async function signUp() {
-    const u = document.getElementById('suU').value.trim();
-    const p = document.getElementById('suP').value;
-    if (!u || u.length < 3) { msg('Username must be at least 3 characters.','err'); return; }
-    if (!p || p.length < 6) { msg('Password must be at least 6 characters.','err'); return; }
-    const btn = document.getElementById('suBtn');
-    btn.disabled=true; btn.textContent='Creating…'; hide();
-    const { data: ex } = await sb.from('profiles').select('id').eq('username',u).maybeSingle();
-    if (ex) { btn.disabled=false; btn.textContent='Create account →'; msg('That username is taken — try another.','err'); return; }
-    const { data, error } = await sb.auth.signUp({ email: toEmail(u), password: p, options:{ data:{username:u} } });
-    if (error) { btn.disabled=false; btn.textContent='Create account →'; msg(error.message,'err'); return; }
-    if (data.session) {
-      await sb.from('profiles').upsert({id:data.user.id,username:u},{onConflict:'id'});
-      location.href='home.html';
+  function setMsg(txt, type) {
+    const el = document.getElementById('msgBox');
+    el.textContent = txt;
+    el.className = 'msg' + (type ? ' ' + type : '');
+  }
+
+  function setLoading(form, loading) {
+    const btn = document.getElementById('btn' + (form === 'signup' ? 'Signup' : 'Signin'));
+    const lbl = document.getElementById(form + 'Label');
+    btn.disabled = loading;
+    if (loading) {
+      lbl.innerHTML = '<div class="spin"></div>';
     } else {
-      msg('Check your email to confirm, then sign in.','ok');
-      btn.disabled=false; btn.textContent='Create account →';
-      sw('signin');
+      lbl.textContent = form === 'signup' ? 'Create account →' : 'Sign in →';
     }
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key==='Enter') {
-      if (document.getElementById('siForm').style.display!=='none') signIn();
-      else signUp();
+  function toEmail(username) {
+    return username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '') + FAKE_DOMAIN;
+  }
+
+  async function doSignup() {
+    const user = document.getElementById('signupUser').value.trim();
+    const pass = document.getElementById('signupPass').value;
+    if (!user) { setMsg('Enter a username.', 'err'); return; }
+    if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
+
+    if (!sb) {
+      // Offline guest mode with username saved
+      localStorage.setItem('vexium_guest', 'true');
+      localStorage.setItem('vexium_username', user);
+      window.location.href = 'home.html';
+      return;
     }
+
+    setLoading('signup', true); setMsg('', '');
+    try {
+      const email = toEmail(user);
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password: pass,
+        options: { data: { username: user, display_name: user } }
+      });
+      if (error) {
+        // Database error means trigger failed but user may still exist — try signing in
+        if (error.message.toLowerCase().includes('database')) {
+          const { data: si } = await sb.auth.signInWithPassword({ email, password: pass });
+          if (si?.session) {
+            localStorage.setItem('vexium_username', user);
+            window.location.href = 'home.html';
+            return;
+          }
+        }
+        setMsg(error.message, 'err');
+        setLoading('signup', false);
+        return;
+      }
+      // Got a session immediately (email confirm disabled)
+      if (data.session) {
+        localStorage.setItem('vexium_username', user);
+        window.location.href = 'home.html';
+        return;
+      }
+      // No session yet — try signing in directly
+      const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (si?.session) {
+        localStorage.setItem('vexium_username', user);
+        window.location.href = 'home.html';
+        return;
+      }
+      setMsg('Account created! Check your email to confirm, then sign in.', 'ok');
+      setLoading('signup', false);
+    } catch(e) { setMsg('Something went wrong.', 'err'); setLoading('signup', false); }
+  }
+
+  async function doSignin() {
+    const user = document.getElementById('signinUser').value.trim();
+    const pass = document.getElementById('signinPass').value;
+    if (!user) { setMsg('Enter your username.', 'err'); return; }
+    if (!pass) { setMsg('Enter your password.', 'err'); return; }
+
+    if (!sb) {
+      localStorage.setItem('vexium_guest', 'true');
+      localStorage.setItem('vexium_username', user);
+      window.location.href = 'home.html';
+      return;
+    }
+
+    setLoading('signin', true); setMsg('', '');
+    try {
+      const email = toEmail(user);
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) { setMsg('Wrong username or password.', 'err'); setLoading('signin', false); return; }
+      localStorage.setItem('vexium_username', user);
+      window.location.href = 'home.html';
+    } catch(e) { setMsg('Something went wrong.', 'err'); setLoading('signin', false); }
+  }
+
+  function doGuest(event) {
+    if (event) event.preventDefault();
+    event && event.stopPropagation();
+    localStorage.setItem('vexium_guest', 'true');
+    if (!localStorage.getItem('vexium_username')) localStorage.setItem('vexium_username', 'Guest');
+    window.location.href = 'home.html';
+  }
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const su = document.getElementById('formSignup').style.display !== 'none';
+    if (su) doSignup(); else doSignin();
   });
-  sb.auth.getSession().then(({data}) => { if (data.session) location.href='home.html'; });
 </script>
 </body>
 </html>

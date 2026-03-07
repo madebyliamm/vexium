@@ -12,7 +12,7 @@
     a{color:inherit;text-decoration:none}
     a:visited{color:inherit}
     :root{
-      --bg:#020209;--s1:#06060f;--s2:#09091a;--b1:#111125;--b2:#18182e;--b3:#22223a;
+      --bg:#020209;--s1:#0c0c1d;--s2:#0f0f22;--b1:#16163a;--b2:#1e1e3a;--b3:#26264a;
       --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;--dim:#1a1a35;
       --sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono','Fira Code',monospace;
     }
@@ -370,7 +370,56 @@
     setTimeout(() => document.getElementById('projNameInput').focus(), 40);
   }
 
+
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function relativeTime(d) {
+    const s = Math.floor((Date.now() - d) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+  }
+
+  async function confirmModal() {
+    const name = document.getElementById('projNameInput').value.trim();
+    if (!name) { document.getElementById('projNameInput').focus(); return; }
+
+    if (modalMode === 'rename') {
+      const p = projects.find(x => x.id === ctxTarget);
+      if (!p) return;
+      p.name = name;
+      if (session && sb) {
+        await sb.from('projects').update({ name, updated_at: new Date().toISOString() }).eq('id', ctxTarget);
+      } else {
+        localStorage.setItem('vexium_projects', JSON.stringify(projects));
+      }
+      closeModal();
+      await loadProjects();
+      return;
+    }
+
+    // new project
+    const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    const defaultFiles = {
+      'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`
+    };
+    const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+
+    if (session && sb) {
+      await sb.from('projects').insert({ ...proj, user_id: session.user.id });
+    } else {
+      projects.unshift(proj);
+      localStorage.setItem('vexium_projects', JSON.stringify(projects));
+    }
+
+    closeModal();
+    localStorage.setItem('vexium_current_project', id);
+    window.location.href = 'editor.html';
+  }
+
   function closeModal() { document.getElementById('newOverlay').classList.remove('show'); }
+  document.getElementById('projNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmModal(); if (e.key === 'Escape') closeModal(); });
 
   document.getElementById('newOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
   // Custom confirm dialog

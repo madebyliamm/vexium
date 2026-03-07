@@ -2,60 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Loading…</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Vexium</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;background:#fff}
-    #f{width:100%;height:100%;border:none;display:none}
-    #ls{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#020208;color:#7070a0;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px}
-    #es{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:48px;background:#020208;color:#f2f2ff;font-family:'Plus Jakarta Sans',sans-serif}
-    .et{font-size:22px;font-weight:800}
-    .em{font-size:13px;color:#7070a0;max-width:360px;line-height:1.7;margin-top:4px}
-    .eb{margin-top:14px;background:#4f6ef7;color:#fff;border:none;border-radius:9px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;display:inline-block}
-    .sp{width:24px;height:24px;border:2px solid #13131e;border-top-color:#4f6ef7;border-radius:50%;animation:spin .7s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;background:#fff;overflow:hidden}
+    #frame{width:100%;height:100%;border:none;display:block}
+    #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;font-family:system-ui,sans-serif;font-size:14px;color:#888}
   </style>
 </head>
 <body>
-<iframe id="f" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>
-<div id="ls"><div class="sp"></div>Loading…</div>
-<div id="es">
-  <div class="et">Not Found</div>
-  <div class="em" id="em">This project doesn't exist or has been deleted.</div>
-  <a href="home.html" class="eb">Back to Vexium</a>
-</div>
-<script src="config.js"></script>
+<div id="loading">Loading…</div>
+<iframe id="frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups" style="display:none"></iframe>
+
+<script src="config.js" onerror="window._noConfig=true"></script>
 <script>
-  var CS='<'+'/'+'script>',CT='<'+'/'+'style>',sb=null;
-  try{sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
-  var pid=new URLSearchParams(location.search).get('project');
-  function err(m){document.getElementById('ls').style.display='none';document.getElementById('em').textContent=m;document.getElementById('es').style.display='flex';}
-  function escRe(s){return s.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&');}
-  function render(p){
-    var fs=p.files||{},mf=p.main_file||p.mainFile||'index.html',html=fs[mf]||'';
-    if(!html){var k=Object.keys(fs).find(function(x){return x.endsWith('.html');});if(!k){err('No HTML file found.');return;}html=fs[k];}
-    Object.keys(fs).forEach(function(n){
-      var s=fs[n];if(!s||n===mf)return;
-      if(n.endsWith('.css')){var safe=s.split(CT).join('/'+CT.slice(1));html=html.replace(new RegExp('<link\\b[^>]*href=["\']'+escRe(n)+'["\'][^>]*/?>','gi'),'<style>'+safe+CT);}
-      else if(n.endsWith('.js')){var safe=s.split(CS).join('/'+CS.slice(1));html=html.replace(new RegExp('<script\\b[^>]*src=["\']'+escRe(n)+'["\'][^>]*>[\\s\\S]*?'+CS,'gi'),'<script>'+safe+CS);}
+  let sb = null;
+  try {
+    if (!window._noConfig && typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  } catch(e) {}
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    if (!projectId) { document.getElementById('loading').textContent = 'No project specified.'; return; }
+
+    let project = null;
+
+    if (sb) {
+      try {
+        const { data } = await sb.from('projects').select('*').eq('id', projectId).single();
+        if (data) project = data;
+      } catch(e) {}
+    }
+    if (!project) {
+      try {
+        const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+        project = list.find(p => p.id === projectId) || null;
+      } catch(e) {}
+    }
+    if (!project) { document.getElementById('loading').textContent = 'Project not found.'; return; }
+
+    document.title = project.name || 'Vexium';
+
+    const fileSystem = project.files || {};
+    const mainFile = project.main_file || 'index.html';
+    let html = fileSystem[mainFile] || '';
+
+    Object.entries(fileSystem).forEach(([fn, content]) => {
+      if (fn === mainFile || !content) return;
+      if (fn.endsWith('.css')) {
+        const safe = content.replace(/<\/style>/gi, '<\\/style>');
+        html = html.replace(new RegExp(`<link[^>]+href=["']${escRe(fn)}["'][^>]*/?>`, 'gi'), `<style>${safe}</style>`);
+      } else if (fn.endsWith('.js')) {
+        const safe = content.replace(/<\/script>/gi, '<\\/script>');
+        html = html.replace(new RegExp(`<script[^>]+src=["']${escRe(fn)}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'), `<script>${safe}<\/script>`);
+      }
     });
-    html=html.replace(new RegExp('<script\\b[^>]+src=["\'][^"\']+["\'][^>]*>[\\s\\S]*?'+CS,'gi'),'');
-    html=html.replace(/<link\b[^>]+href=["'](?!https?:\/\/)[^"']*["'][^>]*\/?>/gi,'');
-    var fr=document.getElementById('f'),doc=fr.contentDocument||fr.contentWindow.document;
-    doc.open();doc.write(html);doc.close();
-    fr.style.display='block';document.getElementById('ls').style.display='none';
-    document.title=(p.name||'Untitled')+' — Vexium';
+
+    const frame = document.getElementById('frame');
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+    document.getElementById('loading').style.display = 'none';
+    frame.style.display = 'block';
   }
-  async function load(){
-    if(!pid){err('No project ID in URL.');return;}
-    var proj=null;
-    if(sb){var r=await sb.from('projects').select('*').eq('id',pid).single();if(r.data)proj=r.data;}
-    if(!proj){err('Project not found.');return;}
-    render(proj);
-  }
-  window.addEventListener('load',load);
+
+  function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
+  window.addEventListener('load', init);
 </script>
 </body>
 </html>

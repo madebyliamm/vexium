@@ -76,30 +76,19 @@
 
     /* ── PROJECT CARD ── */
     .proj-card{
-      background:var(--s1);border:1px solid var(--b1);border-radius:12px;
-      padding:22px 20px;cursor:pointer;transition:all .2s;
+      background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+      padding:28px 20px 22px;cursor:pointer;transition:all .2s;
       position:relative;overflow:hidden;text-decoration:none;display:block;
+      text-align:center;
     }
-    .proj-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(79,110,247,.03),rgba(155,121,252,.03));opacity:0;transition:opacity .2s}
-    .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
-    .proj-card:hover::before{opacity:1}
-    .pc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
-    .pc-emoji{font-size:24px;line-height:1}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0;position:relative;z-index:10}
+    .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;position:absolute;top:12px;right:12px;z-index:10}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
-    .pc-name{font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-.2px}
-    .pc-files{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:5px}
-    .pc-dot{width:3px;height:3px;border-radius:50%;background:var(--sub)}
-    .pc-updated{font-size:11px;color:var(--sub)}
-    .pc-tags{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap}
-    .pc-tag{
-      font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-      padding:2px 7px;border-radius:4px;
-    }
-    .pc-tag.html{background:rgba(79,110,247,.1);color:#818cf8}
-    .pc-tag.css{background:rgba(155,121,252,.1);color:#c4b5fd}
-    .pc-tag.js{background:rgba(251,191,36,.08);color:#fcd34d}
+    .pc-emoji{font-size:36px;line-height:1;margin-bottom:14px;display:block}
+    .pc-name{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
+    .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
 
     /* ── CONTEXT MENU ── */
     .ctx{position:fixed;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;min-width:150px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none}
@@ -292,20 +281,13 @@
       const updated = p.updated_at ? relativeTime(new Date(p.updated_at)) : 'just now';
       return `
         <a class="proj-card" href="#" onclick="openProject(event,'${p.id}')">
-          <div class="pc-top">
-            <div class="pc-emoji">${p.emoji || '💻'}</div>
-            <button class="pc-more" onclick="openCtx(event,'${p.id}')">⋯</button>
-          </div>
+          <button class="pc-more" onclick="openCtx(event,'${p.id}')">⋯</button>
+          <div class="pc-emoji">${p.emoji || '💻'}</div>
           <div class="pc-name">${esc(p.name || 'Untitled')}</div>
-          <div class="pc-files">
+          <div class="pc-meta">
             <span>${files.length} file${files.length !== 1 ? 's' : ''}</span>
             <div class="pc-dot"></div>
-            <span class="pc-updated">${updated}</span>
-          </div>
-          <div class="pc-tags">
-            ${types.includes('html') ? '<div class="pc-tag html">HTML</div>' : ''}
-            ${types.includes('css') ? '<div class="pc-tag css">CSS</div>' : ''}
-            ${types.includes('js') ? '<div class="pc-tag js">JS</div>' : ''}
+            <span>${updated}</span>
           </div>
         </a>
       `;
@@ -402,7 +384,16 @@
     // new project
     const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
     const defaultFiles = {
-      'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`
+      'index.html': `<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\"/>
+  <title>${name}</title>
+</head>
+<body>
+
+</body>
+</html>`
     };
     const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 

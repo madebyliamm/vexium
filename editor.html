@@ -62,16 +62,24 @@
     .add-dd{display:none;position:absolute;top:30px;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:4px;min-width:140px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.7)}
     .add-dd.show{display:block}
     #fileTree{flex:1;overflow-y:auto;padding:4px 0}
-    .tree-item{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 12px;font-size:11px;cursor:pointer;transition:background .1s;position:relative;font-family:var(--mono);color:var(--sub)}
+    .tree-item{display:flex;align-items:center;gap:5px;padding:4px 8px 4px 0;font-size:11.5px;cursor:pointer;transition:background .1s;position:relative;font-family:var(--mono);color:var(--sub);user-select:none}
     .tree-item:hover{background:var(--b1);color:var(--text)}
-    .tree-item.active{background:rgba(79,110,247,.07);color:var(--text)}
+    .tree-item.active{background:rgba(79,110,247,.08);color:var(--text)}
     .tree-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--a1);border-radius:0 1px 1px 0}
-    .tree-ico{width:13px;flex-shrink:0}
+    .tree-indent{flex-shrink:0;display:inline-block}
+    .tree-arrow{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--sub);transition:transform .15s;font-size:9px}
+    .tree-arrow.open{transform:rotate(90deg)}
+    .tree-arrow.leaf{visibility:hidden}
+    .tree-ico{width:13px;height:13px;flex-shrink:0}
     .tree-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .tree-main-dot{width:4px;height:4px;border-radius:50%;background:var(--a1);flex-shrink:0;opacity:.8}
-    .tree-ctx{opacity:0;background:transparent;border:none;color:var(--sub);width:18px;height:18px;border-radius:3px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .tree-ctx{opacity:0;background:transparent;border:none;color:var(--sub);width:18px;height:18px;border-radius:3px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:4px}
     .tree-item:hover .tree-ctx{opacity:1}
     .tree-ctx:hover{background:var(--b3);color:var(--text)}
+    .tree-folder-row{display:flex;align-items:center;gap:5px;padding:4px 8px 4px 0;font-size:11.5px;cursor:pointer;transition:background .1s;position:relative;font-family:var(--mono);color:var(--text);user-select:none}
+    .tree-folder-row:hover{background:var(--b1)}
+    .tree-folder-row .tree-ctx{opacity:0}
+    .tree-folder-row:hover .tree-ctx{opacity:1}
 
     /* ── CTX MENU ── */
     .ctx-menu{position:fixed;background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:4px;min-width:148px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none}
@@ -224,6 +232,10 @@
             <svg class="ctx-ico" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             New file
           </div>
+          <div class="ctx-item" onclick="closeAddDD();promptNewFolder()">
+            <svg class="ctx-ico" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            New folder
+          </div>
         </div>
       </div>
     </div>
@@ -306,13 +318,13 @@
 
 <!-- CTX MENU -->
 <div class="ctx-menu" id="ctxMenu">
-  <div class="ctx-item" onclick="ctxRename()">
+  <div class="ctx-item" id="ctxItemRename" onclick="ctxRename()">
     <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Rename
   </div>
-  <div class="ctx-item" onclick="ctxSetMain()">
+  <div class="ctx-item" id="ctxItemSetMain" onclick="ctxSetMain()">
     <svg class="ctx-ico" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Set as main
   </div>
-  <div class="ctx-item danger" onclick="ctxDelete()">
+  <div class="ctx-item danger" id="ctxItemDelete" onclick="ctxDelete()">
     <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete
   </div>
 </div>
@@ -368,8 +380,16 @@
     if (!project) {
       project = { id: projectId || 'local', name: 'Untitled', emoji: '💻', files: {}, main_file: 'index.html' };
       fileSystem = {
-        'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>My Project</title>\n</head>\n<body>\n\n
-</body>\n</html>`
+        'index.html': `<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\"/>
+  <title>My Project</title>
+</head>
+<body>
+
+</body>
+</html>`
       };
       mainFile = 'index.html';
     }
@@ -453,24 +473,103 @@
   }
 
   // ── FILE TREE ──
+  let collapsedFolders = new Set();
+
+  function fileIco(ext) {
+    const col = ext === 'html' ? '#60a5fa' : ext === 'css' ? '#a78bfa' : ext === 'js' ? '#fbbf24' : ext === 'json' ? '#34d399' : ext === 'md' ? '#94a3b8' : '#5555a0';
+    return `<svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  }
+
+  function folderIco(open) {
+    return open
+      ? `<svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`
+      : `<svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+  }
+
   function renderFileTree() {
     const el = document.getElementById('fileTree');
-    const files = Object.keys(fileSystem).sort((a, b) => {
-      const o = f => f.endsWith('.html') ? 0 : f.endsWith('.css') ? 1 : f.endsWith('.js') ? 2 : 3;
-      return o(a) - o(b) || a.localeCompare(b);
+    const allFiles = Object.keys(fileSystem).sort((a, b) => a.localeCompare(b));
+    if (!allFiles.length) { el.innerHTML = '<div style="padding:8px 12px;font-size:10px;color:var(--sub)">No files</div>'; return; }
+
+    // Build tree structure
+    const tree = {};
+    allFiles.forEach(path => {
+      const parts = path.split('/');
+      let node = tree;
+      parts.forEach((part, i) => {
+        if (i === parts.length - 1) {
+          node[part] = { __file: path };
+        } else {
+          node[part] = node[part] || {};
+          node = node[part];
+        }
+      });
     });
-    if (!files.length) { el.innerHTML = '<div style="padding:8px 12px;font-size:10px;color:var(--sub)">No files</div>'; return; }
-    el.innerHTML = files.map(f => {
-      const n = f.includes('/') ? f.split('/').pop() : f;
-      const ext = n.split('.').pop();
-      const col = ext === 'html' ? '#60a5fa' : ext === 'css' ? '#a78bfa' : ext === 'js' ? '#fbbf24' : '#5555a0';
-      return `<div class="tree-item${f === activeFile ? ' active' : ''}" onclick="openFile('${esc(f)}')">
-        <svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span class="tree-name">${esc(n)}</span>
-        ${f === mainFile ? '<div class="tree-main-dot" title="Main file"></div>' : ''}
-        <button class="tree-ctx" onclick="openCtx(event,'${esc(f)}')">⋯</button>
-      </div>`;
-    }).join('');
+
+    function renderNode(node, depth, parentPath) {
+      let html = '';
+      const indent = depth * 14;
+      const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
+        const aIsFile = av.__file !== undefined;
+        const bIsFile = bv.__file !== undefined;
+        if (aIsFile !== bIsFile) return aIsFile ? 1 : -1;
+        return a.localeCompare(b);
+      });
+
+      entries.forEach(([name, val]) => {
+        const fullPath = parentPath ? parentPath + '/' + name : name;
+        if (val.__file !== undefined) {
+          // File
+          const path = val.__file;
+          const ext = name.split('.').pop();
+          html += `<div class="tree-item${path === activeFile ? ' active' : ''}" onclick="openFile('${esc(path)}')" >
+            <span class="tree-indent" style="width:${indent + 4}px"></span>
+            <span class="tree-arrow leaf">▶</span>
+            ${fileIco(ext)}
+            <span class="tree-name">${esc(name)}</span>
+            ${path === mainFile ? '<div class="tree-main-dot" title="Main file"></div>' : ''}
+            <button class="tree-ctx" onclick="openCtx(event,'${esc(path)}')">⋯</button>
+          </div>`;
+        } else {
+          // Folder
+          const isOpen = !collapsedFolders.has(fullPath);
+          html += `<div class="tree-folder-row" onclick="toggleFolder('${esc(fullPath)}')">
+            <span class="tree-indent" style="width:${indent + 4}px"></span>
+            <span class="tree-arrow${isOpen ? ' open' : ''}">▶</span>
+            ${folderIco(isOpen)}
+            <span class="tree-name" style="color:var(--text)">${esc(name)}</span>
+            <button class="tree-ctx" onclick="folderCtx(event,'${esc(fullPath)}')">⋯</button>
+          </div>`;
+          if (isOpen) {
+            html += renderNode(val, depth + 1, fullPath);
+          }
+        }
+      });
+      return html;
+    }
+
+    el.innerHTML = renderNode(tree, 0, '');
+  }
+
+  function toggleFolder(path) {
+    if (collapsedFolders.has(path)) collapsedFolders.delete(path);
+    else collapsedFolders.add(path);
+    renderFileTree();
+  }
+
+  function folderCtx(e, folderPath) {
+    e.stopPropagation(); e.preventDefault();
+    ctxTarget = folderPath;
+    ctxIsFolder = true;
+    const menu = document.getElementById('ctxMenu');
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+    menu.style.top = Math.min(e.clientY + 4, window.innerHeight - 120) + 'px';
+    // Show only folder-relevant items
+    document.getElementById('ctxItemOpen').style.display = 'none';
+    document.getElementById('ctxItemSetMain').style.display = 'none';
+    document.getElementById('ctxItemRename').style.display = '';
+    document.getElementById('ctxItemDelete').style.display = '';
+    menu.classList.add('show');
   }
 
   // ── OPEN FILE ──
@@ -656,6 +755,20 @@
     });
   }
 
+  function promptNewFolder() {
+    showFileModal('New folder', 'components', name => {
+      if (!name) return;
+      const folderName = name.replace(/\/g, '').trim();
+      if (!folderName) return;
+      // Create a .gitkeep placeholder so the folder shows up
+      const placeholder = folderName + '/.gitkeep';
+      if (fileSystem[placeholder] !== undefined) { showToast('!', 'Folder exists'); return; }
+      fileSystem[placeholder] = '';
+      collapsedFolders.delete(folderName);
+      renderFileTree(); saveNow(); showToast('✓', 'Folder created');
+    });
+  }
+
   function getDefault(n) {
     const b = n.split('/').pop();
     if (b.endsWith('.html')) return `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${b.replace('.html','')}</title>\n</head>\n<body>\n  \n</body>\n</html>`;
@@ -669,11 +782,17 @@
   function closeAddDD() { document.getElementById('addDD').classList.remove('show'); }
   document.addEventListener('click', e => { if (!e.target.closest('#sbAddBtn')) closeAddDD(); });
 
+  let ctxIsFolder = false;
   function openCtx(e, f) {
-    e.stopPropagation(); ctxTarget = f;
+    e.stopPropagation(); e.preventDefault();
+    ctxTarget = f; ctxIsFolder = false;
     const m = document.getElementById('ctxMenu');
     m.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
     m.style.top = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+    document.getElementById('ctxItemOpen').style.display = '';
+    document.getElementById('ctxItemSetMain').style.display = '';
+    document.getElementById('ctxItemRename').style.display = '';
+    document.getElementById('ctxItemDelete').style.display = '';
     m.classList.add('show');
   }
   document.addEventListener('click', () => document.getElementById('ctxMenu').classList.remove('show'));
@@ -700,6 +819,24 @@
 
   function ctxDelete() {
     if (!ctxTarget) return;
+    if (ctxIsFolder) {
+      // Delete all files inside the folder
+      const prefix = ctxTarget + '/';
+      const toDelete = Object.keys(fileSystem).filter(f => f.startsWith(prefix));
+      if (!toDelete.length) { collapsedFolders.delete(ctxTarget); renderFileTree(); return; }
+      if (!confirm('Delete folder "' + ctxTarget + '" and all its files?')) return;
+      toDelete.forEach(f => {
+        delete fileSystem[f];
+        openTabs = openTabs.filter(t => t !== f);
+      });
+      collapsedFolders.delete(ctxTarget);
+      if (activeFile && !fileSystem[activeFile]) {
+        const next = openTabs[openTabs.length-1] || Object.keys(fileSystem)[0] || null;
+        if (next) openFile(next); else activeFile = null;
+      }
+      renderFileTree(); renderTabs(); saveNow(); showToast('✓', 'Folder deleted');
+      return;
+    }
     if (Object.keys(fileSystem).length <= 1) { showToast('!', 'Cannot delete last file'); return; }
     if (!confirm('Delete ' + ctxTarget + '?')) return;
     delete fileSystem[ctxTarget];

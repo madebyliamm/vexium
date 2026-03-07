@@ -321,8 +321,7 @@
   }
 
   async function doSignOut() {
-    const ok = await vxConfirm({ icon: '👋', title: 'Sign out?', msg: 'You can always sign back in.', ok: 'Sign out' });
-    if (!ok) return;
+    if (!confirm('Sign out?')) return;
     if (sb) { try { await sb.auth.signOut(); } catch(e) {} }
     localStorage.removeItem('vexium_guest');
     localStorage.removeItem('vexium_username');
@@ -330,10 +329,7 @@
   }
 
   async function deleteAccount() {
-    const ok1 = await vxConfirm({ icon: '🗑️', title: 'Delete account?', msg: 'This will permanently delete your account and all your projects. This cannot be undone.', ok: 'Delete', danger: true });
-    if (!ok1) return;
-    const ok2 = await vxConfirm({ icon: '⛔', title: 'Are you absolutely sure?', msg: 'There is no recovery. Everything will be gone forever.', ok: 'Yes, delete everything', danger: true });
-    if (!ok2) return;
+    if (!confirm('Delete your account and all projects? This cannot be undone.')) return;
     if (sb && session) {
       try {
         // Calls a security definer function that deletes the auth.users row,
@@ -355,42 +351,8 @@
   }
 
   // Custom confirm dialog
-  let vxConfirmResolve = null;
-  function vxConfirm({ icon = "⚠️", title, msg, ok = "Confirm", danger = false }) {
-    return new Promise(resolve => {
-      document.getElementById("vx-confirm-icon").textContent = icon;
-      document.getElementById("vx-confirm-title").textContent = title;
-      document.getElementById("vx-confirm-msg").textContent = msg;
-      const okBtn = document.getElementById("vx-confirm-ok");
-      okBtn.textContent = ok;
-      okBtn.className = "vx-btn-ok" + (danger ? " danger" : "");
-      document.getElementById("vx-confirm-backdrop").classList.add("open");
-      vxConfirmResolve = (val) => {
-        document.getElementById("vx-confirm-backdrop").classList.remove("open");
-        resolve(val);
-      };
-    });
-  }
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && vxConfirmResolve) vxConfirmResolve(false); });
-  window.addEventListener("load", () => {
-    document.getElementById("vx-confirm-backdrop").addEventListener("click", e => {
-      if (e.target.id === "vx-confirm-backdrop") vxConfirmResolve(false);
-    });
-  });
   window.addEventListener('load', init);
 </script>
 
-  <!-- Custom confirm modal -->
-  <div id="vx-confirm-backdrop" style="display:none">
-    <div id="vx-confirm-box">
-      <div id="vx-confirm-icon"></div>
-      <div id="vx-confirm-title"></div>
-      <div id="vx-confirm-msg"></div>
-      <div class="vx-confirm-btns">
-        <button class="vx-btn-cancel" onclick="vxConfirmResolve(false)">Cancel</button>
-        <button class="vx-btn-ok" id="vx-confirm-ok" onclick="vxConfirmResolve(true)">Confirm</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>

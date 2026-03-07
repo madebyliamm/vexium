@@ -369,18 +369,6 @@
       project = { id: projectId || 'local', name: 'Untitled', emoji: '💻', files: {}, main_file: 'index.html' };
       fileSystem = {
         'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>My Project</title>\n</head>\n<body>\n\n
-  <!-- Custom confirm modal -->
-  <div id="vx-confirm-backdrop" style="display:none">
-    <div id="vx-confirm-box">
-      <div id="vx-confirm-icon"></div>
-      <div id="vx-confirm-title"></div>
-      <div id="vx-confirm-msg"></div>
-      <div class="vx-confirm-btns">
-        <button class="vx-btn-cancel" onclick="vxConfirmResolve(false)">Cancel</button>
-        <button class="vx-btn-ok" id="vx-confirm-ok" onclick="vxConfirmResolve(true)">Confirm</button>
-      </div>
-    </div>
-  </div>
 </body>\n</html>`
       };
       mainFile = 'index.html';
@@ -710,11 +698,10 @@
     mainFile = ctxTarget; setUrl(mainFile); renderFileTree(); saveNow(); showToast('✓', ctxTarget + ' is main');
   }
 
-  async function ctxDelete() {
+  function ctxDelete() {
     if (!ctxTarget) return;
     if (Object.keys(fileSystem).length <= 1) { showToast('!', 'Cannot delete last file'); return; }
-    const ok = await vxConfirm({ icon: '🗑️', title: 'Delete file?', msg: 'Delete "' + ctxTarget + '"? This cannot be undone.', ok: 'Delete', danger: true });
-    if (!ok) return;
+    if (!confirm('Delete ' + ctxTarget + '?')) return;
     delete fileSystem[ctxTarget];
     openTabs = openTabs.filter(f => f !== ctxTarget);
     if (activeFile === ctxTarget) {
@@ -733,53 +720,6 @@
   }
   function closeFileModal() { document.getElementById('fileOverlay').classList.remove('show'); fileModalCb = null; }
   // Custom confirm dialog
-  let vxConfirmResolve = null;
-  function vxConfirm({ icon = "⚠️", title, msg, ok = "Confirm", danger = false }) {
-    return new Promise(resolve => {
-      document.getElementById("vx-confirm-icon").textContent = icon;
-      document.getElementById("vx-confirm-title").textContent = title;
-      document.getElementById("vx-confirm-msg").textContent = msg;
-      const okBtn = document.getElementById("vx-confirm-ok");
-      okBtn.textContent = ok;
-      okBtn.className = "vx-btn-ok" + (danger ? " danger" : "");
-      document.getElementById("vx-confirm-backdrop").classList.add("open");
-      vxConfirmResolve = (val) => {
-        document.getElementById("vx-confirm-backdrop").classList.remove("open");
-        resolve(val);
-      };
-    });
-  }
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && vxConfirmResolve) vxConfirmResolve(false); });
-  window.addEventListener("load", () => {
-    document.getElementById("vx-confirm-backdrop").addEventListener("click", e => {
-      if (e.target.id === "vx-confirm-backdrop") vxConfirmResolve(false);
-    });
-  });
-  function confirmFileModal() { const v = document.getElementById('fileInput').value.trim(); if (fileModalCb) fileModalCb(v); closeFileModal(); }
-  document.getElementById('fileOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeFileModal(); });
-  document.getElementById('fileInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmFileModal(); if (e.key === 'Escape') closeFileModal(); });
-
-  // ── TOAST ──
-  let toastT;
-  function showToast(icon, msg) {
-    clearTimeout(toastT);
-    document.getElementById('toastIcon').textContent = icon;
-    document.getElementById('toastMsg').textContent = msg;
-    document.getElementById('toast').classList.add('show');
-    toastT = setTimeout(() => document.getElementById('toast').classList.remove('show'), 2000);
-  }
-
-  // ── UTILS ──
-  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&'); }
-
-  // ── KEYBOARD ──
-  document.addEventListener('keydown', e => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveNow(); }
-    if ((e.metaKey || e.ctrlKey) && e.key === '`') { e.preventDefault(); toggleConsole(); }
-    if (e.key === 'Escape') closeFileModal();
-  });
 
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);

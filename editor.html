@@ -719,7 +719,36 @@
     setTimeout(() => { const i = document.getElementById('fileInput'); i.focus(); i.select(); }, 40);
   }
   function closeFileModal() { document.getElementById('fileOverlay').classList.remove('show'); fileModalCb = null; }
-  // Custom confirm dialog
+  document.getElementById('fileInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmFileModal(); if (e.key === 'Escape') closeFileModal(); });
+
+  function showToast(icon, msg) {
+    clearTimeout(window._toastT);
+    document.getElementById('toastIcon').textContent = icon;
+    document.getElementById('toastMsg').textContent = msg;
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    window._toastT = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function relativeTime(d) {
+    const s = Math.floor((Date.now() - d) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+  }
+
+  function confirmFileModal() {
+    const v = document.getElementById('fileInput').value.trim();
+    if (fileModalCb) fileModalCb(v);
+    closeFileModal();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeFileModal(); closeAddDD(); }
+  });
 
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);

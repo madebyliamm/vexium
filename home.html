@@ -212,18 +212,6 @@
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 
-  <!-- Custom confirm modal -->
-  <div id="vx-confirm-backdrop" style="display:none">
-    <div id="vx-confirm-box">
-      <div id="vx-confirm-icon"></div>
-      <div id="vx-confirm-title"></div>
-      <div id="vx-confirm-msg"></div>
-      <div class="vx-confirm-btns">
-        <button class="vx-btn-cancel" onclick="vxConfirmResolve(false)">Cancel</button>
-        <button class="vx-btn-ok" id="vx-confirm-ok" onclick="vxConfirmResolve(true)">Confirm</button>
-      </div>
-    </div>
-  </div>
 
 
   <script>
@@ -356,8 +344,7 @@
 
   async function ctxDelete() {
     if (!ctxTarget) return;
-    const ok = await vxConfirm({ icon: '🗑️', title: 'Delete project?', msg: 'This will permanently delete the project and all its files.', ok: 'Delete', danger: true });
-    if (!ok) return;
+    if (!confirm('Delete this project? This cannot be undone.')) return;
     if (session && sb) {
       await sb.from('projects').delete().eq('id', ctxTarget);
     } else {
@@ -387,75 +374,6 @@
 
   document.getElementById('newOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
   // Custom confirm dialog
-  let vxConfirmResolve = null;
-  function vxConfirm({ icon = "⚠️", title, msg, ok = "Confirm", danger = false }) {
-    return new Promise(resolve => {
-      document.getElementById("vx-confirm-icon").textContent = icon;
-      document.getElementById("vx-confirm-title").textContent = title;
-      document.getElementById("vx-confirm-msg").textContent = msg;
-      const okBtn = document.getElementById("vx-confirm-ok");
-      okBtn.textContent = ok;
-      okBtn.className = "vx-btn-ok" + (danger ? " danger" : "");
-      document.getElementById("vx-confirm-backdrop").classList.add("open");
-      vxConfirmResolve = (val) => {
-        document.getElementById("vx-confirm-backdrop").classList.remove("open");
-        resolve(val);
-      };
-    });
-  }
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && vxConfirmResolve) vxConfirmResolve(false); });
-  window.addEventListener("load", () => {
-    document.getElementById("vx-confirm-backdrop").addEventListener("click", e => {
-      if (e.target.id === "vx-confirm-backdrop") vxConfirmResolve(false);
-    });
-  });
-  document.getElementById('projNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmModal(); if (e.key === 'Escape') closeModal(); });
-
-  async function confirmModal() {
-    const name = document.getElementById('projNameInput').value.trim();
-    if (!name) { document.getElementById('projNameInput').focus(); return; }
-
-    if (modalMode === 'rename' && ctxTarget) {
-      if (session && sb) {
-        await sb.from('projects').update({ name, emoji: selectedEmoji, updated_at: new Date().toISOString() }).eq('id', ctxTarget);
-      } else {
-        const p = projects.find(x => x.id === ctxTarget);
-        if (p) { p.name = name; p.emoji = selectedEmoji; }
-        localStorage.setItem('vexium_projects', JSON.stringify(projects));
-      }
-      closeModal(); await loadProjects(); return;
-    }
-
-    // Create new project
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const defaultFiles = {
-      'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`
-    };
-    const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-
-    if (session && sb) {
-      await sb.from('projects').insert({ ...proj, user_id: session.user.id });
-    } else {
-      projects.unshift(proj);
-      localStorage.setItem('vexium_projects', JSON.stringify(projects));
-    }
-    closeModal();
-    localStorage.setItem('vexium_current_project', id);
-    window.location.href = 'editor.html';
-  }
-
-  function relativeTime(date) {
-    const diff = Date.now() - date.getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return m + 'm ago';
-    const h = Math.floor(m / 60);
-    if (h < 24) return h + 'h ago';
-    return Math.floor(h / 24) + 'd ago';
-  }
-
-  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
   window.addEventListener('load', init);
 </script>
 </body>

@@ -449,12 +449,26 @@
   async function loadProject() {
     if (sb && projectId) {
       try {
-        const { data: { session } } = await sb.auth.getSession();
+        // Supabase needs a moment to hydrate session from storage on fresh page load.
+        // getSession() is async but the token may not be in the client cache yet —
+        // wait for onAuthStateChange to fire READY, or just call getSession() which
+        // does read from storage synchronously in v2. Safe to call directly.
+        const { data: authData } = await sb.auth.getSession();
+        const session = authData?.session;
         if (session) {
-          const { data } = await sb.from('projects').select('*').eq('id', projectId).single();
-          if (data) { project = data; fileSystem = data.files || {}; mainFile = data.main_file || 'index.html'; }
+          const { data, error } = await sb.from('projects').select('*').eq('id', projectId).maybeSingle();
+          if (error) console.error('loadProject error:', error.message, error);
+          if (data) {
+            project = data;
+            fileSystem = data.files || {};
+            mainFile = data.main_file || 'index.html';
+          } else {
+            console.warn('Project not found in Supabase for id:', projectId);
+          }
+        } else {
+          console.warn('No session when loading project');
         }
-      } catch(e) {}
+      } catch(e) { console.error('loadProject exception:', e); }
     }
     if (!project) {
       // localStorage fallback

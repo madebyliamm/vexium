@@ -12,103 +12,99 @@
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
       --bg:#020209;--s1:#0c0c1d;--s2:#0f0f22;--b1:#16163a;--b2:#1e1e3a;--b3:#26264a;
-      --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;--dim:#1a1a35;
+      --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;
       --ok:#22c55e;--err:#ef4444;
       --sans:'Plus Jakarta Sans',sans-serif;
     }
     html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
 
-    /* ── TOPBAR ── */
+    /* ══ TOPBAR ══ */
     #topbar{
       position:sticky;top:0;z-index:200;
       height:54px;padding:0 clamp(12px,3vw,40px);
-      display:flex;align-items:center;gap:12px;
+      display:flex;align-items:center;gap:clamp(8px,1.5vw,16px);
       background:rgba(2,2,9,.92);backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(255,255,255,.04);
     }
     .tb-logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .tb-logo img{width:22px;height:22px;border-radius:5px}
-    .tb-logo-t{font-size:15px;font-weight:800;white-space:nowrap}
+    .tb-logo img{width:clamp(18px,2.2vw,22px);height:clamp(18px,2.2vw,22px);border-radius:5px}
+    .tb-logo-t{font-size:clamp(12px,1.4vw,15px);font-weight:800;white-space:nowrap}
     .tb-logo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-    /* search — grows to fill middle */
+    /* search */
     .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:320px;margin:0 auto}
-    .tb-search-ico{position:absolute;left:10px;width:13px;height:13px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none;flex-shrink:0}
+    .tb-search-ico{position:absolute;left:10px;width:13px;height:13px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none}
     .tb-search-input{width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;transition:border-color .2s,background .2s}
     .tb-search-input:focus{border-color:rgba(79,110,247,.4);background:var(--b1)}
     .tb-search-input::placeholder{color:var(--sub)}
-    .search-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none;min-width:200px}
+    .search-drop{position:absolute;top:calc(100% + 6px);left:0;min-width:240px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:6px;z-index:400;box-shadow:0 12px 40px rgba(0,0,0,.7);display:none}
     .search-drop.show{display:block}
-    .search-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .12s}
+    .sd-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:4px 8px 2px;margin-top:2px}
+    .search-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
     .search-item:hover{background:var(--b2)}
     .si-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
     .si-name{font-size:12px;font-weight:700;line-height:1.3}
     .si-handle{font-size:10px;color:var(--sub)}
-    .search-msg{font-size:12px;color:var(--sub);padding:10px 12px;text-align:center}
+    .si-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(79,110,247,.12);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .search-msg{font-size:12px;color:var(--sub);padding:12px;text-align:center}
 
-    /* right side */
-    .tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .tb-name{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
-
-    /* notifications bell */
-    .tb-bell{position:relative;width:34px;height:34px;border-radius:9px;background:transparent;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
-    .tb-bell:hover{background:var(--b2);border-color:var(--b3)}
-    .tb-bell svg{width:15px;height:15px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
-    .tb-bell:hover svg{stroke:var(--text)}
-    .bell-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--a1);border:2px solid var(--bg);display:none}
-    .bell-dot.show{display:block}
-
-    /* notif dropdown */
-    .notif-drop{position:absolute;top:calc(100% + 8px);right:0;width:300px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:0;z-index:300;box-shadow:0 12px 48px rgba(0,0,0,.7);display:none;overflow:hidden}
-    .notif-drop.show{display:block}
-    .notif-head{padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
-    .notif-head-t{font-size:13px;font-weight:800}
-    .notif-mark{font-size:11px;color:var(--a1);cursor:pointer;font-weight:600}
-    .notif-mark:hover{text-decoration:underline}
-    .notif-list{max-height:340px;overflow-y:auto}
-    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.03)}
-    .notif-item:hover{background:var(--b1)}
-    .notif-item.unread{background:rgba(79,110,247,.04)}
-    .notif-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
-    .notif-body{flex:1;min-width:0}
-    .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
-    .notif-text b{font-weight:700}
-    .notif-time{font-size:10px;color:var(--sub);margin-top:2px}
-    .notif-unread-dot{width:7px;height:7px;border-radius:50%;background:var(--a1);flex-shrink:0;margin-top:5px}
-    .notif-empty{padding:32px 16px;text-align:center;font-size:12px;color:var(--sub)}
-
-    /* pfp */
+    /* right cluster: pfp then bell */
+    .tb-right{display:flex;align-items:center;gap:clamp(6px,1vw,12px);flex-shrink:0}
+    .tb-name{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap;max-width:clamp(50px,8vw,100px);overflow:hidden;text-overflow:ellipsis}
     .tb-pfp{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
 
-    /* ── PAGE ── */
-    .page{max-width:1040px;margin:0 auto;padding:48px clamp(16px,4vw,40px)}
+    /* bell — no border box, right of pfp */
+    .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border-radius:8px;transition:background .15s}
+    .tb-bell svg{width:17px;height:17px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+    .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
+    .bell-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--a1);border:2px solid var(--bg);display:none}
+    .bell-dot.show{display:block}
 
-    /* ── HEADER ROW ── */
+    /* notif panel */
+    .notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:310px;background:var(--s1);border:1px solid var(--b2);border-radius:14px;z-index:400;box-shadow:0 16px 56px rgba(0,0,0,.8);display:none;overflow:hidden}
+    .notif-drop.show{display:block}
+    .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+    .notif-head-t{font-size:13px;font-weight:800}
+    .notif-mark{font-size:11px;color:var(--sub);cursor:pointer;font-weight:600;transition:color .12s}
+    .notif-mark:hover{color:var(--text)}
+    .notif-list{max-height:360px;overflow-y:auto}
+    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(255,255,255,.025)}
+    .notif-item:last-child{border-bottom:none}
+    .notif-item:hover{background:var(--b1)}
+    .notif-item.unread{background:rgba(79,110,247,.05)}
+    .notif-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+    .notif-body{flex:1;min-width:0}
+    .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
+    .notif-text b{font-weight:700;color:#fff}
+    .notif-time{font-size:10px;color:var(--sub);margin-top:2px}
+    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--a1);flex-shrink:0;margin-top:6px}
+    .notif-empty{padding:36px 16px;text-align:center;font-size:12px;color:var(--sub)}
+
+    /* ══ PAGE ══ */
+    .page{max-width:1040px;margin:0 auto;padding:48px clamp(16px,4vw,40px)}
     .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;gap:12px;flex-wrap:wrap}
     .page-title{font-size:24px;font-weight:800;letter-spacing:-.5px}
     .page-sub{font-size:13px;color:var(--sub);margin-top:3px}
     .new-btn{display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);box-shadow:0 0 20px rgba(79,110,247,.25);transition:all .2s;white-space:nowrap}
     .new-btn:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.45)}
 
-    /* ── EMPTY ── */
+    /* empty */
     .empty{text-align:center;padding:80px 20px;border:1px dashed var(--b2);border-radius:14px;display:none}
     .empty.show{display:block}
     .empty-icon{font-size:40px;margin-bottom:16px}
     .empty-t{font-size:16px;font-weight:700;margin-bottom:6px}
     .empty-s{font-size:13px;color:var(--sub);margin-bottom:24px}
 
-    /* ── PROJECT GRID ── */
+    /* grid */
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 
-    /* ── PROJECT CARD ── */
-    .proj-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center;display:block;text-decoration:none}
+    /* card */
+    .proj-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
     .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
-    /* ··· button top-right */
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
-    /* visibility badge top-left */
     .pc-vis{position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;pointer-events:none;line-height:1.4}
     .pc-vis.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
     .pc-vis.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
@@ -117,114 +113,131 @@
     .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
 
-    /* ── SECTION HEAD ── */
+    /* section */
     .section-head{margin:52px 0 20px}
     .section-title{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
     .section-sub{font-size:13px;color:var(--sub)}
-
-    /* ── LOADING ── */
     .loading{text-align:center;padding:60px;color:var(--sub);font-size:13px}
 
-    /* ─────────────────────────────────────────
-       PROJECT SETTINGS MODAL
-    ───────────────────────────────────────── */
-    .overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:16px}
+    /* ══ OVERLAYS ══ */
+    .overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
     .overlay.show{display:flex}
 
-    /* project settings modal */
-    .ps-modal{background:var(--s1);border:1px solid var(--b2);border-radius:18px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.8)}
-    .ps-header{padding:22px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-    .ps-proj-info{display:flex;align-items:center;gap:14px}
-    .ps-emoji-btn{font-size:36px;line-height:1;cursor:pointer;padding:6px;border-radius:10px;transition:background .15s;background:transparent;border:none;user-select:none}
-    .ps-emoji-btn:hover{background:var(--b2)}
-    .ps-title-area{}
-    .ps-proj-name{font-size:18px;font-weight:800;letter-spacing:-.4px;margin-bottom:2px}
-    .ps-proj-meta{font-size:11px;color:var(--sub)}
-    .ps-close{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;flex-shrink:0}
+    /* ══ PROJECT SETTINGS MODAL ══ */
+    .ps-modal{
+      background:var(--s1);border:1px solid var(--b2);border-radius:20px;
+      width:480px;max-width:100%;max-height:88vh;overflow-y:auto;
+      box-shadow:0 40px 100px rgba(0,0,0,.9);
+      display:flex;flex-direction:column;
+    }
+
+    /* hero band at top */
+    .ps-hero{
+      background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));
+      border-bottom:1px solid var(--b1);
+      padding:24px 24px 20px;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      flex-shrink:0;
+    }
+    .ps-hero-left{display:flex;align-items:center;gap:14px}
+    .ps-hero-emoji{font-size:40px;line-height:1}
+    .ps-hero-name{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px}
+    .ps-hero-meta{font-size:11px;color:var(--sub)}
+    .ps-close{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
     .ps-close:hover{background:var(--b2);color:var(--text)}
 
-    .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:6px}
+    /* body */
+    .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
 
-    /* rename row */
-    .ps-section{margin-bottom:4px}
-    .ps-sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sub);margin-bottom:8px}
-    .ps-input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:border-color .15s}
-    .ps-input:focus{border-color:rgba(79,110,247,.4)}
+    /* field group */
+    .ps-field{display:flex;flex-direction:column;gap:6px}
+    .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
+    .ps-input{background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
+    .ps-input:focus{border-color:rgba(79,110,247,.5)}
     .ps-input::placeholder{color:var(--sub)}
 
-    /* emoji picker */
-    .emoji-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-    .emoji-opt{font-size:22px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none}
+    /* emoji row */
+    .emoji-strip{display:flex;gap:5px;flex-wrap:wrap}
+    .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;flex-shrink:0}
     .emoji-opt:hover{background:var(--b2)}
-    .emoji-opt.sel{background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.3)}
+    .emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
 
-    /* toggle row */
-    .ps-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border:1px solid var(--b2);border-radius:10px}
-    .pt-left{}
-    .pt-label{font-size:13px;font-weight:700}
-    .pt-sub{font-size:11px;color:var(--sub);margin-top:2px}
-    .toggle{width:38px;height:22px;border-radius:99px;background:var(--b2);position:relative;cursor:pointer;transition:background .2s;border:none;padding:0;flex-shrink:0}
+    /* visibility toggle card */
+    .ps-toggle-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--b2);border-radius:10px}
+    .ptc-info{}
+    .ptc-label{font-size:13px;font-weight:700}
+    .ptc-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .toggle{width:36px;height:20px;border-radius:99px;background:var(--b3);position:relative;cursor:pointer;transition:background .2s;border:none;padding:0;flex-shrink:0}
     .toggle.on{background:var(--a1)}
-    .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
-    .toggle.on::after{left:19px}
-
-    /* action buttons */
-    .ps-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-    .ps-btn{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--b2);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
-    .ps-btn:hover{background:var(--b2);border-color:var(--b3)}
-    .ps-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.7;flex-shrink:0}
-    .ps-btn.danger{color:#ef4444;border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04)}
-    .ps-btn.danger:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .18s}
+    .toggle.on::after{left:18px}
 
     /* divider */
-    .ps-divider{height:1px;background:var(--b1);margin:4px 0}
+    .ps-div{height:1px;background:var(--b1);margin:0 -24px}
 
     /* collaborators */
-    .collab-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-    .cl-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:1px solid var(--b1);border-radius:9px}
+    .collab-list{display:flex;flex-direction:column;gap:6px}
+    .cl-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--b1);border-radius:9px}
     .cl-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
     .cl-info{flex:1;min-width:0}
     .cl-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cl-handle{font-size:10px;color:var(--sub)}
-    .cl-role{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
-    .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:14px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .cl-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
+    .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
     .cl-rm:hover{background:rgba(239,68,68,.1);color:#ef4444}
-    .invite-row{display:flex;gap:8px}
-    .msg{font-size:11px;min-height:14px;margin-top:6px}
-    .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+    .cl-none{font-size:11px;color:var(--sub);padding:2px 0}
 
-    /* save bar */
-    .ps-save{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end}
-    .mbtn{padding:9px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
+    /* invite search */
+    .invite-search-wrap{position:relative}
+    .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
+    .invite-drop.show{display:block}
+    .invite-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .1s}
+    .invite-item:hover{background:var(--b2)}
+    .inv-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
+    .inv-name{font-size:12px;font-weight:700}
+    .inv-handle{font-size:10px;color:var(--sub)}
+    .inv-rel{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(79,110,247,.1);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .invite-msg{font-size:11px;margin-top:5px;min-height:14px}
+    .invite-msg.ok{color:var(--ok)} .invite-msg.err{color:var(--err)}
+
+    /* delete zone */
+    .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .ps-delete-btn:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+    .ps-delete-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+    /* footer */
+    .ps-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+    .mbtn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
     .mbtn-cancel{background:var(--b2);color:var(--sub)}
     .mbtn-cancel:hover{background:var(--b3);color:var(--text)}
-    .mbtn-ok{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
+    .mbtn-ok{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 0 16px rgba(79,110,247,.3)}
     .mbtn-ok:hover{opacity:.9}
 
-    /* ── NEW PROJECT MODAL ── */
-    .modal{background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:32px;width:360px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.7)}
+    /* ══ NEW PROJECT MODAL ══ */
+    .modal{background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:30px;width:360px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.8)}
     .modal-t{font-size:18px;font-weight:800;margin-bottom:22px;letter-spacing:-.3px}
     .m-field{margin-bottom:14px}
-    .m-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block}
+    .m-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;display:block}
     .m-input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--sans);transition:border-color .15s}
     .m-input:focus{border-color:rgba(79,110,247,.4)}
     .m-input::placeholder{color:var(--sub)}
     .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 
-    /* ── TOAST ── */
-    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:10px 20px;font-size:12px;display:flex;align-items:center;gap:8px;opacity:0;transition:all .22s;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap}
+    /* ══ TOAST ══ */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:10px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
     #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-    @media(max-width:560px){
+    @media(max-width:500px){
       .tb-name{display:none}
-      .ps-actions{grid-template-columns:1fr}
+      .tb-search{max-width:none}
     }
   </style>
 </head>
 <body>
 
 <div id="topbar">
-  <a href="index.html" class="tb-logo">
+  <!-- Logo → home.html (since we're on home, going to home reloads — that's fine) -->
+  <a href="home.html" class="tb-logo">
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
   </a>
@@ -238,9 +251,9 @@
 
   <div class="tb-right">
     <span class="tb-name" id="tbName">—</span>
-
-    <!-- NOTIFICATIONS BELL -->
-    <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()" style="position:relative">
+    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
+    <!-- Bell sits RIGHT of pfp, no box -->
+    <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <div class="bell-dot" id="bellDot"></div>
       <div class="notif-drop" id="notifDrop" onclick="event.stopPropagation()">
@@ -248,13 +261,9 @@
           <span class="notif-head-t">Notifications</span>
           <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
         </div>
-        <div class="notif-list" id="notifList">
-          <div class="notif-empty">Loading…</div>
-        </div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
       </div>
     </div>
-
-    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
 </div>
 
@@ -269,7 +278,6 @@
       New project
     </button>
   </div>
-
   <div class="loading" id="loadingState">Loading projects…</div>
   <div class="empty" id="emptyState">
     <div class="empty-icon">💻</div>
@@ -279,7 +287,6 @@
   </div>
   <div class="proj-grid" id="projectGrid"></div>
 
-  <!-- SHARED WITH ME -->
   <div id="sharedSection" style="display:none">
     <div class="section-head">
       <div class="section-title">Shared with me</div>
@@ -292,12 +299,13 @@
 <!-- ══ PROJECT SETTINGS MODAL ══ -->
 <div class="overlay" id="psOverlay">
   <div class="ps-modal">
-    <div class="ps-header">
-      <div class="ps-proj-info">
-        <button class="ps-emoji-btn" id="psEmojiBtn" onclick="toggleEmojiPicker()">💻</button>
-        <div class="ps-title-area">
-          <div class="ps-proj-name" id="psProjName">Project</div>
-          <div class="ps-proj-meta" id="psProjMeta">0 files · just now</div>
+    <!-- Hero -->
+    <div class="ps-hero">
+      <div class="ps-hero-left">
+        <div class="ps-hero-emoji" id="psHeroEmoji">💻</div>
+        <div>
+          <div class="ps-hero-name" id="psHeroName">Project</div>
+          <div class="ps-hero-meta" id="psHeroMeta">—</div>
         </div>
       </div>
       <button class="ps-close" onclick="closePsModal()">✕</button>
@@ -305,64 +313,56 @@
 
     <div class="ps-body">
 
-      <!-- EMOJI PICKER (hidden by default) -->
-      <div id="emojiPickerWrap" style="display:none">
-        <div class="ps-sec-label">Choose icon</div>
-        <div class="emoji-grid" id="emojiGrid"></div>
-        <div style="height:8px"></div>
+      <!-- ICON -->
+      <div class="ps-field">
+        <div class="ps-label">Icon</div>
+        <div class="emoji-strip" id="psEmojiStrip"></div>
       </div>
 
-      <!-- RENAME -->
-      <div class="ps-section">
-        <div class="ps-sec-label">Name</div>
-        <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"/>
+      <!-- NAME -->
+      <div class="ps-field">
+        <div class="ps-label">Name</div>
+        <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"
+          oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
       </div>
 
-      <div class="ps-divider"></div>
+      <div class="ps-div"></div>
 
-      <!-- VISIBILITY TOGGLE -->
-      <div class="ps-toggle-row">
-        <div class="pt-left">
-          <div class="pt-label">Public project</div>
-          <div class="pt-sub">Anyone with the link can view it</div>
+      <!-- VISIBILITY -->
+      <div class="ps-toggle-card">
+        <div class="ptc-info">
+          <div class="ptc-label" id="psVisLabel">Private</div>
+          <div class="ptc-sub" id="psVisSub">Only you can see this project</div>
         </div>
         <button class="toggle" id="psPublicToggle" onclick="togglePsPublic()"></button>
       </div>
 
-      <div class="ps-divider"></div>
+      <div class="ps-div"></div>
 
       <!-- COLLABORATORS -->
-      <div class="ps-section">
-        <div class="ps-sec-label">Collaborators</div>
+      <div class="ps-field">
+        <div class="ps-label">Collaborators</div>
         <div class="collab-list" id="psCollabList"></div>
-        <div class="invite-row">
-          <input class="ps-input" id="psInviteInput" placeholder="@username" style="flex:1"/>
-          <button class="mbtn mbtn-ok" onclick="psInvite()" style="white-space:nowrap;padding:10px 16px">Invite</button>
+        <div style="height:6px"></div>
+        <div class="invite-search-wrap">
+          <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
+            oninput="onInviteInput()" onkeydown="onInviteKey(event)"/>
+          <div class="invite-drop" id="inviteDrop"></div>
         </div>
-        <div class="msg" id="psInviteMsg"></div>
+        <div class="invite-msg" id="psInviteMsg"></div>
       </div>
 
-      <div class="ps-divider"></div>
+      <div class="ps-div"></div>
 
-      <!-- QUICK ACTIONS -->
-      <div>
-        <div class="ps-sec-label">Actions</div>
-        <div class="ps-actions">
-          <button class="ps-btn" onclick="psOpenEditor()">
-            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Open in editor
-          </button>
-          <button class="ps-btn" onclick="psViewLive()">
-            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View live
-          </button>
-          <button class="ps-btn danger" onclick="psDelete()">
-            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete project
-          </button>
-        </div>
-      </div>
+      <!-- DELETE -->
+      <button class="ps-delete-btn" onclick="psDelete()">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Delete project
+      </button>
 
     </div>
 
-    <div class="ps-save">
+    <div class="ps-footer">
       <button class="mbtn mbtn-cancel" onclick="closePsModal()">Cancel</button>
       <button class="mbtn mbtn-ok" onclick="psSave()">Save changes</button>
     </div>
@@ -375,7 +375,7 @@
     <div class="modal-t">New project</div>
     <div class="m-field">
       <label class="m-label">Icon</label>
-      <div class="emoji-grid" id="emojiRow" style="gap:6px;flex-wrap:wrap;display:flex"></div>
+      <div class="emoji-strip" id="emojiRow" style="gap:5px;flex-wrap:wrap;display:flex"></div>
     </div>
     <div class="m-field">
       <label class="m-label">Name</label>
@@ -388,46 +388,63 @@
   </div>
 </div>
 
-<div id="toast"><span id="toastIco"></span><span id="toastMsg" style="margin-left:4px"></span></div>
+<div id="toast"><span id="toastMsg"></span></div>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
   let sb=null, session=null;
   let projects=[], selectedEmoji='💻';
   let psProjectId=null, psCurPublic=false, psEmojiCur='💻';
+  let myFollowing=[], myFollowers=[];
   const EMOJIS=['💻','🚀','🎨','⚡','🔥','🛠','🌐','📱','🎯','🧪','✨','🦄','🎮','🤖','💡','🔬'];
 
-  try {
+  try{
     if(!window._noConfig&&typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined')
       sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  } catch(e){}
+  }catch(e){}
 
   /* ── INIT ── */
-  async function init() {
+  async function init(){
     const uname=localStorage.getItem('vexium_username')||'Guest';
     document.getElementById('tbName').textContent=uname;
     document.getElementById('tbPfp').textContent=uname.charAt(0).toUpperCase();
     if(sb){
       try{
-        const {data}=await sb.auth.getSession();
+        const{data}=await sb.auth.getSession();
         session=data?.session;
         if(!session&&!localStorage.getItem('vexium_guest')){location.href='auth.html';return;}
       }catch(e){}
     }
-    buildEmojiRow();
+    buildNewEmojiRow();
     await loadProjects();
     await loadShared();
-    if(session&&sb) loadNotifications();
+    if(session&&sb){
+      loadNotifications();
+      loadSocialGraph();
+    }
+  }
+
+  /* ── SOCIAL GRAPH (for search prioritization) ── */
+  async function loadSocialGraph(){
+    if(!sb||!session)return;
+    try{
+      const[{data:fwing},{data:fwers}]=await Promise.all([
+        sb.from('follows').select('following_id,profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',session.user.id),
+        sb.from('follows').select('follower_id,profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',session.user.id)
+      ]);
+      myFollowing=(fwing||[]).map(r=>({id:r.following_id,...r.profiles}));
+      myFollowers=(fwers||[]).map(r=>({id:r.follower_id,...r.profiles}));
+    }catch(e){}
   }
 
   /* ── PROJECTS ── */
-  async function loadProjects() {
+  async function loadProjects(){
     document.getElementById('loadingState').style.display='block';
     document.getElementById('emptyState').classList.remove('show');
     document.getElementById('projectGrid').innerHTML='';
     if(session&&sb){
       try{const{data}=await sb.from('projects').select('*').eq('user_id',session.user.id).order('updated_at',{ascending:false});projects=data||[];}catch(e){projects=[];}
-    } else {
+    }else{
       try{projects=JSON.parse(localStorage.getItem('vexium_projects')||'[]');}catch(e){projects=[];}
     }
     document.getElementById('loadingState').style.display='none';
@@ -467,7 +484,7 @@
       document.getElementById('sharedGrid').innerHTML=shared.map(p=>{
         const fc=Object.keys(p.files||{}).length;
         return `<div class="proj-card" onclick="openShared('${p.id}')">
-          <div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.2)">🤝 Shared</div>
+          <div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>
           <div class="pc-emoji">${p.emoji||'💻'}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
           <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>Collaborator</span></div>
@@ -478,7 +495,7 @@
 
   function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html';}
 
-  /* ── PROJECT SETTINGS MODAL ── */
+  /* ── PS MODAL ── */
   async function openPsModal(e,id){
     e.preventDefault();e.stopPropagation();
     psProjectId=id;
@@ -487,49 +504,47 @@
     psCurPublic=!!p.is_public;
     psEmojiCur=p.emoji||'💻';
 
-    // fill header
-    document.getElementById('psEmojiBtn').textContent=psEmojiCur;
-    document.getElementById('psProjName').textContent=p.name||'Untitled';
+    document.getElementById('psHeroEmoji').textContent=psEmojiCur;
+    document.getElementById('psHeroName').textContent=p.name||'Untitled';
     const fc=Object.keys(p.files||{}).length;
-    document.getElementById('psProjMeta').textContent=fc+' file'+(fc!==1?'s':'')+' · '+relTime(new Date(p.updated_at||Date.now()));
+    document.getElementById('psHeroMeta').textContent=fc+' file'+(fc!==1?'s':'')+' · Updated '+relTime(new Date(p.updated_at||Date.now()));
     document.getElementById('psNameInput').value=p.name||'';
-    document.getElementById('emojiPickerWrap').style.display='none';
-    buildPsEmojiGrid();
-
-    // toggle
-    const tog=document.getElementById('psPublicToggle');
-    tog.className='toggle'+(psCurPublic?' on':'');
-
-    // collabs
+    buildPsEmojiStrip();
+    updateVisToggle();
     document.getElementById('psInviteMsg').textContent='';
+    document.getElementById('psInviteMsg').className='invite-msg';
     document.getElementById('psInviteInput').value='';
+    hideInviteDrop();
     await loadPsCollabs();
-
     document.getElementById('psOverlay').classList.add('show');
   }
 
-  function closePsModal(){document.getElementById('psOverlay').classList.remove('show');}
+  function closePsModal(){
+    document.getElementById('psOverlay').classList.remove('show');
+    hideInviteDrop();
+  }
 
-  function buildPsEmojiGrid(){
-    document.getElementById('emojiGrid').innerHTML=EMOJIS.map(em=>
+  function buildPsEmojiStrip(){
+    document.getElementById('psEmojiStrip').innerHTML=EMOJIS.map(em=>
       `<div class="emoji-opt${em===psEmojiCur?' sel':''}" onclick="pickPsEmoji('${em}')">${em}</div>`
     ).join('');
   }
 
-  function toggleEmojiPicker(){
-    const w=document.getElementById('emojiPickerWrap');
-    w.style.display=w.style.display==='none'?'block':'none';
-  }
-
   function pickPsEmoji(em){
     psEmojiCur=em;
-    document.getElementById('psEmojiBtn').textContent=em;
-    document.querySelectorAll('#emojiGrid .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
+    document.getElementById('psHeroEmoji').textContent=em;
+    document.querySelectorAll('#psEmojiStrip .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
   }
 
   function togglePsPublic(){
     psCurPublic=!psCurPublic;
+    updateVisToggle();
+  }
+
+  function updateVisToggle(){
     document.getElementById('psPublicToggle').className='toggle'+(psCurPublic?' on':'');
+    document.getElementById('psVisLabel').textContent=psCurPublic?'Public':'Private';
+    document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
   }
 
   async function psSave(){
@@ -539,37 +554,35 @@
     const updates={name,emoji:psEmojiCur,is_public:psCurPublic,updated_at:new Date().toISOString()};
     if(session&&sb){
       const{error}=await sb.from('projects').update(updates).eq('id',psProjectId);
-      if(error){showToast('✗','Save failed');return;}
-    } else {
+      if(error){showToast('Save failed — '+error.message);return;}
+    }else{
       const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]');
       const idx=list.findIndex(x=>x.id===psProjectId);
       if(idx>=0)Object.assign(list[idx],updates);
       localStorage.setItem('vexium_projects',JSON.stringify(list));
     }
     closePsModal();
-    showToast('✓','Saved');
+    showToast('Changes saved ✓');
     await loadProjects();
   }
 
-  function psOpenEditor(){closePsModal();localStorage.setItem('vexium_current_project',psProjectId);location.href='editor.html';}
-  function psViewLive(){window.open('viewer.html?project='+psProjectId,'_blank');}
   async function psDelete(){
     if(!psProjectId)return;
     if(!confirm('Delete this project? This cannot be undone.'))return;
     if(session&&sb){await sb.from('projects').delete().eq('id',psProjectId);}
     else{const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==psProjectId);localStorage.setItem('vexium_projects',JSON.stringify(list));}
     closePsModal();
-    showToast('🗑','Deleted');
+    showToast('Project deleted');
     await loadProjects();
   }
 
-  /* COLLABORATORS inside ps modal */
+  /* ── COLLABS ── */
   async function loadPsCollabs(){
     const list=document.getElementById('psCollabList');
     if(!sb||!session){list.innerHTML='';return;}
     try{
       const{data}=await sb.from('project_members').select('user_id,role,profiles(username,display_name)').eq('project_id',psProjectId);
-      if(!data||!data.length){list.innerHTML='<div style="font-size:11px;color:var(--sub);padding:2px 0">No collaborators yet.</div>';return;}
+      if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
       list.innerHTML=data.map(m=>{
         const n=m.profiles?.display_name||m.profiles?.username||'Unknown';
         return `<div class="cl-item">
@@ -582,63 +595,108 @@
     }catch(e){list.innerHTML='';}
   }
 
-  async function psInvite(){
-    const uname=document.getElementById('psInviteInput').value.trim().replace('@','');
-    const msg=document.getElementById('psInviteMsg');
-    if(!uname){msg.textContent='Enter a username.';msg.className='msg err';return;}
-    if(!sb||!session)return;
-    try{
-      const{data:uid}=await sb.rpc('get_user_id_by_username',{uname});
-      if(!uid){msg.textContent='User not found.';msg.className='msg err';return;}
-      if(uid===session.user.id){msg.textContent="That's you!";msg.className='msg err';return;}
-      const{error}=await sb.from('project_members').insert({project_id:psProjectId,user_id:uid,role:'editor',invited_by:session.user.id});
-      if(error&&error.code==='23505'){msg.textContent='Already a collaborator.';msg.className='msg err';return;}
-      if(error){msg.textContent=error.message;msg.className='msg err';return;}
-      msg.textContent='@'+uname+' invited!';msg.className='msg ok';
-      document.getElementById('psInviteInput').value='';
-      await loadPsCollabs();
-      setTimeout(()=>{msg.textContent='';msg.className='msg';},3000);
-    }catch(e){msg.textContent='Could not invite.';msg.className='msg err';}
-  }
-
   async function psRemoveCollab(uid){
     if(!confirm('Remove this collaborator?'))return;
     await sb.from('project_members').delete().eq('project_id',psProjectId).eq('user_id',uid);
     await loadPsCollabs();
   }
 
-  /* close modal on backdrop click */
-  document.getElementById('psOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('psOverlay'))closePsModal();});
-  document.getElementById('newOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('newOverlay'))closeNewModal();});
-
-  /* ── NEW PROJECT MODAL ── */
-  function buildEmojiRow(){
-    document.getElementById('emojiRow').innerHTML=EMOJIS.map(e=>
-      `<div class="emoji-opt${e==='💻'?' sel':''}" onclick="pickNewEmoji('${e}')">${e}</div>`
-    ).join('');
-    selectedEmoji='💻';
+  /* INVITE SEARCH — shows followers/following first */
+  let inviteTimer=null;
+  function onInviteInput(){
+    clearTimeout(inviteTimer);
+    const q=document.getElementById('psInviteInput').value.trim();
+    if(!q){showInviteSuggestions();return;}
+    inviteTimer=setTimeout(()=>searchInvite(q),240);
   }
-  function pickNewEmoji(e){selectedEmoji=e;document.querySelectorAll('#emojiRow .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===e));}
-  function openNewModal(){document.getElementById('projNameInput').value='';buildEmojiRow();document.getElementById('newOverlay').classList.add('show');setTimeout(()=>document.getElementById('projNameInput').focus(),40);}
-  function closeNewModal(){document.getElementById('newOverlay').classList.remove('show');}
-  document.getElementById('projNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmNew();if(e.key==='Escape')closeNewModal();});
-
-  async function confirmNew(){
-    const name=document.getElementById('projNameInput').value.trim();
-    if(!name){document.getElementById('projNameInput').focus();return;}
-    const id='proj_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-    const proj={id,name,emoji:selectedEmoji,files:{'index.html':`<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`},main_file:'index.html',is_public:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
-    if(session&&sb){
-      const{error}=await sb.from('projects').insert({...proj,user_id:session.user.id});
-      if(error){console.error('insert error:',error);alert('Could not save: '+error.message);return;}
-    } else {
-      projects.unshift(proj);
-      localStorage.setItem('vexium_projects',JSON.stringify(projects));
+  function onInviteKey(e){
+    if(e.key==='Escape'){hideInviteDrop();document.getElementById('psInviteInput').blur();}
+    if(e.key==='Enter'){
+      const first=document.querySelector('#inviteDrop .invite-item');
+      if(first)first.click();
     }
-    closeNewModal();
-    localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
   }
+
+  function showInviteSuggestions(){
+    if(!myFollowing.length&&!myFollowers.length){hideInviteDrop();return;}
+    // show friends (mutual) then following then followers
+    const mutual=myFollowing.filter(f=>myFollowers.find(r=>r.id===f.id));
+    const onlyFollowing=myFollowing.filter(f=>!myFollowers.find(r=>r.id===f.id));
+    const onlyFollowers=myFollowers.filter(r=>!myFollowing.find(f=>f.id===r.id));
+    let html='';
+    if(mutual.length){html+='<div class="sd-section-label">Friends</div>'+mutual.map(u=>inviteItemHTML(u,'friend')).join('');}
+    if(onlyFollowing.length){html+='<div class="sd-section-label">Following</div>'+onlyFollowing.map(u=>inviteItemHTML(u,'following')).join('');}
+    if(onlyFollowers.length){html+='<div class="sd-section-label">Followers</div>'+onlyFollowers.map(u=>inviteItemHTML(u,'follower')).join('');}
+    renderInviteDrop(html);
+  }
+
+  async function searchInvite(q){
+    let html='';
+    // local social graph results first
+    const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
+      .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
+    if(socialMatches.length){
+      html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>inviteItemHTML(u,getRelLabel(u.id))).join('');
+    }
+    // then search supabase
+    if(sb){
+      try{
+        const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(5);
+        const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
+        if(others.length){html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>inviteItemHTML(u,'')).join('');}
+      }catch(e){}
+    }
+    renderInviteDrop(html||'<div class="search-msg">No users found</div>');
+  }
+
+  function getRelLabel(uid){
+    const isFollowing=myFollowing.find(f=>f.id===uid);
+    const isFollower=myFollowers.find(r=>r.id===uid);
+    if(isFollowing&&isFollower)return'friend';
+    if(isFollowing)return'following';
+    if(isFollower)return'follower';
+    return'';
+  }
+
+  function inviteItemHTML(u,rel){
+    const n=u.display_name||u.username||'?';
+    const relBadge=rel?`<div class="inv-rel">${rel}</div>`:'';
+    return `<div class="invite-item" onclick="doInvite('${esc(u.username||'')}')">
+      <div class="inv-av">${n.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="inv-name">${esc(n)}</div><div class="inv-handle">@${esc(u.username||'')}</div></div>
+      ${relBadge}
+    </div>`;
+  }
+
+  function renderInviteDrop(html){
+    const drop=document.getElementById('inviteDrop');
+    drop.innerHTML=html;
+    drop.classList.add('show');
+  }
+  function hideInviteDrop(){document.getElementById('inviteDrop').classList.remove('show');}
+
+  async function doInvite(uname){
+    const msg=document.getElementById('psInviteMsg');
+    hideInviteDrop();
+    document.getElementById('psInviteInput').value='';
+    if(!uname||!sb||!session)return;
+    try{
+      const{data:uid}=await sb.rpc('get_user_id_by_username',{uname});
+      if(!uid){msg.textContent='User not found.';msg.className='invite-msg err';return;}
+      if(uid===session.user.id){msg.textContent="That's you!";msg.className='invite-msg err';return;}
+      const{error}=await sb.from('project_members').insert({project_id:psProjectId,user_id:uid,role:'editor',invited_by:session.user.id});
+      if(error&&error.code==='23505'){msg.textContent='@'+uname+' is already a collaborator.';msg.className='invite-msg err';return;}
+      if(error){msg.textContent=error.message;msg.className='invite-msg err';return;}
+      msg.textContent='@'+uname+' invited ✓';msg.className='invite-msg ok';
+      await loadPsCollabs();
+      setTimeout(()=>{msg.textContent='';msg.className='invite-msg';},3000);
+    }catch(e){msg.textContent='Could not invite.';msg.className='invite-msg err';}
+  }
+
+  /* focus invite input → show suggestions */
+  document.getElementById('psInviteInput').addEventListener('focus',()=>{
+    if(!document.getElementById('psInviteInput').value.trim())showInviteSuggestions();
+  });
 
   /* ── NOTIFICATIONS ── */
   let notifLoaded=false;
@@ -646,28 +704,29 @@
   async function loadNotifications(){
     if(!sb||!session)return;
     try{
-      const{data}=await sb.from('notifications')
+      const{data,error}=await sb.from('notifications')
         .select('*,actor:actor_id(username,display_name),project:project_id(name)')
         .eq('user_id',session.user.id)
         .order('created_at',{ascending:false})
         .limit(20);
+      if(error){console.warn('notif load:',error.message);return;}
       const notifs=data||[];
       const unread=notifs.filter(n=>!n.read).length;
       document.getElementById('bellDot').classList.toggle('show',unread>0);
       renderNotifs(notifs);
       notifLoaded=true;
-    }catch(e){}
+    }catch(e){console.warn('notif exception:',e);}
   }
 
   function renderNotifs(notifs){
     const list=document.getElementById('notifList');
-    if(!notifs.length){list.innerHTML='<div class="notif-empty">No notifications yet</div>';return;}
+    if(!notifs.length){list.innerHTML='<div class="notif-empty">All caught up ✓</div>';return;}
     list.innerHTML=notifs.map(n=>{
       const actor=n.actor?.display_name||n.actor?.username||'Someone';
       let text='';
       if(n.type==='follow') text=`<b>${esc(actor)}</b> started following you`;
-      else if(n.type==='project_invite') text=`<b>${esc(actor)}</b> invited you to <b>${esc(n.project?.name||'a project')}</b>`;
-      return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${n.actor?.username||''}','${n.project_id||''}')">
+      else if(n.type==='project_invite') text=`<b>${esc(actor)}</b> invited you to collaborate on <b>${esc(n.project?.name||'a project')}</b>`;
+      return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(n.actor?.username||'')}','${n.project_id||''}')">
         <div class="notif-av">${actor.charAt(0).toUpperCase()}</div>
         <div class="notif-body">
           <div class="notif-text">${text}</div>
@@ -679,10 +738,9 @@
   }
 
   async function handleNotifClick(id,type,actorUsername,projectId){
-    // mark read
-    if(sb) await sb.from('notifications').update({read:true}).eq('id',id);
+    if(sb)await sb.from('notifications').update({read:true}).eq('id',id);
     toggleNotifDrop();
-    if(type==='follow'&&actorUsername) location.href='profile.html?user='+actorUsername;
+    if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
     else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
   }
 
@@ -694,47 +752,117 @@
   }
 
   function toggleNotifDrop(){
+    const bell=document.getElementById('bellBtn');
     const drop=document.getElementById('notifDrop');
-    const isOpen=drop.classList.contains('show');
+    const opening=!drop.classList.contains('show');
     drop.classList.toggle('show');
-    if(!isOpen&&!notifLoaded) loadNotifications();
+    bell.classList.toggle('active',drop.classList.contains('show'));
+    if(opening&&!notifLoaded)loadNotifications();
   }
 
-  document.addEventListener('click',e=>{
-    if(!document.getElementById('bellBtn').contains(e.target)) document.getElementById('notifDrop').classList.remove('show');
-    if(!document.getElementById('tbSearchWrap').contains(e.target)) hideSearchDrop();
-  });
-
-  /* ── USER SEARCH ── */
+  /* ── USER SEARCH with social prioritization ── */
   let searchTimer=null;
-  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q.length>=1)showSearchDrop();}
-  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();if(!q){hideSearchDrop();return;}searchTimer=setTimeout(()=>doSearch(q),280);}
+  function onSearchFocus(){
+    const q=document.getElementById('tbSearchInput').value.trim();
+    if(q)doSearch(q); else showSearchSuggestions();
+  }
+  function onSearchInput(){
+    clearTimeout(searchTimer);
+    const q=document.getElementById('tbSearchInput').value.trim();
+    if(!q){showSearchSuggestions();return;}
+    searchTimer=setTimeout(()=>doSearch(q),260);
+  }
   function onSearchKey(e){if(e.key==='Escape'){hideSearchDrop();document.getElementById('tbSearchInput').blur();}}
+
+  function showSearchSuggestions(){
+    if(!myFollowing.length&&!myFollowers.length){hideSearchDrop();return;}
+    const mutual=myFollowing.filter(f=>myFollowers.find(r=>r.id===f.id));
+    const onlyFollowing=myFollowing.filter(f=>!myFollowers.find(r=>r.id===f.id));
+    let html='';
+    if(mutual.length)html+='<div class="sd-section-label">Friends</div>'+mutual.map(u=>searchItemHTML(u,'friend')).join('');
+    if(onlyFollowing.length)html+='<div class="sd-section-label">Following</div>'+onlyFollowing.map(u=>searchItemHTML(u,'following')).join('');
+    if(!html){hideSearchDrop();return;}
+    document.getElementById('searchDrop').innerHTML=html;
+    showSearchDrop();
+  }
+
   async function doSearch(q){
     const drop=document.getElementById('searchDrop');
     drop.innerHTML='<div class="search-msg">Searching…</div>';showSearchDrop();
     if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}
+    let html='';
+    const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
+      .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
+    if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>searchItemHTML(u,getRelLabel(u.id))).join('');
     try{
-      const{data}=await sb.from('profiles').select('username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(6);
-      if(!data||!data.length){drop.innerHTML='<div class="search-msg">No users found</div>';return;}
-      drop.innerHTML=data.map(p=>{
-        const n=p.display_name||p.username||'?';
-        return `<div class="search-item" onclick="goProfile('${esc(p.username)}')">
-          <div class="si-av">${n.charAt(0).toUpperCase()}</div>
-          <div><div class="si-name">${esc(n)}</div><div class="si-handle">@${esc(p.username)}</div></div>
-        </div>`;
-      }).join('');
-    }catch(e){drop.innerHTML='<div class="search-msg">Could not search</div>';}
+      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(6);
+      const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
+      if(others.length)html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>searchItemHTML(u,'')).join('');
+    }catch(e){}
+    drop.innerHTML=html||'<div class="search-msg">No users found</div>';
   }
+
+  function searchItemHTML(u,rel){
+    const n=u.display_name||u.username||'?';
+    const badge=rel?`<div class="si-badge">${rel}</div>`:'';
+    return `<div class="search-item" onclick="goProfile('${esc(u.username||'')}')">
+      <div class="si-av">${n.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="si-name">${esc(n)}</div><div class="si-handle">@${esc(u.username||'')}</div></div>
+      ${badge}
+    </div>`;
+  }
+
   function showSearchDrop(){document.getElementById('searchDrop').classList.add('show');}
   function hideSearchDrop(){document.getElementById('searchDrop').classList.remove('show');}
   function goProfile(u){hideSearchDrop();document.getElementById('tbSearchInput').value='';location.href='profile.html?user='+u;}
+
+  /* ── NEW PROJECT MODAL ── */
+  function buildNewEmojiRow(){
+    document.getElementById('emojiRow').innerHTML=EMOJIS.map(e=>
+      `<div class="emoji-opt${e==='💻'?' sel':''}" onclick="pickNewEmoji('${e}')">${e}</div>`
+    ).join('');
+    selectedEmoji='💻';
+  }
+  function pickNewEmoji(e){selectedEmoji=e;document.querySelectorAll('#emojiRow .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===e));}
+  function openNewModal(){document.getElementById('projNameInput').value='';buildNewEmojiRow();document.getElementById('newOverlay').classList.add('show');setTimeout(()=>document.getElementById('projNameInput').focus(),40);}
+  function closeNewModal(){document.getElementById('newOverlay').classList.remove('show');}
+  document.getElementById('projNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmNew();if(e.key==='Escape')closeNewModal();});
+
+  async function confirmNew(){
+    const name=document.getElementById('projNameInput').value.trim();
+    if(!name){document.getElementById('projNameInput').focus();return;}
+    const id='proj_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    const proj={id,name,emoji:selectedEmoji,files:{'index.html':`<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`},main_file:'index.html',is_public:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+    if(session&&sb){
+      const{error}=await sb.from('projects').insert({...proj,user_id:session.user.id});
+      if(error){console.error('insert error:',error);alert('Could not save: '+error.message);return;}
+    }else{
+      projects.unshift(proj);
+      localStorage.setItem('vexium_projects',JSON.stringify(projects));
+    }
+    closeNewModal();
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
+  }
+
+  /* ── GLOBAL CLICK HANDLER ── */
+  document.addEventListener('click',e=>{
+    if(!document.getElementById('bellBtn').contains(e.target)){
+      document.getElementById('notifDrop').classList.remove('show');
+      document.getElementById('bellBtn').classList.remove('active');
+    }
+    if(!document.getElementById('tbSearchWrap').contains(e.target))hideSearchDrop();
+    if(!document.getElementById('psOverlay').contains(e.target.closest('.ps-modal')||e.target)){}
+    if(!document.getElementById('psInviteInput').contains(e.target)&&!document.getElementById('inviteDrop').contains(e.target))hideInviteDrop();
+  });
+  document.getElementById('psOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('psOverlay'))closePsModal();});
+  document.getElementById('newOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('newOverlay'))closeNewModal();});
 
   /* ── UTILS ── */
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function relTime(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
   let toastT;
-  function showToast(ico,msg){clearTimeout(toastT);document.getElementById('toastIco').textContent=ico;document.getElementById('toastMsg').textContent=msg;document.getElementById('toast').classList.add('show');toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400);}
+  function showToast(msg){clearTimeout(toastT);document.getElementById('toastMsg').textContent=msg;document.getElementById('toast').classList.add('show');toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2600);}
 
   window.addEventListener('load',init);
 </script>

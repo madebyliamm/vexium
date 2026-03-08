@@ -102,57 +102,68 @@
     .monaco-wrap{flex:1;overflow:hidden}
 
     /* ── AI PANEL ── */
-    #aiPanel{flex:1;display:none;flex-direction:column;background:var(--bg);border-right:1px solid var(--b1);min-width:0;overflow:hidden}
+    #aiPanel{flex:1;display:none;flex-direction:column;background:var(--bg);min-width:0;overflow:hidden;position:relative}
     #aiPanel.show{display:flex}
 
-    /* header */
-    #aiHeader{height:38px;border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;background:var(--s1)}
-    .ai-header-dot{width:6px;height:6px;border-radius:50%;background:var(--a2);animation:pulse 2s infinite}
-    .ai-header-t{font-size:11px;font-weight:800;color:var(--text);letter-spacing:.3px}
-    .ai-header-sub{font-size:10px;color:var(--sub);margin-left:2px}
+    /* centered empty state — full panel centering */
+    #aiCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:24px;pointer-events:none;transition:opacity .25s}
+    #aiCenter.hidden{opacity:0;pointer-events:none}
+    .ai-star{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 0 24px rgba(79,110,247,.35);pointer-events:none}
+    .ai-star svg{width:18px;height:18px;fill:#fff}
+    .ai-center-h{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:20px}
 
-    /* templates */
-    #aiTemplates{padding:10px 12px 8px;border-bottom:1px solid var(--b1);display:flex;flex-wrap:wrap;gap:5px;flex-shrink:0;background:var(--s1)}
-    .ai-tpl{background:rgba(79,110,247,.07);border:1px solid rgba(79,110,247,.14);border-radius:99px;padding:3px 10px;font-size:10px;font-weight:700;color:#818cf8;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans)}
-    .ai-tpl:hover{background:rgba(79,110,247,.15);border-color:rgba(79,110,247,.3);color:var(--text)}
+    /* centered input wrapper */
+    #aiCenterInput{width:100%;max-width:400px;pointer-events:all}
+    #aiCenterInput #aiInputArea{border-radius:14px;border:1px solid var(--b2);background:var(--s1);padding:10px 10px 10px 14px}
+    #aiCenterInput #aiInputArea:focus-within{border-color:rgba(79,110,247,.5)}
 
-    /* messages */
-    #aiMessages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+    /* templates below centered input */
+    #aiTemplates{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px;pointer-events:all;width:100%;max-width:420px}
+    .ai-tpl{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);display:flex;align-items:center;gap:5px}
+    .ai-tpl:hover{background:var(--b1);border-color:var(--b2);color:var(--text)}
+    .ai-tpl-ico{font-size:11px}
+
+    /* messages — hidden until convo starts */
+    #aiMessages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;opacity:0;pointer-events:none;transition:opacity .2s}
+    #aiMessages.show{opacity:1;pointer-events:all}
     #aiMessages::-webkit-scrollbar{width:3px}
     #aiMessages::-webkit-scrollbar-track{background:transparent}
     #aiMessages::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 
-    .ai-msg{display:flex;flex-direction:column;gap:4px;max-width:90%}
+    .ai-msg{display:flex;flex-direction:column;gap:3px;max-width:88%}
     .ai-msg.user{align-self:flex-end;align-items:flex-end}
     .ai-msg.ai{align-self:flex-start;align-items:flex-start}
-
-    .ai-bubble{padding:9px 13px;border-radius:12px;font-size:12px;line-height:1.65;word-break:break-word}
-    .ai-msg.user .ai-bubble{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-bottom-right-radius:3px}
-    .ai-msg.ai .ai-bubble{background:var(--s1);border:1px solid var(--b1);color:var(--text);border-bottom-left-radius:3px}
+    .ai-bubble{padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.65;word-break:break-word}
+    .ai-msg.user .ai-bubble{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-bottom-right-radius:4px}
+    .ai-msg.ai .ai-bubble{background:var(--s1);border:1px solid var(--b1);color:var(--text);border-bottom-left-radius:4px}
     .ai-msg-time{font-size:9px;color:var(--sub);padding:0 4px}
 
-    .ai-typing{display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:12px;border-bottom-left-radius:3px;align-self:flex-start}
-    .ai-typing span{width:5px;height:5px;border-radius:50%;background:var(--sub);animation:aiDot 1.2s infinite}
+    .ai-typing{display:flex;align-items:center;gap:4px;padding:9px 13px;background:var(--s1);border:1px solid var(--b1);border-radius:14px;border-bottom-left-radius:4px;align-self:flex-start}
+    .ai-typing span{width:4px;height:4px;border-radius:50%;background:var(--sub);animation:aiDot 1.2s infinite}
     .ai-typing span:nth-child(2){animation-delay:.2s}
     .ai-typing span:nth-child(3){animation-delay:.4s}
-    @keyframes aiDot{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+    @keyframes aiDot{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.3);opacity:1}}
 
-    /* empty state */
-    #aiEmpty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:.5;pointer-events:none}
-    #aiEmpty.hidden{display:none}
-    .ai-empty-ico{font-size:32px}
-    .ai-empty-t{font-size:12px;font-weight:700;color:var(--sub)}
-    .ai-empty-s{font-size:11px;color:var(--sub);text-align:center;line-height:1.6;max-width:200px}
+    /* bottom input — shown after convo starts */
+    #aiBottom{border-top:1px solid var(--b1);padding:10px 14px;flex-shrink:0;background:var(--bg);display:none}
+    #aiBottom.show{display:block}
+    #aiBottomInputArea{border-radius:14px;border:1px solid var(--b2);background:var(--s1);padding:10px 10px 10px 14px;display:flex;align-items:center;gap:8px}
+    #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.5)}
+    #aiBottomInput{flex:1;background:transparent;border:none;font-size:12px;color:var(--text);font-family:var(--sans);resize:none;outline:none;height:20px;line-height:20px;overflow:hidden}
+    #aiBottomInput::placeholder{color:var(--sub)}
+    #aiBottomSend{width:28px;height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 12px rgba(79,110,247,.3)}
+    #aiBottomSend:hover{opacity:.85}
+    #aiBottomSend:disabled{opacity:.3;cursor:default}
+    #aiBottomSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
-    /* input */
-    #aiInputArea{border-top:1px solid var(--b1);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:var(--s1)}
-    #aiInput{flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text);font-family:var(--sans);resize:none;outline:none;min-height:36px;max-height:120px;overflow-y:auto;line-height:1.5;transition:border-color .15s}
-    #aiInput:focus{border-color:var(--a1)}
+    /* shared input row */
+    #aiInputArea{display:flex;align-items:center;gap:8px}
+    #aiInput{flex:1;background:transparent;border:none;font-size:12px;color:var(--text);font-family:var(--sans);resize:none;outline:none;height:20px;line-height:20px;overflow:hidden}
     #aiInput::placeholder{color:var(--sub)}
-    #aiSend{width:32px;height:32px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;margin-bottom:2px}
+    #aiSend{width:28px;height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 12px rgba(79,110,247,.3)}
     #aiSend:hover{opacity:.85}
     #aiSend:disabled{opacity:.3;cursor:default}
-    #aiSend svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    #aiSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
     /* ── RESIZER ── */
     #rightResizer{width:4px;background:transparent;cursor:col-resize;flex-shrink:0;transition:background .15s}
@@ -287,32 +298,44 @@
 
       <!-- AI CHAT PANEL -->
       <div id="aiPanel">
-        <div id="aiHeader">
-          <div class="ai-header-dot"></div>
-          <span class="ai-header-t">Vexium AI</span>
-          <span class="ai-header-sub">— your builder</span>
-        </div>
-        <div id="aiTemplates">
-          <button class="ai-tpl" onclick="aiTemplate('Build me a SaaS landing page with a hero, features section, pricing table, and waitlist form. Dark theme.')">SaaS Landing</button>
-          <button class="ai-tpl" onclick="aiTemplate('Build me a personal portfolio site with an about section, projects grid, skills, and contact form. Clean modern design.')">Portfolio</button>
-          <button class="ai-tpl" onclick="aiTemplate('Build me an online store homepage with a product grid, cart icon, hero banner, and footer. Minimal aesthetic.')">Online Store</button>
-          <button class="ai-tpl" onclick="aiTemplate('Build me a link in bio page like Linktree. Profile photo, name, bio, and a list of stylish link buttons.')">Link in Bio</button>
-          <button class="ai-tpl" onclick="aiTemplate('Build me a coming soon page with a countdown timer, email signup form, and social links. Bold and exciting.')">Coming Soon</button>
-          <button class="ai-tpl" onclick="aiTemplate('Build me a blog homepage with a header, featured post hero, post card grid, and sidebar with categories.')">Blog</button>
-        </div>
-        <div id="aiMessages">
-          <div id="aiEmpty">
-            <div class="ai-empty-ico">✦</div>
-            <div class="ai-empty-t">Ask me anything</div>
-            <div class="ai-empty-s">Plan your project, get ideas, or tell me to build something.</div>
+
+        <!-- centered empty state -->
+        <div id="aiCenter">
+          <div class="ai-star">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>
+          </div>
+          <div class="ai-center-h">Build anything with me.</div>
+          <div id="aiCenterInput">
+            <div id="aiInputArea">
+              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
+              <button id="aiSend" onclick="aiSend()">
+                <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="aiTemplates">
+            <button class="ai-tpl" onclick="aiTemplate('Build me a SaaS landing page with a hero, features section, pricing table, and waitlist form. Dark theme.')"><span class="ai-tpl-ico">🚀</span>SaaS Landing</button>
+            <button class="ai-tpl" onclick="aiTemplate('Build me a personal portfolio site with an about section, projects grid, skills, and contact form. Clean modern design.')"><span class="ai-tpl-ico">🎨</span>Portfolio</button>
+            <button class="ai-tpl" onclick="aiTemplate('Build me an online store homepage with a product grid, cart icon, hero banner, and footer. Minimal aesthetic.')"><span class="ai-tpl-ico">🛍️</span>Online Store</button>
+            <button class="ai-tpl" onclick="aiTemplate('Build me a link in bio page like Linktree. Profile photo, name, bio, and a list of stylish link buttons.')"><span class="ai-tpl-ico">🔗</span>Link in Bio</button>
+            <button class="ai-tpl" onclick="aiTemplate('Build me a coming soon page with a countdown timer, email signup form, and social links. Bold and exciting.')"><span class="ai-tpl-ico">⏳</span>Coming Soon</button>
+            <button class="ai-tpl" onclick="aiTemplate('Build me a blog homepage with a header, featured post hero, post card grid, and sidebar with categories.')"><span class="ai-tpl-ico">✍️</span>Blog</button>
           </div>
         </div>
-        <div id="aiInputArea">
-          <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
-          <button id="aiSend" onclick="aiSend()">
-            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
+
+        <!-- messages (shown after first send) -->
+        <div id="aiMessages"></div>
+
+        <!-- bottom input (shown after first send) -->
+        <div id="aiBottom">
+          <div id="aiBottomInputArea">
+            <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
+            <button id="aiBottomSend" onclick="aiSend(true)">
+              <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+          </div>
         </div>
+
       </div>
 
       <!-- RESIZER -->
@@ -859,28 +882,40 @@
   // ── AI CHAT ──
   var aiHistory = [];
   var aiTyping = false;
+  var aiStarted = false;
+
+  function aiGetInput() {
+    return aiStarted ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
+  }
+
+  function aiTransitionToChat() {
+    if (aiStarted) return;
+    aiStarted = true;
+    document.getElementById('aiCenter').classList.add('hidden');
+    document.getElementById('aiMessages').classList.add('show');
+    document.getElementById('aiBottom').classList.add('show');
+    // wire up bottom input
+    var bi = document.getElementById('aiBottomInput');
+    var bs = document.getElementById('aiBottomSend');
+    bi.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); }
+    });
+    setTimeout(function() { bi.focus(); }, 50);
+  }
 
   function aiTemplate(text) {
     var input = document.getElementById('aiInput');
     input.value = '';
     input.focus();
     var i = 0;
-    var delay = 1000 / 100; // ~100 wpm (avg 5 chars/word)
+    var delay = 10; // ~100wpm
     function typeChar() {
       if (i < text.length) {
-        input.value += text[i];
-        i++;
-        aiAutoResize();
+        input.value += text[i++];
         setTimeout(typeChar, delay);
       }
     }
     typeChar();
-  }
-
-  function aiAutoResize() {
-    var el = document.getElementById('aiInput');
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }
 
   function aiNow() {
@@ -889,8 +924,6 @@
   }
 
   function aiAddMsg(role, text) {
-    var empty = document.getElementById('aiEmpty');
-    if (empty) empty.classList.add('hidden');
     var msgs = document.getElementById('aiMessages');
     var wrap = document.createElement('div');
     wrap.className = 'ai-msg ' + role;
@@ -922,42 +955,42 @@
     if (el) el.remove();
   }
 
-  function aiSend() {
-    var input = document.getElementById('aiInput');
+  function aiSend(fromBottom) {
+    var input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
     var text = input.value.trim();
     if (!text || aiTyping) return;
     input.value = '';
-    aiAutoResize();
-    document.getElementById('aiSend').disabled = true;
+
+    aiTransitionToChat();
+
     aiTyping = true;
+    document.getElementById('aiBottomSend') && (document.getElementById('aiBottomSend').disabled = true);
+    document.getElementById('aiSend') && (document.getElementById('aiSend').disabled = true);
 
     aiAddMsg('user', text);
     aiHistory.push({ role: 'user', content: text });
-
     aiShowTyping();
 
-    // Placeholder response until real API is wired in
     setTimeout(function() {
       aiHideTyping();
       var reply = "I'm not connected to the AI yet - that's coming next. You said: '" + text + "'. Once the API is wired up I'll build, edit, and chat with full context of your project.";
       aiAddMsg('ai', reply);
       aiHistory.push({ role: 'assistant', content: reply });
       aiTyping = false;
-      document.getElementById('aiSend').disabled = false;
+      document.getElementById('aiBottomSend') && (document.getElementById('aiBottomSend').disabled = false);
+      document.getElementById('aiSend') && (document.getElementById('aiSend').disabled = false);
     }, 1200);
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     var input = document.getElementById('aiInput');
-    if (!input) return;
-    input.addEventListener('input', aiAutoResize);
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        aiSend();
-      }
-    });
+    if (input) {
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(false); }
+      });
+    }
   });
+
 
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);

@@ -225,9 +225,9 @@
             <div class="stat-n" id="statFollowing">0</div>
             <div class="stat-l">Following</div>
           </div>
-          <div class="stat">
-            <div class="stat-n" id="statProjects">0</div>
-            <div class="stat-l">Projects</div>
+          <div class="stat" onclick="openFollowList('friends')">
+            <div class="stat-n" id="statFriends">0</div>
+            <div class="stat-l">Friends</div>
           </div>
         </div>
       </div>
@@ -421,6 +421,18 @@
     document.getElementById('statFollowers').textContent = p.follower_count||0;
     document.getElementById('statFollowing').textContent = p.following_count||0;
     document.title = '@'+(p.username||'')+'  — Vexium';
+    // Compute friends count (mutual follows)
+    if(sb&&viewId){
+      try{
+        const[{data:fwing},{data:fwers}]=await Promise.all([
+          sb.from('follows').select('following_id').eq('follower_id',viewId),
+          sb.from('follows').select('follower_id').eq('following_id',viewId)
+        ]);
+        const fwingIds=new Set((fwing||[]).map(r=>r.following_id));
+        const friends=(fwers||[]).filter(r=>fwingIds.has(r.follower_id)).length;
+        document.getElementById('statFriends').textContent=friends;
+      }catch(e){}
+    }
 
     if (isOwn) {
       document.getElementById('heroActions').innerHTML = `
@@ -497,7 +509,7 @@
       try { data=JSON.parse(localStorage.getItem('vexium_projects')||'[]'); } catch(e){}
     }
     projects=data;
-    document.getElementById('statProjects').textContent = projects.length;
+    // project count no longer shown on profile
 
     const grid = document.getElementById('projectGrid');
     const empty = document.getElementById('emptyProjects');
@@ -647,21 +659,27 @@
 
   /* FOLLOW LIST */
   async function openFollowList(type){
-    document.getElementById('followTitle').textContent = type==='followers'?'Followers':'Following';
+    const titles = {followers:'Followers', following:'Following', friends:'Friends'};
+    document.getElementById('followTitle').textContent = titles[type]||type;
     document.getElementById('followSub').textContent='';
     const list=document.getElementById('followList');
     list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">Loading…</div>';
     openOv('followOverlay');
     if(!sb||!viewId){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Not available.</div>'; return; }
     try {
-      let rows;
-      if(type==='followers'){
-        const {data}=await sb.from('follows').select('follower_id,profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',viewId);
-        rows=(data||[]).map(r=>r.profiles);
-      } else {
-        const {data}=await sb.from('follows').select('following_id,profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',viewId);
-        rows=(data||[]).map(r=>r.profiles);
-      }
+      // Fetch both sides — followers.follower_id and following.following_id now ref profiles directly
+      const [{data:fwingData},{data:fwersData}] = await Promise.all([
+        sb.from('follows').select('following_id, profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',viewId),
+        sb.from('follows').select('follower_id, profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',viewId)
+      ]);
+      const following = (fwingData||[]).map(r=>({id:r.following_id, ...r.profiles}));
+      const followers = (fwersData||[]).map(r=>({id:r.follower_id, ...r.profiles}));
+
+      let rows = [];
+      if(type==='following') rows = following;
+      else if(type==='followers') rows = followers;
+      else if(type==='friends') rows = following.filter(f=>followers.find(r=>r.id===f.id));
+
       if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
       list.innerHTML=rows.map(p=>{
         if(!p)return'';
@@ -671,7 +689,7 @@
           <div><div class="fi-name">${esc(n)}</div><div class="fi-handle">@${esc(p.username||'')}</div></div>
         </div>`;
       }).join('');
-    } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
+    } catch(e){ console.error('follow list error:',e); list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
   }
 
   function goProfile(u){ closeOv('followOverlay'); location.href='profile.html?user='+u; }
@@ -748,7 +766,7 @@
     if(!sb||!session)return;
     try{
       const{data,error}=await sb.from('notifications')
-        .select('*,actor:actor_id(username,display_name),project:project_id(name)')
+        .select('*, actor:actor_id(username,display_name), project:project_id(name)')
         .eq('user_id',session.user.id)
         .order('created_at',{ascending:false}).limit(20);
       if(error)return;

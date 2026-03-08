@@ -108,23 +108,23 @@
     /* centered empty state — full panel centering */
     #aiCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:24px;pointer-events:none;transition:opacity .25s}
     #aiCenter.hidden{opacity:0;pointer-events:none}
-    .ai-star{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 0 24px rgba(79,110,247,.35);pointer-events:none}
-    .ai-star svg{width:18px;height:18px;fill:#fff}
-    .ai-center-h{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:20px}
+    .ai-star{width:clamp(36px,3vw,52px);height:clamp(36px,3vw,52px);border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;margin-bottom:clamp(12px,1.2vw,20px);box-shadow:0 0 24px rgba(79,110,247,.35);pointer-events:none}
+    .ai-star svg{width:clamp(16px,1.4vw,24px);height:clamp(16px,1.4vw,24px);fill:#fff}
+    .ai-center-h{font-size:clamp(15px,1.4vw,22px);font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:clamp(16px,1.6vw,24px)}
 
     /* centered input wrapper */
-    #aiCenterInput{width:100%;max-width:400px;pointer-events:all}
-    #aiCenterInput #aiInputArea{border-radius:14px;border:1px solid var(--b2);background:var(--s1);padding:10px 10px 10px 14px}
+    #aiCenterInput{width:min(92%,580px);pointer-events:all}
+    #aiCenterInput #aiInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px)}
     #aiCenterInput #aiInputArea:focus-within{border-color:rgba(79,110,247,.5)}
 
     /* templates below centered input */
-    #aiTemplates{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px;pointer-events:all;width:100%;max-width:420px}
-    .ai-tpl{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);display:flex;align-items:center;gap:5px}
+    #aiTemplates{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(5px,.5vw,8px);margin-top:clamp(12px,1.2vw,18px);pointer-events:all;width:min(92%,600px)}
+    .ai-tpl{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:clamp(4px,.4vw,7px) clamp(9px,.9vw,14px);font-size:clamp(10px,.8vw,13px);font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);display:flex;align-items:center;gap:5px}
     .ai-tpl:hover{background:var(--b1);border-color:var(--b2);color:var(--text)}
-    .ai-tpl-ico{font-size:11px}
+    .ai-tpl-ico{font-size:clamp(11px,.9vw,14px)}
 
     /* messages — hidden until convo starts */
-    #aiMessages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;opacity:0;pointer-events:none;transition:opacity .2s}
+    #aiMessages{flex:1;overflow-y:auto;padding:clamp(12px,1.2vw,20px) clamp(10px,2vw,32px) 8px;display:flex;flex-direction:column;gap:clamp(10px,1vw,16px);scroll-behavior:smooth;opacity:0;pointer-events:none;transition:opacity .2s}
     #aiMessages.show{opacity:1;pointer-events:all}
     #aiMessages::-webkit-scrollbar{width:3px}
     #aiMessages::-webkit-scrollbar-track{background:transparent}
@@ -133,7 +133,7 @@
     .ai-msg{display:flex;flex-direction:column;gap:3px;max-width:88%}
     .ai-msg.user{align-self:flex-end;align-items:flex-end}
     .ai-msg.ai{align-self:flex-start;align-items:flex-start}
-    .ai-bubble{padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.65;word-break:break-word}
+    .ai-bubble{padding:clamp(8px,.8vw,12px) clamp(10px,1vw,16px);border-radius:14px;font-size:clamp(12px,.9vw,14px);line-height:1.65;word-break:break-word}
     .ai-msg.user .ai-bubble{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-bottom-right-radius:4px}
     .ai-msg.ai .ai-bubble{background:var(--s1);border:1px solid var(--b1);color:var(--text);border-bottom-left-radius:4px}
     .ai-msg-time{font-size:9px;color:var(--sub);padding:0 4px}
@@ -145,22 +145,27 @@
     @keyframes aiDot{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.3);opacity:1}}
 
     /* bottom input — shown after convo starts */
-    #aiBottom{border-top:1px solid var(--b1);padding:10px 14px;flex-shrink:0;background:var(--bg);display:none}
-    #aiBottom.show{display:block}
-    #aiBottomInputArea{border-radius:14px;border:1px solid var(--b2);background:var(--s1);padding:10px 10px 10px 14px;display:flex;align-items:center;gap:8px}
+    #aiBottom{border-top:1px solid var(--b1);padding:clamp(8px,.8vw,14px) clamp(10px,1.5vw,24px);flex-shrink:0;background:var(--bg);display:none}
+    #aiBottom.show{display:flex;justify-content:center}
+    #aiBottomWrap{width:min(92%,640px)}
+    #aiBottomInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px);display:flex;align-items:flex-end;gap:8px}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.5)}
-    #aiBottomInput{flex:1;background:transparent;border:none;font-size:12px;color:var(--text);font-family:var(--sans);resize:none;outline:none;height:20px;line-height:20px;overflow:hidden}
+    #aiBottomInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;max-height:160px;overflow-y:auto;min-height:22px}
     #aiBottomInput::placeholder{color:var(--sub)}
-    #aiBottomSend{width:28px;height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 12px rgba(79,110,247,.3)}
+    #aiBottomInput::-webkit-scrollbar{width:2px}
+    #aiBottomInput::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+    #aiBottomSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);margin-bottom:1px}
     #aiBottomSend:hover{opacity:.85}
     #aiBottomSend:disabled{opacity:.3;cursor:default}
-    #aiBottomSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    #aiBottomSend svg{width:clamp(12px,1vw,16px);height:clamp(12px,1vw,16px);fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
-    /* shared input row */
-    #aiInputArea{display:flex;align-items:center;gap:8px}
-    #aiInput{flex:1;background:transparent;border:none;font-size:12px;color:var(--text);font-family:var(--sans);resize:none;outline:none;height:20px;line-height:20px;overflow:hidden}
+    /* shared center input row */
+    #aiInputArea{display:flex;align-items:flex-end;gap:8px}
+    #aiInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;max-height:160px;overflow-y:auto;min-height:22px}
+    #aiInput::-webkit-scrollbar{width:2px}
+    #aiInput::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
     #aiInput::placeholder{color:var(--sub)}
-    #aiSend{width:28px;height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 12px rgba(79,110,247,.3)}
+    #aiSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);margin-bottom:1px}
     #aiSend:hover{opacity:.85}
     #aiSend:disabled{opacity:.3;cursor:default}
     #aiSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -256,8 +261,8 @@
   <span class="tb-saving" id="tbSaving">saving…</span>
 
   <div class="tb-modes">
-    <button class="tb-mode on" id="modeEditor" onclick="setMode('editor')">Editor</button>
-    <button class="tb-mode" id="modeAI" onclick="setMode('ai')">AI ✦</button>
+    <button class="tb-mode on" id="modeAI" onclick="setMode('ai')">AI ✦</button>
+    <button class="tb-mode" id="modeEditor" onclick="setMode('editor')">Editor</button>
   </div>
 
   <div class="tb-r">
@@ -309,7 +314,7 @@
             <div id="aiInputArea">
               <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
               <button id="aiSend" onclick="aiSend()">
-                <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
             </div>
           </div>
@@ -328,11 +333,13 @@
 
         <!-- bottom input (shown after first send) -->
         <div id="aiBottom">
+          <div id="aiBottomWrap">
           <div id="aiBottomInputArea">
             <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
             <button id="aiBottomSend" onclick="aiSend(true)">
-              <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+              <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             </button>
+          </div>
           </div>
         </div>
 
@@ -544,7 +551,7 @@
   // ── MODE ──
   function setMode(m) {
     document.getElementById('modeEditor').classList.toggle('on', m === 'editor');
-    document.getElementById('modeAI').classList.toggle('on', m === 'ai');
+    document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
     document.getElementById('editorPane').style.display = m === 'editor' ? '' : 'none';
     document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
     document.getElementById('sidebar').style.display = m === 'ai' ? 'none' : '';
@@ -897,6 +904,7 @@
     // wire up bottom input
     var bi = document.getElementById('aiBottomInput');
     var bs = document.getElementById('aiBottomSend');
+    bi.addEventListener('input', function() { aiAutoResize(bi); });
     bi.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); }
     });
@@ -960,6 +968,7 @@
     var text = input.value.trim();
     if (!text || aiTyping) return;
     input.value = '';
+    input.style.height = 'auto';
 
     aiTransitionToChat();
 
@@ -982,10 +991,16 @@
     }, 1200);
   }
 
+  function aiAutoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
-    var input = document.getElementById('aiInput');
-    if (input) {
-      input.addEventListener('keydown', function(e) {
+    var centerInput = document.getElementById('aiInput');
+    if (centerInput) {
+      centerInput.addEventListener('input', function() { aiAutoResize(centerInput); });
+      centerInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(false); }
       });
     }

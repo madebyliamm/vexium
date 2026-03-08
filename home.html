@@ -138,10 +138,27 @@
     .section-title{font-size:18px;font-weight:800;letter-spacing:-.3px}
     .section-sub{font-size:13px;color:var(--sub)}
 
+    /* ── SEARCH ── */
+    .tb-search{position:relative;display:flex;align-items:center}
+    .tb-search-input{background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:6px 12px 6px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;width:180px;transition:all .2s}
+    .tb-search-input:focus{border-color:rgba(79,110,247,.4);width:220px;background:var(--b1)}
+    .tb-search-input::placeholder{color:var(--sub)}
+    .tb-search-ico{position:absolute;left:10px;width:12px;height:12px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none}
+    .search-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;min-width:220px}
+    .search-drop.show{display:block}
+    .search-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .12s}
+    .search-item:hover{background:var(--b2)}
+    .search-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+    .search-name{font-size:12px;font-weight:700}
+    .search-handle{font-size:10px;color:var(--sub)}
+    .search-empty{font-size:12px;color:var(--sub);padding:10px 12px;text-align:center}
+
     @media(max-width:640px){
       #topbar{padding:0 16px}
       .page{padding:32px 16px}
       .page-head{flex-direction:column;align-items:flex-start;gap:14px}
+      .tb-search-input{width:130px}
+      .tb-search-input:focus{width:150px}
     }
   </style>
 </head>
@@ -152,6 +169,12 @@
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
   </a>
+  <div class="tb-search" id="tbSearchWrap">
+    <svg class="tb-search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="tb-search-input" id="tbSearchInput" placeholder="Find users…" autocomplete="off"
+      oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)"/>
+    <div class="search-drop" id="searchDrop"></div>
+  </div>
   <div class="tb-r">
     <span class="tb-name" id="tbName">—</span>
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
@@ -473,14 +496,9 @@
     const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 
     if (session && sb) {
-      const { data: insertData, error } = await sb.from('projects').insert({ ...proj, user_id: session.user.id }).select();
-      console.log('INSERT result:', { insertData, error, userId: session.user.id, projId: id });
-      if (error) {
-        alert('INSERT FAILED:\n' + JSON.stringify(error, null, 2));
-        return;
-      }
+      const { error } = await sb.from('projects').insert({ ...proj, user_id: session.user.id });
+      if (error) { console.error('insert error:', error); alert('Could not save project: ' + error.message); return; }
     } else {
-      console.log('No session — saving to localStorage. session=', session, 'sb=', sb);
       projects.unshift(proj);
       localStorage.setItem('vexium_projects', JSON.stringify(projects));
     }
@@ -495,6 +513,65 @@
 
   document.getElementById('newOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
   // Custom confirm dialog
+  // ── USER SEARCH ──
+  let searchTimer = null;
+
+  function onSearchFocus() {
+    const q = document.getElementById('tbSearchInput').value.trim();
+    if (q.length >= 1) showSearchDrop();
+  }
+
+  function onSearchInput() {
+    clearTimeout(searchTimer);
+    const q = document.getElementById('tbSearchInput').value.trim();
+    if (!q) { hideSearchDrop(); return; }
+    searchTimer = setTimeout(() => doSearch(q), 280);
+  }
+
+  function onSearchKey(e) {
+    if (e.key === 'Escape') { hideSearchDrop(); document.getElementById('tbSearchInput').blur(); }
+  }
+
+  async function doSearch(q) {
+    const drop = document.getElementById('searchDrop');
+    drop.innerHTML = '<div class="search-empty">Searching…</div>';
+    showSearchDrop();
+    if (!sb) { drop.innerHTML = '<div class="search-empty">Sign in to search users</div>'; return; }
+    try {
+      const { data } = await sb.from('profiles')
+        .select('username, display_name')
+        .ilike('username', '%' + q + '%')
+        .eq('is_public', true)
+        .limit(6);
+      if (!data || !data.length) {
+        drop.innerHTML = '<div class="search-empty">No users found</div>'; return;
+      }
+      drop.innerHTML = data.map(p => {
+        const name = p.display_name || p.username || '?';
+        return `<div class="search-item" onclick="goUserProfile('${esc(p.username)}')">
+          <div class="search-av">${name.charAt(0).toUpperCase()}</div>
+          <div>
+            <div class="search-name">${esc(name)}</div>
+            <div class="search-handle">@${esc(p.username)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { drop.innerHTML = '<div class="search-empty">Could not search</div>'; }
+  }
+
+  function showSearchDrop() { document.getElementById('searchDrop').classList.add('show'); }
+  function hideSearchDrop() { document.getElementById('searchDrop').classList.remove('show'); }
+
+  function goUserProfile(username) {
+    hideSearchDrop();
+    document.getElementById('tbSearchInput').value = '';
+    window.location.href = 'profile.html?user=' + username;
+  }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('tbSearchWrap').contains(e.target)) hideSearchDrop();
+  });
+
   window.addEventListener('load', init);
 </script>
 </body>

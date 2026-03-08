@@ -152,9 +152,9 @@
     /* field group */
     .ps-field{display:flex;flex-direction:column;gap:6px}
     .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
-    .ps-input{background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
-    .ps-input:focus{border-color:rgba(79,110,247,.5)}
-    .ps-input::placeholder{color:var(--sub)}
+    .ps-input{background:transparent;border:none;border-bottom:1px solid var(--b2);border-radius:0;padding:8px 2px;color:var(--text);font-size:15px;font-weight:700;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
+    .ps-input:focus{border-bottom-color:rgba(79,110,247,.6)}
+    .ps-input::placeholder{color:var(--b3)}
 
     /* emoji row */
     .emoji-strip{display:flex;gap:5px;flex-wrap:wrap}
@@ -162,29 +162,30 @@
     .emoji-opt:hover{background:var(--b2)}
     .emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
 
-    /* visibility toggle card */
-    .ps-toggle-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--b2);border-radius:10px}
-    .ptc-info{}
-    .ptc-label{font-size:13px;font-weight:700}
-    .ptc-sub{font-size:11px;color:var(--sub);margin-top:2px}
-    .toggle{width:36px;height:20px;border-radius:99px;background:var(--b3);position:relative;cursor:pointer;transition:background .2s;border:none;padding:0;flex-shrink:0}
-    .toggle.on{background:var(--a1)}
-    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .18s}
-    .toggle.on::after{left:18px}
+    /* visibility — lock/unlock button */
+    .ps-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .ps-vis-info{}
+    .ps-vis-label{font-size:13px;font-weight:700;color:var(--text)}
+    .ps-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
+    .lock-btn:hover{background:var(--b2);color:var(--text)}
+    .lock-btn.unlocked{color:#4ade80}
+    .lock-btn.unlocked:hover{background:rgba(34,197,94,.08);color:#4ade80}
+    .lock-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
     /* divider */
     .ps-div{height:1px;background:var(--b1);margin:0 -24px}
 
     /* collaborators */
-    .collab-list{display:flex;flex-direction:column;gap:6px}
-    .cl-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--b1);border-radius:9px}
+    .collab-list{display:flex;flex-direction:column;gap:4px}
+    .cl-item{display:flex;align-items:center;gap:10px;padding:7px 0}
     .cl-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
     .cl-info{flex:1;min-width:0}
     .cl-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cl-handle{font-size:10px;color:var(--sub)}
     .cl-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
     .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-    .cl-rm:hover{background:rgba(239,68,68,.1);color:#ef4444}
+    .cl-rm:hover{color:#ef4444}
     .cl-none{font-size:11px;color:var(--sub);padding:2px 0}
 
     /* invite search */
@@ -236,8 +237,8 @@
 <body>
 
 <div id="topbar">
-  <!-- Logo → home.html (since we're on home, going to home reloads — that's fine) -->
-  <a href="home.html" class="tb-logo">
+  <!-- Logo → index.html (landing page) -->
+  <a href="index.html" class="tb-logo">
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
   </a>
@@ -329,12 +330,15 @@
       <div class="ps-div"></div>
 
       <!-- VISIBILITY -->
-      <div class="ps-toggle-card">
-        <div class="ptc-info">
-          <div class="ptc-label" id="psVisLabel">Private</div>
-          <div class="ptc-sub" id="psVisSub">Only you can see this project</div>
+      <div class="ps-vis-row">
+        <div class="ps-vis-info">
+          <div class="ps-vis-label" id="psVisLabel">Private</div>
+          <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
         </div>
-        <button class="toggle" id="psPublicToggle" onclick="togglePsPublic()"></button>
+        <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
+          <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span id="psLockTxt">Locked</span>
+        </button>
       </div>
 
       <div class="ps-div"></div>
@@ -396,7 +400,7 @@
   let projects=[], selectedEmoji='💻';
   let psProjectId=null, psCurPublic=false, psEmojiCur='💻';
   let myFollowing=[], myFollowers=[];
-  const EMOJIS=['💻','🚀','🎨','⚡','🔥','🛠','🌐','📱','🎯','🧪','✨','🦄','🎮','🤖','💡','🔬'];
+  const EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
 
   try{
     if(!window._noConfig&&typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined')
@@ -542,9 +546,22 @@
   }
 
   function updateVisToggle(){
-    document.getElementById('psPublicToggle').className='toggle'+(psCurPublic?' on':'');
+    const btn=document.getElementById('psLockBtn');
+    const ico=document.getElementById('psLockIco');
+    const txt=document.getElementById('psLockTxt');
     document.getElementById('psVisLabel').textContent=psCurPublic?'Public':'Private';
     document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
+    if(psCurPublic){
+      btn.className='lock-btn unlocked';
+      // unlocked padlock SVG
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
+      txt.textContent='Public';
+    } else {
+      btn.className='lock-btn';
+      // locked padlock SVG
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+      txt.textContent='Locked';
+    }
   }
 
   async function psSave(){

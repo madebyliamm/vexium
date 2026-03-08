@@ -562,21 +562,42 @@
 
   // ── PREVIEW ──
   function refreshPreview() {
-    const frame = document.getElementById('previewFrame');
-    const bridge = `<script>(function(){var m=['log','warn','error','info'];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:'console',kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==='object'?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(' ')},'*')}catch(e){}o.apply(console,arguments);};});window.addEventListener('error',function(e){window.parent.postMessage({type:'console',kind:'error',msg:e.message+' (line '+e.lineno+')'},'*');});})();<\/script>`;
-    let html = fileSystem[mainFile] || '';
-    Object.entries(fileSystem).forEach(([fn, content]) => {
-      if (fn === mainFile || !content) return;
+    var frame = document.getElementById('previewFrame');
+    var bridgeSrc = '(function(){var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});})();';
+    var bridge = '<script>' + bridgeSrc + '<\/script>';
+
+    var html = fileSystem[mainFile] || '';
+
+    // Inline CSS and JS files
+    Object.entries(fileSystem).forEach(function(entry) {
+      var fn = entry[0], content = entry[1];
+      if (!content) return;
       if (fn.endsWith('.css')) {
-        const safe = content.replace(/<\/style>/gi, '<\\/style>');
-        html = html.replace(new RegExp(`<link[^>]+href=["']${escRe(fn)}["'][^>]*/?>`,'gi'), `<style>${safe}</style>`);
+        var safe = content.replace(/<\/style>/gi, '<\\/style>');
+        var re = new RegExp('<link[^>]+href=["']' + escRe(fn) + '["'][^>]*/?>','gi');
+        html = html.replace(re, '<style>' + safe + '<\/style>');
       } else if (fn.endsWith('.js')) {
-        const safe = content.replace(/<\/script>/gi, '<\\/script>');
-        html = html.replace(new RegExp(`<script[^>]+src=["']${escRe(fn)}["'][^>]*>[\\s\\S]*?<\\/script>`,'gi'), `<script>${safe}<\/script>`);
+        var safe2 = content.replace(/<\/script>/gi, '<\\/script>');
+        var re2 = new RegExp('<script[^>]+src=["']' + escRe(fn) + '["'][^>]*><\/script>','gi');
+        html = html.replace(re2, '<script>' + safe2 + '<\/script>');
       }
     });
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    doc.open(); doc.write(bridge + html); doc.close();
+
+    // Inject bridge after <head> or prepend
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
+    } else {
+      html = bridge + html;
+    }
+
+    // Blob URL — reliable for large content
+    var prev = frame._previewBlob;
+    if (prev) URL.revokeObjectURL(prev);
+    var blob = new Blob([html], { type: 'text/html' });
+    var burl = URL.createObjectURL(blob);
+    frame._previewBlob = burl;
+    frame.src = burl;
+
     setUrl(mainFile); pushHist(mainFile);
   }
 

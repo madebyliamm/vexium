@@ -574,11 +574,11 @@
       if (!content) return;
       if (fn.endsWith('.css')) {
         var safe = content.replace(/<\/style>/gi, '<\\/style>');
-        var re = new RegExp('<link[^>]+href=["']' + escRe(fn) + '["'][^>]*/?>','gi');
+        var re = new RegExp('<link[^>]+href=[\x22\x27]' + escRe(fn) + '[\x22\x27][^>]*/?>','gi');
         html = html.replace(re, '<style>' + safe + '<\/style>');
       } else if (fn.endsWith('.js')) {
         var safe2 = content.replace(/<\/script>/gi, '<\\/script>');
-        var re2 = new RegExp('<script[^>]+src=["']' + escRe(fn) + '["'][^>]*><\/script>','gi');
+        var re2 = new RegExp('<script[^>]+src=[\x22\x27]' + escRe(fn) + '[\x22\x27][^>]*><\/script>','gi');
         html = html.replace(re2, '<script>' + safe2 + '<\/script>');
       }
     });

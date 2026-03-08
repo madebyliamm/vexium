@@ -123,6 +123,21 @@
     /* ── LOADING ── */
     .loading{text-align:center;padding:60px;color:var(--sub);font-size:13px}
 
+    /* ── PUBLIC BADGE on card ── */
+    .pc-pub{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;pointer-events:none}
+    .pc-pub.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
+    .pc-pub.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
+
+    /* ── COLLAB AVATARS ── */
+    .pc-collabs{display:flex;justify-content:center;margin-top:10px}
+    .pc-cav{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));border:2px solid var(--s1);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;margin-left:-4px}
+    .pc-cav:first-child{margin-left:0}
+
+    /* ── SHARED SECTION ── */
+    .section-head{display:flex;align-items:center;gap:10px;margin:48px 0 20px}
+    .section-title{font-size:18px;font-weight:800;letter-spacing:-.3px}
+    .section-sub{font-size:13px;color:var(--sub)}
+
     @media(max-width:640px){
       #topbar{padding:0 16px}
       .page{padding:32px 16px}
@@ -165,13 +180,30 @@
   <div id="projectGrid"></div>
 </div>
 
+<!-- SHARED WITH ME -->
+<div class="page" id="sharedSection" style="padding-top:0;display:none">
+  <div class="section-head">
+    <div>
+      <div class="section-title">Shared with me</div>
+      <div class="section-sub">Projects you've been invited to collaborate on</div>
+    </div>
+  </div>
+  <div id="sharedGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+</div>
+
 <!-- CTX MENU -->
 <div class="ctx" id="ctxMenu">
   <div class="ctx-item" onclick="ctxOpen()">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Open
+    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Open in editor
+  </div>
+  <div class="ctx-item" onclick="ctxView()">
+    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View live
   </div>
   <div class="ctx-item" onclick="ctxRename()">
     <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Rename
+  </div>
+  <div class="ctx-item" onclick="ctxTogglePublic()">
+    <svg class="ctx-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span id="ctxPubTxt">Make public</span>
   </div>
   <div class="ctx-item danger" onclick="ctxDelete()">
     <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete
@@ -208,6 +240,7 @@
   let session = null;
   let projects = [];
   let ctxTarget = null;
+  let ctxTargetPub = false;
   let modalMode = 'new'; // 'new' | 'rename'
   let selectedEmoji = '💻';
 
@@ -236,6 +269,7 @@
     }
     buildEmojiRow();
     await loadProjects();
+    await loadShared();
   }
 
   function buildEmojiRow() {
@@ -277,11 +311,13 @@
     const grid = document.getElementById('projectGrid');
     grid.innerHTML = projects.map(p => {
       const files = Object.keys(p.files || {});
-      const types = [...new Set(files.map(f => f.split('.').pop()))];
       const updated = p.updated_at ? relativeTime(new Date(p.updated_at)) : 'just now';
+      const isPub = !!p.is_public;
+      const badge = `<div class="pc-pub ${isPub?'pub':'priv'}">${isPub?'🌐 Public':'🔒 Private'}</div>`;
       return `
         <a class="proj-card" href="#" onclick="openProject(event,'${p.id}')">
-          <button class="pc-more" onclick="openCtx(event,'${p.id}')">⋯</button>
+          <button class="pc-more" onclick="openCtx(event,'${p.id}',${isPub})">⋯</button>
+          ${badge}
           <div class="pc-emoji">${p.emoji || '💻'}</div>
           <div class="pc-name">${esc(p.name || 'Untitled')}</div>
           <div class="pc-meta">
@@ -300,18 +336,33 @@
     window.location.href = 'editor.html';
   }
 
-  function openCtx(e, id) {
+  function openCtx(e, id, isPub) {
     e.preventDefault(); e.stopPropagation();
-    ctxTarget = id;
+    ctxTarget = id; ctxTargetPub = isPub;
+    document.getElementById('ctxPubTxt').textContent = isPub ? 'Make private' : 'Make public';
     const menu = document.getElementById('ctxMenu');
-    menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
-    menu.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
+    menu.style.top = Math.min(e.clientY, window.innerHeight - 160) + 'px';
     menu.classList.add('show');
   }
 
   document.addEventListener('click', () => document.getElementById('ctxMenu').classList.remove('show'));
 
   function ctxOpen() { if (!ctxTarget) return; localStorage.setItem('vexium_current_project', ctxTarget); window.location.href = 'editor.html'; }
+  function ctxView() { if (!ctxTarget) return; window.open('viewer.html?project=' + ctxTarget, '_blank'); }
+
+  async function ctxTogglePublic() {
+    if (!ctxTarget) return;
+    const newVal = !ctxTargetPub;
+    if (session && sb) {
+      await sb.from('projects').update({ is_public: newVal }).eq('id', ctxTarget);
+    } else {
+      const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+      const p = list.find(x => x.id === ctxTarget);
+      if (p) { p.is_public = newVal; localStorage.setItem('vexium_projects', JSON.stringify(list)); }
+    }
+    await loadProjects();
+  }
 
   function ctxRename() {
     if (!ctxTarget) return;
@@ -334,6 +385,30 @@
       localStorage.setItem('vexium_projects', JSON.stringify(projects));
     }
     await loadProjects();
+  }
+
+  async function loadShared() {
+    if (!session || !sb) return;
+    try {
+      const { data } = await sb.from('project_members').select('project_id,projects(*)').eq('user_id', session.user.id);
+      const shared = (data || []).map(r => r.projects).filter(Boolean);
+      if (!shared.length) return;
+      document.getElementById('sharedSection').style.display = '';
+      document.getElementById('sharedGrid').innerHTML = shared.map(p => {
+        const fc = Object.keys(p.files || {}).length;
+        return `<a class="proj-card" href="#" onclick="openShared(event,'${p.id}')">
+          <div class="pc-emoji">${p.emoji || '💻'}</div>
+          <div class="pc-name">${esc(p.name || 'Untitled')}</div>
+          <div class="pc-meta"><span>${fc} file${fc !== 1 ? 's' : ''}</span><div class="pc-dot"></div><span>Shared</span></div>
+        </a>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  function openShared(e, id) {
+    e.preventDefault();
+    localStorage.setItem('vexium_current_project', id);
+    window.location.href = 'editor.html';
   }
 
   // ── MODAL ──

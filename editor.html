@@ -47,6 +47,42 @@
     .tb-btn.primary:hover{background:#3d5df0}
     .tb-btn.tb-pub{font-size:10px}
     .tb-btn.tb-pub.is-public{color:#4ade80;border-color:rgba(34,197,94,.2);background:rgba(34,197,94,.06)}
+
+    /* ── EDITOR PROJECT SETTINGS MODAL ── */
+    .ep-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
+    .ep-overlay.show{display:flex}
+    .ep-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:440px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column}
+    .ep-hero{background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));border-bottom:1px solid var(--b1);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+    .ep-hero-left{display:flex;align-items:center;gap:12px}
+    .ep-hero-emoji{font-size:36px;line-height:1}
+    .ep-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
+    .ep-hero-meta{font-size:11px;color:var(--sub);margin-top:2px}
+    .ep-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
+    .ep-close:hover{background:var(--b2);color:var(--text)}
+    .ep-body{padding:18px 24px 20px;display:flex;flex-direction:column;gap:16px}
+    .ep-field{display:flex;flex-direction:column;gap:6px}
+    .ep-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
+    .ep-input{background:transparent;border:none;border-bottom:1px solid var(--b2);padding:7px 2px;color:var(--text);font-size:15px;font-weight:700;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
+    .ep-input:focus{border-bottom-color:rgba(79,110,247,.6)}
+    .ep-div{height:1px;background:var(--b1);margin:0 -24px}
+    .ep-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .ep-vis-label{font-size:13px;font-weight:700}
+    .ep-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .ep-lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
+    .ep-lock-btn:hover{background:var(--b2);color:var(--text)}
+    .ep-lock-btn.unlocked{color:#4ade80}
+    .ep-lock-btn.unlocked:hover{background:rgba(34,197,94,.08);color:#4ade80}
+    .ep-lock-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .ep-emoji-strip{display:flex;gap:5px;flex-wrap:wrap}
+    .ep-emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;flex-shrink:0}
+    .ep-emoji-opt:hover{background:var(--b2)}
+    .ep-emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
+    .ep-footer{padding:0 24px 18px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+    .ep-btn{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
+    .ep-cancel{background:var(--b2);color:var(--sub)}
+    .ep-cancel:hover{background:var(--b3);color:var(--text)}
+    .ep-save{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
+    .ep-save:hover{opacity:.9}
     .tb-pfp-lnk{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;text-decoration:none;flex-shrink:0;margin-left:2px}
 
     /* ── LAYOUT ── */
@@ -265,11 +301,64 @@
   </div>
 
   <div class="tb-r">
-    <button class="tb-btn tb-pub" id="btnPublic" onclick="toggleProjectPublic()" title="Toggle public/private">🔒 Private</button>
+    <button class="tb-btn" id="btnSettings" onclick="openEditorSettings()" title="Project settings">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
     <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
     <button class="tb-btn" id="btnConsole" onclick="toggleConsole()">Console</button>
     <button class="tb-btn primary" onclick="saveNow()">Save</button>
     <a href="profile.html" class="tb-pfp-lnk" id="tbPfpLnk">?</a>
+  </div>
+</div>
+
+<!-- EDITOR PROJECT SETTINGS MODAL -->
+<div class="ep-overlay" id="epOverlay">
+  <div class="ep-modal">
+    <div class="ep-hero">
+      <div class="ep-hero-left">
+        <div class="ep-hero-emoji" id="epHeroEmoji">💻</div>
+        <div>
+          <div class="ep-hero-name" id="epHeroName">Project</div>
+          <div class="ep-hero-meta" id="epHeroMeta">—</div>
+        </div>
+      </div>
+      <button class="ep-close" onclick="closeEditorSettings()">✕</button>
+    </div>
+    <div class="ep-body">
+
+      <!-- ICON -->
+      <div class="ep-field">
+        <div class="ep-label">Icon</div>
+        <div class="ep-emoji-strip" id="epEmojiStrip"></div>
+      </div>
+
+      <!-- NAME -->
+      <div class="ep-field">
+        <div class="ep-label">Name</div>
+        <input class="ep-input" id="epNameInput" placeholder="Project name" autocomplete="off"
+          oninput="document.getElementById('epHeroName').textContent=this.value||'Project'"/>
+      </div>
+
+      <div class="ep-div"></div>
+
+      <!-- VISIBILITY -->
+      <div class="ep-vis-row">
+        <div>
+          <div class="ep-vis-label" id="epVisLabel">Private</div>
+          <div class="ep-vis-sub" id="epVisSub">Only you can see this project</div>
+        </div>
+        <button class="ep-lock-btn" id="epLockBtn" onclick="toggleEpPublic()">
+          <svg id="epLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span id="epLockTxt">Locked</span>
+        </button>
+      </div>
+
+    </div>
+    <div class="ep-footer">
+      <button class="ep-btn ep-cancel" onclick="closeEditorSettings()">Cancel</button>
+      <button class="ep-btn ep-save" onclick="saveEditorSettings()">Save changes</button>
+    </div>
   </div>
 </div>
 
@@ -498,8 +587,6 @@
     document.getElementById('tbProj').textContent = project.name || 'Untitled';
     document.title = (project.name || 'Untitled') + ' — Vexium';
     document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
-    // Public/private button state
-    updatePublicBtn(!!project.is_public);
     // Pfp initial
     const uname = localStorage.getItem('vexium_username') || '?';
     document.getElementById('tbPfpLnk').textContent = uname.charAt(0).toUpperCase();
@@ -654,32 +741,91 @@
     renderTabs();
   }
 
-  // ── SAVE ──
-  function updatePublicBtn(isPublic) {
-    const btn = document.getElementById('btnPublic');
-    if (!btn) return;
-    btn.textContent = isPublic ? '🌐 Public' : '🔒 Private';
-    btn.classList.toggle('is-public', isPublic);
-    if (project) project.is_public = isPublic;
+  // ── EDITOR PROJECT SETTINGS ──
+  const EP_EMOJIS = ['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
+  let epEmojiCur = '💻';
+  let epPublicCur = false;
+
+  function openEditorSettings() {
+    if (!project) return;
+    epEmojiCur = project.emoji || '💻';
+    epPublicCur = !!project.is_public;
+    document.getElementById('epHeroEmoji').textContent = epEmojiCur;
+    document.getElementById('epHeroName').textContent = project.name || 'Untitled';
+    const fc = Object.keys(project.files || {}).length;
+    document.getElementById('epHeroMeta').textContent = fc + ' file' + (fc !== 1 ? 's' : '');
+    document.getElementById('epNameInput').value = project.name || '';
+    buildEpEmojiStrip();
+    updateEpLock();
+    document.getElementById('epOverlay').classList.add('show');
   }
 
-  async function toggleProjectPublic() {
+  function closeEditorSettings() {
+    document.getElementById('epOverlay').classList.remove('show');
+  }
+
+  function buildEpEmojiStrip() {
+    document.getElementById('epEmojiStrip').innerHTML = EP_EMOJIS.map(em =>
+      `<div class="ep-emoji-opt${em === epEmojiCur ? ' sel' : ''}" onclick="pickEpEmoji('${em}')">${em}</div>`
+    ).join('');
+  }
+
+  function pickEpEmoji(em) {
+    epEmojiCur = em;
+    document.getElementById('epHeroEmoji').textContent = em;
+    document.querySelectorAll('#epEmojiStrip .ep-emoji-opt').forEach(el => el.classList.toggle('sel', el.textContent === em));
+  }
+
+  function toggleEpPublic() {
+    epPublicCur = !epPublicCur;
+    updateEpLock();
+  }
+
+  function updateEpLock() {
+    const btn = document.getElementById('epLockBtn');
+    const ico = document.getElementById('epLockIco');
+    const txt = document.getElementById('epLockTxt');
+    document.getElementById('epVisLabel').textContent = epPublicCur ? 'Public' : 'Private';
+    document.getElementById('epVisSub').textContent = epPublicCur ? 'Anyone with the link can view this' : 'Only you can see this project';
+    if (epPublicCur) {
+      btn.className = 'ep-lock-btn unlocked';
+      ico.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
+      txt.textContent = 'Public';
+    } else {
+      btn.className = 'ep-lock-btn';
+      ico.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+      txt.textContent = 'Locked';
+    }
+  }
+
+  async function saveEditorSettings() {
     if (!project) return;
-    const newVal = !project.is_public;
-    updatePublicBtn(newVal);
+    const name = document.getElementById('epNameInput').value.trim();
+    if (!name) { document.getElementById('epNameInput').focus(); return; }
+    project.name = name;
+    project.emoji = epEmojiCur;
+    project.is_public = epPublicCur;
+    // Update topbar project name
+    document.getElementById('tbProj').textContent = name;
+    const updates = { name, emoji: epEmojiCur, is_public: epPublicCur, updated_at: new Date().toISOString() };
     if (sb) {
       try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) await sb.from('projects').update({ is_public: newVal }).eq('id', project.id);
+        const { data: { session: s } } = await sb.auth.getSession();
+        if (s) await sb.from('projects').update(updates).eq('id', project.id);
       } catch(e) {}
     } else {
       try {
         const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
         const p = list.find(x => x.id === project.id);
-        if (p) { p.is_public = newVal; localStorage.setItem('vexium_projects', JSON.stringify(list)); }
+        if (p) { Object.assign(p, updates); localStorage.setItem('vexium_projects', JSON.stringify(list)); }
       } catch(e) {}
     }
+    closeEditorSettings();
   }
+
+  document.getElementById('epOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('epOverlay')) closeEditorSettings();
+  });
 
   async function saveNow() {
     if (!project) return;

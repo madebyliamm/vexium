@@ -148,24 +148,20 @@
     #aiBottom{border-top:1px solid var(--b1);padding:clamp(8px,.8vw,14px) clamp(10px,1.5vw,24px);flex-shrink:0;background:var(--bg);display:none}
     #aiBottom.show{display:flex;justify-content:center}
     #aiBottomWrap{width:min(92%,640px)}
-    #aiBottomInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px);display:flex;align-items:flex-end;gap:8px}
+    #aiBottomInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px);display:flex;align-items:center;gap:8px}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.5)}
-    #aiBottomInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;max-height:160px;overflow-y:auto;min-height:22px}
+    #aiBottomInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;height:22px;min-height:22px}
     #aiBottomInput::placeholder{color:var(--sub)}
-    #aiBottomInput::-webkit-scrollbar{width:2px}
-    #aiBottomInput::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
-    #aiBottomSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);margin-bottom:1px}
+    #aiBottomSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35)}
     #aiBottomSend:hover{opacity:.85}
     #aiBottomSend:disabled{opacity:.3;cursor:default}
     #aiBottomSend svg{width:clamp(12px,1vw,16px);height:clamp(12px,1vw,16px);fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
     /* shared center input row */
-    #aiInputArea{display:flex;align-items:flex-end;gap:8px}
-    #aiInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;max-height:160px;overflow-y:auto;min-height:22px}
-    #aiInput::-webkit-scrollbar{width:2px}
-    #aiInput::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+    #aiInputArea{display:flex;align-items:center;gap:8px}
+    #aiInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;height:22px;min-height:22px}
     #aiInput::placeholder{color:var(--sub)}
-    #aiSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);margin-bottom:1px}
+    #aiSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35)}
     #aiSend:hover{opacity:.85}
     #aiSend:disabled{opacity:.3;cursor:default}
     #aiSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -312,7 +308,7 @@
           <div class="ai-center-h">Build anything with me.</div>
           <div id="aiCenterInput">
             <div id="aiInputArea">
-              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
+              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…"></textarea>
               <button id="aiSend" onclick="aiSend()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
@@ -335,7 +331,7 @@
         <div id="aiBottom">
           <div id="aiBottomWrap">
           <div id="aiBottomInputArea">
-            <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
+            <textarea id="aiBottomInput" placeholder="Ask me anything…"></textarea>
             <button id="aiBottomSend" onclick="aiSend(true)">
               <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             </button>
@@ -484,6 +480,7 @@
     document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
     renderFileTree();
     setUrl(mainFile);
+    setMode('ai');
   }
 
   // ── MONACO ──
@@ -969,6 +966,7 @@
     if (!text || aiTyping) return;
     input.value = '';
     input.style.height = 'auto';
+    input.style.overflow = 'hidden';
 
     aiTransitionToChat();
 
@@ -992,8 +990,12 @@
   }
 
   function aiAutoResize(el) {
+    el.style.overflow = 'hidden';
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+    var maxH = Math.round(window.innerHeight * 0.25); // max 25vh
+    var newH = Math.min(el.scrollHeight, maxH);
+    el.style.height = newH + 'px';
+    el.style.overflow = el.scrollHeight > maxH ? 'auto' : 'hidden';
   }
 
   document.addEventListener('DOMContentLoaded', function() {

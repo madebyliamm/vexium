@@ -473,7 +473,8 @@
     const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 
     if (session && sb) {
-      await sb.from('projects').insert({ ...proj, user_id: session.user.id });
+      const { error } = await sb.from('projects').insert({ ...proj, user_id: session.user.id });
+      if (error) { console.error('insert error:', error); alert('Could not save project: ' + error.message); return; }
     } else {
       projects.unshift(proj);
       localStorage.setItem('vexium_projects', JSON.stringify(projects));

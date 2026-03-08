@@ -457,6 +457,7 @@
         const session = authData?.session;
         if (session) {
           const { data, error } = await sb.from('projects').select('*').eq('id', projectId).maybeSingle();
+          console.log('LOAD PROJECT result:', { data, error, projectId, userId: session.user.id });
           if (error) console.error('loadProject error:', error.message, error);
           if (data) {
             project = data;

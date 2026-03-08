@@ -45,6 +45,9 @@
     .tb-btn.active{background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.2);color:#93c5fd}
     .tb-btn.primary{background:var(--a1);border-color:transparent;color:#fff}
     .tb-btn.primary:hover{background:#3d5df0}
+    .tb-btn.tb-pub{font-size:10px}
+    .tb-btn.tb-pub.is-public{color:#4ade80;border-color:rgba(34,197,94,.2);background:rgba(34,197,94,.06)}
+    .tb-pfp-lnk{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;text-decoration:none;flex-shrink:0;margin-left:2px}
 
     /* ── LAYOUT ── */
     #workspace{display:flex;height:calc(100vh - 44px - 22px)}
@@ -262,9 +265,11 @@
   </div>
 
   <div class="tb-r">
+    <button class="tb-btn tb-pub" id="btnPublic" onclick="toggleProjectPublic()" title="Toggle public/private">🔒 Private</button>
     <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
     <button class="tb-btn" id="btnConsole" onclick="toggleConsole()">Console</button>
     <button class="tb-btn primary" onclick="saveNow()">Save</button>
+    <a href="profile.html" class="tb-pfp-lnk" id="tbPfpLnk">?</a>
   </div>
 </div>
 
@@ -478,6 +483,11 @@
     document.getElementById('tbProj').textContent = project.name || 'Untitled';
     document.title = (project.name || 'Untitled') + ' — Vexium';
     document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
+    // Public/private button state
+    updatePublicBtn(!!project.is_public);
+    // Pfp initial
+    const uname = localStorage.getItem('vexium_username') || '?';
+    document.getElementById('tbPfpLnk').textContent = uname.charAt(0).toUpperCase();
     renderFileTree();
     setUrl(mainFile);
     setMode('ai');
@@ -630,6 +640,32 @@
   }
 
   // ── SAVE ──
+  function updatePublicBtn(isPublic) {
+    const btn = document.getElementById('btnPublic');
+    if (!btn) return;
+    btn.textContent = isPublic ? '🌐 Public' : '🔒 Private';
+    btn.classList.toggle('is-public', isPublic);
+    if (project) project.is_public = isPublic;
+  }
+
+  async function toggleProjectPublic() {
+    if (!project) return;
+    const newVal = !project.is_public;
+    updatePublicBtn(newVal);
+    if (sb) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) await sb.from('projects').update({ is_public: newVal }).eq('id', project.id);
+      } catch(e) {}
+    } else {
+      try {
+        const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+        const p = list.find(x => x.id === project.id);
+        if (p) { p.is_public = newVal; localStorage.setItem('vexium_projects', JSON.stringify(list)); }
+      } catch(e) {}
+    }
+  }
+
   async function saveNow() {
     if (!project) return;
     document.getElementById('tbSaving').classList.add('show');

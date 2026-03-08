@@ -939,7 +939,7 @@
     // Placeholder response until real API is wired in
     setTimeout(function() {
       aiHideTyping();
-      var reply = "I'm not connected to the AI yet — that's coming next. But I heard you! You said: "" + text + "". Once the API is wired up I'll be able to build, edit, and chat with full context of your project.";
+      var reply = "I'm not connected to the AI yet - that's coming next. You said: '" + text + "'. Once the API is wired up I'll build, edit, and chat with full context of your project.";
       aiAddMsg('ai', reply);
       aiHistory.push({ role: 'assistant', content: reply });
       aiTyping = false;

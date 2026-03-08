@@ -473,9 +473,14 @@
     const proj = { id, name, emoji: selectedEmoji, files: defaultFiles, main_file: 'index.html', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 
     if (session && sb) {
-      const { error } = await sb.from('projects').insert({ ...proj, user_id: session.user.id });
-      if (error) { console.error('insert error:', error); alert('Could not save project: ' + error.message); return; }
+      const { data: insertData, error } = await sb.from('projects').insert({ ...proj, user_id: session.user.id }).select();
+      console.log('INSERT result:', { insertData, error, userId: session.user.id, projId: id });
+      if (error) {
+        alert('INSERT FAILED:\n' + JSON.stringify(error, null, 2));
+        return;
+      }
     } else {
+      console.log('No session — saving to localStorage. session=', session, 'sb=', sb);
       projects.unshift(proj);
       localStorage.setItem('vexium_projects', JSON.stringify(projects));
     }

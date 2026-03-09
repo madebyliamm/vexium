@@ -1350,12 +1350,15 @@
         const firstChanged = parsed.files[0].name;
         if (openTabs.includes(firstChanged)) openFile(firstChanged);
 
-        // Show preview automatically if it's not already visible
-        if (!previewVisible) {
-          previewVisible = true;
-          document.getElementById('rightPanel').classList.remove('hidden');
-          document.getElementById('btnPreview').classList.add('active');
-        }
+        // Show preview automatically — always force it open when AI produces files
+        previewVisible = true;
+        const rp = document.getElementById('rightPanel');
+        const pf = document.getElementById('previewFrame');
+        const pt = document.getElementById('previewToolbar');
+        rp.classList.remove('hidden');
+        pf.style.display = 'block';
+        pt.style.display = '';
+        document.getElementById('btnPreview').classList.add('active');
 
         // Refresh the preview
         setTimeout(refreshPreview, 100);

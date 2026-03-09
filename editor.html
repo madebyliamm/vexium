@@ -443,6 +443,67 @@
     .prev-open{padding:4px 10px;background:transparent;border:1px solid var(--b2);border-radius:5px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;flex-shrink:0}
     .prev-open:hover{background:var(--b2);color:var(--text)}
 
+    /* ── device view ── */
+    #previewInner{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff}
+    #previewInner.device-phone,#previewInner.device-desktop{background:var(--bg);align-items:center;justify-content:center;padding:20px}
+    /* phone frame */
+    .device-shell-phone{
+      width:375px;max-width:calc(100% - 32px);
+      border-radius:44px;overflow:hidden;
+      border:8px solid #1a1a2e;
+      box-shadow:0 0 0 1px #0a0a1a,0 30px 80px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.06);
+      position:relative;flex-shrink:0;
+      height:calc(min(100%, (375px - 16px) * 844 / 390));
+      max-height:calc(100% - 40px);
+      display:flex;flex-direction:column;background:#000;
+    }
+    .device-shell-phone::before{
+      content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+      width:120px;height:28px;background:#1a1a2e;border-radius:0 0 20px 20px;z-index:10;
+    }
+    /* desktop frame */
+    .device-shell-desktop{
+      width:min(900px,calc(100% - 32px));
+      border-radius:12px 12px 0 0;overflow:hidden;
+      border:6px solid #1a1a2e;border-bottom:none;
+      box-shadow:0 0 0 1px #0a0a1a,0 20px 60px rgba(0,0,0,.7);
+      position:relative;flex-shrink:0;
+      height:min(580px,calc(100% - 60px));
+      display:flex;flex-direction:column;background:#000;
+    }
+    .device-shell-desktop::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:28px;
+      background:#1a1a2e;display:flex;align-items:center;z-index:10;
+    }
+    .device-shell-desktop::after{
+      content:'● ● ●';position:absolute;top:7px;left:12px;
+      font-size:8px;letter-spacing:4px;color:rgba(255,255,255,.25);z-index:11;
+    }
+    .device-frame-iframe{flex:1;width:100%;border:none;background:#fff;display:block}
+    .device-shell-phone .device-frame-iframe{margin-top:28px;height:calc(100% - 28px)}
+    .device-shell-desktop .device-frame-iframe{margin-top:28px;height:calc(100% - 28px)}
+    /* device picker dropdown */
+    .prev-device-btn{
+      padding:3px 8px;background:transparent;border:1px solid var(--b2);border-radius:5px;
+      font-size:10px;font-weight:600;color:var(--sub);cursor:pointer;font-family:var(--sans);
+      transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;
+    }
+    .prev-device-btn:hover{background:var(--b2);color:var(--text)}
+    .prev-device-btn.active{background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.2);color:#93c5fd}
+    .prev-device-drop{
+      position:absolute;top:calc(100% + 4px);right:0;
+      background:var(--s1);border:1px solid var(--b2);border-radius:10px;
+      overflow:hidden;z-index:200;display:none;
+      box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:130px;
+    }
+    .prev-device-drop.show{display:block}
+    .prev-device-opt{
+      padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;
+      display:flex;align-items:center;gap:8px;transition:background .12s;color:var(--sub);
+    }
+    .prev-device-opt:hover,.prev-device-opt.sel{background:var(--b1);color:var(--text)}
+    .prev-device-opt.sel{color:var(--a1)}
+    .prev-device-icon{font-size:13px}
     #previewFrame{flex:1;width:100%;border:none;background:#fff;display:block}
 
     /* ══ PLAN PANEL ══ */
@@ -523,8 +584,8 @@
 
     #planCenterInput{width:var(--plan-w);margin-bottom:10px}
     #planCenterInput #planInputArea{
-      border-radius:16px;border:1px solid var(--b2);background:var(--s1);
-      padding:14px 14px 14px 20px;
+      border-radius:14px;border:1px solid var(--b2);background:var(--s1);
+      padding:9px 9px 9px 16px;
       transition:border-color .2s,box-shadow .2s;
       box-shadow:0 4px 32px rgba(0,0,0,.3);
     }
@@ -532,7 +593,7 @@
       border-color:rgba(79,110,247,.5);
       box-shadow:0 0 0 3px rgba(79,110,247,.08),0 8px 40px rgba(0,0,0,.3);
     }
-    #planInputArea{display:flex;align-items:flex-end;gap:10px}
+    #planInputArea{display:flex;align-items:center;gap:10px}
     #planInput{
       flex:1;background:transparent;border:none;font-size:14px;
       color:var(--text);font-family:var(--sans);resize:none;outline:none;
@@ -540,15 +601,15 @@
     }
     #planInput::placeholder{color:var(--sub)}
     #planSend{
-      width:38px;height:38px;min-width:38px;
+      width:30px;height:30px;min-width:30px;
       background:linear-gradient(135deg,var(--a1),var(--a2));
       border:none;border-radius:50%;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       flex-shrink:0;transition:opacity .15s,transform .15s;
-      box-shadow:0 0 20px rgba(79,110,247,.45);align-self:flex-end;
+      box-shadow:0 0 16px rgba(79,110,247,.4);
     }
     #planSend:hover{opacity:.88;transform:scale(1.06)}
-    #planSend svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    #planSend svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
     .plan-skip-btn{
       background:none;border:none;font-size:11px;font-weight:600;
@@ -960,7 +1021,7 @@
           <div id="aiPlanEntry">
             <button id="aiPlanEntryBtn" onclick="openPlanPhase()">
               <div class="ape-orb">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(200,180,255,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(200,180,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               </div>
               <div class="ape-text">
                 <div class="ape-title">Plan with AI</div>
@@ -1054,8 +1115,21 @@
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
           <button class="prev-open" onclick="openInViewer()">Open ↗</button>
+          <div style="position:relative">
+            <button class="prev-device-btn" id="prevDeviceBtn" onclick="toggleDeviceDrop(event)" title="Device view">
+              <svg id="prevDeviceIco" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+              <span id="prevDeviceLbl">Default</span>
+            </button>
+            <div class="prev-device-drop" id="prevDeviceDrop">
+              <div class="prev-device-opt sel" id="dopt-default" onclick="setDeviceMode('default')"><span class="prev-device-icon">⬜</span>Default</div>
+              <div class="prev-device-opt" id="dopt-phone" onclick="setDeviceMode('phone')"><span class="prev-device-icon">📱</span>Phone</div>
+              <div class="prev-device-opt" id="dopt-desktop" onclick="setDeviceMode('desktop')"><span class="prev-device-icon">🖥</span>Desktop</div>
+            </div>
+          </div>
         </div>
-        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>
+        <div id="previewInner">
+          <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>
+        </div>
         <div id="consoleResizer"></div>
         <div id="consolePanel" class="hidden">
           <div id="consoleHeader">
@@ -1707,8 +1781,74 @@
     consoleVisible = !consoleVisible;
     document.getElementById('consolePanel').classList.toggle('hidden', !consoleVisible);
     document.getElementById('rightPanel').classList.toggle('hidden', !previewVisible && !consoleVisible);
-    document.getElementById('btnConsole').classList.toggle('active', consoleVisible);
     if (editor) editor.layout();
+  }
+
+  // ── DEVICE MODE ──
+  var deviceMode = 'default';
+  function toggleDeviceDrop(e) {
+    e.stopPropagation();
+    document.getElementById('prevDeviceDrop').classList.toggle('show');
+  }
+  document.addEventListener('click', function() {
+    var d = document.getElementById('prevDeviceDrop');
+    if (d) d.classList.remove('show');
+  });
+  function setDeviceMode(mode) {
+    deviceMode = mode;
+    document.getElementById('prevDeviceDrop').classList.remove('show');
+    // Update button label + icon
+    var lbl = document.getElementById('prevDeviceLbl');
+    var ico = document.getElementById('prevDeviceIco');
+    var btn = document.getElementById('prevDeviceBtn');
+    if (lbl) lbl.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+    btn.classList.toggle('active', mode !== 'default');
+    // Highlight selected option
+    ['default','phone','desktop'].forEach(function(m) {
+      var opt = document.getElementById('dopt-' + m);
+      if (opt) opt.classList.toggle('sel', m === mode);
+    });
+    // Rebuild the preview inner content
+    applyDeviceMode();
+    refreshPreview();
+  }
+  function applyDeviceMode() {
+    var inner = document.getElementById('previewInner');
+    var frame = document.getElementById('previewFrame');
+    if (!inner || !frame) return;
+    // Remove any existing device shell
+    var existingShell = inner.querySelector('.device-shell-phone,.device-shell-desktop');
+    if (existingShell) {
+      // move iframe back to inner before removing shell
+      inner.appendChild(frame);
+      existingShell.remove();
+    }
+    inner.className = '';
+    if (deviceMode === 'default') {
+      // iframe fills the panel directly
+      frame.style.width = '100%';
+      frame.style.height = '';
+      frame.style.flex = '1';
+      frame.className = '';
+    } else if (deviceMode === 'phone') {
+      inner.classList.add('device-phone');
+      var shell = document.createElement('div');
+      shell.className = 'device-shell-phone';
+      frame.className = 'device-frame-iframe';
+      frame.style.width = '100%';
+      frame.style.flex = '';
+      shell.appendChild(frame);
+      inner.appendChild(shell);
+    } else if (deviceMode === 'desktop') {
+      inner.classList.add('device-desktop');
+      var shell = document.createElement('div');
+      shell.className = 'device-shell-desktop';
+      frame.className = 'device-frame-iframe';
+      frame.style.width = '100%';
+      frame.style.flex = '';
+      shell.appendChild(frame);
+      inner.appendChild(shell);
+    }
   }
 
   // ── RESIZE ──
@@ -2081,7 +2221,6 @@
           '<div style="font-size:13px;font-weight:600;color:var(--text)">' + escHtml(t.name) + '</div>' +
           '<div style="font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(t.prompt) + '</div>' +
         '</div>' +
-        '<div style="font-size:10px;color:var(--sub)">✎</div>' +
       '</div>';
     });
     list.innerHTML = html;

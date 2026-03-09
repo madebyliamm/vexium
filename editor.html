@@ -1187,7 +1187,8 @@
   var aiTyping = false;
   var aiStarted = false;
 
-  // FIX 7: Unified auto-resize for both textareas
+  const AI_EDGE_URL = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/ai-chat';
+
   function aiAutoResize(el) {
     el.style.height = 'auto';
     el.style.overflow = 'hidden';
@@ -1259,7 +1260,21 @@
     if (el) el.remove();
   }
 
-  function aiSend(fromBottom) {
+  // Show a file-change summary pill inside the AI message
+  function aiAddFileBadges(files, parentEl) {
+    if (!files || !files.length) return;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin-top:8px';
+    files.forEach(function(f) {
+      var badge = document.createElement('div');
+      badge.style.cssText = 'font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(79,110,247,.12);color:#818cf8;font-family:var(--mono)';
+      badge.textContent = '✎ ' + f.name;
+      row.appendChild(badge);
+    });
+    parentEl.appendChild(row);
+  }
+
+  async function aiSend(fromBottom) {
     var input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
     var text = input.value.trim();
     if (!text || aiTyping) return;
@@ -1276,19 +1291,90 @@
     aiHistory.push({ role: 'user', content: text });
     aiShowTyping();
 
-    setTimeout(function() {
+    try {
+      const response = await fetch(AI_EDGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: aiHistory,
+          files: fileSystem
+        })
+      });
+
+      const data = await response.json();
       aiHideTyping();
-      var reply = "I'm not connected to the AI yet — that's coming next. You said: '" + text + "'. Once the API is wired up I'll build, edit, and chat with full context of your project.";
-      aiAddMsg('ai', reply);
-      aiHistory.push({ role: 'assistant', content: reply });
-      aiTyping = false;
-      document.getElementById('aiBottomSend').disabled = false;
-      document.getElementById('aiSend').disabled = false;
-    }, 1200);
+
+      // Pull the text content out of Anthropic's response envelope
+      if (data.error) throw new Error(data.error);
+      if (!data.content || !data.content[0]) throw new Error('Empty response from AI');
+
+      const raw = data.content[0].text;
+
+      // Parse the JSON the AI returned
+      let parsed;
+      try {
+        // Strip any accidental markdown fences just in case
+        const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+        parsed = JSON.parse(cleaned);
+      } catch(e) {
+        // If it's not JSON (AI went rogue), just show whatever it said
+        parsed = { message: raw, files: [] };
+      }
+
+      // Show the AI's message
+      var msgWrap = document.querySelector('#aiMessages .ai-msg.ai:last-child');
+      var bubble = aiAddMsg('ai', parsed.message || '…').parentElement.querySelector('.ai-bubble');
+
+      // Apply file changes
+      if (parsed.files && parsed.files.length) {
+        parsed.files.forEach(function(f) {
+          if (!f.name || f.content === undefined) return;
+          fileSystem[f.name] = f.content;
+          dirtyFiles.add(f.name);
+          // If it's a new file, add it to open tabs
+          if (!openTabs.includes(f.name)) openTabs.push(f.name);
+        });
+
+        // Add file badges to the bubble
+        var lastBubble = document.querySelector('#aiMessages .ai-msg.ai:last-child .ai-bubble');
+        if (lastBubble) aiAddFileBadges(parsed.files, lastBubble);
+
+        renderFileTree();
+        renderTabs();
+
+        // Switch to the first changed file in the editor
+        const firstChanged = parsed.files[0].name;
+        if (openTabs.includes(firstChanged)) openFile(firstChanged);
+
+        // Show preview automatically if it's not already visible
+        if (!previewVisible) {
+          previewVisible = true;
+          document.getElementById('rightPanel').classList.remove('hidden');
+          document.getElementById('btnPreview').classList.add('active');
+        }
+
+        // Refresh the preview
+        setTimeout(refreshPreview, 100);
+
+        // Auto-save
+        saveNow();
+      }
+
+      // Push assistant reply into history for context on next message
+      aiHistory.push({ role: 'assistant', content: raw });
+
+    } catch(err) {
+      aiHideTyping();
+      aiAddMsg('ai', '⚠ Something went wrong: ' + err.message + '. Check the console for details.');
+      console.error('AI error:', err);
+    }
+
+    aiTyping = false;
+    document.getElementById('aiBottomSend').disabled = false;
+    document.getElementById('aiSend').disabled = false;
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    // FIX 7: Wire up center input auto-resize
     var centerInput = document.getElementById('aiInput');
     if (centerInput) {
       centerInput.addEventListener('input', function() { aiAutoResize(centerInput); });

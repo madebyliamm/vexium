@@ -62,7 +62,7 @@
     .info{}
     .name-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
     .prof-name{font-size:24px;font-weight:800;letter-spacing:-.5px}
-    .prof-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:5px;background:rgba(79,110,247,.1);color:#818cf8;border:1px solid rgba(79,110,247,.15)}
+    /* FIX 4: prof-badge removed */
     .prof-handle{font-size:13px;color:var(--sub);margin-bottom:9px}
     .prof-bio{font-size:13px;color:var(--sub);line-height:1.65;margin-bottom:13px;max-width:480px}
     .stats-row{display:flex;gap:22px}
@@ -79,7 +79,6 @@
     .btn-icon:hover{background:var(--b2);color:var(--text)}
     .btn-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
-    /* PRIVACY TAG */
     .privacy-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;transition:all .15s;margin-bottom:28px;user-select:none}
     .privacy-pill.pub{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);color:#4ade80}
     .privacy-pill.priv{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171}
@@ -105,12 +104,10 @@
     .pc-name{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:5px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub)}
-    /* collab avatars strip */
     .pc-collabs{display:flex;align-items:center;justify-content:center;margin-top:10px;gap:-4px}
     .pc-collab-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));border:2px solid var(--s1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;margin-left:-4px}
     .pc-collab-av:first-child{margin-left:0}
 
-    /* EMPTY */
     .empty{text-align:center;padding:60px 20px;border:1px dashed var(--b2);border-radius:14px;display:none}
     .empty.show{display:block}
     .empty-ico{font-size:34px;margin-bottom:12px}
@@ -166,7 +163,6 @@
     .cl-rm:hover{background:rgba(239,68,68,.1);color:#ef4444}
     .invite-row{display:flex;gap:8px}
 
-    /* MSG + TOAST */
     .msg{font-size:11px;min-height:14px;margin-top:6px}
     .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
     #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:10px 20px;font-size:12px;display:flex;align-items:center;gap:8px;opacity:0;transition:all .22s;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap}
@@ -198,7 +194,7 @@
           <span class="notif-head-t">Notifications</span>
           <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
         </div>
-        <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
       </div>
     </div>
   </div>
@@ -212,7 +208,7 @@
       <div class="info">
         <div class="name-row">
           <div class="prof-name" id="profName">Loading…</div>
-          <div class="prof-badge" id="profBadge">Free</div>
+          <!-- FIX 4: "Free" badge removed -->
         </div>
         <div class="prof-handle" id="profHandle">@—</div>
         <div class="prof-bio" id="profBio"></div>
@@ -290,14 +286,12 @@
   <div class="modal">
     <div class="modal-t">Settings</div>
     <div class="modal-sub">Your profile and account</div>
-
     <div class="sec-lbl">Profile</div>
     <div class="m-field"><label class="m-label">Display name</label><input class="m-input" id="fName" placeholder="Your name"/></div>
     <div class="m-field"><label class="m-label">Username</label><input class="m-input" id="fUsername" placeholder="username" autocomplete="off"/></div>
     <div class="m-field"><label class="m-label">Bio</label><textarea class="m-input" id="fBio" rows="3" placeholder="Tell the world what you're building…" style="resize:none"></textarea></div>
     <button class="mbtn mbtn-ok" onclick="saveProfile()">Save profile</button>
     <div class="msg" id="profileMsg"></div>
-
     <div class="mdivider"></div>
     <div class="sec-lbl">Password</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -306,14 +300,12 @@
     </div>
     <button class="mbtn mbtn-ok" onclick="changePassword()">Update password</button>
     <div class="msg" id="passMsg"></div>
-
     <div class="mdivider"></div>
     <div class="sec-lbl">Account</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="mbtn mbtn-danger" onclick="doSignOut()">Sign out</button>
       <button class="mbtn mbtn-danger" onclick="deleteAccount()">Delete account</button>
     </div>
-
     <div class="modal-btns">
       <button class="mbtn mbtn-cancel" onclick="closeOv('settingsOverlay')">Close</button>
     </div>
@@ -375,10 +367,8 @@
       isOwn = true;
       await loadOwnProfile();
     }
-    // Topbar pfp
     const tname = myProfile?.display_name || myProfile?.username || localStorage.getItem('vexium_username') || '?';
     document.getElementById('tbPfp').textContent = tname.charAt(0).toUpperCase();
-
     await renderHero();
     await loadProjects();
     if (isOwn) {
@@ -421,7 +411,6 @@
     document.getElementById('statFollowers').textContent = p.follower_count||0;
     document.getElementById('statFollowing').textContent = p.following_count||0;
     document.title = '@'+(p.username||'')+'  — Vexium';
-    // Compute friends count (mutual follows)
     if(sb&&viewId){
       try{
         const[{data:fwing},{data:fwers}]=await Promise.all([
@@ -433,7 +422,6 @@
         document.getElementById('statFriends').textContent=friends;
       }catch(e){}
     }
-
     if (isOwn) {
       document.getElementById('heroActions').innerHTML = `
         <button class="btn-icon" onclick="openSettings()" title="Settings">
@@ -482,7 +470,6 @@
     if (document.getElementById('followBtn')) document.getElementById('followBtn').disabled=false;
   }
 
-  /* PRIVACY */
   function updatePrivacyPill() {
     const pill = document.getElementById('privacyPill');
     document.getElementById('privIco').textContent = acctPublic?'🌐':'🔒';
@@ -496,7 +483,6 @@
     showToast(acctPublic?'🌐':'🔒', acctPublic?'Profile is now public':'Profile is now private');
   }
 
-  /* PROJECTS */
   async function loadProjects() {
     let data=[];
     if (sb&&viewId) {
@@ -509,8 +495,6 @@
       try { data=JSON.parse(localStorage.getItem('vexium_projects')||'[]'); } catch(e){}
     }
     projects=data;
-    // project count no longer shown on profile
-
     const grid = document.getElementById('projectGrid');
     const empty = document.getElementById('emptyProjects');
     if (!projects.length) {
@@ -519,8 +503,6 @@
       return;
     }
     empty.classList.remove('show');
-
-    // For own projects, also fetch collaborator counts
     let collabMap = {};
     if (isOwn && sb) {
       try {
@@ -529,7 +511,6 @@
         (cm||[]).forEach(r=>{ if (!collabMap[r.project_id]) collabMap[r.project_id]=[]; collabMap[r.project_id].push(r.profiles); });
       } catch(e){}
     }
-
     grid.innerHTML = projects.map(p=>{
       const fc = Object.keys(p.files||{}).length;
       const upd = relTime(new Date(p.updated_at||Date.now()));
@@ -575,7 +556,6 @@
   }
   function openShared(id) { localStorage.setItem('vexium_current_project',id); location.href='editor.html'; }
 
-  /* CTX */
   function openCtx(e,id,isPub) {
     e.preventDefault(); e.stopPropagation();
     ctxId=id; ctxPub=isPub;
@@ -599,15 +579,11 @@
     if(!ctxId)return;
     if(!confirm('Delete this project? Cannot be undone.'))return;
     if(sb){ await sb.from('projects').delete().eq('id',ctxId); }
-    else {
-      const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==ctxId);
-      localStorage.setItem('vexium_projects',JSON.stringify(list));
-    }
+    else { const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==ctxId); localStorage.setItem('vexium_projects',JSON.stringify(list)); }
     await loadProjects();
   }
   function ctxCollaborators(){ if(!ctxId)return; openCollabModal(ctxId); }
 
-  /* COLLAB MODAL */
   async function openCollabModal(pid) {
     document.getElementById('inviteMsg').textContent='';
     document.getElementById('inviteInput').value='';
@@ -657,7 +633,6 @@
     await refreshCollabList(pid);
   }
 
-  /* FOLLOW LIST */
   async function openFollowList(type){
     const titles = {followers:'Followers', following:'Following', friends:'Friends'};
     document.getElementById('followTitle').textContent = titles[type]||type;
@@ -667,19 +642,16 @@
     openOv('followOverlay');
     if(!sb||!viewId){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Not available.</div>'; return; }
     try {
-      // Fetch both sides — followers.follower_id and following.following_id now ref profiles directly
       const [{data:fwingData},{data:fwersData}] = await Promise.all([
         sb.from('follows').select('following_id, profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',viewId),
         sb.from('follows').select('follower_id, profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',viewId)
       ]);
       const following = (fwingData||[]).map(r=>({id:r.following_id, ...r.profiles}));
       const followers = (fwersData||[]).map(r=>({id:r.follower_id, ...r.profiles}));
-
       let rows = [];
       if(type==='following') rows = following;
       else if(type==='followers') rows = followers;
       else if(type==='friends') rows = following.filter(f=>followers.find(r=>r.id===f.id));
-
       if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
       list.innerHTML=rows.map(p=>{
         if(!p)return'';
@@ -689,12 +661,11 @@
           <div><div class="fi-name">${esc(n)}</div><div class="fi-handle">@${esc(p.username||'')}</div></div>
         </div>`;
       }).join('');
-    } catch(e){ console.error('follow list error:',e); list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
+    } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
   }
 
   function goProfile(u){ closeOv('followOverlay'); location.href='profile.html?user='+u; }
 
-  /* TABS */
   function switchTab(t){
     document.getElementById('tabProjects').classList.toggle('active',t==='projects');
     document.getElementById('tabShared').classList.toggle('active',t==='shared');
@@ -702,10 +673,7 @@
     document.getElementById('paneShared').style.display=t==='shared'?'':'none';
   }
 
-  /* SETTINGS */
-  function openSettings(){
-    openOv('settingsOverlay');
-  }
+  function openSettings(){ openOv('settingsOverlay'); }
   async function saveProfile(){
     const name=document.getElementById('fName').value.trim();
     const username=document.getElementById('fUsername').value.trim().toLowerCase();
@@ -751,52 +719,75 @@
     localStorage.clear(); location.href='index.html';
   }
 
-  /* UTILS */
   function openOv(id){ document.getElementById(id).classList.add('show'); }
   function closeOv(id){ document.getElementById(id).classList.remove('show'); }
   document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function relTime(d){ const s=Math.floor((Date.now()-d)/1000); if(s<60)return'just now'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
   let toastT;
   function showToast(ico,msg){ clearTimeout(toastT); document.getElementById('toastIco').textContent=ico; document.getElementById('toastMsg').textContent=msg; document.getElementById('toast').classList.add('show'); toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400); }
 
-  /* ── NOTIFICATIONS ── */
+  /* ── NOTIFICATIONS (FIX 1) ── */
   let notifLoaded=false;
   async function loadNotifications(){
     if(!sb||!session)return;
+    const listEl=document.getElementById('notifList');
     try{
-      const{data,error}=await sb.from('notifications')
-        .select('*, actor:actor_id(username,display_name), project:project_id(name)')
+      const{data,error}=await sb
+        .from('notifications')
+        .select('id,user_id,actor_id,type,project_id,read,created_at')
         .eq('user_id',session.user.id)
-        .order('created_at',{ascending:false}).limit(20);
-      if(error)return;
+        .order('created_at',{ascending:false})
+        .limit(20);
+      if(error){
+        listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
+        notifLoaded=true; return;
+      }
       const notifs=data||[];
+      if(!notifs.length){
+        listEl.innerHTML='<div class="notif-empty">All caught up ✓</div>';
+        notifLoaded=true; return;
+      }
+      // Fetch actors and projects separately
+      const actorIds=[...new Set(notifs.filter(n=>n.actor_id).map(n=>n.actor_id))];
+      const projectIds=[...new Set(notifs.filter(n=>n.project_id).map(n=>n.project_id))];
+      let actorMap={}, projectMap={};
+      if(actorIds.length){
+        try{ const{data:actors}=await sb.from('profiles').select('id,username,display_name').in('id',actorIds); (actors||[]).forEach(a=>{actorMap[a.id]=a;}); }catch(e){}
+      }
+      if(projectIds.length){
+        try{ const{data:projs}=await sb.from('projects').select('id,name').in('id',projectIds); (projs||[]).forEach(p=>{projectMap[p.id]=p;}); }catch(e){}
+      }
       document.getElementById('bellDot').classList.toggle('show',notifs.some(n=>!n.read));
-      const list=document.getElementById('notifList');
-      if(!notifs.length){list.innerHTML='<div class="notif-empty">All caught up ✓</div>';notifLoaded=true;return;}
-      list.innerHTML=notifs.map(n=>{
-        const actor=n.actor?.display_name||n.actor?.username||'Someone';
+      listEl.innerHTML=notifs.map(n=>{
+        const actor=actorMap[n.actor_id];
+        const actorName=actor?.display_name||actor?.username||'Someone';
+        const project=projectMap[n.project_id];
         let text='';
-        if(n.type==='follow')text=`<b>${esc(actor)}</b> started following you`;
-        else if(n.type==='project_invite')text=`<b>${esc(actor)}</b> invited you to <b>${esc(n.project?.name||'a project')}</b>`;
-        return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(n.actor?.username||'')}','${n.project_id||''}')">
-          <div class="notif-av">${actor.charAt(0).toUpperCase()}</div>
+        if(n.type==='follow')text=`<b>${esc(actorName)}</b> started following you`;
+        else if(n.type==='project_invite')text=`<b>${esc(actorName)}</b> invited you to <b>${esc(project?.name||'a project')}</b>`;
+        else text=`New notification from <b>${esc(actorName)}</b>`;
+        return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(actor?.username||'')}','${n.project_id||''}')">
+          <div class="notif-av">${actorName.charAt(0).toUpperCase()}</div>
           <div class="notif-body"><div class="notif-text">${text}</div><div class="notif-time">${relTime(new Date(n.created_at))}</div></div>
           ${!n.read?'<div class="notif-unread-dot"></div>':''}
         </div>`;
       }).join('');
       notifLoaded=true;
-    }catch(e){}
+    }catch(e){
+      listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
+      notifLoaded=true;
+    }
   }
   async function handleNotifClick(id,type,actorUsername,projectId){
-    if(sb)await sb.from('notifications').update({read:true}).eq('id',id);
+    if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
     toggleNotifDrop();
     if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
     else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
   }
   async function markAllRead(){
     if(!sb||!session)return;
-    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false);
+    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
     document.getElementById('bellDot').classList.remove('show');
     loadNotifications();
   }
@@ -807,8 +798,7 @@
     bell.classList.toggle('active',drop.classList.contains('show'));
     if(drop.classList.contains('show')&&!notifLoaded)loadNotifications();
   }
-  function relTime(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
-  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
   document.addEventListener('click',e=>{
     const bell=document.getElementById('bellBtn');
     if(bell&&!bell.contains(e.target)){document.getElementById('notifDrop').classList.remove('show');bell.classList.remove('active');}

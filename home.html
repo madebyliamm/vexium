@@ -56,8 +56,8 @@
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border-radius:8px;transition:background .15s}
     .tb-bell svg{width:17px;height:17px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
     .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
-    .bell-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--a1);border:2px solid var(--bg);display:none}
-    .bell-dot.show{display:block}
+    .bell-dot{position:absolute;top:0px;right:0px;min-width:16px;height:16px;border-radius:8px;background:var(--a1);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;padding:0 3px;font-family:var(--sans);line-height:1}
+    .bell-dot.show{display:flex}
     .notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:310px;background:var(--s1);border:1px solid var(--b2);border-radius:14px;z-index:400;box-shadow:0 16px 56px rgba(0,0,0,.8);display:none;overflow:hidden}
     .notif-drop.show{display:block}
     .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
@@ -127,9 +127,9 @@
     .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
     .ps-field{display:flex;flex-direction:column;gap:6px}
     .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
-    .ps-input{background:transparent;border:none;border-bottom:1px solid var(--b2);border-radius:0;padding:8px 2px;color:var(--text);font-size:15px;font-weight:700;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
-    .ps-input:focus{border-bottom-color:rgba(79,110,247,.6)}
-    .ps-input::placeholder{color:var(--b3)}
+    .ps-input{background:var(--b1);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
+    .ps-input:focus{border-color:rgba(79,110,247,.5)}
+    .ps-input::placeholder{color:var(--sub)}
     /* FIX 3: emoji strip 5x2 grid */
     .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
     .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;}
@@ -493,7 +493,7 @@
     }else{
       btn.className='lock-btn';
       ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
-      txt.textContent='Locked';
+      txt.textContent='Private';
     }
   }
 
@@ -531,13 +531,18 @@
     const list=document.getElementById('psCollabList');
     if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
     try{
-      const{data}=await sb.from('project_members').select('user_id,role,profiles(username,display_name)').eq('project_id',psProjectId);
+      const{data}=await sb.from('project_members').select('user_id,role').eq('project_id',psProjectId);
       if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
+      // Fetch profiles separately
+      const uids=data.map(m=>m.user_id);
+      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
+      const profileMap={};(profiles||[]).forEach(p=>{profileMap[p.id]=p;});
       list.innerHTML=data.map(m=>{
-        const n=m.profiles?.display_name||m.profiles?.username||'Unknown';
+        const p=profileMap[m.user_id]||{};
+        const n=p.display_name||p.username||'Unknown';
         return `<div class="cl-item">
           <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
-          <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(m.profiles?.username||'')}</div></div>
+          <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
           <div class="cl-role">${m.role}</div>
           <button class="cl-rm" onclick="psRemoveCollab('${m.user_id}')">✕</button>
         </div>`;
@@ -681,7 +686,9 @@
       }
 
       const unread=notifs.filter(n=>!n.read).length;
-      document.getElementById('bellDot').classList.toggle('show',unread>0);
+      const bellDot=document.getElementById('bellDot');
+      if(unread>0){bellDot.textContent=unread>9?'9+':unread;bellDot.classList.add('show');}
+      else{bellDot.textContent='';bellDot.classList.remove('show');}
 
       listEl.innerHTML=notifs.map(n=>{
         const actor=actorMap[n.actor_id];
@@ -709,16 +716,27 @@
   }
 
   async function handleNotifClick(id,type,actorUsername,projectId){
+    // Mark read immediately in UI
+    const el=document.querySelector(`.notif-item[onclick*="'${id}'"]`);
+    if(el){el.classList.remove('unread');const dot=el.querySelector('.notif-unread-dot');if(dot)dot.remove();}
     if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
-    toggleNotifDrop();
+    // Update badge count
+    const remaining=document.querySelectorAll('.notif-item.unread').length;
+    const bellDot=document.getElementById('bellDot');
+    if(remaining>0){bellDot.textContent=remaining>9?'9+':remaining;bellDot.classList.add('show');}
+    else{bellDot.textContent='';bellDot.classList.remove('show');}
+    // Navigate
     if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
     else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
+    else toggleNotifDrop();
   }
 
   async function markAllRead(){
     if(!sb||!session)return;
     await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
-    document.getElementById('bellDot').classList.remove('show');
+    const bellDot=document.getElementById('bellDot');
+    bellDot.textContent='';bellDot.classList.remove('show');
+    notifLoaded=false;
     loadNotifications();
   }
 

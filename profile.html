@@ -597,17 +597,32 @@
     const list=document.getElementById('clList');
     list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:4px">Loading…</div>';
     try {
-      const {data}=await sb.from('project_members').select('user_id,role,profiles(username,display_name)').eq('project_id',pid);
+      const {data}=await sb.from('project_members')
+        .select('user_id,role,status').eq('project_id',pid).neq('status','declined');
       if(!data||!data.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">No collaborators yet.</div>'; return; }
-      list.innerHTML=data.map(m=>{
-        const n=m.profiles?.display_name||m.profiles?.username||'Unknown';
-        return `<div class="cl-item">
-          <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
-          <div class="cl-name">${esc(n)}<div style="font-size:10px;color:var(--sub)">@${esc(m.profiles?.username||'')}</div></div>
-          <div class="cl-role">${m.role}</div>
-          <button class="cl-rm" onclick="removeCollab('${pid}','${m.user_id}')">✕</button>
-        </div>`;
-      }).join('');
+      const uids=data.map(m=>m.user_id);
+      const {data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
+      const pm={}; (profiles||[]).forEach(p=>{pm[p.id]=p;});
+      const joined=data.filter(m=>m.status==='accepted'||!m.status);
+      const pending=data.filter(m=>m.status==='pending');
+      let html='';
+      if(joined.length){
+        html+='<div style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Active</div>';
+        html+=joined.map(m=>{
+          const p=pm[m.user_id]||{}; const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item"><div class="cl-av">${n.charAt(0).toUpperCase()}</div><div class="cl-name">${esc(n)}<div style="font-size:10px;color:var(--sub)">@${esc(p.username||'')}</div></div><div class="cl-role" style="background:rgba(74,222,128,.1);color:#4ade80">Joined</div><button class="cl-rm" onclick="removeCollab('${pid}','${m.user_id}')">✕</button></div>`;
+        }).join('');
+      }
+      if(pending.length){
+        if(joined.length)html+='<div style="height:6px"></div>';
+        html+='<div style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Invited</div>';
+        html+=pending.map(m=>{
+          const p=pm[m.user_id]||{}; const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item" style="opacity:.8"><div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div><div class="cl-name">${esc(n)}<div style="font-size:10px;color:var(--sub)">@${esc(p.username||'')}</div></div><div class="cl-role" style="background:rgba(251,191,36,.1);color:#fbbf24">Pending</div><button class="cl-rm" onclick="removeCollab('${pid}','${m.user_id}')" title="Cancel">✕</button></div>`;
+        }).join('');
+      }
+      if(!html)html='<div style="font-size:12px;color:var(--sub)">No collaborators yet.</div>';
+      list.innerHTML=html;
     } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
   }
 
@@ -620,7 +635,7 @@
       const {data:uid}=await sb.rpc('get_user_id_by_username',{uname});
       if(!uid){ msg.textContent='User not found.'; msg.className='msg err'; return; }
       if(uid===myId){ msg.textContent="That's you!"; msg.className='msg err'; return; }
-      await sb.from('project_members').insert({project_id:ctxId,user_id:uid,role:'editor',invited_by:myId});
+      await sb.from('project_members').insert({project_id:ctxId,user_id:uid,role:'editor',invited_by:myId,status:'pending'});
       msg.textContent='@'+uname+' added!'; msg.className='msg ok';
       document.getElementById('inviteInput').value='';
       await refreshCollabList(ctxId);

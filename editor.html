@@ -1515,56 +1515,157 @@
   }
 
   async function aiCallAPI() {
+    let textEl = null;   // live text container
+    let fullMessage = '';
+    let rawFull = '';
+
     try {
       const response = await fetch(AI_EDGE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: aiHistory, files: fileSystem })
       });
-      const data = await response.json();
+
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!response.body) throw new Error('No response body');
+
       aiHideTyping();
-      if (data.error) throw new Error(data.error);
-      if (!data.content || !data.content[0]) throw new Error('Empty response');
-      const raw = data.content[0].text;
 
-      let parsed;
-      try {
-        const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
-        parsed = JSON.parse(cleaned);
-      } catch(e) {
-        parsed = { message: raw, files: [] };
+      // Create the AI message row immediately (empty) so text streams in
+      var msgs = document.getElementById('aiMessages');
+      var row = document.createElement('div');
+      row.className = 'ai-row ai';
+      textEl = document.createElement('div');
+      textEl.className = 'ai-text';
+      row.appendChild(textEl);
+      msgs.appendChild(row);
+
+      // Read SSE stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE lines
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // keep incomplete last line
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (!line || line.startsWith(':')) continue;
+
+          var eventMatch = line.match(/^event:\s*(.+)$/);
+          var dataMatch = line.match(/^data:\s*(.+)$/);
+
+          if (eventMatch) {
+            var eventType = eventMatch[1];
+            // Get next line for data
+            var nextLine = lines[i + 1] || '';
+            var dMatch = nextLine.match(/^data:\s*(.+)$/);
+            if (!dMatch) continue;
+            var data;
+            try { data = JSON.parse(dMatch[1]); } catch(e) { continue; }
+            i++; // skip the data line
+
+            if (eventType === 'delta' && data.text) {
+              fullMessage += data.text;
+              // Render incrementally — convert \n\n to paragraphs
+              textEl.innerHTML = fullMessage
+                .split(/\n\n+/)
+                .map(function(p) { return '<p>' + escHtml(p).replace(/\n/g,'<br>') + '</p>'; })
+                .join('');
+              msgs.scrollTop = msgs.scrollHeight;
+            }
+
+            if (eventType === 'done') {
+              rawFull = data.raw || fullMessage;
+              fullMessage = data.message || fullMessage;
+
+              // Final render of message
+              textEl.innerHTML = fullMessage
+                .split(/\n\n+/)
+                .map(function(p) { return '<p>' + escHtml(p).replace(/\n/g,'<br>') + '</p>'; })
+                .join('');
+
+              // Add meta row (copy + time)
+              var meta = document.createElement('div');
+              meta.className = 'ai-msg-meta';
+              meta.innerHTML =
+                '<div class="ai-msg-actions">' +
+                  '<button class="ai-act-btn" title="Copy" data-copy-el="1" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+                '</div>' +
+                '<div class="ai-msg-time">' + aiNow() + '</div>';
+              row.appendChild(meta);
+
+              // Apply file changes
+              var changedFiles = data.files || [];
+              if (changedFiles.length) {
+                changedFiles.forEach(function(f) {
+                  if (!f.name || f.content === undefined) return;
+                  fileSystem[f.name] = f.content;
+                  dirtyFiles.add(f.name);
+                  if (!openTabs.includes(f.name)) openTabs.push(f.name);
+                });
+
+                // Add file cards
+                var cardsEl = document.createElement('div');
+                cardsEl.className = 'ai-file-cards';
+                changedFiles.forEach(function(f) {
+                  var col = aiFileColor(f.name);
+                  var card = document.createElement('div');
+                  card.className = 'ai-file-card';
+                  card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(f.name) + '</span>';
+                  card.title = 'Open ' + f.name;
+                  var fname = f.name;
+                  card.onclick = function() {
+                    setMode('editor');
+                    if (!openTabs.includes(fname)) openTabs.push(fname);
+                    renderTabs();
+                    openFile(fname);
+                  };
+                  cardsEl.appendChild(card);
+                });
+                // Insert cards between text and meta
+                row.insertBefore(cardsEl, meta);
+
+                renderFileTree();
+                renderTabs();
+                var first = changedFiles[0].name;
+                if (openTabs.includes(first)) openFile(first);
+                previewVisible = true;
+                document.getElementById('rightPanel').classList.remove('hidden');
+                document.getElementById('previewFrame').style.display = 'block';
+                document.getElementById('previewToolbar').style.display = '';
+                document.getElementById('btnPreview').classList.add('active');
+                setTimeout(refreshPreview, 100);
+                saveNow();
+              }
+
+              aiHistory.push({ role: 'assistant', content: rawFull });
+              msgs.scrollTop = msgs.scrollHeight;
+            }
+
+            if (eventType === 'error') {
+              throw new Error(data.error || 'Stream error');
+            }
+          }
+        }
       }
-
-      // Apply file changes
-      if (parsed.files && parsed.files.length) {
-        parsed.files.forEach(function(f) {
-          if (!f.name || f.content === undefined) return;
-          fileSystem[f.name] = f.content;
-          dirtyFiles.add(f.name);
-          if (!openTabs.includes(f.name)) openTabs.push(f.name);
-        });
-        renderFileTree();
-        renderTabs();
-        const firstChanged = parsed.files[0].name;
-        if (openTabs.includes(firstChanged)) openFile(firstChanged);
-        // Force preview open
-        previewVisible = true;
-        document.getElementById('rightPanel').classList.remove('hidden');
-        document.getElementById('previewFrame').style.display = 'block';
-        document.getElementById('previewToolbar').style.display = '';
-        document.getElementById('btnPreview').classList.add('active');
-        setTimeout(refreshPreview, 100);
-        saveNow();
-      }
-
-      aiAddAI(parsed.message || '', parsed.files || []);
-      aiHistory.push({ role: 'assistant', content: raw });
 
     } catch(err) {
       aiHideTyping();
-      aiAddAI('Something went wrong: ' + err.message, []);
+      if (textEl) {
+        textEl.innerHTML = '<p style="color:var(--err)">Something went wrong: ' + escHtml(err.message) + '</p>';
+      } else {
+        aiAddAI('Something went wrong: ' + err.message, []);
+      }
       console.error('AI error:', err);
     }
+
     aiTyping = false;
     document.getElementById('aiBottomSend').disabled = false;
     document.getElementById('aiSend').disabled = false;

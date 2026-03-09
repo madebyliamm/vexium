@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Home — Vexium</title>
+  <link rel="icon" type="image/png" href="vexium_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -98,6 +99,28 @@
     .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
+    /* shared invite actions */
+    .pc-invite-actions{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,var(--s1) 80%,transparent);gap:7px;z-index:3}
+    .proj-card:hover .pc-invite-actions{display:flex}
+    .pc-invite-btn{flex:1;padding:7px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .pc-invite-btn.accept{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+    .pc-invite-btn.accept:hover{background:rgba(34,197,94,.25)}
+    .pc-invite-btn.decline{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+    .pc-invite-btn.decline:hover{background:rgba(239,68,68,.2)}
+    /* collab status badges */
+    .cl-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
+    .cl-status.joined{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+    .cl-status.pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+    .cl-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:8px 0 4px;margin-top:4px}
+    /* accept popup overlay */
+    #acceptOverlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
+    #acceptOverlay.show{display:flex}
+    .accept-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:360px;max-width:100%;padding:28px 28px 24px;box-shadow:0 40px 100px rgba(0,0,0,.9);text-align:center}
+    .accept-modal-emoji{font-size:44px;margin-bottom:14px}
+    .accept-modal-title{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
+    .accept-modal-sub{font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:22px}
+    .accept-modal-btns{display:flex;gap:10px}
+    .accept-modal-btns button{flex:1;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
     .pc-vis{position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;pointer-events:none;line-height:1.4}
     .pc-vis.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
     .pc-vis.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
@@ -211,8 +234,6 @@
   </div>
 
   <div class="tb-right">
-    <span class="tb-name" id="tbName">—</span>
-    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <div class="bell-dot" id="bellDot"></div>
@@ -224,6 +245,7 @@
         <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
       </div>
     </div>
+    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
 </div>
 
@@ -253,6 +275,19 @@
       <div class="section-sub">Projects you've been invited to collaborate on</div>
     </div>
     <div class="proj-grid" id="sharedGrid"></div>
+  </div>
+</div>
+
+<!-- ══ ACCEPT INVITE OVERLAY ══ -->
+<div id="acceptOverlay">
+  <div class="accept-modal">
+    <div class="accept-modal-emoji" id="acceptEmoji">💻</div>
+    <div class="accept-modal-title" id="acceptTitle">Join this project?</div>
+    <div class="accept-modal-sub" id="acceptSub">You've been invited to collaborate. Accept to open the project and join the team.</div>
+    <div class="accept-modal-btns">
+      <button style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)" onclick="respondInvite(false)">Decline</button>
+      <button style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)" onclick="respondInvite(true)">Accept & Open</button>
+    </div>
   </div>
 </div>
 
@@ -341,7 +376,7 @@
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
-  let sb=null, session=null;
+  let sb=null, session=null, myProfile=null;
   let projects=[], selectedEmoji='💻';
   let psProjectId=null, psCurPublic=false, psEmojiCur='💻';
   let myFollowing=[], myFollowers=[];
@@ -354,7 +389,6 @@
 
   async function init(){
     const uname=localStorage.getItem('vexium_username')||'Guest';
-    document.getElementById('tbName').textContent=uname;
     document.getElementById('tbPfp').textContent=uname.charAt(0).toUpperCase();
     if(sb){
       try{
@@ -369,7 +403,16 @@
     if(session&&sb){
       loadNotifications();
       loadSocialGraph();
+      loadMyProfile();
     }
+  }
+
+  async function loadMyProfile(){
+    if(!sb||!session)return;
+    try{
+      const{data}=await sb.from('profiles').select('id,username,display_name,is_public').eq('id',session.user.id).maybeSingle();
+      myProfile=data||null;
+    }catch(e){}
   }
 
   async function loadSocialGraph(){
@@ -420,26 +463,85 @@
     location.href='editor.html';
   }
 
+  let pendingAcceptId = null; // project id awaiting accept/decline response
+
   async function loadShared(){
     if(!session||!sb)return;
     try{
-      const{data}=await sb.from('project_members').select('project_id,projects(*)').eq('user_id',session.user.id);
-      const shared=(data||[]).map(r=>r.projects).filter(Boolean);
-      if(!shared.length)return;
+      const{data}=await sb.from('project_members')
+        .select('project_id,status,projects(*)')
+        .eq('user_id',session.user.id)
+        .neq('status','declined');
+      const rows=(data||[]).filter(r=>r.projects);
+      if(!rows.length)return;
       document.getElementById('sharedSection').style.display='';
-      document.getElementById('sharedGrid').innerHTML=shared.map(p=>{
+      document.getElementById('sharedGrid').innerHTML=rows.map(r=>{
+        const p=r.projects;
+        const isPending=r.status==='pending';
         const fc=Object.keys(p.files||{}).length;
-        return `<div class="proj-card" onclick="openShared('${p.id}')">
-          <div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>
+        const badge=isPending
+          ?`<div class="pc-vis" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">⏳ Invited</div>`
+          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>`;
+        const inviteActions=isPending?`
+          <div class="pc-invite-actions">
+            <button class="pc-invite-btn decline" onclick="quickDecline(event,'${p.id}')">Decline</button>
+            <button class="pc-invite-btn accept" onclick="quickAccept(event,'${p.id}')">Accept</button>
+          </div>`:''
+        return `<div class="proj-card" onclick="openShared('${p.id}','${isPending}','${esc(p.emoji||'💻')}','${esc(p.name||'Untitled')}')">
+          ${badge}
           <div class="pc-emoji">${p.emoji||'💻'}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
-          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>Collaborator</span></div>
+          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Pending invite':'Collaborator'}</span></div>
+          ${inviteActions}
         </div>`;
       }).join('');
-    }catch(e){}
+    }catch(e){console.error('loadShared',e);}
   }
 
-  function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html';}
+  function openShared(id, isPending, emoji, name){
+    if(isPending==='true'){
+      // Show accept popup instead of opening directly
+      pendingAcceptId=id;
+      document.getElementById('acceptEmoji').textContent=decodeURIComponent(emoji)||'💻';
+      document.getElementById('acceptTitle').textContent='Join "'+name+'"?';
+      document.getElementById('acceptSub').textContent='You\'ve been invited to collaborate on this project. Accept to open it and join the team, or decline to remove it from your list.';
+      document.getElementById('acceptOverlay').classList.add('show');
+    } else {
+      localStorage.setItem('vexium_current_project',id);
+      location.href='editor.html';
+    }
+  }
+
+  async function respondInvite(accept){
+    document.getElementById('acceptOverlay').classList.remove('show');
+    if(!pendingAcceptId||!sb||!session)return;
+    const id=pendingAcceptId;
+    pendingAcceptId=null;
+    if(accept){
+      await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
+      localStorage.setItem('vexium_current_project',id);
+      location.href='editor.html';
+    } else {
+      await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',session.user.id);
+      await loadShared();
+    }
+  }
+
+  async function quickAccept(e, id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
+  }
+
+  async function quickDecline(e, id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',session.user.id);
+    await loadShared();
+    showToast('Invite declined');
+  }
 
   /* ── PS MODAL ── */
   async function openPsModal(e,id){
@@ -531,22 +633,47 @@
     const list=document.getElementById('psCollabList');
     if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
     try{
-      const{data}=await sb.from('project_members').select('user_id,role').eq('project_id',psProjectId);
+      const{data}=await sb.from('project_members')
+        .select('user_id,role,status')
+        .eq('project_id',psProjectId)
+        .neq('status','declined');
       if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
-      // Fetch profiles separately
       const uids=data.map(m=>m.user_id);
       const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
-      const profileMap={};(profiles||[]).forEach(p=>{profileMap[p.id]=p;});
-      list.innerHTML=data.map(m=>{
-        const p=profileMap[m.user_id]||{};
-        const n=p.display_name||p.username||'Unknown';
-        return `<div class="cl-item">
-          <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
-          <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
-          <div class="cl-role">${m.role}</div>
-          <button class="cl-rm" onclick="psRemoveCollab('${m.user_id}')">✕</button>
-        </div>`;
-      }).join('');
+      const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
+
+      const joined=data.filter(m=>m.status==='accepted'||!m.status); // backwards compat: no status = old accepted
+      const pending=data.filter(m=>m.status==='pending');
+
+      let html='';
+      if(joined.length){
+        html+='<div class="cl-section-label">Active</div>';
+        html+=joined.map(m=>{
+          const p=pm[m.user_id]||{};
+          const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item">
+            <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
+            <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
+            <div class="cl-status joined">Joined</div>
+            <button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+          </div>`;
+        }).join('');
+      }
+      if(pending.length){
+        html+='<div class="cl-section-label" style="margin-top:${joined.length?\'8px\':\'0\'}">Invited</div>';
+        html+=pending.map(m=>{
+          const p=pm[m.user_id]||{};
+          const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item">
+            <div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div>
+            <div class="cl-info"><div class="cl-name" style="opacity:.7">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
+            <div class="cl-status pending">Pending</div>
+            <button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+          </div>`;
+        }).join('');
+      }
+      if(!html)html='<div class="cl-none">No collaborators yet</div>';
+      list.innerHTML=html;
     }catch(e){list.innerHTML='<div class="cl-none">No collaborators yet</div>';}
   }
 
@@ -581,6 +708,10 @@
   }
 
   async function searchInvite(q){
+    if(myProfile&&myProfile.is_public===false){
+      renderInviteDrop('<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t invite others. <a href="profile.html" style="color:#818cf8;text-decoration:none">Go public →</a></div>');
+      return;
+    }
     let html='';
     const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
       .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
@@ -626,10 +757,10 @@
       const{data:uid}=await sb.rpc('get_user_id_by_username',{uname});
       if(!uid){msg.textContent='User not found.';msg.className='invite-msg err';return;}
       if(uid===session.user.id){msg.textContent="That's you!";msg.className='invite-msg err';return;}
-      const{error}=await sb.from('project_members').insert({project_id:psProjectId,user_id:uid,role:'editor',invited_by:session.user.id});
-      if(error&&error.code==='23505'){msg.textContent='@'+uname+' is already a collaborator.';msg.className='invite-msg err';return;}
+      const{error}=await sb.from('project_members').insert({project_id:psProjectId,user_id:uid,role:'editor',invited_by:session.user.id,status:'pending'});
+      if(error&&error.code==='23505'){msg.textContent='@'+uname+' is already invited.';msg.className='invite-msg err';return;}
       if(error){msg.textContent=error.message;msg.className='invite-msg err';return;}
-      msg.textContent='@'+uname+' invited ✓';msg.className='invite-msg ok';
+      msg.textContent='Invite sent to @'+uname+' ✓';msg.className='invite-msg ok';
       await loadPsCollabs();
       setTimeout(()=>{msg.textContent='';msg.className='invite-msg';},3000);
     }catch(e){msg.textContent='Could not invite.';msg.className='invite-msg err';}
@@ -767,6 +898,11 @@
   }
 
   async function doSearch(q){
+    if(myProfile&&myProfile.is_public===false){
+      const drop=document.getElementById('searchDrop')||document.getElementById('tbSearchDrop');
+      if(drop){drop.innerHTML='<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t search users. <a href="profile.html" style="color:#818cf8;text-decoration:none">Make your profile public →</a></div>';drop.classList.add('show');}
+      return;
+    }
     const drop=document.getElementById('searchDrop');
     drop.innerHTML='<div class="search-msg">Searching…</div>';showSearchDrop();
     if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}

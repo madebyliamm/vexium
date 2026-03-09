@@ -31,8 +31,8 @@
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border-radius:8px;transition:background .15s}
     .tb-bell svg{width:17px;height:17px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
     .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
-    .bell-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--a1);border:2px solid var(--bg);display:none}
-    .bell-dot.show{display:block}
+    .bell-dot{position:absolute;top:0px;right:0px;min-width:16px;height:16px;border-radius:8px;background:var(--a1);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;padding:0 3px;font-family:var(--sans);line-height:1}
+    .bell-dot.show{display:flex}
     .notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:310px;background:var(--s1);border:1px solid var(--b2);border-radius:14px;z-index:400;box-shadow:0 16px 56px rgba(0,0,0,.8);display:none;overflow:hidden}
     .notif-drop.show{display:block}
     .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
@@ -642,16 +642,24 @@
     openOv('followOverlay');
     if(!sb||!viewId){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Not available.</div>'; return; }
     try {
+      // Simple flat queries — no FK alias (avoids silent failures)
       const [{data:fwingData},{data:fwersData}] = await Promise.all([
-        sb.from('follows').select('following_id, profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',viewId),
-        sb.from('follows').select('follower_id, profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',viewId)
+        sb.from('follows').select('following_id').eq('follower_id',viewId),
+        sb.from('follows').select('follower_id').eq('following_id',viewId)
       ]);
-      const following = (fwingData||[]).map(r=>({id:r.following_id, ...r.profiles}));
-      const followers = (fwersData||[]).map(r=>({id:r.follower_id, ...r.profiles}));
-      let rows = [];
-      if(type==='following') rows = following;
-      else if(type==='followers') rows = followers;
-      else if(type==='friends') rows = following.filter(f=>followers.find(r=>r.id===f.id));
+      const followingIds=(fwingData||[]).map(r=>r.following_id);
+      const followerIds=(fwersData||[]).map(r=>r.follower_id);
+
+      let ids=[];
+      if(type==='following') ids=followingIds;
+      else if(type==='followers') ids=followerIds;
+      else if(type==='friends') ids=followingIds.filter(id=>followerIds.includes(id));
+
+      if(!ids.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
+
+      // Now fetch profiles for those IDs
+      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',ids);
+      const rows=profiles||[];
       if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
       list.innerHTML=rows.map(p=>{
         if(!p)return'';
@@ -758,7 +766,10 @@
       if(projectIds.length){
         try{ const{data:projs}=await sb.from('projects').select('id,name').in('id',projectIds); (projs||[]).forEach(p=>{projectMap[p.id]=p;}); }catch(e){}
       }
-      document.getElementById('bellDot').classList.toggle('show',notifs.some(n=>!n.read));
+      const unreadCount=notifs.filter(n=>!n.read).length;
+      const bellDot=document.getElementById('bellDot');
+      if(unreadCount>0){bellDot.textContent=unreadCount>9?'9+':unreadCount;bellDot.classList.add('show');}
+      else{bellDot.textContent='';bellDot.classList.remove('show');}
       listEl.innerHTML=notifs.map(n=>{
         const actor=actorMap[n.actor_id];
         const actorName=actor?.display_name||actor?.username||'Someone';
@@ -780,15 +791,23 @@
     }
   }
   async function handleNotifClick(id,type,actorUsername,projectId){
+    const el=document.querySelector(`.notif-item[onclick*="'${id}'"]`);
+    if(el){el.classList.remove('unread');const dot=el.querySelector('.notif-unread-dot');if(dot)dot.remove();}
     if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
-    toggleNotifDrop();
+    const remaining=document.querySelectorAll('.notif-item.unread').length;
+    const bellDot=document.getElementById('bellDot');
+    if(remaining>0){bellDot.textContent=remaining>9?'9+':remaining;bellDot.classList.add('show');}
+    else{bellDot.textContent='';bellDot.classList.remove('show');}
     if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
     else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
+    else toggleNotifDrop();
   }
   async function markAllRead(){
     if(!sb||!session)return;
     await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
-    document.getElementById('bellDot').classList.remove('show');
+    const bellDot=document.getElementById('bellDot');
+    bellDot.textContent='';bellDot.classList.remove('show');
+    notifLoaded=false;
     loadNotifications();
   }
   function toggleNotifDrop(){

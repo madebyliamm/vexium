@@ -34,8 +34,8 @@
     .tb-saving{font-family:var(--mono);font-size:10px;color:var(--sub);display:none}
     .tb-saving.show{display:block}
 
-    /* mode tabs — absolutely centered on topbar */
-    .tb-modes{display:flex;gap:2px;background:var(--b1);border-radius:6px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+    /* mode tabs */
+    .tb-modes{display:flex;gap:2px;background:var(--b1);border-radius:6px;padding:3px;margin:0 auto;flex-shrink:0}
     .tb-mode{padding:3px 14px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;background:transparent;border:none;color:var(--sub);font-family:var(--sans);transition:all .15s}
     .tb-mode.on{background:var(--b2);color:var(--text)}
 
@@ -198,6 +198,12 @@
     .pane-tab:hover .tab-close{opacity:.6}
     .pane-tab .tab-close:hover{opacity:1;color:var(--err)}
     .monaco-wrap{flex:1;overflow:hidden}
+
+    /* ── SPLIT MODE (AI + editor side by side) ── */
+    #editorArea.split #aiPanel.show{flex:1;min-width:0}
+    #editorArea.split .editor-pane{flex:1;min-width:0;border-left:1px solid var(--b1)}
+    /* In split mode, preview/console stack vertically inside the right panel */
+    #editorArea.split #rightPanel{flex-direction:column}
 
     /* ── AI PANEL ── */
     #aiPanel{flex:1;display:none;flex-direction:column;background:var(--bg);min-width:0;overflow:hidden;position:relative}
@@ -397,8 +403,8 @@
   <span class="tb-saving" id="tbSaving">saving…</span>
 
   <div class="tb-modes">
-    <button class="tb-mode on" id="modeAI" onclick="setMode('ai')">AI ✦</button>
-    <button class="tb-mode" id="modeEditor" onclick="setMode('editor')">Editor</button>
+    <button class="tb-mode on" id="modeAI" onclick="handleModeClick(event,'ai')">AI ✦</button>
+    <button class="tb-mode" id="modeEditor" onclick="handleModeClick(event,'editor')">Editor</button>
   </div>
 
   <div class="tb-r">
@@ -778,15 +784,51 @@
     });
   }
 
-  // ── MODE ── FIX 5: toggle statusbar visibility
+  // ── MODE ──
+  var splitMode = false;
+
+  function handleModeClick(e, m) {
+    if (e.shiftKey) {
+      splitMode = !splitMode;
+      if (splitMode) setSplitMode();
+      else setMode(m === 'ai' ? 'editor' : 'ai');
+    } else {
+      splitMode = false;
+      setMode(m);
+    }
+  }
+
+  function setSplitMode() {
+    document.getElementById('modeAI').classList.add('on');
+    document.getElementById('modeEditor').classList.add('on');
+    document.getElementById('editorPane').style.display = '';
+    document.getElementById('aiPanel').classList.add('show');
+    document.getElementById('editorArea').classList.add('split');
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('statusbar').classList.add('hidden');
+    // If preview/console open in split: stack them vertically
+    var rp = document.getElementById('rightPanel');
+    if (previewVisible || consoleVisible) {
+      rp.style.flexDirection = 'column';
+      document.getElementById('previewFrame').style.flex = '1';
+      document.getElementById('previewFrame').style.width = '100%';
+    }
+    if (editor) editor.layout();
+  }
+
   function setMode(m) {
+    splitMode = false;
+    document.getElementById('editorArea').classList.remove('split');
     document.getElementById('modeEditor').classList.toggle('on', m === 'editor');
     document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
     document.getElementById('editorPane').style.display = m === 'editor' ? '' : 'none';
     document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
     document.getElementById('sidebar').style.display = m === 'ai' ? 'none' : '';
-    // Hide status bar in AI mode
     document.getElementById('statusbar').classList.toggle('hidden', m === 'ai');
+    // Reset right panel direction
+    document.getElementById('rightPanel').style.flexDirection = '';
+    document.getElementById('previewFrame').style.flex = '';
+    document.getElementById('previewFrame').style.width = '';
     if (m === 'editor' && editor) editor.layout();
   }
 
@@ -1105,6 +1147,16 @@
     } else {
       frame.style.display = 'none'; toolbar.style.display = 'none';
       if (!consoleVisible) panel.classList.add('hidden');
+    }
+    // In split mode: stack preview/console vertically
+    if (splitMode && (previewVisible || consoleVisible)) {
+      panel.style.flexDirection = 'column';
+      frame.style.flex = '1';
+      frame.style.width = '100%';
+    } else if (!splitMode) {
+      panel.style.flexDirection = '';
+      frame.style.flex = '';
+      frame.style.width = '';
     }
     if (editor) editor.layout();
   }

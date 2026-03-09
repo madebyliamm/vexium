@@ -49,19 +49,15 @@
     .si-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(79,110,247,.12);color:#818cf8;margin-left:auto;flex-shrink:0}
     .search-msg{font-size:12px;color:var(--sub);padding:12px;text-align:center}
 
-    /* right cluster: pfp then bell */
     .tb-right{display:flex;align-items:center;gap:clamp(6px,1vw,12px);flex-shrink:0}
     .tb-name{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap;max-width:clamp(50px,8vw,100px);overflow:hidden;text-overflow:ellipsis}
     .tb-pfp{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
 
-    /* bell — no border box, right of pfp */
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border-radius:8px;transition:background .15s}
     .tb-bell svg{width:17px;height:17px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
     .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
     .bell-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--a1);border:2px solid var(--bg);display:none}
     .bell-dot.show{display:block}
-
-    /* notif panel */
     .notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:310px;background:var(--s1);border:1px solid var(--b2);border-radius:14px;z-index:400;box-shadow:0 16px 56px rgba(0,0,0,.8);display:none;overflow:hidden}
     .notif-drop.show{display:block}
     .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
@@ -89,17 +85,14 @@
     .new-btn{display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);box-shadow:0 0 20px rgba(79,110,247,.25);transition:all .2s;white-space:nowrap}
     .new-btn:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.45)}
 
-    /* empty */
     .empty{text-align:center;padding:80px 20px;border:1px dashed var(--b2);border-radius:14px;display:none}
     .empty.show{display:block}
     .empty-icon{font-size:40px;margin-bottom:16px}
     .empty-t{font-size:16px;font-weight:700;margin-bottom:6px}
     .empty-s{font-size:13px;color:var(--sub);margin-bottom:24px}
 
-    /* grid */
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 
-    /* card */
     .proj-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
     .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
     .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
@@ -113,7 +106,6 @@
     .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
 
-    /* section */
     .section-head{margin:52px 0 20px}
     .section-title{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
     .section-sub{font-size:13px;color:var(--sub)}
@@ -124,59 +116,34 @@
     .overlay.show{display:flex}
 
     /* ══ PROJECT SETTINGS MODAL ══ */
-    .ps-modal{
-      background:var(--s1);border:1px solid var(--b2);border-radius:20px;
-      width:480px;max-width:100%;max-height:88vh;overflow-y:auto;
-      box-shadow:0 40px 100px rgba(0,0,0,.9);
-      display:flex;flex-direction:column;
-    }
-
-    /* hero band at top */
-    .ps-hero{
-      background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));
-      border-bottom:1px solid var(--b1);
-      padding:24px 24px 20px;
-      display:flex;align-items:center;justify-content:space-between;gap:16px;
-      flex-shrink:0;
-    }
-    .ps-hero-left{display:flex;align-items:center;gap:14px}
-    .ps-hero-emoji{font-size:40px;line-height:1}
-    .ps-hero-name{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px}
-    .ps-hero-meta{font-size:11px;color:var(--sub)}
-    .ps-close{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
+    .ps-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:480px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column;}
+    .ps-hero{background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));border-bottom:1px solid var(--b1);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+    .ps-hero-left{display:flex;align-items:center;gap:12px}
+    .ps-hero-emoji{font-size:36px;line-height:1}
+    .ps-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
+    .ps-hero-meta{font-size:11px;color:var(--sub);margin-top:2px}
+    .ps-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
     .ps-close:hover{background:var(--b2);color:var(--text)}
-
-    /* body */
     .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
-
-    /* field group */
     .ps-field{display:flex;flex-direction:column;gap:6px}
     .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
     .ps-input{background:transparent;border:none;border-bottom:1px solid var(--b2);border-radius:0;padding:8px 2px;color:var(--text);font-size:15px;font-weight:700;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
     .ps-input:focus{border-bottom-color:rgba(79,110,247,.6)}
     .ps-input::placeholder{color:var(--b3)}
-
-    /* emoji row */
-    .emoji-strip{display:flex;gap:5px;flex-wrap:wrap}
-    .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;flex-shrink:0}
+    /* FIX 3: emoji strip 5x2 grid */
+    .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+    .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;}
     .emoji-opt:hover{background:var(--b2)}
     .emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
-
-    /* visibility — lock/unlock button */
     .ps-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .ps-vis-info{}
-    .ps-vis-label{font-size:13px;font-weight:700;color:var(--text)}
+    .ps-vis-label{font-size:13px;font-weight:700}
     .ps-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
     .lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
     .lock-btn:hover{background:var(--b2);color:var(--text)}
     .lock-btn.unlocked{color:#4ade80}
     .lock-btn.unlocked:hover{background:rgba(34,197,94,.08);color:#4ade80}
     .lock-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-
-    /* divider */
     .ps-div{height:1px;background:var(--b1);margin:0 -24px}
-
-    /* collaborators */
     .collab-list{display:flex;flex-direction:column;gap:4px}
     .cl-item{display:flex;align-items:center;gap:10px;padding:7px 0}
     .cl-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
@@ -187,8 +154,6 @@
     .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
     .cl-rm:hover{color:#ef4444}
     .cl-none{font-size:11px;color:var(--sub);padding:2px 0}
-
-    /* invite search */
     .invite-search-wrap{position:relative}
     .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
     .invite-drop.show{display:block}
@@ -200,13 +165,9 @@
     .inv-rel{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(79,110,247,.1);color:#818cf8;margin-left:auto;flex-shrink:0}
     .invite-msg{font-size:11px;margin-top:5px;min-height:14px}
     .invite-msg.ok{color:var(--ok)} .invite-msg.err{color:var(--err)}
-
-    /* delete zone */
     .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
     .ps-delete-btn:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
     .ps-delete-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
-
-    /* footer */
     .ps-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
     .mbtn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
     .mbtn-cancel{background:var(--b2);color:var(--sub)}
@@ -237,7 +198,6 @@
 <body>
 
 <div id="topbar">
-  <!-- Logo → index.html (landing page) -->
   <a href="index.html" class="tb-logo">
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
@@ -253,7 +213,6 @@
   <div class="tb-right">
     <span class="tb-name" id="tbName">—</span>
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
-    <!-- Bell sits RIGHT of pfp, no box -->
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <div class="bell-dot" id="bellDot"></div>
@@ -262,7 +221,7 @@
           <span class="notif-head-t">Notifications</span>
           <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
         </div>
-        <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
       </div>
     </div>
   </div>
@@ -300,7 +259,6 @@
 <!-- ══ PROJECT SETTINGS MODAL ══ -->
 <div class="overlay" id="psOverlay">
   <div class="ps-modal">
-    <!-- Hero -->
     <div class="ps-hero">
       <div class="ps-hero-left">
         <div class="ps-hero-emoji" id="psHeroEmoji">💻</div>
@@ -313,23 +271,16 @@
     </div>
 
     <div class="ps-body">
-
-      <!-- ICON -->
       <div class="ps-field">
         <div class="ps-label">Icon</div>
         <div class="emoji-strip" id="psEmojiStrip"></div>
       </div>
-
-      <!-- NAME -->
       <div class="ps-field">
         <div class="ps-label">Name</div>
         <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"
           oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
       </div>
-
       <div class="ps-div"></div>
-
-      <!-- VISIBILITY -->
       <div class="ps-vis-row">
         <div class="ps-vis-info">
           <div class="ps-vis-label" id="psVisLabel">Private</div>
@@ -340,13 +291,10 @@
           <span id="psLockTxt">Locked</span>
         </button>
       </div>
-
       <div class="ps-div"></div>
-
-      <!-- COLLABORATORS -->
       <div class="ps-field">
         <div class="ps-label">Collaborators</div>
-        <div class="collab-list" id="psCollabList"></div>
+        <div class="collab-list" id="psCollabList"><div class="cl-none">Loading…</div></div>
         <div style="height:6px"></div>
         <div class="invite-search-wrap">
           <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
@@ -355,15 +303,11 @@
         </div>
         <div class="invite-msg" id="psInviteMsg"></div>
       </div>
-
       <div class="ps-div"></div>
-
-      <!-- DELETE -->
       <button class="ps-delete-btn" onclick="psDelete()">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         Delete project
       </button>
-
     </div>
 
     <div class="ps-footer">
@@ -379,7 +323,8 @@
     <div class="modal-t">New project</div>
     <div class="m-field">
       <label class="m-label">Icon</label>
-      <div class="emoji-strip" id="emojiRow" style="gap:5px;flex-wrap:wrap;display:flex"></div>
+      <!-- FIX 3: 5x2 grid via CSS grid on .emoji-strip -->
+      <div class="emoji-strip" id="emojiRow"></div>
     </div>
     <div class="m-field">
       <label class="m-label">Name</label>
@@ -407,7 +352,6 @@
       sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
   }catch(e){}
 
-  /* ── INIT ── */
   async function init(){
     const uname=localStorage.getItem('vexium_username')||'Guest';
     document.getElementById('tbName').textContent=uname;
@@ -428,7 +372,6 @@
     }
   }
 
-  /* ── SOCIAL GRAPH (for search prioritization) ── */
   async function loadSocialGraph(){
     if(!sb||!session)return;
     try{
@@ -441,7 +384,6 @@
     }catch(e){}
   }
 
-  /* ── PROJECTS ── */
   async function loadProjects(){
     document.getElementById('loadingState').style.display='block';
     document.getElementById('emptyState').classList.remove('show');
@@ -507,7 +449,6 @@
     if(!p)return;
     psCurPublic=!!p.is_public;
     psEmojiCur=p.emoji||'💻';
-
     document.getElementById('psHeroEmoji').textContent=psEmojiCur;
     document.getElementById('psHeroName').textContent=p.name||'Untitled';
     const fc=Object.keys(p.files||{}).length;
@@ -523,10 +464,7 @@
     document.getElementById('psOverlay').classList.add('show');
   }
 
-  function closePsModal(){
-    document.getElementById('psOverlay').classList.remove('show');
-    hideInviteDrop();
-  }
+  function closePsModal(){document.getElementById('psOverlay').classList.remove('show');hideInviteDrop();}
 
   function buildPsEmojiStrip(){
     document.getElementById('psEmojiStrip').innerHTML=EMOJIS.map(em=>
@@ -540,10 +478,7 @@
     document.querySelectorAll('#psEmojiStrip .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
   }
 
-  function togglePsPublic(){
-    psCurPublic=!psCurPublic;
-    updateVisToggle();
-  }
+  function togglePsPublic(){psCurPublic=!psCurPublic;updateVisToggle();}
 
   function updateVisToggle(){
     const btn=document.getElementById('psLockBtn');
@@ -553,12 +488,10 @@
     document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
     if(psCurPublic){
       btn.className='lock-btn unlocked';
-      // unlocked padlock SVG
       ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
       txt.textContent='Public';
-    } else {
+    }else{
       btn.className='lock-btn';
-      // locked padlock SVG
       ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
       txt.textContent='Locked';
     }
@@ -596,7 +529,7 @@
   /* ── COLLABS ── */
   async function loadPsCollabs(){
     const list=document.getElementById('psCollabList');
-    if(!sb||!session){list.innerHTML='';return;}
+    if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
     try{
       const{data}=await sb.from('project_members').select('user_id,role,profiles(username,display_name)').eq('project_id',psProjectId);
       if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
@@ -609,7 +542,7 @@
           <button class="cl-rm" onclick="psRemoveCollab('${m.user_id}')">✕</button>
         </div>`;
       }).join('');
-    }catch(e){list.innerHTML='';}
+    }catch(e){list.innerHTML='<div class="cl-none">No collaborators yet</div>';}
   }
 
   async function psRemoveCollab(uid){
@@ -618,7 +551,6 @@
     await loadPsCollabs();
   }
 
-  /* INVITE SEARCH — shows followers/following first */
   let inviteTimer=null;
   function onInviteInput(){
     clearTimeout(inviteTimer);
@@ -628,15 +560,11 @@
   }
   function onInviteKey(e){
     if(e.key==='Escape'){hideInviteDrop();document.getElementById('psInviteInput').blur();}
-    if(e.key==='Enter'){
-      const first=document.querySelector('#inviteDrop .invite-item');
-      if(first)first.click();
-    }
+    if(e.key==='Enter'){const first=document.querySelector('#inviteDrop .invite-item');if(first)first.click();}
   }
 
   function showInviteSuggestions(){
     if(!myFollowing.length&&!myFollowers.length){hideInviteDrop();return;}
-    // show friends (mutual) then following then followers
     const mutual=myFollowing.filter(f=>myFollowers.find(r=>r.id===f.id));
     const onlyFollowing=myFollowing.filter(f=>!myFollowers.find(r=>r.id===f.id));
     const onlyFollowers=myFollowers.filter(r=>!myFollowing.find(f=>f.id===r.id));
@@ -649,13 +577,9 @@
 
   async function searchInvite(q){
     let html='';
-    // local social graph results first
     const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
       .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
-    if(socialMatches.length){
-      html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>inviteItemHTML(u,getRelLabel(u.id))).join('');
-    }
-    // then search supabase
+    if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>inviteItemHTML(u,getRelLabel(u.id))).join('');
     if(sb){
       try{
         const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(5);
@@ -685,11 +609,7 @@
     </div>`;
   }
 
-  function renderInviteDrop(html){
-    const drop=document.getElementById('inviteDrop');
-    drop.innerHTML=html;
-    drop.classList.add('show');
-  }
+  function renderInviteDrop(html){const drop=document.getElementById('inviteDrop');drop.innerHTML=html;drop.classList.add('show');}
   function hideInviteDrop(){document.getElementById('inviteDrop').classList.remove('show');}
 
   async function doInvite(uname){
@@ -710,52 +630,86 @@
     }catch(e){msg.textContent='Could not invite.';msg.className='invite-msg err';}
   }
 
-  /* focus invite input → show suggestions */
   document.getElementById('psInviteInput').addEventListener('focus',()=>{
     if(!document.getElementById('psInviteInput').value.trim())showInviteSuggestions();
   });
 
-  /* ── NOTIFICATIONS ── */
+  /* ── NOTIFICATIONS (FIX 1) ── */
   let notifLoaded=false;
 
   async function loadNotifications(){
     if(!sb||!session)return;
+    const listEl=document.getElementById('notifList');
     try{
-      const{data,error}=await sb.from('notifications')
-        .select('*,actor:actor_id(username,display_name),project:project_id(name)')
+      // Use simple select first, then fetch actor/project names separately to avoid FK alias issues
+      const{data,error}=await sb
+        .from('notifications')
+        .select('id,user_id,actor_id,type,project_id,read,created_at')
         .eq('user_id',session.user.id)
         .order('created_at',{ascending:false})
         .limit(20);
-      if(error){console.warn('notif load:',error.message);return;}
+
+      if(error){
+        console.warn('notif error:',error.message);
+        listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
+        notifLoaded=true;
+        return;
+      }
+
       const notifs=data||[];
+      if(!notifs.length){
+        listEl.innerHTML='<div class="notif-empty">All caught up ✓</div>';
+        notifLoaded=true;
+        return;
+      }
+
+      // Fetch actor profiles
+      const actorIds=[...new Set(notifs.filter(n=>n.actor_id).map(n=>n.actor_id))];
+      const projectIds=[...new Set(notifs.filter(n=>n.project_id).map(n=>n.project_id))];
+      let actorMap={}, projectMap={};
+      if(actorIds.length){
+        try{
+          const{data:actors}=await sb.from('profiles').select('id,username,display_name').in('id',actorIds);
+          (actors||[]).forEach(a=>{actorMap[a.id]=a;});
+        }catch(e){}
+      }
+      if(projectIds.length){
+        try{
+          const{data:projs}=await sb.from('projects').select('id,name').in('id',projectIds);
+          (projs||[]).forEach(p=>{projectMap[p.id]=p;});
+        }catch(e){}
+      }
+
       const unread=notifs.filter(n=>!n.read).length;
       document.getElementById('bellDot').classList.toggle('show',unread>0);
-      renderNotifs(notifs);
-      notifLoaded=true;
-    }catch(e){console.warn('notif exception:',e);}
-  }
 
-  function renderNotifs(notifs){
-    const list=document.getElementById('notifList');
-    if(!notifs.length){list.innerHTML='<div class="notif-empty">All caught up ✓</div>';return;}
-    list.innerHTML=notifs.map(n=>{
-      const actor=n.actor?.display_name||n.actor?.username||'Someone';
-      let text='';
-      if(n.type==='follow') text=`<b>${esc(actor)}</b> started following you`;
-      else if(n.type==='project_invite') text=`<b>${esc(actor)}</b> invited you to collaborate on <b>${esc(n.project?.name||'a project')}</b>`;
-      return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(n.actor?.username||'')}','${n.project_id||''}')">
-        <div class="notif-av">${actor.charAt(0).toUpperCase()}</div>
-        <div class="notif-body">
-          <div class="notif-text">${text}</div>
-          <div class="notif-time">${relTime(new Date(n.created_at))}</div>
-        </div>
-        ${!n.read?'<div class="notif-unread-dot"></div>':''}
-      </div>`;
-    }).join('');
+      listEl.innerHTML=notifs.map(n=>{
+        const actor=actorMap[n.actor_id];
+        const actorName=actor?.display_name||actor?.username||'Someone';
+        const project=projectMap[n.project_id];
+        let text='';
+        if(n.type==='follow')text=`<b>${esc(actorName)}</b> started following you`;
+        else if(n.type==='project_invite')text=`<b>${esc(actorName)}</b> invited you to collaborate on <b>${esc(project?.name||'a project')}</b>`;
+        else text=`New notification from <b>${esc(actorName)}</b>`;
+        return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(actor?.username||'')}','${n.project_id||''}')">
+          <div class="notif-av">${actorName.charAt(0).toUpperCase()}</div>
+          <div class="notif-body">
+            <div class="notif-text">${text}</div>
+            <div class="notif-time">${relTime(new Date(n.created_at))}</div>
+          </div>
+          ${!n.read?'<div class="notif-unread-dot"></div>':''}
+        </div>`;
+      }).join('');
+      notifLoaded=true;
+    }catch(e){
+      console.error('notif exception:',e);
+      listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
+      notifLoaded=true;
+    }
   }
 
   async function handleNotifClick(id,type,actorUsername,projectId){
-    if(sb)await sb.from('notifications').update({read:true}).eq('id',id);
+    if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
     toggleNotifDrop();
     if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
     else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
@@ -763,7 +717,7 @@
 
   async function markAllRead(){
     if(!sb||!session)return;
-    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false);
+    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
     document.getElementById('bellDot').classList.remove('show');
     loadNotifications();
   }
@@ -777,18 +731,10 @@
     if(opening&&!notifLoaded)loadNotifications();
   }
 
-  /* ── USER SEARCH with social prioritization ── */
+  /* ── USER SEARCH ── */
   let searchTimer=null;
-  function onSearchFocus(){
-    const q=document.getElementById('tbSearchInput').value.trim();
-    if(q)doSearch(q); else showSearchSuggestions();
-  }
-  function onSearchInput(){
-    clearTimeout(searchTimer);
-    const q=document.getElementById('tbSearchInput').value.trim();
-    if(!q){showSearchSuggestions();return;}
-    searchTimer=setTimeout(()=>doSearch(q),260);
-  }
+  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q)doSearch(q);else showSearchSuggestions();}
+  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();if(!q){showSearchSuggestions();return;}searchTimer=setTimeout(()=>doSearch(q),260);}
   function onSearchKey(e){if(e.key==='Escape'){hideSearchDrop();document.getElementById('tbSearchInput').blur();}}
 
   function showSearchSuggestions(){
@@ -799,8 +745,7 @@
     if(mutual.length)html+='<div class="sd-section-label">Friends</div>'+mutual.map(u=>searchItemHTML(u,'friend')).join('');
     if(onlyFollowing.length)html+='<div class="sd-section-label">Following</div>'+onlyFollowing.map(u=>searchItemHTML(u,'following')).join('');
     if(!html){hideSearchDrop();return;}
-    document.getElementById('searchDrop').innerHTML=html;
-    showSearchDrop();
+    document.getElementById('searchDrop').innerHTML=html;showSearchDrop();
   }
 
   async function doSearch(q){
@@ -835,6 +780,7 @@
 
   /* ── NEW PROJECT MODAL ── */
   function buildNewEmojiRow(){
+    // FIX 3: uses .emoji-strip which is grid 5-columns via CSS
     document.getElementById('emojiRow').innerHTML=EMOJIS.map(e=>
       `<div class="emoji-opt${e==='💻'?' sel':''}" onclick="pickNewEmoji('${e}')">${e}</div>`
     ).join('');
@@ -862,14 +808,13 @@
     location.href='editor.html';
   }
 
-  /* ── GLOBAL CLICK HANDLER ── */
+  /* ── GLOBAL CLICK ── */
   document.addEventListener('click',e=>{
     if(!document.getElementById('bellBtn').contains(e.target)){
       document.getElementById('notifDrop').classList.remove('show');
       document.getElementById('bellBtn').classList.remove('active');
     }
     if(!document.getElementById('tbSearchWrap').contains(e.target))hideSearchDrop();
-    if(!document.getElementById('psOverlay').contains(e.target.closest('.ps-modal')||e.target)){}
     if(!document.getElementById('psInviteInput').contains(e.target)&&!document.getElementById('inviteDrop').contains(e.target))hideInviteDrop();
   });
   document.getElementById('psOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('psOverlay'))closePsModal();});

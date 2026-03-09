@@ -45,45 +45,104 @@
     .tb-btn.active{background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.2);color:#93c5fd}
     .tb-btn.primary{background:var(--a1);border-color:transparent;color:#fff}
     .tb-btn.primary:hover{background:#3d5df0}
-    .tb-btn.tb-pub{font-size:10px}
-    .tb-btn.tb-pub.is-public{color:#4ade80;border-color:rgba(34,197,94,.2);background:rgba(34,197,94,.06)}
+    .tb-pfp-lnk{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;text-decoration:none;flex-shrink:0;margin-left:2px}
 
-    /* ── EDITOR PROJECT SETTINGS MODAL ── */
+    /* ── PROJECT SETTINGS MODAL (redesigned) ── */
     .ep-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
     .ep-overlay.show{display:flex}
-    .ep-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:440px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column}
-    .ep-hero{background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));border-bottom:1px solid var(--b1);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
-    .ep-hero-left{display:flex;align-items:center;gap:12px}
-    .ep-hero-emoji{font-size:36px;line-height:1}
-    .ep-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
-    .ep-hero-meta{font-size:11px;color:var(--sub);margin-top:2px}
-    .ep-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
-    .ep-close:hover{background:var(--b2);color:var(--text)}
-    .ep-body{padding:18px 24px 20px;display:flex;flex-direction:column;gap:16px}
-    .ep-field{display:flex;flex-direction:column;gap:6px}
-    .ep-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
-    .ep-input{background:transparent;border:none;border-bottom:1px solid var(--b2);padding:7px 2px;color:var(--text);font-size:15px;font-weight:700;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
-    .ep-input:focus{border-bottom-color:rgba(79,110,247,.6)}
-    .ep-div{height:1px;background:var(--b1);margin:0 -24px}
-    .ep-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .ep-vis-label{font-size:13px;font-weight:700}
-    .ep-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
-    .ep-lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
-    .ep-lock-btn:hover{background:var(--b2);color:var(--text)}
-    .ep-lock-btn.unlocked{color:#4ade80}
-    .ep-lock-btn.unlocked:hover{background:rgba(34,197,94,.08);color:#4ade80}
-    .ep-lock-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+    .ep-modal{
+      background:var(--s1);
+      border:1px solid var(--b2);
+      border-radius:20px;
+      width:420px;max-width:100%;
+      max-height:88vh;overflow-y:auto;
+      box-shadow:0 40px 100px rgba(0,0,0,.9);
+      display:flex;flex-direction:column;
+    }
+
+    /* header */
+    .ep-header{
+      padding:20px 22px 0;
+      display:flex;align-items:center;justify-content:space-between;
+      flex-shrink:0;
+    }
+    .ep-header-title{font-size:15px;font-weight:800;letter-spacing:-.3px}
+    .ep-close{width:28px;height:28px;border-radius:8px;background:var(--b2);border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+    .ep-close:hover{background:var(--b3);color:var(--text)}
+
+    /* body */
+    .ep-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:20px}
+
+    /* section label */
+    .ep-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin-bottom:8px}
+
+    /* name field */
+    .ep-name-row{display:flex;align-items:center;gap:12px}
+    .ep-emoji-big{
+      width:48px;height:48px;border-radius:12px;
+      background:var(--b1);border:1px solid var(--b2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:24px;flex-shrink:0;cursor:pointer;transition:all .15s;
+    }
+    .ep-emoji-big:hover{border-color:rgba(79,110,247,.4);background:rgba(79,110,247,.06)}
+    .ep-name-input{
+      flex:1;background:var(--b1);border:1px solid var(--b2);border-radius:10px;
+      padding:11px 14px;color:var(--text);font-size:14px;font-weight:700;
+      outline:none;font-family:var(--sans);transition:border-color .15s;
+    }
+    .ep-name-input:focus{border-color:rgba(79,110,247,.5)}
+    .ep-name-input::placeholder{color:var(--sub)}
+
+    /* emoji picker strip */
     .ep-emoji-strip{display:flex;gap:5px;flex-wrap:wrap}
-    .ep-emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;flex-shrink:0}
+    .ep-emoji-opt{
+      font-size:20px;width:34px;height:34px;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:8px;cursor:pointer;border:2px solid transparent;
+      transition:all .12s;user-select:none;flex-shrink:0;
+    }
     .ep-emoji-opt:hover{background:var(--b2)}
     .ep-emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
-    .ep-footer{padding:0 24px 18px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
-    .ep-btn{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
+
+    /* divider */
+    .ep-div{height:1px;background:var(--b2);margin:0 -22px}
+
+    /* visibility toggle */
+    .ep-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .ep-vis-info{}
+    .ep-vis-label{font-size:13px;font-weight:700}
+    .ep-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .ep-lock-btn{
+      display:flex;align-items:center;gap:7px;
+      padding:8px 14px;border-radius:9px;
+      background:var(--b2);border:none;cursor:pointer;
+      font-family:var(--sans);font-size:11px;font-weight:700;
+      color:var(--sub);transition:all .15s;flex-shrink:0;
+    }
+    .ep-lock-btn:hover{background:var(--b3);color:var(--text)}
+    .ep-lock-btn.unlocked{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);color:#4ade80}
+    .ep-lock-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+    /* collaborators */
+    .ep-collab-list{display:flex;flex-direction:column;gap:6px}
+    .ep-collab-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--b1);border:1px solid var(--b2);border-radius:9px}
+    .ep-collab-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+    .ep-collab-info{flex:1;min-width:0}
+    .ep-collab-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ep-collab-handle{font-size:10px;color:var(--sub)}
+    .ep-collab-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
+    .ep-collab-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .ep-collab-rm:hover{background:rgba(239,68,68,.1);color:#ef4444}
+    .ep-collab-none{font-size:11px;color:var(--sub);padding:2px 0}
+
+    /* footer */
+    .ep-footer{padding:0 22px 18px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+    .ep-btn{padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--sans);transition:all .15s}
     .ep-cancel{background:var(--b2);color:var(--sub)}
     .ep-cancel:hover{background:var(--b3);color:var(--text)}
     .ep-save{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
     .ep-save:hover{opacity:.9}
-    .tb-pfp-lnk{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;text-decoration:none;flex-shrink:0;margin-left:2px}
 
     /* ── LAYOUT ── */
     #workspace{display:flex;height:calc(100vh - 44px - 22px)}
@@ -144,7 +203,7 @@
     #aiPanel{flex:1;display:none;flex-direction:column;background:var(--bg);min-width:0;overflow:hidden;position:relative}
     #aiPanel.show{display:flex}
 
-    /* centered empty state — full panel centering */
+    /* centered empty state */
     #aiCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:24px;pointer-events:none;transition:opacity .25s}
     #aiCenter.hidden{opacity:0;pointer-events:none}
     .ai-star{width:clamp(36px,3vw,52px);height:clamp(36px,3vw,52px);border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;margin-bottom:clamp(12px,1.2vw,20px);box-shadow:0 0 24px rgba(79,110,247,.35);pointer-events:none}
@@ -156,13 +215,13 @@
     #aiCenterInput #aiInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px)}
     #aiCenterInput #aiInputArea:focus-within{border-color:rgba(79,110,247,.5)}
 
-    /* templates below centered input */
+    /* templates */
     #aiTemplates{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(5px,.5vw,8px);margin-top:clamp(12px,1.2vw,18px);pointer-events:all;width:min(92%,600px)}
     .ai-tpl{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:clamp(4px,.4vw,7px) clamp(9px,.9vw,14px);font-size:clamp(10px,.8vw,13px);font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);display:flex;align-items:center;gap:5px}
     .ai-tpl:hover{background:var(--b1);border-color:var(--b2);color:var(--text)}
     .ai-tpl-ico{font-size:clamp(11px,.9vw,14px)}
 
-    /* messages — hidden until convo starts */
+    /* messages */
     #aiMessages{flex:1;overflow-y:auto;padding:clamp(12px,1.2vw,20px) clamp(10px,2vw,32px) 8px;display:flex;flex-direction:column;gap:clamp(10px,1vw,16px);scroll-behavior:smooth;opacity:0;pointer-events:none;transition:opacity .2s}
     #aiMessages.show{opacity:1;pointer-events:all}
     #aiMessages::-webkit-scrollbar{width:3px}
@@ -183,24 +242,24 @@
     .ai-typing span:nth-child(3){animation-delay:.4s}
     @keyframes aiDot{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.3);opacity:1}}
 
-    /* bottom input — shown after convo starts */
+    /* bottom input */
     #aiBottom{border-top:1px solid var(--b1);padding:clamp(8px,.8vw,14px) clamp(10px,1.5vw,24px);flex-shrink:0;background:var(--bg);display:none}
     #aiBottom.show{display:flex;justify-content:center}
     #aiBottomWrap{width:min(92%,640px)}
-    #aiBottomInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px);display:flex;align-items:center;gap:8px}
+    #aiBottomInputArea{border-radius:clamp(12px,1.2vw,18px);border:1px solid var(--b2);background:var(--s1);padding:clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(10px,1vw,14px) clamp(14px,1.2vw,18px);display:flex;align-items:flex-end;gap:8px}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.5)}
-    #aiBottomInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;height:22px;min-height:22px}
+    #aiBottomInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;min-height:22px;max-height:25vh}
     #aiBottomInput::placeholder{color:var(--sub)}
-    #aiBottomSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35)}
+    #aiBottomSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);align-self:flex-end}
     #aiBottomSend:hover{opacity:.85}
     #aiBottomSend:disabled{opacity:.3;cursor:default}
     #aiBottomSend svg{width:clamp(12px,1vw,16px);height:clamp(12px,1vw,16px);fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
     /* shared center input row */
-    #aiInputArea{display:flex;align-items:center;gap:8px}
-    #aiInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;height:22px;min-height:22px}
+    #aiInputArea{display:flex;align-items:flex-end;gap:8px}
+    #aiInput{flex:1;background:transparent;border:none;font-size:clamp(12px,1vw,15px);color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.5;overflow:hidden;min-height:22px;max-height:25vh}
     #aiInput::placeholder{color:var(--sub)}
-    #aiSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35)}
+    #aiSend{width:clamp(28px,2.2vw,36px);height:clamp(28px,2.2vw,36px);min-width:28px;min-height:28px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 0 14px rgba(79,110,247,.35);align-self:flex-end}
     #aiSend:hover{opacity:.85}
     #aiSend:disabled{opacity:.3;cursor:default}
     #aiSend svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -213,7 +272,7 @@
     #rightPanel{width:46%;min-width:180px;max-width:75%;display:flex;flex-direction:column;border-left:1px solid var(--b1)}
     #rightPanel.hidden{display:none}
 
-    /* ── PREVIEW TOOLBAR ── (CodeHS-style) */
+    /* ── PREVIEW TOOLBAR ── */
     #previewToolbar{
       height:38px;background:var(--s2);border-bottom:1px solid var(--b1);
       display:flex;align-items:center;gap:5px;padding:0 8px;flex-shrink:0;
@@ -221,11 +280,7 @@
     .prev-nav{width:26px;height:26px;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .prev-nav:hover:not(:disabled){background:var(--b2);color:var(--text)}
     .prev-nav:disabled{opacity:.25;cursor:default}
-    .prev-url{
-      flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:6px;
-      padding:4px 10px;font-size:10px;color:var(--sub);font-family:var(--mono);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
+    .prev-url{flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--sub);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .prev-refresh{width:26px;height:26px;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .prev-refresh:hover{background:var(--b2);color:var(--text)}
     .prev-open{padding:4px 10px;background:transparent;border:1px solid var(--b2);border-radius:5px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;flex-shrink:0}
@@ -260,6 +315,7 @@
 
     /* ── STATUS BAR ── */
     #statusbar{height:22px;background:#01010a;border-top:1px solid var(--b1);display:flex;align-items:center;padding:0 14px;gap:18px;flex-shrink:0}
+    #statusbar.hidden{display:none}
     .st{font-family:var(--mono);font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px}
     .st .acc{color:var(--a1)}
     .st-mode{margin-left:auto;font-size:9px;color:var(--b3);font-weight:700}
@@ -312,46 +368,53 @@
   </div>
 </div>
 
-<!-- EDITOR PROJECT SETTINGS MODAL -->
+<!-- PROJECT SETTINGS MODAL (redesigned) -->
 <div class="ep-overlay" id="epOverlay">
   <div class="ep-modal">
-    <div class="ep-hero">
-      <div class="ep-hero-left">
-        <div class="ep-hero-emoji" id="epHeroEmoji">💻</div>
-        <div>
-          <div class="ep-hero-name" id="epHeroName">Project</div>
-          <div class="ep-hero-meta" id="epHeroMeta">—</div>
-        </div>
-      </div>
+    <div class="ep-header">
+      <div class="ep-header-title">Project settings</div>
       <button class="ep-close" onclick="closeEditorSettings()">✕</button>
     </div>
     <div class="ep-body">
 
-      <!-- ICON -->
-      <div class="ep-field">
-        <div class="ep-label">Icon</div>
-        <div class="ep-emoji-strip" id="epEmojiStrip"></div>
-      </div>
-
-      <!-- NAME -->
-      <div class="ep-field">
-        <div class="ep-label">Name</div>
-        <input class="ep-input" id="epNameInput" placeholder="Project name" autocomplete="off"
-          oninput="document.getElementById('epHeroName').textContent=this.value||'Project'"/>
+      <!-- NAME + EMOJI -->
+      <div>
+        <div class="ep-sec">Project</div>
+        <div class="ep-name-row">
+          <div class="ep-emoji-big" id="epEmojiBtn" onclick="toggleEmojiPicker()">💻</div>
+          <input class="ep-name-input" id="epNameInput" placeholder="Project name" autocomplete="off"/>
+        </div>
+        <!-- emoji picker (hidden by default) -->
+        <div id="epEmojiPicker" style="display:none;margin-top:10px">
+          <div class="ep-emoji-strip" id="epEmojiStrip"></div>
+        </div>
       </div>
 
       <div class="ep-div"></div>
 
       <!-- VISIBILITY -->
-      <div class="ep-vis-row">
-        <div>
-          <div class="ep-vis-label" id="epVisLabel">Private</div>
-          <div class="ep-vis-sub" id="epVisSub">Only you can see this project</div>
+      <div>
+        <div class="ep-sec">Visibility</div>
+        <div class="ep-vis-row">
+          <div>
+            <div class="ep-vis-label" id="epVisLabel">Private</div>
+            <div class="ep-vis-sub" id="epVisSub">Only you can see this project</div>
+          </div>
+          <button class="ep-lock-btn" id="epLockBtn" onclick="toggleEpPublic()">
+            <svg id="epLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="epLockTxt">Private</span>
+          </button>
         </div>
-        <button class="ep-lock-btn" id="epLockBtn" onclick="toggleEpPublic()">
-          <svg id="epLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span id="epLockTxt">Locked</span>
-        </button>
+      </div>
+
+      <div class="ep-div"></div>
+
+      <!-- COLLABORATORS -->
+      <div>
+        <div class="ep-sec">Collaborators</div>
+        <div class="ep-collab-list" id="epCollabList">
+          <div class="ep-collab-none">Loading…</div>
+        </div>
       </div>
 
     </div>
@@ -375,7 +438,6 @@
             <svg class="ctx-ico" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             New file
           </div>
-
         </div>
       </div>
     </div>
@@ -393,7 +455,6 @@
 
       <!-- AI CHAT PANEL -->
       <div id="aiPanel">
-
         <!-- centered empty state -->
         <div id="aiCenter">
           <div class="ai-star">
@@ -402,7 +463,7 @@
           <div class="ai-center-h">Build anything with me.</div>
           <div id="aiCenterInput">
             <div id="aiInputArea">
-              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…"></textarea>
+              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
               <button id="aiSend" onclick="aiSend()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
@@ -418,29 +479,27 @@
           </div>
         </div>
 
-        <!-- messages (shown after first send) -->
+        <!-- messages -->
         <div id="aiMessages"></div>
 
-        <!-- bottom input (shown after first send) -->
+        <!-- bottom input -->
         <div id="aiBottom">
           <div id="aiBottomWrap">
-          <div id="aiBottomInputArea">
-            <textarea id="aiBottomInput" placeholder="Ask me anything…"></textarea>
-            <button id="aiBottomSend" onclick="aiSend(true)">
-              <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-            </button>
-          </div>
+            <div id="aiBottomInputArea">
+              <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
+              <button id="aiBottomSend" onclick="aiSend(true)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
+            </div>
           </div>
         </div>
-
       </div>
 
       <!-- RESIZER -->
       <div id="rightResizer"></div>
 
       <!-- PREVIEW + CONSOLE -->
-      <div id="rightPanel">
-        <!-- CodeHS-style preview toolbar -->
+      <div id="rightPanel" class="hidden">
         <div id="previewToolbar">
           <button class="prev-nav" id="btnBack" onclick="prevBack()" disabled title="Back">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -470,7 +529,7 @@
       </div>
     </div>
 
-    <!-- STATUS BAR -->
+    <!-- STATUS BAR — hidden in AI mode -->
     <div id="statusbar">
       <div class="st">Ln <span class="acc" id="stLine">1</span></div>
       <div class="st">Col <span class="acc" id="stCol">1</span></div>
@@ -521,12 +580,43 @@
   let project = null, projectId = null;
   let fileSystem = {}, mainFile = 'index.html';
   let openTabs = [], activeFile = null;
-  let previewVisible = true, consoleVisible = false;
+  let previewVisible = false, consoleVisible = false;
   let editor = null, monacoReady = false;
   let dirtyFiles = new Set();
   let ctxTarget = null, fileModalCb = null;
   let prevHistory = [], prevHistIdx = -1;
   let errCnt = 0, warnCnt = 0;
+
+  // Default code fingerprint — used to detect if there's real content
+  const DEFAULT_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>My Project</title>
+</head>
+<body>
+
+</body>
+</html>`;
+
+  function isDefaultCode(fs) {
+    const files = Object.keys(fs || {});
+    if (files.length === 0) return true;
+    if (files.length === 1) {
+      const content = (fs[files[0]] || '').trim();
+      // Check against the default template
+      const defaultTrimmed = DEFAULT_HTML.trim();
+      // Also check for the per-project default (title varies) — strip title line
+      const stripped = content.replace(/<title>[^<]*<\/title>/, '<title></title>').trim();
+      const defaultStripped = defaultTrimmed.replace(/<title>[^<]*<\/title>/, '<title></title>').trim();
+      if (stripped === defaultStripped) return true;
+      // Empty body
+      if (content.replace(/\s/g, '') === '<!DOCTYPEhtml><htmllang="en"><head><metacharset="UTF-8"/></head><body></body></html>') return true;
+      // Truly empty
+      if (!content) return true;
+    }
+    return false;
+  }
 
   // ── INIT ──
   async function init() {
@@ -538,30 +628,19 @@
   async function loadProject() {
     if (sb && projectId) {
       try {
-        // Supabase needs a moment to hydrate session from storage on fresh page load.
-        // getSession() is async but the token may not be in the client cache yet —
-        // wait for onAuthStateChange to fire READY, or just call getSession() which
-        // does read from storage synchronously in v2. Safe to call directly.
         const { data: authData } = await sb.auth.getSession();
         const session = authData?.session;
         if (session) {
           const { data, error } = await sb.from('projects').select('*').eq('id', projectId).maybeSingle();
-          console.log('LOAD PROJECT result:', { data, error, projectId, userId: session.user.id });
-          if (error) console.error('loadProject error:', error.message, error);
           if (data) {
             project = data;
             fileSystem = data.files || {};
             mainFile = data.main_file || 'index.html';
-          } else {
-            console.warn('Project not found in Supabase for id:', projectId);
           }
-        } else {
-          console.warn('No session when loading project');
         }
-      } catch(e) { console.error('loadProject exception:', e); }
+      } catch(e) {}
     }
     if (!project) {
-      // localStorage fallback
       try {
         const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
         project = list.find(p => p.id === projectId) || null;
@@ -570,26 +649,22 @@
     }
     if (!project) {
       project = { id: projectId || 'local', name: 'Untitled', emoji: '💻', files: {}, main_file: 'index.html' };
-      fileSystem = {
-        'index.html': `<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-  <meta charset=\"UTF-8\"/>
-  <title>My Project</title>
-</head>
-<body>
-
-</body>
-</html>`
-      };
+      fileSystem = { 'index.html': DEFAULT_HTML };
       mainFile = 'index.html';
     }
     document.getElementById('tbProj').textContent = project.name || 'Untitled';
     document.title = (project.name || 'Untitled') + ' — Vexium';
     document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
-    // Pfp initial
     const uname = localStorage.getItem('vexium_username') || '?';
     document.getElementById('tbPfpLnk').textContent = uname.charAt(0).toUpperCase();
+
+    // FIX 6: Only show preview by default if project has real content
+    if (!isDefaultCode(fileSystem)) {
+      previewVisible = true;
+      document.getElementById('rightPanel').classList.remove('hidden');
+      document.getElementById('btnPreview').classList.add('active');
+    }
+
     renderFileTree();
     setUrl(mainFile);
     setMode('ai');
@@ -653,17 +728,19 @@
         document.getElementById('stCol').textContent = e.position.column;
       });
       openFile(mainFile);
-      setTimeout(refreshPreview, 400);
+      if (previewVisible) setTimeout(refreshPreview, 400);
     });
   }
 
-  // ── MODE ──
+  // ── MODE ── FIX 5: toggle statusbar visibility
   function setMode(m) {
     document.getElementById('modeEditor').classList.toggle('on', m === 'editor');
     document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
     document.getElementById('editorPane').style.display = m === 'editor' ? '' : 'none';
     document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
     document.getElementById('sidebar').style.display = m === 'ai' ? 'none' : '';
+    // Hide status bar in AI mode
+    document.getElementById('statusbar').classList.toggle('hidden', m === 'ai');
     if (m === 'editor' && editor) editor.layout();
   }
 
@@ -741,27 +818,35 @@
     renderTabs();
   }
 
-  // ── EDITOR PROJECT SETTINGS ──
+  // ── EDITOR PROJECT SETTINGS (redesigned) ──
   const EP_EMOJIS = ['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
   let epEmojiCur = '💻';
   let epPublicCur = false;
+  let epPickerOpen = false;
 
-  function openEditorSettings() {
+  async function openEditorSettings() {
     if (!project) return;
     epEmojiCur = project.emoji || '💻';
     epPublicCur = !!project.is_public;
-    document.getElementById('epHeroEmoji').textContent = epEmojiCur;
-    document.getElementById('epHeroName').textContent = project.name || 'Untitled';
-    const fc = Object.keys(project.files || {}).length;
-    document.getElementById('epHeroMeta').textContent = fc + ' file' + (fc !== 1 ? 's' : '');
+    document.getElementById('epEmojiBtn').textContent = epEmojiCur;
     document.getElementById('epNameInput').value = project.name || '';
     buildEpEmojiStrip();
     updateEpLock();
+    // close picker by default
+    epPickerOpen = false;
+    document.getElementById('epEmojiPicker').style.display = 'none';
+    // Load collaborators
+    await loadEpCollabs();
     document.getElementById('epOverlay').classList.add('show');
   }
 
   function closeEditorSettings() {
     document.getElementById('epOverlay').classList.remove('show');
+  }
+
+  function toggleEmojiPicker() {
+    epPickerOpen = !epPickerOpen;
+    document.getElementById('epEmojiPicker').style.display = epPickerOpen ? 'block' : 'none';
   }
 
   function buildEpEmojiStrip() {
@@ -772,8 +857,11 @@
 
   function pickEpEmoji(em) {
     epEmojiCur = em;
-    document.getElementById('epHeroEmoji').textContent = em;
+    document.getElementById('epEmojiBtn').textContent = em;
     document.querySelectorAll('#epEmojiStrip .ep-emoji-opt').forEach(el => el.classList.toggle('sel', el.textContent === em));
+    // close picker after picking
+    epPickerOpen = false;
+    document.getElementById('epEmojiPicker').style.display = 'none';
   }
 
   function toggleEpPublic() {
@@ -794,8 +882,42 @@
     } else {
       btn.className = 'ep-lock-btn';
       ico.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
-      txt.textContent = 'Locked';
+      txt.textContent = 'Private';
     }
+  }
+
+  async function loadEpCollabs() {
+    const list = document.getElementById('epCollabList');
+    if (!sb || !project) { list.innerHTML = '<div class="ep-collab-none">No collaborators yet</div>'; return; }
+    try {
+      const { data } = await sb.from('project_members')
+        .select('user_id,role,profiles(username,display_name)')
+        .eq('project_id', project.id);
+      if (!data || !data.length) {
+        list.innerHTML = '<div class="ep-collab-none">No collaborators yet</div>';
+        return;
+      }
+      list.innerHTML = data.map(m => {
+        const n = m.profiles?.display_name || m.profiles?.username || 'Unknown';
+        return `<div class="ep-collab-item">
+          <div class="ep-collab-av">${n.charAt(0).toUpperCase()}</div>
+          <div class="ep-collab-info">
+            <div class="ep-collab-name">${esc(n)}</div>
+            <div class="ep-collab-handle">@${esc(m.profiles?.username || '')}</div>
+          </div>
+          <div class="ep-collab-role">${m.role}</div>
+          <button class="ep-collab-rm" onclick="epRemoveCollab('${m.user_id}')">✕</button>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      list.innerHTML = '<div class="ep-collab-none">No collaborators yet</div>';
+    }
+  }
+
+  async function epRemoveCollab(uid) {
+    if (!confirm('Remove this collaborator?')) return;
+    await sb.from('project_members').delete().eq('project_id', project.id).eq('user_id', uid);
+    await loadEpCollabs();
   }
 
   async function saveEditorSettings() {
@@ -805,7 +927,6 @@
     project.name = name;
     project.emoji = epEmojiCur;
     project.is_public = epPublicCur;
-    // Update topbar project name
     document.getElementById('tbProj').textContent = name;
     const updates = { name, emoji: epEmojiCur, is_public: epPublicCur, updated_at: new Date().toISOString() };
     if (sb) {
@@ -821,6 +942,7 @@
       } catch(e) {}
     }
     closeEditorSettings();
+    showToast('✓', 'Saved');
   }
 
   document.getElementById('epOverlay').addEventListener('click', e => {
@@ -856,10 +978,7 @@
     var frame = document.getElementById('previewFrame');
     var bridgeSrc = '(function(){var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});})();';
     var bridge = '<script>' + bridgeSrc + '<\/script>';
-
     var html = fileSystem[mainFile] || '';
-
-    // Inline CSS and JS files
     Object.entries(fileSystem).forEach(function(entry) {
       var fn = entry[0], content = entry[1];
       if (!content) return;
@@ -874,22 +993,17 @@
         html = html.replace(re2, '<script>' + safe2 + '<\/script>');
       }
     });
-
-    // Inject bridge after <head> or prepend
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
       html = bridge + html;
     }
-
-    // Blob URL — reliable for large content
     var prev = frame._previewBlob;
     if (prev) URL.revokeObjectURL(prev);
     var blob = new Blob([html], { type: 'text/html' });
     var burl = URL.createObjectURL(blob);
     frame._previewBlob = burl;
     frame.src = burl;
-
     setUrl(mainFile); pushHist(mainFile);
   }
 
@@ -978,7 +1092,6 @@
     });
   }
 
-
   function getDefault(n) {
     const b = n.split('/').pop();
     if (b.endsWith('.html')) return `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${b.replace('.html','')}</title>\n</head>\n<body>\n  \n</body>\n</html>`;
@@ -1054,14 +1167,7 @@
   }
 
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  function relativeTime(d) {
-    const s = Math.floor((Date.now() - d) / 1000);
-    if (s < 60) return 'just now';
-    if (s < 3600) return Math.floor(s/60) + 'm ago';
-    if (s < 86400) return Math.floor(s/3600) + 'h ago';
-    return Math.floor(s/86400) + 'd ago';
-  }
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   function confirmFileModal() {
     const v = document.getElementById('fileInput').value.trim();
@@ -1072,12 +1178,8 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeFileModal(); closeAddDD(); }
   });
-
   document.addEventListener('keydown', e => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-      e.preventDefault();
-      saveNow();
-    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveNow(); }
   });
 
   // ── AI CHAT ──
@@ -1085,8 +1187,14 @@
   var aiTyping = false;
   var aiStarted = false;
 
-  function aiGetInput() {
-    return aiStarted ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
+  // FIX 7: Unified auto-resize for both textareas
+  function aiAutoResize(el) {
+    el.style.height = 'auto';
+    el.style.overflow = 'hidden';
+    const maxH = Math.round(window.innerHeight * 0.25);
+    const newH = Math.min(el.scrollHeight, maxH);
+    el.style.height = newH + 'px';
+    el.style.overflow = el.scrollHeight > maxH ? 'auto' : 'hidden';
   }
 
   function aiTransitionToChat() {
@@ -1095,9 +1203,7 @@
     document.getElementById('aiCenter').classList.add('hidden');
     document.getElementById('aiMessages').classList.add('show');
     document.getElementById('aiBottom').classList.add('show');
-    // wire up bottom input
     var bi = document.getElementById('aiBottomInput');
-    var bs = document.getElementById('aiBottomSend');
     bi.addEventListener('input', function() { aiAutoResize(bi); });
     bi.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); }
@@ -1110,12 +1216,8 @@
     input.value = '';
     input.focus();
     var i = 0;
-    var delay = 10; // ~100wpm
     function typeChar() {
-      if (i < text.length) {
-        input.value += text[i++];
-        setTimeout(typeChar, delay);
-      }
+      if (i < text.length) { input.value += text[i++]; aiAutoResize(input); setTimeout(typeChar, 10); }
     }
     typeChar();
   }
@@ -1162,14 +1264,13 @@
     var text = input.value.trim();
     if (!text || aiTyping) return;
     input.value = '';
-    input.style.height = 'auto';
-    input.style.overflow = 'hidden';
+    input.style.height = '';
 
     aiTransitionToChat();
 
     aiTyping = true;
-    document.getElementById('aiBottomSend') && (document.getElementById('aiBottomSend').disabled = true);
-    document.getElementById('aiSend') && (document.getElementById('aiSend').disabled = true);
+    document.getElementById('aiBottomSend').disabled = true;
+    document.getElementById('aiSend').disabled = true;
 
     aiAddMsg('user', text);
     aiHistory.push({ role: 'user', content: text });
@@ -1177,25 +1278,17 @@
 
     setTimeout(function() {
       aiHideTyping();
-      var reply = "I'm not connected to the AI yet - that's coming next. You said: '" + text + "'. Once the API is wired up I'll build, edit, and chat with full context of your project.";
+      var reply = "I'm not connected to the AI yet — that's coming next. You said: '" + text + "'. Once the API is wired up I'll build, edit, and chat with full context of your project.";
       aiAddMsg('ai', reply);
       aiHistory.push({ role: 'assistant', content: reply });
       aiTyping = false;
-      document.getElementById('aiBottomSend') && (document.getElementById('aiBottomSend').disabled = false);
-      document.getElementById('aiSend') && (document.getElementById('aiSend').disabled = false);
+      document.getElementById('aiBottomSend').disabled = false;
+      document.getElementById('aiSend').disabled = false;
     }, 1200);
   }
 
-  function aiAutoResize(el) {
-    el.style.overflow = 'hidden';
-    el.style.height = 'auto';
-    var maxH = Math.round(window.innerHeight * 0.25); // max 25vh
-    var newH = Math.min(el.scrollHeight, maxH);
-    el.style.height = newH + 'px';
-    el.style.overflow = el.scrollHeight > maxH ? 'auto' : 'hidden';
-  }
-
   document.addEventListener('DOMContentLoaded', function() {
+    // FIX 7: Wire up center input auto-resize
     var centerInput = document.getElementById('aiInput');
     if (centerInput) {
       centerInput.addEventListener('input', function() { aiAutoResize(centerInput); });
@@ -1204,7 +1297,6 @@
       });
     }
   });
-
 
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);

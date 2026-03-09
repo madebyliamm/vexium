@@ -849,22 +849,33 @@
   async function handleNotifClick(id,type,actorUsername,projectId){
     // Mark read immediately in UI
     const el=document.querySelector(`.notif-item[onclick*="'${id}'"]`);
+    const wasUnread=el&&el.classList.contains('unread');
     if(el){el.classList.remove('unread');const dot=el.querySelector('.notif-unread-dot');if(dot)dot.remove();}
-    if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
+    // Mark read in DB — use try/await, not .catch (Supabase v2 query not a real Promise)
+    if(sb&&wasUnread){
+      try{await sb.from('notifications').update({read:true}).eq('id',id);}catch(e){}
+    }
     // Update badge count
     const remaining=document.querySelectorAll('.notif-item.unread').length;
     const bellDot=document.getElementById('bellDot');
     if(remaining>0){bellDot.textContent=remaining>9?'9+':remaining;bellDot.classList.add('show');}
     else{bellDot.textContent='';bellDot.classList.remove('show');}
-    // Navigate
-    if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
-    else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
-    else toggleNotifDrop();
+    // Navigate — always navigate whether read or not
+    if(type==='follow'&&actorUsername){hideNotifDrop();location.href='profile.html?user='+actorUsername;}
+    else if(type==='project_invite'&&projectId){hideNotifDrop();location.href='viewer.html?project='+projectId;}
+    else hideNotifDrop();
+  }
+
+  function hideNotifDrop(){
+    const drop=document.getElementById('notifDrop');
+    const bell=document.getElementById('bellBtn');
+    if(drop)drop.classList.remove('show');
+    if(bell)bell.classList.remove('active');
   }
 
   async function markAllRead(){
     if(!sb||!session)return;
-    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
+    try{await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false);}catch(e){}
     const bellDot=document.getElementById('bellDot');
     bellDot.textContent='';bellDot.classList.remove('show');
     notifLoaded=false;

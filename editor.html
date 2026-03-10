@@ -815,9 +815,233 @@
     /* ── TOAST ── */
     #toast{position:fixed;bottom:18px;left:18px;z-index:9999;background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:9px 14px;font-size:11px;display:flex;align-items:center;gap:8px;transform:translateY(50px);opacity:0;transition:all .22s;box-shadow:0 8px 32px rgba(0,0,0,.6);font-family:var(--mono)}
     #toast.show{transform:translateY(0);opacity:1}
+
+    /* ══════════════════════════════════════════
+       MODE SELECTION SCREEN
+    ══════════════════════════════════════════ */
+    #modeSelectScreen{
+      position:fixed;inset:0;z-index:9000;
+      background:var(--bg);
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:24px;
+      transition:opacity .4s ease, transform .4s ease;
+    }
+    #modeSelectScreen.leaving{
+      opacity:0;
+      transform:scale(.97);
+      pointer-events:none;
+    }
+    #modeSelectScreen.hidden{display:none}
+
+    /* ambient background blobs */
+    #modeSelectScreen::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 700px 500px at 20% 60%, rgba(79,110,247,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 400px at 80% 30%, rgba(155,121,252,.06) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 50% 90%, rgba(79,110,247,.04) 0%, transparent 70%);
+    }
+
+    /* subtle noise texture overlay */
+    #modeSelectScreen::after{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity:.4;
+    }
+
+    .ms-top{
+      text-align:center;margin-bottom:52px;position:relative;z-index:1;
+    }
+    .ms-logo{
+      display:flex;align-items:center;justify-content:center;gap:9px;
+      margin-bottom:28px;
+    }
+    .ms-logo img{width:26px;height:26px;border-radius:6px}
+    .ms-logo-t{
+      font-size:18px;font-weight:800;letter-spacing:-.3px;
+    }
+    .ms-logo-t span{
+      background:linear-gradient(90deg,var(--a1),var(--a2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .ms-heading{
+      font-size:clamp(26px,4vw,38px);font-weight:800;
+      letter-spacing:-.5px;line-height:1.15;
+      color:var(--text);margin-bottom:10px;
+    }
+    .ms-heading span{
+      background:linear-gradient(90deg,var(--a1),var(--a2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .ms-sub{
+      font-size:14px;color:var(--sub);font-weight:500;
+      max-width:380px;margin:0 auto;line-height:1.6;
+    }
+
+    /* card grid */
+    .ms-cards{
+      display:flex;gap:16px;
+      position:relative;z-index:1;
+      flex-wrap:wrap;justify-content:center;
+      max-width:900px;width:100%;
+    }
+
+    .ms-card{
+      flex:1;min-width:220px;max-width:280px;
+      background:var(--s1);
+      border:1px solid var(--b2);
+      border-radius:20px;
+      padding:28px 24px 26px;
+      cursor:pointer;
+      position:relative;overflow:hidden;
+      transform-style:preserve-3d;
+      transform:perspective(800px) rotateX(0deg) rotateY(0deg);
+      transition:border-color .25s,box-shadow .25s;
+      will-change:transform;
+      user-select:none;
+    }
+
+    /* shimmer border on hover */
+    .ms-card::before{
+      content:'';position:absolute;inset:-1px;border-radius:21px;
+      background:linear-gradient(135deg,transparent 30%,rgba(167,139,250,.35) 50%,transparent 70%);
+      background-size:300% 300%;
+      opacity:0;transition:opacity .3s;
+      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;mask-composite:exclude;padding:1px;
+      pointer-events:none;z-index:0;
+    }
+    .ms-card:hover::before{opacity:1}
+
+    /* inner glow */
+    .ms-card::after{
+      content:'';position:absolute;inset:0;border-radius:20px;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(79,110,247,.08) 0%, transparent 60%);
+      opacity:0;transition:opacity .3s;pointer-events:none;
+    }
+    .ms-card:hover::after{opacity:1}
+
+    .ms-card:hover{
+      border-color:rgba(120,90,255,.35);
+      box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(120,90,255,.1);
+    }
+
+    .ms-card-emoji{
+      font-size:30px;margin-bottom:16px;display:block;
+      transition:transform .2s;
+      position:relative;z-index:1;
+    }
+    .ms-card:hover .ms-card-emoji{transform:scale(1.12) translateY(-2px)}
+
+    .ms-card-name{
+      font-size:17px;font-weight:800;color:var(--text);
+      margin-bottom:8px;letter-spacing:-.25px;
+      position:relative;z-index:1;
+    }
+    .ms-card-desc{
+      font-size:12px;color:var(--sub);line-height:1.65;
+      position:relative;z-index:1;
+    }
+
+    /* subtle tag chip */
+    .ms-card-tag{
+      display:inline-flex;align-items:center;gap:4px;
+      margin-top:18px;padding:4px 10px;border-radius:20px;
+      font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+      background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.18);
+      color:rgba(147,197,253,.7);
+      position:relative;z-index:1;
+    }
+
+    /* arrow bottom right */
+    .ms-card-arrow{
+      position:absolute;bottom:22px;right:22px;
+      width:28px;height:28px;border-radius:50%;
+      background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.2);
+      display:flex;align-items:center;justify-content:center;
+      color:rgba(147,197,253,.5);font-size:14px;
+      transition:all .2s;z-index:1;
+    }
+    .ms-card:hover .ms-card-arrow{
+      background:rgba(79,110,247,.2);border-color:rgba(79,110,247,.4);
+      color:#93c5fd;transform:translate(2px,-2px);
+    }
+
+    /* accent line at top of card */
+    .ms-card-accent{
+      position:absolute;top:0;left:24px;right:24px;height:1px;
+      border-radius:0 0 2px 2px;opacity:0;
+      transition:opacity .3s;
+    }
+    .ms-card:hover .ms-card-accent{opacity:1}
+    .ms-card[data-mode="business"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(251,191,36,.6),transparent)}
+    .ms-card[data-mode="website"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(79,110,247,.7),transparent)}
+    .ms-card[data-mode="yourway"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(155,121,252,.7),transparent)}
+
+    .ms-footer{
+      margin-top:32px;font-size:11px;color:var(--b3);
+      position:relative;z-index:1;
+    }
+
   </style>
 </head>
 <body>
+<!-- ══ MODE SELECTION SCREEN ══ -->
+<div id="modeSelectScreen" class="hidden">
+  <div class="ms-top">
+    <div class="ms-logo">
+      <img src="vexium_logo.png" alt="V"/>
+      <span class="ms-logo-t">VEXIUM<span>.AI</span></span>
+    </div>
+    <div class="ms-heading">What are you <span>building?</span></div>
+    <div class="ms-sub">Choose how you want to work — you can always change this later.</div>
+  </div>
+
+  <div class="ms-cards">
+    <!-- BUSINESS -->
+    <div class="ms-card" data-mode="business" onclick="selectProjectMode('business')">
+      <div class="ms-card-accent"></div>
+      <span class="ms-card-emoji">💰</span>
+      <div class="ms-card-name">Business</div>
+      <div class="ms-card-desc">Structured end-to-end. Plan your idea, build your site, analyze performance, and launch with a marketing strategy that converts.</div>
+      <div class="ms-card-tag">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Revenue focused
+      </div>
+      <div class="ms-card-arrow">›</div>
+    </div>
+
+    <!-- WEBSITE -->
+    <div class="ms-card" data-mode="website" onclick="selectProjectMode('website')">
+      <div class="ms-card-accent"></div>
+      <span class="ms-card-emoji">🌐</span>
+      <div class="ms-card-name">Website</div>
+      <div class="ms-card-desc">Just build. A clean prompt box, no structure imposed. Great for landing pages, personal sites, or anything you want to ship fast.</div>
+      <div class="ms-card-tag">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Build anything
+      </div>
+      <div class="ms-card-arrow">›</div>
+    </div>
+
+    <!-- YOUR WAY -->
+    <div class="ms-card" data-mode="yourway" onclick="selectProjectMode('yourway')">
+      <div class="ms-card-accent"></div>
+      <span class="ms-card-emoji">🗺️</span>
+      <div class="ms-card-name">Your Way</div>
+      <div class="ms-card-desc">Define your own workflow. Set the stages, add context to each one, and the AI follows your process — step by step, your rules.</div>
+      <div class="ms-card-tag">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Custom workflow
+      </div>
+      <div class="ms-card-arrow">›</div>
+    </div>
+  </div>
+
+  <div class="ms-footer">You can change this any time from project settings</div>
+</div>
+
 
 <!-- TOPBAR -->
 <div id="topbar">
@@ -1239,7 +1463,113 @@
     projectId = localStorage.getItem('vexium_current_project');
     await loadProject();
     loadMonaco();
+    // Show mode select only for brand new projects
+    if (isDefaultCode(fileSystem) && !project.project_type) {
+      showModeSelect();
+    }
   }
+
+  // ══════════════════════════════════════════════
+  // MODE SELECTION SCREEN
+  // ══════════════════════════════════════════════
+
+  function showModeSelect() {
+    const screen = document.getElementById('modeSelectScreen');
+    screen.classList.remove('hidden');
+    // Stagger card entrance
+    const cards = screen.querySelectorAll('.ms-card');
+    cards.forEach(function(card, i) {
+      card.style.opacity = '0';
+      card.style.transform = 'perspective(800px) translateY(24px)';
+      card.style.transition = 'opacity .4s ease ' + (i * 0.08 + 0.1) + 's, transform .4s ease ' + (i * 0.08 + 0.1) + 's, border-color .25s, box-shadow .25s';
+      setTimeout(function() {
+        card.style.opacity = '1';
+        card.style.transform = 'perspective(800px) translateY(0px)';
+      }, 20);
+    });
+    initCardTilt();
+  }
+
+  function hideModeSelect(cb) {
+    const screen = document.getElementById('modeSelectScreen');
+    screen.classList.add('leaving');
+    setTimeout(function() {
+      screen.classList.add('hidden');
+      screen.classList.remove('leaving');
+      if (cb) cb();
+    }, 420);
+  }
+
+  function selectProjectMode(mode) {
+    // Save mode on the project
+    if (project) project.project_type = mode;
+    if (sb && project && project.id) {
+      sb.auth.getSession().then(function(r) {
+        if (r.data?.session) {
+          sb.from('projects').update({ project_type: mode, updated_at: new Date().toISOString() }).eq('id', project.id).then(function(){});
+        }
+      });
+    } else {
+      try {
+        var list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+        var idx = list.findIndex(function(p) { return p.id === project.id; });
+        if (idx >= 0) { list[idx].project_type = mode; localStorage.setItem('vexium_projects', JSON.stringify(list)); }
+      } catch(e) {}
+    }
+    hideModeSelect(function() {
+      if (mode === 'business') {
+        // Open plan phase for business mode
+        openPlanPhase();
+      } else if (mode === 'yourway') {
+        // Show your-way workflow builder (for now opens a friendly AI prompt)
+        setMode('ai');
+        setTimeout(function() {
+          var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
+          if (inp) {
+            inp.placeholder = 'Describe your workflow — what stages do you want to work through?';
+            inp.focus();
+          }
+        }, 100);
+      } else {
+        // website — just drop into AI mode
+        setMode('ai');
+        setTimeout(function() {
+          var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
+          if (inp) inp.focus();
+        }, 100);
+      }
+    });
+  }
+
+  // ── TILT EFFECT ──
+  function initCardTilt() {
+    var cards = document.querySelectorAll('.ms-card');
+    cards.forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var dx = (e.clientX - cx) / (rect.width / 2);
+        var dy = (e.clientY - cy) / (rect.height / 2);
+        var rotX = -dy * 5;   // max 5deg tilt
+        var rotY = dx * 5;
+        card.style.transform = 'perspective(800px) rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg) translateZ(4px)';
+        // move inner glow with cursor
+        var pctX = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        var pctY = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        card.style.setProperty('--mx', pctX + '%');
+        card.style.setProperty('--my', pctY + '%');
+      });
+      card.addEventListener('mouseleave', function() {
+        card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+        card.style.transition = 'transform .4s ease, border-color .25s, box-shadow .25s';
+      });
+      card.addEventListener('mouseenter', function() {
+        card.style.transition = 'transform .1s ease, border-color .25s, box-shadow .25s';
+      });
+    });
+  }
+
 
   async function loadProject() {
     if (sb && projectId) {

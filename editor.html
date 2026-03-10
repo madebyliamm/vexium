@@ -825,162 +825,155 @@
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
       padding:24px;
-      transition:opacity .4s ease, transform .4s ease;
+      transition:opacity .45s ease, transform .45s ease;
     }
-    #modeSelectScreen.leaving{
-      opacity:0;
-      transform:scale(.97);
-      pointer-events:none;
-    }
+    #modeSelectScreen.leaving{opacity:0;transform:scale(.97);pointer-events:none}
     #modeSelectScreen.hidden{display:none}
 
-    /* ambient background blobs */
+    /* ambient blobs */
     #modeSelectScreen::before{
       content:'';position:absolute;inset:0;pointer-events:none;
       background:
-        radial-gradient(ellipse 700px 500px at 20% 60%, rgba(79,110,247,.07) 0%, transparent 70%),
-        radial-gradient(ellipse 500px 400px at 80% 30%, rgba(155,121,252,.06) 0%, transparent 70%),
-        radial-gradient(ellipse 400px 300px at 50% 90%, rgba(79,110,247,.04) 0%, transparent 70%);
-    }
-
-    /* subtle noise texture overlay */
-    #modeSelectScreen::after{
-      content:'';position:absolute;inset:0;pointer-events:none;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      opacity:.4;
+        radial-gradient(ellipse 700px 500px at 18% 65%, rgba(79,110,247,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 400px at 82% 28%, rgba(155,121,252,.06) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 50% 92%, rgba(79,110,247,.04) 0%, transparent 70%);
     }
 
     .ms-top{
-      text-align:center;margin-bottom:52px;position:relative;z-index:1;
+      text-align:center;margin-bottom:48px;position:relative;z-index:1;
     }
     .ms-logo{
       display:flex;align-items:center;justify-content:center;gap:9px;
-      margin-bottom:28px;
+      margin-bottom:26px;
     }
-    .ms-logo img{width:26px;height:26px;border-radius:6px}
-    .ms-logo-t{
-      font-size:18px;font-weight:800;letter-spacing:-.3px;
-    }
+    .ms-logo img{width:24px;height:24px;border-radius:5px}
+    .ms-logo-t{font-size:17px;font-weight:800;letter-spacing:-.2px}
     .ms-logo-t span{
       background:linear-gradient(90deg,var(--a1),var(--a2));
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
     }
     .ms-heading{
-      font-size:clamp(26px,4vw,38px);font-weight:800;
-      letter-spacing:-.5px;line-height:1.15;
-      color:var(--text);margin-bottom:10px;
+      font-size:clamp(24px,3.5vw,36px);font-weight:800;
+      letter-spacing:-.5px;line-height:1.15;color:var(--text);margin-bottom:9px;
     }
     .ms-heading span{
       background:linear-gradient(90deg,var(--a1),var(--a2));
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
     }
-    .ms-sub{
-      font-size:14px;color:var(--sub);font-weight:500;
-      max-width:380px;margin:0 auto;line-height:1.6;
-    }
+    .ms-sub{font-size:13px;color:var(--sub);font-weight:500;line-height:1.6}
 
     /* card grid */
     .ms-cards{
-      display:flex;gap:16px;
-      position:relative;z-index:1;
-      flex-wrap:wrap;justify-content:center;
-      max-width:900px;width:100%;
+      display:flex;gap:14px;position:relative;z-index:1;
+      flex-wrap:wrap;justify-content:center;max-width:820px;width:100%;
     }
 
+    /* card base — JS owns transform transition dynamically */
     .ms-card{
-      flex:1;min-width:220px;max-width:280px;
+      flex:1;min-width:200px;max-width:260px;
       background:var(--s1);
       border:1px solid var(--b2);
       border-radius:20px;
-      padding:28px 24px 26px;
+      padding:32px 24px 28px;
       cursor:pointer;
       position:relative;overflow:hidden;
-      transform-style:preserve-3d;
-      transform:perspective(800px) rotateX(0deg) rotateY(0deg);
-      transition:border-color .25s,box-shadow .25s;
       will-change:transform;
       user-select:none;
+      text-align:center;
+      /* only non-transform props get CSS transitions */
+      transition:border-color .3s, box-shadow .3s;
+    }
+    .ms-card:hover{
+      border-color:rgba(120,90,255,.3);
+      box-shadow:0 24px 64px rgba(0,0,0,.55),0 0 0 1px rgba(120,90,255,.08);
     }
 
-    /* shimmer border on hover */
-    .ms-card::before{
-      content:'';position:absolute;inset:-1px;border-radius:21px;
-      background:linear-gradient(135deg,transparent 30%,rgba(167,139,250,.35) 50%,transparent 70%);
-      background-size:300% 300%;
-      opacity:0;transition:opacity .3s;
-      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-      -webkit-mask-composite:xor;mask-composite:exclude;padding:1px;
-      pointer-events:none;z-index:0;
-    }
-    .ms-card:hover::before{opacity:1}
-
-    /* inner glow */
+    /* cursor-tracked glow inside card */
     .ms-card::after{
       content:'';position:absolute;inset:0;border-radius:20px;
-      background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(79,110,247,.08) 0%, transparent 60%);
-      opacity:0;transition:opacity .3s;pointer-events:none;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(79,110,247,.09) 0%, transparent 55%);
+      opacity:0;transition:opacity .25s;pointer-events:none;
     }
     .ms-card:hover::after{opacity:1}
 
-    .ms-card:hover{
-      border-color:rgba(120,90,255,.35);
-      box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(120,90,255,.1);
-    }
-
-    .ms-card-emoji{
-      font-size:30px;margin-bottom:16px;display:block;
-      transition:transform .2s;
+    /* icon wrapper */
+    .ms-card-icon{
+      width:48px;height:48px;border-radius:14px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 18px;
+      transition:background .25s,border-color .25s;
       position:relative;z-index:1;
     }
-    .ms-card:hover .ms-card-emoji{transform:scale(1.12) translateY(-2px)}
+    .ms-card:hover .ms-card-icon{
+      background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.25);
+    }
+    .ms-card-icon svg{
+      width:22px;height:22px;stroke:#fff;fill:none;
+      stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+      opacity:.75;transition:opacity .25s;
+    }
+    .ms-card:hover .ms-card-icon svg{opacity:1}
 
     .ms-card-name{
-      font-size:17px;font-weight:800;color:var(--text);
-      margin-bottom:8px;letter-spacing:-.25px;
-      position:relative;z-index:1;
-    }
-    .ms-card-desc{
-      font-size:12px;color:var(--sub);line-height:1.65;
+      font-size:16px;font-weight:800;color:var(--text);
+      margin-bottom:12px;letter-spacing:-.2px;
       position:relative;z-index:1;
     }
 
-    /* subtle tag chip */
+    /* pill tag */
     .ms-card-tag{
-      display:inline-flex;align-items:center;gap:4px;
-      margin-top:18px;padding:4px 10px;border-radius:20px;
-      font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
-      background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.18);
-      color:rgba(147,197,253,.7);
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 11px;border-radius:20px;
+      font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+      background:rgba(79,110,247,.07);border:1px solid rgba(79,110,247,.16);
+      color:rgba(147,197,253,.65);
       position:relative;z-index:1;
     }
+    .ms-card-tag svg{opacity:.7}
 
-    /* arrow bottom right */
-    .ms-card-arrow{
-      position:absolute;bottom:22px;right:22px;
-      width:28px;height:28px;border-radius:50%;
-      background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.2);
+    /* ... info button */
+    .ms-card-info{
+      position:absolute;top:12px;right:12px;z-index:2;
+      width:22px;height:22px;border-radius:50%;
+      background:transparent;border:1px solid var(--b3);
       display:flex;align-items:center;justify-content:center;
-      color:rgba(147,197,253,.5);font-size:14px;
-      transition:all .2s;z-index:1;
+      color:var(--sub);font-size:10px;font-weight:700;
+      cursor:pointer;transition:all .18s;
+      line-height:1;font-family:var(--sans);
     }
-    .ms-card:hover .ms-card-arrow{
-      background:rgba(79,110,247,.2);border-color:rgba(79,110,247,.4);
-      color:#93c5fd;transform:translate(2px,-2px);
-    }
+    .ms-card-info:hover{background:var(--b2);border-color:var(--b3);color:var(--text)}
 
-    /* accent line at top of card */
-    .ms-card-accent{
-      position:absolute;top:0;left:24px;right:24px;height:1px;
-      border-radius:0 0 2px 2px;opacity:0;
-      transition:opacity .3s;
+    /* detail tooltip / popover */
+    .ms-card-detail{
+      position:absolute;inset:0;border-radius:20px;
+      background:var(--s2);border:1px solid var(--b2);
+      padding:20px;z-index:10;
+      display:flex;flex-direction:column;
+      opacity:0;pointer-events:none;
+      transform:scale(.96);
+      transition:opacity .2s,transform .2s;
+      text-align:left;
     }
-    .ms-card:hover .ms-card-accent{opacity:1}
-    .ms-card[data-mode="business"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(251,191,36,.6),transparent)}
-    .ms-card[data-mode="website"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(79,110,247,.7),transparent)}
-    .ms-card[data-mode="yourway"] .ms-card-accent{background:linear-gradient(90deg,transparent,rgba(155,121,252,.7),transparent)}
+    .ms-card-detail.show{opacity:1;pointer-events:all;transform:scale(1)}
+    .ms-card-detail-title{
+      font-size:12px;font-weight:800;color:var(--text);
+      margin-bottom:10px;letter-spacing:-.1px;
+    }
+    .ms-card-detail-body{
+      font-size:11px;color:var(--sub);line-height:1.7;flex:1;
+    }
+    .ms-card-detail-close{
+      margin-top:14px;align-self:flex-start;
+      font-size:10px;font-weight:700;color:var(--sub);
+      background:var(--b1);border:1px solid var(--b2);border-radius:6px;
+      padding:4px 10px;cursor:pointer;font-family:var(--sans);
+      transition:color .15s,background .15s;
+    }
+    .ms-card-detail-close:hover{color:var(--text);background:var(--b2)}
 
     .ms-footer{
-      margin-top:32px;font-size:11px;color:var(--b3);
+      margin-top:28px;font-size:11px;color:var(--b3);
       position:relative;z-index:1;
     }
 
@@ -1001,41 +994,56 @@
   <div class="ms-cards">
     <!-- BUSINESS -->
     <div class="ms-card" data-mode="business" onclick="selectProjectMode('business')">
-      <div class="ms-card-accent"></div>
-      <span class="ms-card-emoji">💰</span>
+      <button class="ms-card-info" onclick="toggleCardDetail(event,'detail-business')">···</button>
+      <div class="ms-card-icon">
+        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
       <div class="ms-card-name">Business</div>
-      <div class="ms-card-desc">Structured end-to-end. Plan your idea, build your site, analyze performance, and launch with a marketing strategy that converts.</div>
       <div class="ms-card-tag">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         Revenue focused
       </div>
-      <div class="ms-card-arrow">›</div>
+      <div class="ms-card-detail" id="detail-business">
+        <div class="ms-card-detail-title">Business</div>
+        <div class="ms-card-detail-body">Structured end-to-end. Plan your idea, build your site, analyze performance, and launch with a marketing strategy built to convert. Best if you want to make money.</div>
+        <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-business')">Close</button>
+      </div>
     </div>
 
     <!-- WEBSITE -->
     <div class="ms-card" data-mode="website" onclick="selectProjectMode('website')">
-      <div class="ms-card-accent"></div>
-      <span class="ms-card-emoji">🌐</span>
+      <button class="ms-card-info" onclick="toggleCardDetail(event,'detail-website')">···</button>
+      <div class="ms-card-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
       <div class="ms-card-name">Website</div>
-      <div class="ms-card-desc">Just build. A clean prompt box, no structure imposed. Great for landing pages, personal sites, or anything you want to ship fast.</div>
       <div class="ms-card-tag">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         Build anything
       </div>
-      <div class="ms-card-arrow">›</div>
+      <div class="ms-card-detail" id="detail-website">
+        <div class="ms-card-detail-title">Website</div>
+        <div class="ms-card-detail-body">Just build. A clean prompt box, nothing imposed. Great for landing pages, personal sites, tools, or anything you want to ship fast without a structured process.</div>
+        <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-website')">Close</button>
+      </div>
     </div>
 
     <!-- YOUR WAY -->
     <div class="ms-card" data-mode="yourway" onclick="selectProjectMode('yourway')">
-      <div class="ms-card-accent"></div>
-      <span class="ms-card-emoji">🗺️</span>
+      <button class="ms-card-info" onclick="toggleCardDetail(event,'detail-yourway')">···</button>
+      <div class="ms-card-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+      </div>
       <div class="ms-card-name">Your Way</div>
-      <div class="ms-card-desc">Define your own workflow. Set the stages, add context to each one, and the AI follows your process — step by step, your rules.</div>
       <div class="ms-card-tag">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Custom workflow
       </div>
-      <div class="ms-card-arrow">›</div>
+      <div class="ms-card-detail" id="detail-yourway">
+        <div class="ms-card-detail-title">Your Way</div>
+        <div class="ms-card-detail-body">Define your own stages. Add context to each one and the AI follows your process step by step. Perfect if you already know how you like to work and just want the AI to power each phase.</div>
+        <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-yourway')">Close</button>
+      </div>
     </div>
   </div>
 
@@ -1545,29 +1553,42 @@
   function initCardTilt() {
     var cards = document.querySelectorAll('.ms-card');
     cards.forEach(function(card) {
+      // While mouse is moving: very short transition so it tracks instantly.
+      // On leave: spring-like ease back to flat.
+      card.addEventListener('mouseenter', function() {
+        card.style.transition = 'transform 60ms linear, border-color .3s, box-shadow .3s';
+      });
+
       card.addEventListener('mousemove', function(e) {
         var rect = card.getBoundingClientRect();
-        var cx = rect.left + rect.width / 2;
-        var cy = rect.top + rect.height / 2;
-        var dx = (e.clientX - cx) / (rect.width / 2);
-        var dy = (e.clientY - cy) / (rect.height / 2);
-        var rotX = -dy * 5;   // max 5deg tilt
-        var rotY = dx * 5;
-        card.style.transform = 'perspective(800px) rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg) translateZ(4px)';
-        // move inner glow with cursor
-        var pctX = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-        var pctY = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-        card.style.setProperty('--mx', pctX + '%');
-        card.style.setProperty('--my', pctY + '%');
+        var dx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+        var dy = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+        var rx = -dy * 5;
+        var ry = dx * 5;
+        card.style.transform = 'perspective(1000px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(1.03)';
+        // spotlight glow tracks cursor
+        var px = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        var py = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        card.style.setProperty('--mx', px + '%');
+        card.style.setProperty('--my', py + '%');
       });
+
       card.addEventListener('mouseleave', function() {
-        card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
-        card.style.transition = 'transform .4s ease, border-color .25s, box-shadow .25s';
-      });
-      card.addEventListener('mouseenter', function() {
-        card.style.transition = 'transform .1s ease, border-color .25s, box-shadow .25s';
+        // spring snap-back: slight overshoot feel via cubic-bezier
+        card.style.transition = 'transform 500ms cubic-bezier(0.23,1,0.32,1), border-color .3s, box-shadow .3s';
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
       });
     });
+  }
+
+  function toggleCardDetail(e, id) {
+    e.stopPropagation(); // don't trigger card click
+    var detail = document.getElementById(id);
+    if (!detail) return;
+    var isOpen = detail.classList.contains('show');
+    // close all details first
+    document.querySelectorAll('.ms-card-detail').forEach(function(d) { d.classList.remove('show'); });
+    if (!isOpen) detail.classList.add('show');
   }
 
 

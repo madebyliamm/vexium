@@ -3862,26 +3862,26 @@
     var lines   = content.split('\n');
     var bytes   = new Blob([content]).size;
     var isDone  = !!(aiPillMap[name] && aiPillMap[name].classList.contains('done'));
+    var sameFile = acpCurrentFile === name;
 
     // Mark active pill
-    Object.keys(aiPillMap).forEach(function(k) {
-      aiPillMap[k].classList.remove('active');
-    });
+    Object.keys(aiPillMap).forEach(function(k) { aiPillMap[k].classList.remove('active'); });
     if (aiPillMap[name]) aiPillMap[name].classList.add('active');
     acpCurrentFile = name;
 
-    // Header
-    var dot = document.getElementById('aiCodePanelDot');
-    dot.style.background = lang.color;
-    dot.style.boxShadow  = '0 0 8px ' + lang.color + '88';
+    // Only update header when switching files (avoid flicker on live updates)
+    if (!sameFile) {
+      var dot = document.getElementById('aiCodePanelDot');
+      dot.style.background = lang.color;
+      dot.style.boxShadow  = '0 0 8px ' + lang.color + '88';
+      document.getElementById('aiCodePanelFilename').textContent = name;
+      var badge = document.getElementById('aiCodePanelBadge');
+      badge.textContent = lang.label;
+      badge.style.background = lang.color + '18';
+      badge.style.color = lang.color;
+    }
 
-    document.getElementById('aiCodePanelFilename').textContent = name;
-
-    var badge = document.getElementById('aiCodePanelBadge');
-    badge.textContent = lang.label;
-    badge.style.background = lang.color + '18';
-    badge.style.color       = lang.color;
-
+    // Always update live stats
     document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
     document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
 
@@ -3897,7 +3897,7 @@
     // Render code
     acpRender(content, name, !isDone);
 
-    // Open panel
+    // Open panel (idempotent — already open stays open)
     document.getElementById('aiCodePanel').classList.add('open');
   }
 
@@ -4115,7 +4115,7 @@
             if (data.encoding === 'base64') {
               try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); }
             }
-            // Show live editing pill (opens panel on first click)
+            // Show pill + auto-open code panel immediately
             aiAddEditingPill(data.name, content);
 
             // Apply to filesystem immediately
@@ -4123,8 +4123,10 @@
             dirtyFiles.add(data.name);
             if (!openTabs.includes(data.name)) openTabs.push(data.name);
             collectedFiles.push({ name: data.name, content: content });
-            // Live update code panel if it's open on this file
-            acpLiveUpdate(data.name, content);
+            // Always show the panel — if same file, just update content
+            acpOpen(data.name);
+            // Live preview
+            livePreviewUpdate();
             // Live preview: update iframe as files arrive
             livePreviewUpdate();
           }

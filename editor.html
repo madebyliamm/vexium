@@ -308,119 +308,214 @@
     #aiMessages::-webkit-scrollbar-track{background:transparent}
     #aiMessages::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 
-    /* message rows — constrained to chat-w, full stretch */
+    /* ── CHAT MESSAGES ── */
+    #aiMessages{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;align-items:center;gap:0;scroll-behavior:smooth}
+    #aiMessages::-webkit-scrollbar{width:3px}
+    #aiMessages::-webkit-scrollbar-track{background:transparent}
+    #aiMessages::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
     .ai-row{display:flex;flex-direction:column;padding:2px 0;position:relative;width:var(--chat-w)}
 
-    /* user messages — right-aligned bubble */
-    .ai-row.user{align-items:flex-end;padding:5px 0}
+    /* ── USER BUBBLE ── */
+    .ai-row.user{align-items:flex-end;padding:6px 0}
     .ai-row.user .ai-bubble{
-      background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;
-      padding:10px 15px;border-radius:18px;border-bottom-right-radius:5px;
-      font-size:13.5px;line-height:1.6;max-width:78%;word-break:break-word;
+      background:linear-gradient(145deg,#3b4fd8,#6c3fc5);
+      color:#fff;
+      padding:11px 16px;
+      border-radius:20px 20px 4px 20px;
+      font-size:13.5px;line-height:1.65;max-width:80%;word-break:break-word;
       position:relative;
+      box-shadow:0 2px 12px rgba(79,70,229,.25);
     }
-    /* bubble collapse */
     .ai-bubble.collapsed{max-height:120px;overflow:hidden}
-    .ai-bubble.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(transparent,rgba(79,110,247,.9));border-radius:0 0 18px 5px;pointer-events:none}
+    .ai-bubble.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(transparent,rgba(60,45,180,.9));border-radius:0 0 4px 20px;pointer-events:none}
     .ai-bubble-more{margin-top:4px;font-size:11px;font-weight:700;color:var(--sub);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0;transition:color .12s}
     .ai-bubble-more:hover{color:var(--text)}
 
-    /* ai messages — plain text flush left */
-    .ai-row.ai{align-items:flex-start;padding:8px 0}
+    /* ── AI MESSAGE ── */
+    .ai-row.ai{align-items:flex-start;padding:10px 0}
     .ai-row.ai .ai-text{
-      font-size:13.5px;line-height:1.78;color:var(--text);
+      font-size:14px;line-height:1.82;color:var(--text);
       word-break:break-word;width:100%;
     }
-    .ai-row.ai .ai-text p{margin:0 0 10px}
-    .ai-text ul,.ai-text ol{margin:0 0 10px 0;padding-left:20px}
-    .ai-text li{margin:0;padding:0;line-height:1.6}
-    .ai-row.ai .ai-text p:last-child{margin:0}
+    /* Rich text formatting */
+    .ai-text p{margin:0 0 10px}
+    .ai-text p:last-child{margin:0}
+    .ai-text h1{font-size:20px;font-weight:800;margin:16px 0 8px;letter-spacing:-.3px;color:var(--text)}
+    .ai-text h2{font-size:16px;font-weight:700;margin:14px 0 6px;letter-spacing:-.2px;color:var(--text)}
+    .ai-text h3{font-size:14px;font-weight:700;margin:12px 0 4px;color:var(--text)}
+    .ai-text strong{font-weight:700;color:#e2e8ff}
+    .ai-text em{font-style:italic;color:rgba(255,255,255,.8)}
+    .ai-text code{
+      font-family:var(--mono);font-size:12px;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+      border-radius:5px;padding:1px 6px;color:#a5b4fc;
+    }
+    .ai-text pre{
+      background:rgba(0,0,0,.35);border:1px solid var(--b2);border-radius:12px;
+      padding:14px 16px;overflow-x:auto;margin:10px 0;
+    }
+    .ai-text pre code{background:none;border:none;padding:0;font-size:12px;color:#c4b5fd;line-height:1.65}
+    .ai-text ul,.ai-text ol{margin:6px 0 10px 0;padding-left:22px;display:flex;flex-direction:column;gap:3px}
+    .ai-text ul{list-style:none;padding-left:0}
+    .ai-text ul li{padding-left:16px;position:relative}
+    .ai-text ul li::before{content:'·';position:absolute;left:4px;color:var(--a1);font-weight:900;font-size:16px;line-height:1.3}
+    .ai-text ol{list-style:decimal}
+    .ai-text li{line-height:1.65}
+    .ai-text blockquote{
+      border-left:3px solid var(--a1);margin:8px 0;padding:8px 14px;
+      background:rgba(79,110,247,.05);border-radius:0 8px 8px 0;
+      color:rgba(255,255,255,.7);font-style:italic;
+    }
+    .ai-text hr{border:none;border-top:1px solid var(--b2);margin:14px 0}
+    .ai-text a{color:var(--a1);text-decoration:underline;text-underline-offset:2px}
+    .ai-text a:hover{color:var(--a2)}
+
+    /* streaming cursor blink */
+    .ai-stream-cursor::after{
+      content:'▋';display:inline-block;
+      color:var(--a1);animation:cursorBlink .9s step-end infinite;
+      font-size:.9em;vertical-align:-.05em;margin-left:1px;
+    }
+    @keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
 
     /* timestamp + actions — only on hover */
-    .ai-msg-meta{display:flex;align-items:center;gap:6px;margin-top:4px;height:22px}
+    .ai-msg-meta{display:flex;align-items:center;gap:6px;margin-top:5px;height:22px}
     .ai-row.user .ai-msg-meta{justify-content:flex-end}
     .ai-msg-time{font-size:10px;color:var(--sub);opacity:0;transition:opacity .12s;user-select:none}
     .ai-msg-actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .12s}
     .ai-row:hover .ai-msg-time,.ai-row:hover .ai-msg-actions{opacity:1}
-    .ai-act-btn{width:24px;height:24px;border-radius:6px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:var(--sans)}
+    .ai-act-btn{width:26px;height:26px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:var(--sans)}
     .ai-act-btn:hover{background:var(--b2);color:var(--text)}
     .ai-act-btn svg{width:11px;height:11px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
     .ai-act-btn.copied{color:#4ade80}
 
-    /* file cards — colored by language */
-    .ai-file-cards{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+    /* ── FILE CARDS ── */
+    .ai-file-cards{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
     .ai-file-card{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:5px 10px;border-radius:7px;
+      display:inline-flex;align-items:center;gap:7px;
+      padding:6px 12px 6px 10px;
+      border-radius:10px;
       border:1px solid var(--b2);background:var(--s1);
-      cursor:pointer;transition:all .13s;
+      cursor:pointer;transition:all .15s;
       font-size:11px;font-weight:600;font-family:var(--mono);
-      color:var(--sub);
+      color:var(--sub);box-shadow:0 1px 4px rgba(0,0,0,.2);
     }
-    .ai-file-card:hover{background:var(--b2);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.3)}
-    .ai-file-card-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .ai-file-card:hover{background:var(--b2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3);color:var(--text)}
+    .ai-file-card-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-    /* ── live editing pills (shown while generating) ── */
+    /* ── LIVE EDITING PILLS ── */
     #aiEditingPills{display:none;flex-wrap:wrap;gap:6px;padding:6px 0;width:var(--chat-w,min(680px,90%));margin:0 auto}
     #aiEditingPills.show{display:flex}
     .ai-edit-pill{
       display:inline-flex;align-items:center;gap:7px;
-      padding:5px 11px;border-radius:20px;
+      padding:5px 12px;border-radius:24px;
       border:1px solid var(--b2);background:var(--s1);
       font-size:11px;font-weight:600;font-family:var(--mono);
       cursor:pointer;transition:all .15s;position:relative;
     }
     .ai-edit-pill:hover{background:var(--b2)}
     .ai-edit-pill-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-    .ai-edit-pill-dots{display:flex;gap:2px;align-items:center;margin-left:2px}
-    .ai-edit-pill-dots span{width:3px;height:3px;border-radius:50%;background:var(--sub);animation:aiDot 1.1s infinite}
-    .ai-edit-pill-dots span:nth-child(2){animation-delay:.18s}
-    .ai-edit-pill-dots span:nth-child(3){animation-delay:.36s}
-    .ai-edit-pill.done .ai-edit-pill-dots{display:none}
-    .ai-edit-pill.done{opacity:.7}
-    /* diff dropdown */
+    .ai-edit-pill-anim{display:flex;gap:2px;align-items:center;margin-left:2px}
+    .ai-edit-pill-anim span{width:3px;height:3px;border-radius:50%;background:var(--sub);animation:aiDot 1.1s infinite}
+    .ai-edit-pill-anim span:nth-child(2){animation-delay:.18s}
+    .ai-edit-pill-anim span:nth-child(3){animation-delay:.36s}
+    .ai-edit-pill.done .ai-edit-pill-anim{display:none}
+    .ai-edit-pill.done{border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.04)}
+    .ai-edit-pill.done .ai-edit-pill-dot{box-shadow:0 0 6px currentColor}
+    /* live code preview panel inside pill */
     .ai-diff-wrap{
       position:absolute;bottom:calc(100% + 8px);left:0;
-      background:var(--s1);border:1px solid var(--b2);border-radius:10px;
-      width:clamp(260px,50vw,520px);max-height:320px;overflow:hidden;
-      box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;
-      display:none;flex-direction:column;
+      background:#0d0d1a;border:1px solid var(--b2);border-radius:14px;
+      width:clamp(280px,52vw,560px);max-height:360px;overflow:hidden;
+      box-shadow:0 12px 48px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);
+      z-index:200;display:none;flex-direction:column;
     }
     .ai-diff-wrap.open{display:flex}
-    .ai-diff-header{padding:8px 12px;font-size:10px;font-weight:700;color:var(--sub);border-bottom:1px solid var(--b1);flex-shrink:0;font-family:var(--mono)}
+    .ai-diff-header{
+      padding:10px 14px;font-size:10px;font-weight:700;color:var(--sub);
+      border-bottom:1px solid var(--b1);flex-shrink:0;font-family:var(--mono);
+      display:flex;align-items:center;gap:8px;
+    }
+    .ai-diff-header-dot{width:8px;height:8px;border-radius:50%;animation:diffPulse 1.2s ease infinite}
+    @keyframes diffPulse{0%,100%{opacity:.4}50%{opacity:1}}
     .ai-diff-body{overflow-y:auto;flex:1;padding:8px 0}
     .ai-diff-line{
-      display:block;font-family:var(--mono);font-size:11px;line-height:1.6;
-      padding:0 12px;white-space:pre;overflow:hidden;text-overflow:ellipsis;
+      display:block;font-family:var(--mono);font-size:11.5px;line-height:1.6;
+      padding:0 14px;white-space:pre;overflow:hidden;text-overflow:ellipsis;
     }
-    .ai-diff-line.add{color:#4ade80;background:rgba(74,222,128,.05)}
-    .ai-diff-line.context{color:var(--sub)}
+    .ai-diff-line.add{color:#86efac;background:rgba(74,222,128,.04)}
+    .ai-diff-line.context{color:rgba(255,255,255,.25)}
 
-    /* typing indicator */
-    .ai-typing{display:flex;align-items:center;gap:5px;padding:14px 0;width:var(--chat-w);margin:0 auto}
-    .ai-typing span{width:5px;height:5px;border-radius:50%;background:var(--sub);animation:aiDot 1.3s infinite}
-    .ai-typing span:nth-child(2){animation-delay:.18s}
-    .ai-typing span:nth-child(3){animation-delay:.36s}
+    /* ── LIVE PREVIEW FLASH ── */
+    @keyframes previewFlash{0%{opacity:.6}100%{opacity:1}}
+    .preview-refreshing{animation:previewFlash .3s ease}
+
+    /* ── TYPING INDICATOR ── */
+    .ai-typing{display:flex;align-items:center;gap:5px;padding:16px 0;width:var(--chat-w);margin:0 auto}
+    .ai-typing-avatar{
+      width:26px;height:26px;border-radius:50%;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      box-shadow:0 0 12px rgba(79,110,247,.4);
+    }
+    .ai-typing-avatar svg{width:12px;height:12px;fill:#fff}
+    .ai-typing-dots{display:flex;gap:4px;align-items:center;padding:0 2px}
+    .ai-typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--sub);animation:aiDot 1.3s infinite}
+    .ai-typing-dots span:nth-child(2){animation-delay:.18s}
+    .ai-typing-dots span:nth-child(3){animation-delay:.36s}
     @keyframes aiDot{0%,80%,100%{transform:scale(.8);opacity:.3}40%{transform:scale(1.2);opacity:1}}
 
-    /* ── BOTTOM INPUT — floating, no bg box ── */
-    #aiBottom{padding:10px 0 18px;flex-shrink:0;background:transparent;display:none;justify-content:center}
+    /* ── BOTTOM INPUT ── */
+    #aiBottom{padding:8px 0 18px;flex-shrink:0;background:transparent;display:none;justify-content:center}
     #aiBottom.show{display:flex}
     #aiBottomWrap{width:var(--chat-w,min(680px,90%))}
-    #aiBottomInputArea{
-      border-radius:16px;border:1px solid var(--b2);background:var(--s1);
-      padding:12px 12px 12px 18px;display:flex;align-items:flex-end;gap:10px;
-      transition:border-color .15s,box-shadow .15s;
-      box-shadow:0 4px 24px rgba(0,0,0,.25);
+
+    /* formatting toolbar */
+    #fmtToolbar{
+      display:flex;align-items:center;gap:2px;padding:5px 6px;
+      border-bottom:1px solid var(--b1);
     }
-    #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.5);box-shadow:0 0 0 3px rgba(79,110,247,.08),0 4px 24px rgba(0,0,0,.25)}
+    .fmt-btn{
+      width:26px;height:26px;border-radius:7px;background:transparent;
+      border:none;color:var(--sub);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--sans);font-size:11px;font-weight:700;
+      transition:all .12s;flex-shrink:0;
+    }
+    .fmt-btn:hover{background:var(--b2);color:var(--text)}
+    .fmt-btn.active{background:rgba(79,110,247,.18);color:var(--a1)}
+    .fmt-sep{width:1px;height:14px;background:var(--b2);margin:0 3px;flex-shrink:0}
+    #fmtToolbar svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+    #aiBottomInputArea{
+      border-radius:20px;border:1px solid var(--b2);background:var(--s1);
+      overflow:hidden;
+      transition:border-color .15s,box-shadow .15s;
+      box-shadow:0 4px 28px rgba(0,0,0,.3);
+    }
+    #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.45);box-shadow:0 0 0 3px rgba(79,110,247,.07),0 4px 28px rgba(0,0,0,.3)}
+    #aiInputRow{display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 18px}
     #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
-    #aiBottomInput::placeholder{color:var(--sub)}
-    #aiBottomSend{width:32px;height:32px;min-width:32px;min-height:32px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .15s;box-shadow:0 0 16px rgba(79,110,247,.4);align-self:flex-end}
-    #aiBottomSend:hover{opacity:.88;transform:scale(1.06)}
+    #aiBottomInput::placeholder{color:var(--b3)}
+    #aiBottomSend{
+      width:34px;height:34px;min-width:34px;min-height:34px;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      border:none;border-radius:50%;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:opacity .15s,transform .15s;
+      box-shadow:0 0 18px rgba(79,110,247,.45);align-self:flex-end;
+    }
+    #aiBottomSend:hover{opacity:.88;transform:scale(1.08)}
     #aiBottomSend:disabled{opacity:.25;cursor:default;transform:none}
     #aiBottomSend svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-    #aiStopBtn{width:32px;height:32px;min-width:32px;background:var(--b2);border:1px solid var(--b3);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;align-self:flex-end}
+    #aiStopBtn{
+      width:34px;height:34px;min-width:34px;
+      background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
+      border-radius:50%;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:all .15s;align-self:flex-end;
+    }
     #aiStopBtn:hover{background:var(--err);border-color:var(--err)}
     #rightResizer{width:4px;background:transparent;cursor:col-resize;flex-shrink:0;transition:background .15s}
     #rightResizer:hover,#rightResizer.dragging{background:var(--a1)}
@@ -977,6 +1072,165 @@
       position:relative;z-index:1;
     }
 
+
+    /* ── PHASE TOPBAR STRIP ── */
+    #phaseStrip{
+      display:none;align-items:center;justify-content:space-between;
+      flex-shrink:0;gap:8px;
+      /* sits between logo area and right controls, takes remaining space */
+      flex:1;margin:0 12px;min-width:0;
+    }
+    #phaseStrip.show{display:flex}
+    /* hide regular mode tabs when phase strip shows */
+    #phaseStrip.show ~ .tb-modes,
+    body.phase-active .tb-modes{ display:none !important }
+
+    /* Current step pill — left side, clickable */
+    #phaseCurrentBtn{
+      display:flex;align-items:center;gap:6px;
+      background:var(--b1);border:1px solid var(--b2);
+      border-radius:8px;padding:4px 10px 4px 8px;
+      cursor:pointer;font-family:var(--sans);
+      transition:background .15s,border-color .15s;
+      min-width:0;flex-shrink:1;
+      white-space:nowrap;overflow:hidden;
+    }
+    #phaseCurrentBtn:hover{background:var(--b2);border-color:var(--b3)}
+    #phaseCurrentBtn svg{flex-shrink:0;opacity:.5}
+    #phaseCurrentLabel{
+      font-size:11px;font-weight:700;color:var(--text);
+      overflow:hidden;text-overflow:ellipsis;
+    }
+    #phaseCurrentNum{
+      font-size:10px;color:var(--sub);white-space:nowrap;flex-shrink:0;
+    }
+
+    /* Next step button — right side */
+    #phaseNextBtn{
+      display:flex;align-items:center;gap:5px;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      border:none;border-radius:8px;padding:4px 12px 4px 10px;
+      cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:700;
+      color:#fff;white-space:nowrap;flex-shrink:0;
+      transition:opacity .15s,transform .15s;
+      box-shadow:0 0 12px rgba(79,110,247,.3);
+    }
+    #phaseNextBtn:hover{opacity:.88;transform:translateY(-1px)}
+    #phaseNextBtn:disabled{opacity:.3;cursor:default;transform:none;box-shadow:none}
+    #phaseNextBtn svg{opacity:.8}
+
+    /* Steps popup */
+    #phasePopup{
+      display:none;position:fixed;z-index:600;
+      background:var(--s1);border:1px solid var(--b2);
+      border-radius:14px;padding:8px;
+      min-width:220px;
+      box-shadow:0 16px 48px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.3);
+      animation:phasePopIn .15s ease;
+    }
+    @keyframes phasePopIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    #phasePopup.show{display:block}
+    .pp-title{
+      font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+      color:var(--sub);padding:4px 8px 8px;border-bottom:1px solid var(--b1);margin-bottom:6px;
+    }
+    .pp-item{
+      display:flex;align-items:center;gap:9px;
+      padding:7px 10px;border-radius:8px;cursor:pointer;
+      transition:background .12s;
+    }
+    .pp-item:hover{background:var(--b1)}
+    .pp-item.active{background:rgba(79,110,247,.08)}
+    .pp-check{
+      width:16px;height:16px;border-radius:50%;flex-shrink:0;
+      border:1.5px solid var(--b3);
+      display:flex;align-items:center;justify-content:center;
+      transition:all .15s;
+    }
+    .pp-item.done .pp-check{
+      background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.5);
+    }
+    .pp-item.active .pp-check{
+      border-color:var(--a1);background:rgba(79,110,247,.1);
+    }
+    .pp-item-name{
+      font-size:12px;font-weight:600;color:var(--sub);flex:1;
+      transition:color .12s;
+    }
+    .pp-item.active .pp-item-name{color:var(--text)}
+    .pp-item.done .pp-item-name{color:rgba(34,197,94,.8)}
+
+    /* ── YOUR WAY BUILDER MODAL ── */
+    #ywModal{
+      display:none;position:fixed;inset:0;z-index:9500;
+      background:rgba(0,0,0,.8);backdrop-filter:blur(12px);
+      align-items:center;justify-content:center;padding:20px;
+    }
+    #ywModal.show{display:flex}
+    #ywBox{
+      background:var(--s1);border:1px solid var(--b2);border-radius:20px;
+      width:min(92%,480px);max-height:85vh;display:flex;flex-direction:column;
+      box-shadow:0 32px 80px rgba(0,0,0,.7);overflow:hidden;
+    }
+    #ywHead{
+      padding:20px 22px 16px;border-bottom:1px solid var(--b1);flex-shrink:0;
+    }
+    #ywHead h2{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+    #ywHead p{font-size:12px;color:var(--sub);line-height:1.5}
+    #ywPhaseList{
+      flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;
+    }
+    .yw-phase-row{
+      display:flex;align-items:center;gap:8px;
+      background:var(--b1);border:1px solid var(--b2);border-radius:10px;
+      padding:8px 10px;
+      animation:ywRowIn .18s ease;
+    }
+    @keyframes ywRowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .yw-drag-handle{
+      cursor:grab;color:var(--b3);flex-shrink:0;display:flex;align-items:center;
+      padding:2px;border-radius:4px;transition:color .15s;
+    }
+    .yw-drag-handle:hover{color:var(--sub)}
+    .yw-drag-handle:active{cursor:grabbing}
+    .yw-phase-input{
+      flex:1;background:transparent;border:none;outline:none;
+      font-family:var(--sans);font-size:13px;color:var(--text);
+      padding:0;
+    }
+    .yw-phase-input::placeholder{color:var(--b3)}
+    .yw-del-btn{
+      width:20px;height:20px;border-radius:5px;background:transparent;
+      border:none;color:var(--b3);cursor:pointer;display:flex;align-items:center;
+      justify-content:center;transition:all .15s;flex-shrink:0;font-size:14px;line-height:1;
+    }
+    .yw-del-btn:hover{background:rgba(239,68,68,.12);color:var(--err)}
+    #ywAddBtn{
+      margin:4px 16px 0;padding:9px;border-radius:10px;
+      background:transparent;border:1px dashed var(--b3);
+      color:var(--sub);font-family:var(--sans);font-size:12px;font-weight:600;
+      cursor:pointer;width:calc(100% - 32px);transition:all .18s;
+    }
+    #ywAddBtn:hover{border-color:var(--a1);color:var(--text);background:rgba(79,110,247,.05)}
+    #ywFoot{
+      padding:14px 20px;border-top:1px solid var(--b1);
+      display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;
+    }
+    .yw-cancel{
+      background:var(--b1);border:1px solid var(--b2);color:var(--sub);
+      border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;
+      cursor:pointer;font-family:var(--sans);transition:all .15s;
+    }
+    .yw-cancel:hover{color:var(--text);background:var(--b2)}
+    .yw-start{
+      background:linear-gradient(135deg,var(--a1),var(--a2));border:none;
+      color:#fff;border-radius:9px;padding:8px 20px;font-size:12px;font-weight:700;
+      cursor:pointer;font-family:var(--sans);transition:opacity .15s;
+      box-shadow:0 0 16px rgba(79,110,247,.35);
+    }
+    .yw-start:hover{opacity:.88}
+    .yw-start:disabled{opacity:.3;cursor:default}
+
   </style>
 </head>
 <body>
@@ -1032,7 +1286,7 @@
     <div class="ms-card" data-mode="yourway" onclick="selectProjectMode('yourway')">
       <button class="ms-card-info" onclick="toggleCardDetail(event,'detail-yourway')">···</button>
       <div class="ms-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       </div>
       <div class="ms-card-name">Your Way</div>
       <div class="ms-card-tag">
@@ -1060,6 +1314,25 @@
   <div class="tb-sep"></div>
   <span class="tb-proj" id="tbProj">Loading…</span>
   <span class="tb-saving" id="tbSaving">saving…</span>
+
+  <!-- Phase strip: shown instead of mode tabs for business/yourway projects -->
+  <div id="phaseStrip">
+    <button id="phaseCurrentBtn" onclick="togglePhasePopup(event)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <span id="phaseCurrentLabel">Plan</span>
+      <span id="phaseCurrentNum">1 of 5</span>
+    </button>
+    <button id="phaseNextBtn" onclick="advancePhase()">
+      Next step
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- Phase steps popup (portal, positioned by JS) -->
+  <div id="phasePopup">
+    <div class="pp-title">Workflow</div>
+    <div id="phasePopupList"></div>
+  </div>
 
   <div class="tb-modes">
     <button class="tb-mode on" id="modeAI" onclick="handleModeClick(event,'ai')">AI ✦</button>
@@ -1118,6 +1391,24 @@
 
       <div class="ep-div"></div>
 
+      <!-- PHASE / WORKFLOW (only shown for business projects) -->
+      <div id="epPhaseSection" style="display:none">
+        <div class="ep-sec">Workflow</div>
+        <div id="epPhaseList" style="display:flex;flex-direction:column;gap:4px;margin-top:6px"></div>
+        <button id="epNextPhaseBtn" onclick="epAdvancePhase()" style="
+          margin-top:10px;width:100%;padding:9px 14px;border-radius:10px;
+          background:linear-gradient(135deg,var(--a1),var(--a2));
+          border:none;color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;
+          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+          box-shadow:0 0 16px rgba(79,110,247,.3);transition:opacity .15s;
+        ">
+          Move to next step
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <div id="epPhaseDivider" class="ep-div" style="display:none"></div>
+
       <!-- COLLABORATORS -->
       <div>
         <div class="ep-sec">Collaborators</div>
@@ -1133,6 +1424,8 @@
     </div>
   </div>
 </div>
+
+
 
 <!-- WORKSPACE -->
 <div id="workspace">
@@ -1318,13 +1611,34 @@
         <div id="aiBottom">
           <div id="aiBottomWrap">
             <div id="aiBottomInputArea">
-              <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
-              <button id="aiStopBtn" onclick="aiStop()" style="display:none">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-              </button>
-              <button id="aiBottomSend" onclick="aiSend(true)">
-                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-              </button>
+              <!-- formatting toolbar -->
+              <div id="fmtToolbar">
+                <button class="fmt-btn" title="Bold (⌘B)" onclick="fmtWrap('**','**')"><b>B</b></button>
+                <button class="fmt-btn" title="Italic (⌘I)" onclick="fmtWrap('_','_')"><i>I</i></button>
+                <button class="fmt-btn" title="Strikethrough" onclick="fmtWrap('~~','~~')"><s>S</s></button>
+                <div class="fmt-sep"></div>
+                <button class="fmt-btn" title="Bullet list" onclick="fmtList('bullet')">
+                  <svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+                </button>
+                <button class="fmt-btn" title="Numbered list" onclick="fmtList('numbered')">
+                  <svg viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+                </button>
+                <div class="fmt-sep"></div>
+                <button class="fmt-btn" title="Inline code" onclick="fmtWrap('\`','\`')">
+                  <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </button>
+                <button class="fmt-btn" title="Heading" onclick="fmtHeading()">H</button>
+              </div>
+              <!-- input row -->
+              <div id="aiInputRow">
+                <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
+                <button id="aiStopBtn" onclick="aiStop()" style="display:none">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+                </button>
+                <button id="aiBottomSend" onclick="aiSend(true)">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1484,18 +1798,30 @@
   function showModeSelect() {
     const screen = document.getElementById('modeSelectScreen');
     screen.classList.remove('hidden');
-    // Stagger card entrance
     const cards = screen.querySelectorAll('.ms-card');
+    const lastDelay = (cards.length - 1) * 0.08 + 0.1; // delay of last card
+    const entranceDuration = lastDelay + 0.4; // last card delay + animation duration
+
+    // Stagger entrance — opacity + translateY only, no conflict with tilt
     cards.forEach(function(card, i) {
       card.style.opacity = '0';
-      card.style.transform = 'perspective(800px) translateY(24px)';
-      card.style.transition = 'opacity .4s ease ' + (i * 0.08 + 0.1) + 's, transform .4s ease ' + (i * 0.08 + 0.1) + 's, border-color .25s, box-shadow .25s';
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(20px)';
+      card.style.transition = 'opacity .38s ease ' + (i * 0.08 + 0.1) + 's, transform .38s ease ' + (i * 0.08 + 0.1) + 's, border-color .3s, box-shadow .3s';
       setTimeout(function() {
         card.style.opacity = '1';
-        card.style.transform = 'perspective(800px) translateY(0px)';
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0px)';
       }, 20);
     });
-    initCardTilt();
+
+    // Wait until all entrance animations finish, then hand control to tilt
+    setTimeout(function() {
+      cards.forEach(function(card) {
+        // Clear inline transition so initCardTilt owns it from here
+        card.style.transition = 'border-color .3s, box-shadow .3s';
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+      });
+      initCardTilt();
+    }, Math.ceil(entranceDuration * 1000) + 20);
   }
 
   function hideModeSelect(cb) {
@@ -1508,38 +1834,50 @@
     }, 420);
   }
 
-  function selectProjectMode(mode) {
-    // Save mode on the project
-    if (project) project.project_type = mode;
+  // ── PROJECT TYPE + PHASE SYSTEM ──────────────────────────────────
+
+  // Business phases: fixed
+  var BUSINESS_PHASES = ['Plan','Build','Analyze','Launch','Marketing'];
+  // yourway phases: user-defined, saved to project
+  // current phase index
+  var currentPhaseIndex = 0;
+
+  function saveProjectMeta(extraFields) {
+    var updates = Object.assign({ updated_at: new Date().toISOString() }, extraFields || {});
     if (sb && project && project.id) {
       sb.auth.getSession().then(function(r) {
         if (r.data?.session) {
-          sb.from('projects').update({ project_type: mode, updated_at: new Date().toISOString() }).eq('id', project.id).then(function(){});
+          try { sb.from('projects').update(updates).eq('id', project.id).then(function(){}); } catch(e){}
         }
       });
-    } else {
-      try {
-        var list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
-        var idx = list.findIndex(function(p) { return p.id === project.id; });
-        if (idx >= 0) { list[idx].project_type = mode; localStorage.setItem('vexium_projects', JSON.stringify(list)); }
-      } catch(e) {}
     }
+    // Always keep localStorage in sync too
+    try {
+      var list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+      var idx = list.findIndex(function(p) { return p.id === (project && project.id); });
+      if (idx >= 0) {
+        Object.assign(list[idx], updates);
+        localStorage.setItem('vexium_projects', JSON.stringify(list));
+      }
+    } catch(e) {}
+    // Keep in-memory project updated
+    if (project) Object.assign(project, updates);
+  }
+
+  function selectProjectMode(mode) {
     hideModeSelect(function() {
       if (mode === 'business') {
-        // Open plan phase for business mode
-        openPlanPhase();
+        saveProjectMeta({ project_type: 'business', project_phases: JSON.stringify(BUSINESS_PHASES), current_phase: 0 });
+        currentPhaseIndex = 0;
+        renderPhaseBar(BUSINESS_PHASES, 0);
+        openPlanPhase(); // Business starts in plan mode
       } else if (mode === 'yourway') {
-        // Show your-way workflow builder (for now opens a friendly AI prompt)
-        setMode('ai');
-        setTimeout(function() {
-          var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
-          if (inp) {
-            inp.placeholder = 'Describe your workflow — what stages do you want to work through?';
-            inp.focus();
-          }
-        }, 100);
+        // Show the yourway phase builder first
+        openYwModal();
       } else {
-        // website — just drop into AI mode
+        // Website — no phases, just AI
+        saveProjectMeta({ project_type: 'website', project_phases: null, current_phase: 0 });
+        renderPhaseBar(null, 0);
         setMode('ai');
         setTimeout(function() {
           var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
@@ -1547,6 +1885,238 @@
         }, 100);
       }
     });
+  }
+
+  // ── PHASE BAR ──────────────────────────────────────────────────────
+
+  function getProjectPhases() {
+    if (!project) return null;
+    if (project.project_type === 'business') return BUSINESS_PHASES;
+    try { return JSON.parse(project.project_phases || 'null'); } catch(e) { return null; }
+  }
+
+  // ── PHASE STRIP (topbar) ───────────────────────────────────────────
+
+  function renderPhaseStrip(phases, activeIdx) {
+    var strip    = document.getElementById('phaseStrip');
+    var label    = document.getElementById('phaseCurrentLabel');
+    var num      = document.getElementById('phaseCurrentNum');
+    var nextBtn  = document.getElementById('phaseNextBtn');
+    var modes    = document.querySelector('.tb-modes');
+
+    if (!phases || !phases.length) {
+      strip.classList.remove('show');
+      if (modes) modes.style.display = '';
+      return;
+    }
+
+    strip.classList.add('show');
+    if (modes) modes.style.display = 'none';
+
+    var name = phases[activeIdx] || phases[0];
+    label.textContent = name;
+    num.textContent   = (activeIdx + 1) + ' of ' + phases.length;
+    nextBtn.disabled  = (activeIdx >= phases.length - 1);
+
+    // Rebuild popup list
+    var list = document.getElementById('phasePopupList');
+    if (list) {
+      list.innerHTML = phases.map(function(p, i) {
+        var cls = 'pp-item' + (i === activeIdx ? ' active' : '') + (i < activeIdx ? ' done' : '');
+        var checkInner = i < activeIdx
+          ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(34,197,94,.8)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          : (i === activeIdx ? '<div style="width:6px;height:6px;border-radius:50%;background:var(--a1)"></div>' : '');
+        return '<div class="pp-item ' + cls + '" onclick="phasePopupClick(' + i + ')">' +
+          '<div class="pp-check">' + checkInner + '</div>' +
+          '<span class="pp-item-name">' + escHtml(p) + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    // Settings phase section
+    renderSettingsPhaseList(phases, activeIdx);
+  }
+
+  function renderSettingsPhaseList(phases, activeIdx) {
+    var sec     = document.getElementById('epPhaseSection');
+    var divider = document.getElementById('epPhaseDivider');
+    var list    = document.getElementById('epPhaseList');
+    if (!sec || !list) return;
+    var show = !!(phases && phases.length);
+    sec.style.display     = show ? '' : 'none';
+    divider.style.display = show ? '' : 'none';
+    if (!show) return;
+    list.innerHTML = phases.map(function(p, i) {
+      var isDone   = i < activeIdx;
+      var isActive = i === activeIdx;
+      var dotCol   = isDone ? 'rgba(34,197,94,.7)' : isActive ? 'var(--a1)' : 'var(--b3)';
+      var nameCol  = isDone ? 'rgba(34,197,94,.8)' : isActive ? 'var(--text)' : 'var(--sub)';
+      var badge    = isDone
+        ? '<span style="font-size:9px;font-weight:700;color:rgba(34,197,94,.7);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:5px;padding:1px 6px">Done</span>'
+        : isActive
+          ? '<span style="font-size:9px;font-weight:700;color:var(--a1);background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);border-radius:5px;padding:1px 6px">Current</span>'
+          : '';
+      return '<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;background:' + (isActive ? 'rgba(79,110,247,.05)' : 'transparent') + '">' +
+        '<div style="width:7px;height:7px;border-radius:50%;background:' + dotCol + ';flex-shrink:0"></div>' +
+        '<span style="font-size:12px;font-weight:600;color:' + nameCol + ';flex:1">' + escHtml(p) + '</span>' +
+        badge +
+        '</div>';
+    }).join('');
+  }
+
+  function setPhase(idx, fromSettings) {
+    var phases = getProjectPhases();
+    if (!phases || idx < 0 || idx >= phases.length) return;
+    currentPhaseIndex = idx;
+    renderPhaseStrip(phases, idx);
+    saveProjectMeta({ current_phase: idx });
+    // Inject phase-transition divider into chat
+    var notice = document.createElement('div');
+    notice.style.cssText = 'text-align:center;padding:10px 0 2px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);opacity:.5;user-select:none';
+    notice.textContent = '── ' + phases[idx] + ' ──';
+    var msgs = document.getElementById('aiMessages');
+    if (msgs) msgs.appendChild(notice);
+    if (!fromSettings) closePhasePopup();
+    // Plan step navigates to plan section
+    if (phases[idx].toLowerCase() === 'plan') {
+      openPlanPhase();
+    } else {
+      setMode('ai');
+    }
+  }
+
+  function advancePhase() {
+    var phases = getProjectPhases();
+    if (!phases) return;
+    if (currentPhaseIndex < phases.length - 1) setPhase(currentPhaseIndex + 1);
+  }
+
+  function epAdvancePhase() {
+    // Advance from settings — close settings then move phase
+    closeEditorSettings();
+    setTimeout(function() { advancePhase(); }, 150);
+  }
+
+  // Popup open/close
+  function togglePhasePopup(e) {
+    e.stopPropagation();
+    var popup = document.getElementById('phasePopup');
+    if (popup.classList.contains('show')) { closePhasePopup(); return; }
+    // Position below the button
+    var btn  = document.getElementById('phaseCurrentBtn');
+    var rect = btn.getBoundingClientRect();
+    popup.style.top  = (rect.bottom + 6) + 'px';
+    popup.style.left = rect.left + 'px';
+    popup.classList.add('show');
+    // close on outside click
+    setTimeout(function() {
+      document.addEventListener('click', closePhasePopup, { once: true });
+    }, 0);
+  }
+
+  function closePhasePopup() {
+    var popup = document.getElementById('phasePopup');
+    if (popup) popup.classList.remove('show');
+  }
+
+  function phasePopupClick(idx) {
+    closePhasePopup();
+    setPhase(idx);
+  }
+
+  // Restore on project load
+  function restorePhaseBar() {
+    var phases = getProjectPhases();
+    var idx = (project && project.current_phase != null) ? (project.current_phase || 0) : 0;
+    currentPhaseIndex = idx;
+    renderPhaseStrip(phases, idx);
+  }
+
+  // alias kept for any remaining internal calls
+  function renderPhaseBar(phases, idx) { renderPhaseStrip(phases, idx); }
+
+  // ── YOUR WAY MODAL ─────────────────────────────────────────────────
+
+  var ywDragSrc = null;
+
+  function openYwModal() {
+    var modal = document.getElementById('ywModal');
+    var list = document.getElementById('ywPhaseList');
+    // Pre-populate with sensible defaults
+    list.innerHTML = '';
+    ['Research','Design','Build','Review','Launch'].forEach(function(p) { ywAddPhaseWithName(p); });
+    ywUpdateStartBtn();
+    modal.classList.add('show');
+  }
+
+  function ywCancel() {
+    document.getElementById('ywModal').classList.remove('show');
+    // Go back to mode select
+    showModeSelect();
+  }
+
+  function ywAddPhase() { ywAddPhaseWithName(''); }
+
+  function ywAddPhaseWithName(name) {
+    var list = document.getElementById('ywPhaseList');
+    var row = document.createElement('div');
+    row.className = 'yw-phase-row';
+    row.draggable = true;
+    row.innerHTML =
+      '<div class="yw-drag-handle" title="Drag to reorder">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>' +
+      '</div>' +
+      '<input class="yw-phase-input" placeholder="Phase name…" value="' + escHtml(name) + '" maxlength="32" oninput="ywUpdateStartBtn()" />' +
+      '<button class="yw-del-btn" onclick="ywDelPhase(this)" title="Remove">×</button>';
+    // Drag events
+    row.addEventListener('dragstart', function(e) {
+      ywDragSrc = row;
+      e.dataTransfer.effectAllowed = 'move';
+      row.style.opacity = '.4';
+    });
+    row.addEventListener('dragend', function() { row.style.opacity = ''; ywDragSrc = null; });
+    row.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (ywDragSrc && ywDragSrc !== row) {
+        var list2 = document.getElementById('ywPhaseList');
+        var rows = Array.from(list2.children);
+        var srcIdx = rows.indexOf(ywDragSrc);
+        var dstIdx = rows.indexOf(row);
+        if (srcIdx < dstIdx) list2.insertBefore(ywDragSrc, row.nextSibling);
+        else list2.insertBefore(ywDragSrc, row);
+      }
+    });
+    list.appendChild(row);
+    // Focus empty inputs
+    if (!name) setTimeout(function() { row.querySelector('input').focus(); }, 50);
+    ywUpdateStartBtn();
+  }
+
+  function ywDelPhase(btn) {
+    btn.closest('.yw-phase-row').remove();
+    ywUpdateStartBtn();
+  }
+
+  function ywUpdateStartBtn() {
+    var inputs = document.querySelectorAll('#ywPhaseList .yw-phase-input');
+    var hasAny = Array.from(inputs).some(function(i) { return i.value.trim(); });
+    document.getElementById('ywStartBtn').disabled = !hasAny;
+  }
+
+  function ywStartWorkflow() {
+    var inputs = document.querySelectorAll('#ywPhaseList .yw-phase-input');
+    var phases = Array.from(inputs).map(function(i) { return i.value.trim(); }).filter(Boolean);
+    if (!phases.length) return;
+    document.getElementById('ywModal').classList.remove('show');
+    saveProjectMeta({ project_type: 'yourway', project_phases: JSON.stringify(phases), current_phase: 0 });
+    currentPhaseIndex = 0;
+    renderPhaseBar(phases, 0);
+    setMode('ai');
+    setTimeout(function() {
+      var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
+      if (inp) inp.focus();
+    }, 100);
   }
 
   // ── TILT EFFECT ──
@@ -1598,7 +2168,7 @@
         const { data: authData } = await sb.auth.getSession();
         const session = authData?.session;
         if (session) {
-          const { data, error } = await sb.from('projects').select('*').eq('id', projectId).maybeSingle();
+          const { data, error } = await sb.from('projects').select('*,project_phases,current_phase').eq('id', projectId).maybeSingle();
           if (data) {
             project = data;
             fileSystem = data.files || {};
@@ -1639,6 +2209,7 @@
     await aiLoadHistory();
     renderTemplates();
     startPlaceholderRotator();
+    restorePhaseBar();
   }
 
   // ── MONACO ──
@@ -1855,6 +2426,8 @@
     document.getElementById('epEmojiPicker').style.display = 'none';
     // Load collaborators
     await loadEpCollabs();
+    // Refresh phase section
+    renderSettingsPhaseList(getProjectPhases(), currentPhaseIndex);
     document.getElementById('epOverlay').classList.add('show');
   }
 
@@ -2390,7 +2963,7 @@
         row.className = 'ai-row ai';
         var textEl = document.createElement('div');
         textEl.className = 'ai-text';
-        textEl.innerHTML = (m.text || '').split(/\n\n+/).map(function(p){ return p.trim() ? '<p>' + escHtml(p).replace(/\n/g,'<br>') + '</p>' : ''; }).join('');
+        textEl.innerHTML = formatChatText(m.text || '');
         row.appendChild(textEl);
         if (m.files && m.files.length) {
           var cardsEl = document.createElement('div');
@@ -2782,10 +3355,7 @@
     var textEl = document.createElement('div');
     textEl.className = 'ai-text';
     // Convert newlines to paragraphs
-    var paras = text.trim().split(/\n\n+/);
-    textEl.innerHTML = paras.map(function(p) {
-      return '<p>' + escHtml(p).replace(/\n/g,'<br>') + '</p>';
-    }).join('');
+    textEl.innerHTML = formatChatText(text.trim());
 
     // File cards
     var cardsEl = null;
@@ -2831,7 +3401,9 @@
     var el = document.createElement('div');
     el.className = 'ai-typing';
     el.id = 'aiTypingIndicator';
-    el.innerHTML = '<span></span><span></span><span></span>';
+    el.innerHTML =
+      '<div class="ai-typing-avatar"><svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z" fill="#fff"/></svg></div>' +
+      '<div class="ai-typing-dots"><span></span><span></span><span></span></div>';
     msgs.appendChild(el);
     msgs.scrollTop = msgs.scrollHeight;
   }
@@ -2878,6 +3450,160 @@
     aiSetGenerating(true);
     aiShowTyping();
     aiCallAPI();
+  }
+
+  // ── MARKDOWN RENDERER ────────────────────────────────────────────
+  function formatChatText(raw) {
+    if (!raw) return '';
+    var s = raw;
+
+    // Code blocks (``` ... ```) — must go before other replacements
+    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, function(_, code) {
+      return '<pre><code>' + code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim() + '</code></pre>';
+    });
+
+    // Escape HTML (after code block extraction so code stays raw)
+    var parts = [];
+    var lastIdx = 0;
+    var preRe = /<pre><code>([\s\S]*?)<\/code><\/pre>/g;
+    var m;
+    // Split around already-processed pre blocks
+    s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Restore pre blocks we already escaped
+    s = s.replace(/&lt;pre&gt;&lt;code&gt;([\s\S]*?)&lt;\/code&gt;&lt;\/pre&gt;/g, function(_, code) {
+      return '<pre><code>' + code + '</code></pre>';
+    });
+
+    // Headings
+    s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Bold + italic combined
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^\*\n]+?)\*/g, '<em>$1</em>');
+    s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    s = s.replace(/_([^_\n]+?)_/g, '<em>$1</em>');
+
+    // Strikethrough
+    s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+    // Inline code (skip inside pre blocks)
+    s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+    // Links
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Horizontal rule
+    s = s.replace(/^[-*_]{3,}$/gm, '<hr>');
+
+    // Blockquote
+    s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Bullet lists
+    s = s.replace(/((?:^[-*] .+\n?)+)/gm, function(block) {
+      var items = block.trim().split('\n').map(function(line) {
+        return '<li>' + line.replace(/^[-*] /, '') + '</li>';
+      }).join('');
+      return '<ul>' + items + '</ul>';
+    });
+
+    // Numbered lists
+    s = s.replace(/((?:^\d+\. .+\n?)+)/gm, function(block) {
+      var items = block.trim().split('\n').map(function(line) {
+        return '<li>' + line.replace(/^\d+\. /, '') + '</li>';
+      }).join('');
+      return '<ol>' + items + '</ol>';
+    });
+
+    // Paragraphs — split on double newlines
+    var paras = s.split(/\n\n+/);
+    s = paras.map(function(para) {
+      para = para.trim();
+      if (!para) return '';
+      if (/^<(h[1-6]|ul|ol|pre|blockquote|hr|div)/.test(para)) return para;
+      return '<p>' + para.replace(/\n/g, '<br>') + '</p>';
+    }).filter(Boolean).join('');
+
+    return s;
+  }
+
+  // ── FORMATTING TOOLBAR ────────────────────────────────────────────
+  function fmtWrap(before, after) {
+    var ta = document.getElementById('aiBottomInput');
+    if (!ta) return;
+    ta.focus();
+    var start = ta.selectionStart, end = ta.selectionEnd;
+    var selected = ta.value.slice(start, end);
+    var replacement = before + (selected || 'text') + after;
+    ta.setRangeText(replacement, start, end, 'select');
+    // Select just the inner text
+    ta.selectionStart = start + before.length;
+    ta.selectionEnd   = start + before.length + (selected || 'text').length;
+    aiAutoResize(ta);
+  }
+
+  function fmtList(type) {
+    var ta = document.getElementById('aiBottomInput');
+    if (!ta) return;
+    ta.focus();
+    var val = ta.value;
+    var start = ta.selectionStart;
+    var lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    var lineEnd = val.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = val.length;
+    var lineText = val.slice(lineStart, lineEnd);
+    var prefix = type === 'bullet' ? '- ' : '1. ';
+    if (lineText.startsWith(prefix)) {
+      ta.setRangeText('', lineStart, lineStart + prefix.length, 'end');
+    } else {
+      ta.setRangeText(prefix, lineStart, lineStart, 'end');
+    }
+    aiAutoResize(ta);
+  }
+
+  function fmtHeading() {
+    var ta = document.getElementById('aiBottomInput');
+    if (!ta) return;
+    ta.focus();
+    var val = ta.value;
+    var start = ta.selectionStart;
+    var lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    var lineEnd = val.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = val.length;
+    var line = val.slice(lineStart, lineEnd);
+    if (line.startsWith('### ')) {
+      ta.setRangeText(line.slice(4), lineStart, lineEnd, 'end');
+    } else if (line.startsWith('## ')) {
+      ta.setRangeText('### ' + line.slice(3), lineStart, lineEnd, 'end');
+    } else {
+      ta.setRangeText('## ' + line, lineStart, lineEnd, 'end');
+    }
+    aiAutoResize(ta);
+  }
+
+  // ── LIVE PREVIEW ─────────────────────────────────────────────────
+  var _livePreviewDebounce = null;
+  function livePreviewUpdate() {
+    clearTimeout(_livePreviewDebounce);
+    _livePreviewDebounce = setTimeout(function() {
+      if (!previewVisible) {
+        // Auto-open preview when code starts arriving
+        previewVisible = true;
+        document.getElementById('rightPanel').classList.remove('hidden');
+        document.getElementById('previewFrame').style.display = 'block';
+        document.getElementById('previewToolbar').style.display = '';
+        document.getElementById('btnPreview').classList.add('active');
+      }
+      var frame = document.getElementById('previewFrame');
+      // Flash to show update
+      frame.classList.remove('preview-refreshing');
+      void frame.offsetWidth; // reflow
+      frame.classList.add('preview-refreshing');
+      refreshPreview();
+      setTimeout(function() { frame.classList.remove('preview-refreshing'); }, 400);
+    }, 180); // fast but debounced — 180ms after last chunk
   }
 
   async function aiSend(fromBottom) {
@@ -2928,9 +3654,12 @@
     pill.innerHTML =
       '<div class="ai-edit-pill-dot" style="background:' + col + '"></div>' +
       '<span style="color:' + col + '">' + escHtml(name) + '</span>' +
-      '<div class="ai-edit-pill-dots"><span></span><span></span><span></span></div>' +
+      '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>' +
       '<div class="ai-diff-wrap">' +
-        '<div class="ai-diff-header">' + escHtml(name) + '</div>' +
+        '<div class="ai-diff-header">' +
+          '<div class="ai-diff-header-dot" style="background:' + col + '"></div>' +
+          escHtml(name) +
+        '</div>' +
         '<div class="ai-diff-body"></div>' +
       '</div>';
 
@@ -3010,7 +3739,8 @@
       row.className = 'ai-row ai';
       textEl = document.createElement('div');
       textEl.className = 'ai-text';
-      textEl.innerHTML = '<p style="color:var(--sub);font-style:italic">Working...</p>';
+      textEl.innerHTML = '';
+      textEl.className = 'ai-text ai-stream-cursor';
       row.appendChild(textEl);
       msgs.appendChild(row);
       scrollIfSticky();
@@ -3051,10 +3781,7 @@
           // ── message: parsed message text only (no code) ──
           if (eventType === 'message') {
             fullMessage = data.message || '';
-            textEl.innerHTML = fullMessage
-              .split(/\n\n+/)
-              .map(function(p) { return '<p>' + escHtml(p).replace(/\n/g,'<br>') + '</p>'; })
-              .join('');
+            textEl.innerHTML = formatChatText(fullMessage);
             scrollIfSticky();
           }
 
@@ -3072,6 +3799,8 @@
             dirtyFiles.add(data.name);
             if (!openTabs.includes(data.name)) openTabs.push(data.name);
             collectedFiles.push({ name: data.name, content: content });
+            // Live preview: update iframe as files arrive
+            livePreviewUpdate();
           }
 
           // ── done: all files received ──
@@ -3112,6 +3841,9 @@
               row.appendChild(cardsEl);
             }
 
+            // Remove stream cursor
+            if (textEl) textEl.classList.remove('ai-stream-cursor');
+
             // Meta row
             var meta = document.createElement('div');
             meta.className = 'ai-msg-meta';
@@ -3148,11 +3880,14 @@
 
     } catch(err) {
       if (err.name === 'AbortError') {
-        if (textEl && fullMessage) {
-          var stopNote = document.createElement('p');
-          stopNote.style.cssText = 'font-size:11px;color:var(--sub);margin-top:6px';
-          stopNote.textContent = '— stopped';
-          textEl.appendChild(stopNote);
+        if (textEl) {
+          textEl.classList.remove('ai-stream-cursor');
+          if (fullMessage) {
+            var stopNote = document.createElement('p');
+            stopNote.style.cssText = 'font-size:11px;color:var(--sub);margin-top:6px;font-style:italic';
+            stopNote.textContent = '— stopped';
+            textEl.appendChild(stopNote);
+          }
         }
       } else {
         aiHideTyping();
@@ -3584,5 +4319,22 @@ Be thorough. Every decision from the conversation should appear here. This is th
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);
 </script>
+
+<!-- ══ YOUR WAY PHASE BUILDER ══ -->
+<div id="ywModal">
+  <div id="ywBox">
+    <div id="ywHead">
+      <h2>Build your workflow</h2>
+      <p>Add the phases you want to work through. You can rename, reorder, or delete them anytime before you start.</p>
+    </div>
+    <div id="ywPhaseList"></div>
+    <button id="ywAddBtn" onclick="ywAddPhase()">+ Add phase</button>
+    <div id="ywFoot">
+      <button class="yw-cancel" onclick="ywCancel()">Back</button>
+      <button class="yw-start" id="ywStartBtn" onclick="ywStartWorkflow()" disabled>Start building</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

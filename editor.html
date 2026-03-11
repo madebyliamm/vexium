@@ -344,7 +344,7 @@
     .ai-text h1{font-size:20px;font-weight:800;margin:16px 0 8px;letter-spacing:-.3px;color:var(--text)}
     .ai-text h2{font-size:16px;font-weight:700;margin:14px 0 6px;letter-spacing:-.2px;color:var(--text)}
     .ai-text h3{font-size:14px;font-weight:700;margin:12px 0 4px;color:var(--text)}
-    .ai-text strong{font-weight:700;color:#e2e8ff}
+    .ai-text strong{font-weight:700;color:#c4b5fd}
     .ai-text em{font-style:italic;color:rgba(255,255,255,.8)}
     .ai-text code{
       font-family:var(--mono);font-size:12px;
@@ -438,116 +438,84 @@
     .ai-edit-pill.done{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05)}
     .ai-edit-pill.done .ai-edit-pill-dot{box-shadow:0 0 5px currentColor}
 
-    /* ── CODE VIEWER PANEL ── */
-    #aiCodePanel{
-      position:fixed;
-      bottom:0;left:0;right:0;
-      height:0;
-      z-index:600;
-      pointer-events:none;
-      transition:height .28s cubic-bezier(.4,0,.2,1);
-    }
-    #aiCodePanel.open{
-      height:min(62vh,520px);
-      pointer-events:all;
-    }
-    #aiCodePanelInner{
-      position:absolute;
-      bottom:0;left:50%;
-      transform:translateX(-50%);
-      width:min(900px,94vw);
-      height:100%;
-      display:flex;flex-direction:column;
-      background:rgba(7,7,20,.92);
-      backdrop-filter:blur(24px) saturate(1.4);
-      -webkit-backdrop-filter:blur(24px) saturate(1.4);
-      border:1px solid rgba(255,255,255,.07);
-      border-bottom:none;
-      border-radius:18px 18px 0 0;
+    /* ── INLINE CODE BOX (per-file, lives inside the chat row) ── */
+    .ai-code-box{
+      margin:10px 0 4px;
+      border-radius:14px;
       overflow:hidden;
-      box-shadow:
-        0 -1px 0 rgba(255,255,255,.05),
-        0 -24px 80px rgba(0,0,0,.6),
-        0 -4px 20px rgba(0,0,0,.4);
+      border:1px solid rgba(255,255,255,.07);
+      background:rgba(255,255,255,.03);
+      /* enter */
+      animation:codeBoxIn .18s ease;
+    }
+    @keyframes codeBoxIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    /* collapse-out when done */
+    .ai-code-box.collapsing{
+      animation:codeBoxOut .22s ease forwards;
+    }
+    @keyframes codeBoxOut{
+      from{opacity:1;max-height:400px}
+      to{opacity:0;max-height:0;margin:0;padding:0;border-width:0}
     }
 
-    /* Panel header */
-    #aiCodePanelHeader{
-      display:flex;align-items:center;gap:10px;
-      padding:12px 16px 11px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      flex-shrink:0;
+    /* header bar */
+    .ai-code-box-head{
+      display:flex;align-items:center;gap:8px;
+      padding:9px 12px 8px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      background:rgba(255,255,255,.02);
     }
-    #aiCodePanelDot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s,box-shadow .3s}
-    #aiCodePanelFilename{
-      font-family:var(--mono);font-size:12px;font-weight:600;
-      color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    .ai-code-box-dot{
+      width:7px;height:7px;border-radius:50%;flex-shrink:0;
     }
-    .acp-badge{
-      font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
-      padding:2px 7px;border-radius:5px;flex-shrink:0;
+    .ai-code-box-name{
+      font-family:var(--mono);font-size:11.5px;font-weight:600;
+      color:var(--text);flex:1;
     }
-    .acp-stat{
-      font-size:10px;font-weight:600;color:var(--sub);
+    .ai-code-box-badge{
+      font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+      padding:2px 6px;border-radius:4px;flex-shrink:0;
+    }
+    .ai-code-box-lines{
+      font-size:10px;font-weight:500;color:var(--sub);
       font-family:var(--mono);flex-shrink:0;
     }
-    #aiCodePanelStatus{
-      display:flex;align-items:center;gap:5px;
-      font-size:10px;font-weight:600;color:var(--sub);
-      flex-shrink:0;
-    }
-    #aiCodePanelStatus .acp-writing-dot{
-      width:5px;height:5px;border-radius:50%;
+    .ai-code-box-pulse{
+      width:5px;height:5px;border-radius:50%;flex-shrink:0;
       background:var(--a1);
-      animation:acpPulse 1s ease-in-out infinite;
+      animation:cbPulse .9s ease-in-out infinite;
     }
-    @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-    #aiCodePanelClose{
-      width:26px;height:26px;border-radius:8px;
-      background:transparent;border:none;
-      color:var(--sub);cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      transition:background .12s,color .12s;flex-shrink:0;
-    }
-    #aiCodePanelClose:hover{background:rgba(255,255,255,.07);color:var(--text)}
-    #aiCodePanelClose svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
+    @keyframes cbPulse{0%,100%{opacity:.25;transform:scale(.75)}50%{opacity:1;transform:scale(1)}}
 
-    /* Line numbers + code area */
-    #aiCodePanelBody{
-      flex:1;overflow:auto;display:flex;
-      font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    /* code body */
+    .ai-code-box-body{
+      display:flex;
+      max-height:260px;overflow-y:auto;
+      font-family:var(--mono);font-size:12px;line-height:1.65;
     }
-    #aiCodePanelNums{
-      padding:14px 0 14px 14px;
-      color:rgba(255,255,255,.18);
-      text-align:right;
-      user-select:none;
-      flex-shrink:0;
-      min-width:46px;
+    .ai-code-box-nums{
+      padding:10px 0 10px 12px;min-width:40px;
+      text-align:right;color:rgba(255,255,255,.15);
+      user-select:none;flex-shrink:0;
       border-right:1px solid rgba(255,255,255,.04);
     }
-    #aiCodePanelNums span{display:block;padding-right:12px;font-size:11px}
-    #aiCodePanelCode{
-      padding:14px 18px;
-      flex:1;white-space:pre;overflow-x:auto;
-      color:rgba(220,210,255,.75);
-      min-width:0;
+    .ai-code-box-nums span{display:block;padding-right:10px;font-size:10.5px}
+    .ai-code-box-code{
+      padding:10px 14px;flex:1;
+      white-space:pre;overflow-x:auto;
+      color:rgba(210,200,255,.7);min-width:0;
     }
-    /* syntax token colours */
-    .tok-tag{color:#7dd3fc}      /* html tags */
-    .tok-attr{color:#c4b5fd}     /* attributes */
-    .tok-str{color:#86efac}      /* strings */
-    .tok-kw{color:#a5b4fc}       /* keywords */
-    .tok-cmt{color:rgba(255,255,255,.28);font-style:italic}  /* comments */
-    .tok-fn{color:#fbbf24}       /* functions */
-    .tok-num{color:#fb923c}      /* numbers */
-    .tok-punct{color:rgba(255,255,255,.35)} /* punctuation */
-    /* writing animation — last line pulses */
-    .acp-writing-line{
-      color:rgba(255,255,255,.9);
-      animation:acpLinePulse .8s ease-in-out infinite alternate;
-    }
-    @keyframes acpLinePulse{from{opacity:.6}to{opacity:1}}
+    /* syntax tokens */
+    .tok-tag{color:#7dd3fc}
+    .tok-attr{color:#c4b5fd}
+    .tok-str{color:#86efac}
+    .tok-kw{color:#a5b4fc}
+    .tok-cmt{color:rgba(255,255,255,.28);font-style:italic}
+    .tok-fn{color:#fbbf24}
+    .tok-num{color:#fb923c}
+    .tok-punct{color:rgba(255,255,255,.32)}
+
+    @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
     /* ── AI MESSAGE AVATAR ── */
     .ai-row.ai{position:relative}
@@ -3785,15 +3753,17 @@
     document.getElementById('aiSend').disabled = on;
     document.getElementById('aiBottomSend').disabled = on;
     if (!on) {
-      // Close code panel and clear pills after a delay
+      // Clear state after pills/boxes finish animating out
       setTimeout(function() {
-        acpClose();
         acpLiveContent = {};
+        acpBoxMap = {};
+        acpCurrentFile = null;
+        _acpRenderTimer = null;
         var pillsEl = document.getElementById('aiEditingPills');
         pillsEl.classList.remove('show');
         pillsEl.innerHTML = '';
         aiPillMap = {};
-      }, 2200);
+      }, 2500);
     }
   }
 
@@ -3834,11 +3804,6 @@
       '<span style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
       '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
 
-    // Click to re-open panel on this file (if closed)
-    pill.addEventListener('click', function() {
-      acpOpenFile(name);
-    });
-
     pillsEl.appendChild(pill);
     aiPillMap[name] = pill;
     return pill;
@@ -3848,209 +3813,143 @@
     var pill = aiPillMap[name];
     if (!pill) return;
     pill.classList.add('done');
-    pill.classList.remove('active');
-    // Update panel if it's showing this file
-    if (acpCurrentFile === name) {
-      acpSetDone();
-    }
   }
 
-  // ── AI CODE PANEL ─────────────────────────────────────────────────
-  var acpCurrentFile = null;
-  var acpLiveContent = {};   // name -> accumulated live string
+  // ── INLINE CODE BOX ───────────────────────────────────────────────
+  var acpBoxMap = {};       // name -> { el, numsEl, codeEl, linesEl, pulseEl, body }
+  var acpLiveContent = {};  // name -> accumulated content string
+  var acpCurrentFile = null; // which file is actively streaming right now
+  var _acpRenderTimer = null;
 
-  // Called when edge fn sends file_start — open panel immediately, empty
-  function acpFileStart(name) {
-    acpLiveContent[name] = '';
-    // Create pill now (no content yet)
-    if (!aiPillMap[name]) aiAddEditingPill(name);
-    // Auto-open to this file
-    acpSwitchTo(name, true);
-  }
-
-  // Called on every file_delta — append chars and re-render
-  function acpFileDelta(text) {
-    if (!acpCurrentFile) return;
-    acpLiveContent[acpCurrentFile] = (acpLiveContent[acpCurrentFile] || '') + text;
-    var content = acpLiveContent[acpCurrentFile];
-    var lines = content.split('\n');
-    var bytes = new Blob([content]).size;
-    document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
-    document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
-    acpRender(content, acpCurrentFile, true);
-  }
-
-  // Called when a file is fully done (file event received) — re-render clean
-  function acpFileDone(name) {
-    if (aiPillMap[name]) aiMarkPillDone(name);
-    if (acpCurrentFile === name) acpSetDone();
-  }
-
-  // Open the panel focused on a specific file (used by pill clicks after generation)
-  function acpOpenFile(name) {
-    var content = acpLiveContent[name] || fileSystem[name] || '';
-    var isDone  = !!(aiPillMap[name] && aiPillMap[name].classList.contains('done'));
-    acpSwitchTo(name, !isDone);
-    if (content) {
-      var lines = content.split('\n');
-      var bytes = new Blob([content]).size;
-      document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
-      document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
-      acpRender(content, name, !isDone);
-    }
-  }
-
-  // Internal: switch panel to a file and open it
-  function acpSwitchTo(name, isWriting) {
+  // Called on file_start — create the inline box inside the chat row
+  function acpFileStart(name, streamContent) {
     acpCurrentFile = name;
+    acpLiveContent[name] = '';
+    if (!aiPillMap[name]) aiAddEditingPill(name);
+
     var lang = aiLangLabel(name);
 
-    // Mark active pill
-    Object.keys(aiPillMap).forEach(function(k) { aiPillMap[k].classList.remove('active'); });
-    if (aiPillMap[name]) aiPillMap[name].classList.add('active');
+    var box = document.createElement('div');
+    box.className = 'ai-code-box';
+    box.innerHTML =
+      '<div class="ai-code-box-head">' +
+        '<div class="ai-code-box-dot" style="background:' + lang.color + ';box-shadow:0 0 6px ' + lang.color + '55"></div>' +
+        '<span class="ai-code-box-name">' + escHtml(name) + '</span>' +
+        '<span class="ai-code-box-badge" style="background:' + lang.color + '18;color:' + lang.color + '">' + lang.label + '</span>' +
+        '<span class="ai-code-box-lines">0 lines</span>' +
+        '<div class="ai-code-box-pulse"></div>' +
+      '</div>' +
+      '<div class="ai-code-box-body">' +
+        '<div class="ai-code-box-nums"></div>' +
+        '<div class="ai-code-box-code"></div>' +
+      '</div>';
 
-    // Header
-    var dot = document.getElementById('aiCodePanelDot');
-    dot.style.background = lang.color;
-    dot.style.boxShadow  = '0 0 8px ' + lang.color + '88';
-    document.getElementById('aiCodePanelFilename').textContent = name;
+    // Insert at top of streamContent so it appears above the (hidden) message text
+    streamContent.insertBefore(box, streamContent.firstChild);
 
-    var badge = document.getElementById('aiCodePanelBadge');
-    badge.textContent       = lang.label;
-    badge.style.background  = lang.color + '18';
-    badge.style.color       = lang.color;
-
-    document.getElementById('aiCodePanelLines').textContent = '0 lines';
-    document.getElementById('aiCodePanelSize').textContent  = '0 B';
-
-    var status     = document.getElementById('aiCodePanelStatus');
-    var statusText = document.getElementById('aiCodePanelStatusText');
-    if (isWriting) {
-      status.style.display  = 'flex';
-      statusText.textContent = 'writing…';
-    } else {
-      status.style.display = 'none';
-    }
-
-    // Clear code area
-    document.getElementById('aiCodePanelNums').innerHTML = '';
-    document.getElementById('aiCodePanelCode').innerHTML = '';
-
-    // Open panel
-    document.getElementById('aiCodePanel').classList.add('open');
+    acpBoxMap[name] = {
+      el:      box,
+      numsEl:  box.querySelector('.ai-code-box-nums'),
+      codeEl:  box.querySelector('.ai-code-box-code'),
+      linesEl: box.querySelector('.ai-code-box-lines'),
+      pulseEl: box.querySelector('.ai-code-box-pulse'),
+      body:    box.querySelector('.ai-code-box-body'),
+    };
   }
 
-  function acpClose() {
-    document.getElementById('aiCodePanel').classList.remove('open');
-    Object.keys(aiPillMap).forEach(function(k) { aiPillMap[k].classList.remove('active'); });
-    acpCurrentFile = null;
-  }
+  // Called on every file_delta — append chars + throttled render at ~60fps
+  function acpFileDelta(text) {
+    var name = acpCurrentFile;
+    if (!name || !acpBoxMap[name]) return;
 
-  function acpSetDone() {
-    var status = document.getElementById('aiCodePanelStatus');
-    if (status) status.style.display = 'none';
-    if (acpCurrentFile) {
-      var content = acpLiveContent[acpCurrentFile] || fileSystem[acpCurrentFile] || '';
-      var lines = content.split('\n');
-      var bytes = new Blob([content]).size;
-      document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
-      document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
-      acpRender(content, acpCurrentFile, false);
+    acpLiveContent[name] += text;
+
+    if (!_acpRenderTimer) {
+      _acpRenderTimer = setTimeout(function() {
+        _acpRenderTimer = null;
+        if (acpCurrentFile) acpRenderBox(acpCurrentFile, true);
+      }, 16);
     }
   }
 
-  // Throttled render — don't thrash DOM on every char
-  var _acpRenderTimer = null;
-  var _acpPendingContent = null;
-  var _acpPendingName = null;
-  var _acpPendingWriting = false;
-
-  function acpRender(code, name, isWriting) {
-    // For writing: throttle to ~60fps
-    if (isWriting) {
-      _acpPendingContent = code;
-      _acpPendingName    = name;
-      _acpPendingWriting = true;
-      if (!_acpRenderTimer) {
-        _acpRenderTimer = setTimeout(function() {
-          _acpRenderTimer = null;
-          if (_acpPendingContent !== null) {
-            acpRenderNow(_acpPendingContent, _acpPendingName, _acpPendingWriting);
-            _acpPendingContent = null;
-          }
-        }, 16); // ~60fps
-      }
-      return;
-    }
-    // Final render: immediate
-    acpRenderNow(code, name, false);
+  // Called when file event received — file complete
+  function acpFileDone(name) {
+    if (acpCurrentFile === name) acpCurrentFile = null;
+    if (aiPillMap[name]) aiMarkPillDone(name);
+    // Final render
+    acpRenderBox(name, false);
+    // Hide pulse dot
+    var b = acpBoxMap[name];
+    if (b && b.pulseEl) b.pulseEl.style.display = 'none';
+    // Collapse the box after a short pause
+    setTimeout(function() {
+      var b2 = acpBoxMap[name];
+      if (!b2) return;
+      b2.el.classList.add('collapsing');
+      b2.el.addEventListener('animationend', function() {
+        b2.el.style.display = 'none';
+      }, { once: true });
+    }, 600);
   }
 
-  function acpRenderNow(code, name, isWriting) {
-    var lines   = code.split('\n');
-    var numsEl  = document.getElementById('aiCodePanelNums');
-    var codeEl  = document.getElementById('aiCodePanelCode');
-    var body    = document.getElementById('aiCodePanelBody');
-    var wasAtBottom = (body.scrollHeight - body.scrollTop - body.clientHeight) < 80;
+  function acpRenderBox(name, isWriting) {
+    var b = acpBoxMap[name];
+    if (!b) return;
+    var code  = acpLiveContent[name] || '';
+    var lines = code.split('\n');
 
-    numsEl.innerHTML = lines.map(function(_, i) {
+    b.linesEl.textContent = lines.length + ' lines';
+
+    b.numsEl.innerHTML = lines.map(function(_, i) {
       return '<span>' + (i + 1) + '</span>';
     }).join('');
 
-    var highlighted = acpHighlight(code, name);
-    var hlLines     = highlighted.split('\n');
-    var html = hlLines.map(function(line, i) {
-      var isLast = isWriting && i === hlLines.length - 1;
-      return '<span class="acp-line' + (isLast ? ' acp-writing-line' : '') + '">' + line + '\n</span>';
-    }).join('');
-    codeEl.innerHTML = html;
+    if (isWriting) {
+      // Plain text while streaming — syntax highlighting on partial HTML
+      // produces broken mid-tag <span>s that the browser silently drops,
+      // making code lines go blank. textContent is always safe.
+      b.codeEl.textContent = code;
+    } else {
+      // File complete — safe to highlight the full, valid source
+      var highlighted = acpHighlight(code, name);
+      var hlLines = highlighted.split('\n');
+      b.codeEl.innerHTML = hlLines.map(function(line) {
+        return '<span class="acp-line">' + line + '\n</span>';
+      }).join('');
+    }
 
-    if (isWriting || wasAtBottom) body.scrollTop = body.scrollHeight;
+    // Scroll to bottom while writing
+    if (isWriting) b.body.scrollTop = b.body.scrollHeight;
   }
 
-  // Lightweight syntax highlighter — HTML/CSS/JS aware
+  // Syntax highlighter
   function acpHighlight(code, filename) {
     var ext = (filename.split('.').pop() || '').toLowerCase();
     var s = code
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
-
     if (ext === 'html') {
-      // Comments
       s = s.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-cmt">$1</span>');
-      // Tags
       s = s.replace(/(&lt;\/?)([\w-]+)/g, '<span class="tok-punct">$1</span><span class="tok-tag">$2</span>');
-      // Attributes
       s = s.replace(/\s([\w-]+)(=)/g, ' <span class="tok-attr">$1</span><span class="tok-punct">$2</span>');
-      // Strings
       s = s.replace(/(["'])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
       return s;
     }
     if (ext === 'css') {
-      // Comments
       s = s.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-cmt">$1</span>');
-      // Properties
       s = s.replace(/([\w-]+)(\s*:)(?!:)/g, '<span class="tok-attr">$1</span><span class="tok-punct">$2</span>');
-      // Values/strings
       s = s.replace(/(["'])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
-      // Numbers + units
       s = s.replace(/\b(\d+\.?\d*)(px|em|rem|vh|vw|%|s|ms|deg)?\b/g, '<span class="tok-num">$1$2</span>');
-      // Selectors / at-rules
       s = s.replace(/(@[\w-]+)/g, '<span class="tok-kw">$1</span>');
       return s;
     }
     if (ext === 'js' || ext === 'ts') {
-      // Comments
       s = s.replace(/(\/\/[^\n]*)/g, '<span class="tok-cmt">$1</span>');
       s = s.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-cmt">$1</span>');
-      // Strings
       s = s.replace(/(["'`])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
-      // Keywords
       s = s.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await|try|catch|new|this|typeof|null|undefined|true|false)\b/g, '<span class="tok-kw">$1</span>');
-      // Functions
       s = s.replace(/\b([\w$]+)(\s*\()/g, '<span class="tok-fn">$1</span><span class="tok-punct">$2</span>');
-      // Numbers
       s = s.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
       return s;
     }
@@ -4101,7 +4000,6 @@
       streamContent.style.cssText = 'flex:1;min-width:0';
       textEl = document.createElement('div');
       textEl.className = 'ai-text ai-stream-cursor';
-      textEl.style.cssText = 'opacity:0;transition:opacity .25s ease';
       streamContent.appendChild(textEl);
       streamInner.appendChild(streamContent);
       row.appendChild(streamInner);
@@ -4136,10 +4034,13 @@
           var data;
           try { data = JSON.parse(dataStr); } catch(e) { continue; }
 
-          // ── delta: accumulate text (hidden until done) ──
+          // ── delta: stream message text live ──
           if (eventType === 'delta' && data.text) {
             fullMessage += data.text;
-            // textEl is opacity:0 during generation — no render needed
+            if (textEl) {
+              textEl.innerHTML = formatChatText(fullMessage);
+              scrollIfSticky();
+            }
           }
 
           // ── message: final event — apply full markdown rendering ──
@@ -4159,7 +4060,7 @@
 
           // ── file_start: new file beginning to stream ──
           if (eventType === 'file_start' && data.name) {
-            acpFileStart(data.name);
+            acpFileStart(data.name, row._contentWrap || row);
           }
 
           // ── file_delta: live chars of current file content ──
@@ -4219,12 +4120,10 @@
               target.appendChild(cardsEl);
             }
 
-            // Reveal message text with fade-in
+            // Finalise — swap cursor class, re-render clean markdown
             if (textEl) {
               textEl.classList.remove('ai-stream-cursor');
-              // Re-render final markdown
               textEl.innerHTML = formatChatText(fullMessage);
-              requestAnimationFrame(function() { textEl.style.opacity = '1'; });
             }
 
             // Meta row
@@ -4703,30 +4602,6 @@ Be thorough. Every decision from the conversation should appear here. This is th
   window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
   window.addEventListener('load', init);
 </script>
-
-<!-- ══ AI CODE VIEWER PANEL ══ -->
-<div id="aiCodePanel">
-  <div id="aiCodePanelInner">
-    <div id="aiCodePanelHeader">
-      <div id="aiCodePanelDot"></div>
-      <span id="aiCodePanelFilename">index.html</span>
-      <span class="acp-badge" id="aiCodePanelBadge">HTML</span>
-      <span class="acp-stat" id="aiCodePanelLines">0 lines</span>
-      <span class="acp-stat" id="aiCodePanelSize">0 B</span>
-      <div id="aiCodePanelStatus">
-        <div class="acp-writing-dot"></div>
-        <span id="aiCodePanelStatusText">writing…</span>
-      </div>
-      <button id="aiCodePanelClose" onclick="acpClose()" title="Close">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div id="aiCodePanelBody">
-      <div id="aiCodePanelNums"></div>
-      <div id="aiCodePanelCode"></div>
-    </div>
-  </div>
-</div>
 
 <!-- ══ YOUR WAY PHASE BUILDER ══ -->
 <div id="ywModal">

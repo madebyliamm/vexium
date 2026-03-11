@@ -3161,7 +3161,15 @@
         var h = d.getHours(), mn = d.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
         var time = h + ':' + mn.toString().padStart(2,'0') + ' ' + ampm;
-        aiAllMessages.push({ role: row.role, text: row.content, files: row.file_names || [], time: time });
+        // Assistant messages are stored as JSON {"message":"...","files":[...]} — extract just the message text
+        var displayText = row.content;
+        if (row.role === 'assistant') {
+          try {
+            var parsed = JSON.parse(row.content);
+            displayText = parsed.message || row.content;
+          } catch(e) { /* plain text, use as-is */ }
+        }
+        aiAllMessages.push({ role: row.role, text: displayText, files: row.file_names || [], time: time });
       });
       aiTransitionToChat();
       aiRenderMessages();

@@ -3788,6 +3788,7 @@
       // Close code panel and clear pills after a delay
       setTimeout(function() {
         acpClose();
+        acpLiveContent = {};
         var pillsEl = document.getElementById('aiEditingPills');
         pillsEl.classList.remove('show');
         pillsEl.innerHTML = '';
@@ -3820,7 +3821,7 @@
   }
 
   // ── PILL ──────────────────────────────────────────────────────────
-  function aiAddEditingPill(name, content) {
+  function aiAddEditingPill(name) {
     var pillsEl = document.getElementById('aiEditingPills');
     pillsEl.classList.add('show');
     var col = aiFileColor(name);
@@ -3833,8 +3834,9 @@
       '<span style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
       '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
 
+    // Click to re-open panel on this file (if closed)
     pill.addEventListener('click', function() {
-      acpOpen(name);
+      acpOpenFile(name);
     });
 
     pillsEl.appendChild(pill);
@@ -3855,49 +3857,86 @@
 
   // ── AI CODE PANEL ─────────────────────────────────────────────────
   var acpCurrentFile = null;
+  var acpLiveContent = {};   // name -> accumulated live string
 
-  function acpOpen(name) {
-    var content = fileSystem[name] || '';
-    var lang    = aiLangLabel(name);
-    var lines   = content.split('\n');
-    var bytes   = new Blob([content]).size;
+  // Called when edge fn sends file_start — open panel immediately, empty
+  function acpFileStart(name) {
+    acpLiveContent[name] = '';
+    // Create pill now (no content yet)
+    if (!aiPillMap[name]) aiAddEditingPill(name);
+    // Auto-open to this file
+    acpSwitchTo(name, true);
+  }
+
+  // Called on every file_delta — append chars and re-render
+  function acpFileDelta(text) {
+    if (!acpCurrentFile) return;
+    acpLiveContent[acpCurrentFile] = (acpLiveContent[acpCurrentFile] || '') + text;
+    var content = acpLiveContent[acpCurrentFile];
+    var lines = content.split('\n');
+    var bytes = new Blob([content]).size;
+    document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
+    document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
+    acpRender(content, acpCurrentFile, true);
+  }
+
+  // Called when a file is fully done (file event received) — re-render clean
+  function acpFileDone(name) {
+    if (aiPillMap[name]) aiMarkPillDone(name);
+    if (acpCurrentFile === name) acpSetDone();
+  }
+
+  // Open the panel focused on a specific file (used by pill clicks after generation)
+  function acpOpenFile(name) {
+    var content = acpLiveContent[name] || fileSystem[name] || '';
     var isDone  = !!(aiPillMap[name] && aiPillMap[name].classList.contains('done'));
-    var sameFile = acpCurrentFile === name;
+    acpSwitchTo(name, !isDone);
+    if (content) {
+      var lines = content.split('\n');
+      var bytes = new Blob([content]).size;
+      document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
+      document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
+      acpRender(content, name, !isDone);
+    }
+  }
+
+  // Internal: switch panel to a file and open it
+  function acpSwitchTo(name, isWriting) {
+    acpCurrentFile = name;
+    var lang = aiLangLabel(name);
 
     // Mark active pill
     Object.keys(aiPillMap).forEach(function(k) { aiPillMap[k].classList.remove('active'); });
     if (aiPillMap[name]) aiPillMap[name].classList.add('active');
-    acpCurrentFile = name;
 
-    // Only update header when switching files (avoid flicker on live updates)
-    if (!sameFile) {
-      var dot = document.getElementById('aiCodePanelDot');
-      dot.style.background = lang.color;
-      dot.style.boxShadow  = '0 0 8px ' + lang.color + '88';
-      document.getElementById('aiCodePanelFilename').textContent = name;
-      var badge = document.getElementById('aiCodePanelBadge');
-      badge.textContent = lang.label;
-      badge.style.background = lang.color + '18';
-      badge.style.color = lang.color;
-    }
+    // Header
+    var dot = document.getElementById('aiCodePanelDot');
+    dot.style.background = lang.color;
+    dot.style.boxShadow  = '0 0 8px ' + lang.color + '88';
+    document.getElementById('aiCodePanelFilename').textContent = name;
 
-    // Always update live stats
-    document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
-    document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
+    var badge = document.getElementById('aiCodePanelBadge');
+    badge.textContent       = lang.label;
+    badge.style.background  = lang.color + '18';
+    badge.style.color       = lang.color;
 
-    var status = document.getElementById('aiCodePanelStatus');
+    document.getElementById('aiCodePanelLines').textContent = '0 lines';
+    document.getElementById('aiCodePanelSize').textContent  = '0 B';
+
+    var status     = document.getElementById('aiCodePanelStatus');
     var statusText = document.getElementById('aiCodePanelStatusText');
-    if (isDone) {
-      status.style.display = 'none';
-    } else {
-      status.style.display = 'flex';
+    if (isWriting) {
+      status.style.display  = 'flex';
       statusText.textContent = 'writing…';
+    } else {
+      status.style.display = 'none';
     }
 
-    // Render code
-    acpRender(content, name, !isDone);
+    // Clear code area
+    document.getElementById('aiCodePanelNums').innerHTML = '';
+    document.getElementById('aiCodePanelCode').innerHTML = '';
 
-    // Open panel (idempotent — already open stays open)
+    // Open panel
     document.getElementById('aiCodePanel').classList.add('open');
   }
 
@@ -3909,12 +3948,9 @@
 
   function acpSetDone() {
     var status = document.getElementById('aiCodePanelStatus');
-    var statusText = document.getElementById('aiCodePanelStatusText');
     if (status) status.style.display = 'none';
-    // Re-render without writing pulse on last line
-    if (acpCurrentFile && fileSystem[acpCurrentFile]) {
-      var lang = aiLangLabel(acpCurrentFile);
-      var content = fileSystem[acpCurrentFile];
+    if (acpCurrentFile) {
+      var content = acpLiveContent[acpCurrentFile] || fileSystem[acpCurrentFile] || '';
       var lines = content.split('\n');
       var bytes = new Blob([content]).size;
       document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
@@ -3923,41 +3959,53 @@
     }
   }
 
-  // Live-update the panel if this file is currently open
-  function acpLiveUpdate(name, content) {
-    if (acpCurrentFile !== name) return;
-    var lines = content.split('\n');
-    var bytes = new Blob([content]).size;
-    document.getElementById('aiCodePanelLines').textContent = lines.length + ' lines';
-    document.getElementById('aiCodePanelSize').textContent  = aiFileSize(bytes);
-    acpRender(content, name, true);
-  }
+  // Throttled render — don't thrash DOM on every char
+  var _acpRenderTimer = null;
+  var _acpPendingContent = null;
+  var _acpPendingName = null;
+  var _acpPendingWriting = false;
 
   function acpRender(code, name, isWriting) {
-    var lines = code.split('\n');
-    var numsEl = document.getElementById('aiCodePanelNums');
-    var codeEl = document.getElementById('aiCodePanelCode');
-    var body   = document.getElementById('aiCodePanelBody');
-    var wasAtBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+    // For writing: throttle to ~60fps
+    if (isWriting) {
+      _acpPendingContent = code;
+      _acpPendingName    = name;
+      _acpPendingWriting = true;
+      if (!_acpRenderTimer) {
+        _acpRenderTimer = setTimeout(function() {
+          _acpRenderTimer = null;
+          if (_acpPendingContent !== null) {
+            acpRenderNow(_acpPendingContent, _acpPendingName, _acpPendingWriting);
+            _acpPendingContent = null;
+          }
+        }, 16); // ~60fps
+      }
+      return;
+    }
+    // Final render: immediate
+    acpRenderNow(code, name, false);
+  }
 
-    // Line numbers
+  function acpRenderNow(code, name, isWriting) {
+    var lines   = code.split('\n');
+    var numsEl  = document.getElementById('aiCodePanelNums');
+    var codeEl  = document.getElementById('aiCodePanelCode');
+    var body    = document.getElementById('aiCodePanelBody');
+    var wasAtBottom = (body.scrollHeight - body.scrollTop - body.clientHeight) < 80;
+
     numsEl.innerHTML = lines.map(function(_, i) {
       return '<span>' + (i + 1) + '</span>';
     }).join('');
 
-    // Syntax highlight + render
     var highlighted = acpHighlight(code, name);
-    var hlLines = highlighted.split('\n');
+    var hlLines     = highlighted.split('\n');
     var html = hlLines.map(function(line, i) {
       var isLast = isWriting && i === hlLines.length - 1;
-      return '<span class="acp-line' + (isLast ? ' acp-writing-line' : '') + '">' + line + '</span>';
-    }).join('\n');
+      return '<span class="acp-line' + (isLast ? ' acp-writing-line' : '') + '">' + line + '\n</span>';
+    }).join('');
     codeEl.innerHTML = html;
 
-    // Auto-scroll to bottom while writing
-    if (isWriting || wasAtBottom) {
-      body.scrollTop = body.scrollHeight;
-    }
+    if (isWriting || wasAtBottom) body.scrollTop = body.scrollHeight;
   }
 
   // Lightweight syntax highlighter — HTML/CSS/JS aware
@@ -4109,25 +4157,30 @@
             aiHideTyping();
           }
 
-          // ── file: individual file, base64-encoded ──
+          // ── file_start: new file beginning to stream ──
+          if (eventType === 'file_start' && data.name) {
+            acpFileStart(data.name);
+          }
+
+          // ── file_delta: live chars of current file content ──
+          if (eventType === 'file_delta' && data.text) {
+            acpFileDelta(data.text);
+          }
+
+          // ── file: complete file received (base64) ──
           if (eventType === 'file' && data.name) {
             var content = data.content;
             if (data.encoding === 'base64') {
               try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); }
             }
-            // Show pill + auto-open code panel immediately
-            aiAddEditingPill(data.name, content);
-
-            // Apply to filesystem immediately
+            // Apply to filesystem
             fileSystem[data.name] = content;
             dirtyFiles.add(data.name);
             if (!openTabs.includes(data.name)) openTabs.push(data.name);
             collectedFiles.push({ name: data.name, content: content });
-            // Always show the panel — if same file, just update content
-            acpOpen(data.name);
+            // Mark file done in panel + pill
+            acpFileDone(data.name);
             // Live preview
-            livePreviewUpdate();
-            // Live preview: update iframe as files arrive
             livePreviewUpdate();
           }
 

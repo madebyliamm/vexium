@@ -175,6 +175,11 @@
       .hero-left{flex-direction:column;gap:14px}
       .hero-right{margin-top:0}
     }
+
+    /* ── pref toggle ── */
+    #prefUsageWarn:checked + #prefUsageWarnTrack { background: var(--a1); }
+    #prefUsageWarn:checked ~ #prefUsageWarnThumb { transform: translateX(16px); }
+
   </style>
 </head>
 <body>
@@ -302,6 +307,19 @@
     <button class="mbtn mbtn-ok" onclick="changePassword()">Update password</button>
     <div class="msg" id="passMsg"></div>
     <div class="mdivider"></div>
+    <div class="sec-lbl">Preferences</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--b0);border:1px solid var(--b1);border-radius:10px;margin-bottom:4px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Warn before large builds</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">Show a confirmation before generating multi-page websites</div>
+      </div>
+      <label style="position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;cursor:pointer">
+        <input type="checkbox" id="prefUsageWarn" style="opacity:0;width:0;height:0" onchange="savePrefUsageWarn(this.checked)"/>
+        <span id="prefUsageWarnTrack" style="position:absolute;inset:0;border-radius:20px;background:var(--b2);transition:background .2s;cursor:pointer"></span>
+        <span id="prefUsageWarnThumb" style="position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none"></span>
+      </label>
+    </div>
+    <div class="mdivider"></div>
     <div class="sec-lbl">Account</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="mbtn mbtn-danger" onclick="doSignOut()">Sign out</button>
@@ -383,7 +401,20 @@
     if (sb && myId) {
       try {
         const {data} = await sb.from('profiles').select('*').eq('id',myId).single();
-        if (data) { viewProfile=data; myProfile=data; acctPublic=!!data.is_public; return; }
+        if (data) {
+          viewProfile=data; myProfile=data; acctPublic=!!data.is_public;
+          // Load usage warning preference
+          var warnChecked = data.show_usage_warning !== false;
+          var cb = document.getElementById('prefUsageWarn');
+          if (cb) {
+            cb.checked = warnChecked;
+            var t = document.getElementById('prefUsageWarnTrack');
+            var th = document.getElementById('prefUsageWarnThumb');
+            if (t) t.style.background = warnChecked ? 'var(--a1)' : 'var(--b2)';
+            if (th) th.style.transform = warnChecked ? 'translateX(16px)' : 'none';
+          }
+          return;
+        }
       } catch(e){}
     }
     const u = localStorage.getItem('vexium_username')||'guest';
@@ -698,6 +729,18 @@
   }
 
   function openSettings(){ openOv('settingsOverlay'); }
+  async function savePrefUsageWarn(checked) {
+    // Update visual
+    var track = document.getElementById('prefUsageWarnTrack');
+    var thumb = document.getElementById('prefUsageWarnThumb');
+    if (track) track.style.background = checked ? 'var(--a1)' : 'var(--b2)';
+    if (thumb) thumb.style.transform = checked ? 'translateX(16px)' : 'none';
+    if (sb && myId) {
+      try { await sb.from('profiles').update({ show_usage_warning: checked }).eq('id', myId); } catch(e) {}
+    }
+    showToast(checked ? '🔔' : '🔕', checked ? 'Usage warnings on' : 'Usage warnings off');
+  }
+
   async function saveProfile(){
     const name=document.getElementById('fName').value.trim();
     const username=document.getElementById('fUsername').value.trim().toLowerCase();

@@ -490,7 +490,7 @@
     /* code body */
     .ai-code-box-body{
       display:flex;
-      max-height:260px;overflow-y:auto;
+      max-height:420px;overflow-y:auto;
       font-family:var(--mono);font-size:12px;line-height:1.65;
     }
     .ai-code-box-nums{
@@ -1178,162 +1178,86 @@
 
 
     /* ── PHASE TOPBAR STRIP ── */
-    #phaseStrip{
-      display:none;align-items:center;justify-content:space-between;
-      flex-shrink:0;gap:8px;
-      /* sits between logo area and right controls, takes remaining space */
-      flex:1;margin:0 12px;min-width:0;
-    }
-    #phaseStrip.show{display:flex}
-    /* hide regular mode tabs when phase strip shows */
-    #phaseStrip.show ~ .tb-modes,
-    body.phase-active .tb-modes{ display:none !important }
 
-    /* Current step pill — left side, clickable */
-    #phaseCurrentBtn{
-      display:flex;align-items:center;gap:6px;
-      background:var(--b1);border:1px solid var(--b2);
-      border-radius:8px;padding:4px 10px 4px 8px;
-      cursor:pointer;font-family:var(--sans);
-      transition:background .15s,border-color .15s;
-      min-width:0;flex-shrink:1;
-      white-space:nowrap;overflow:hidden;
-    }
-    #phaseCurrentBtn:hover{background:var(--b2);border-color:var(--b3)}
-    #phaseCurrentBtn svg{flex-shrink:0;opacity:.5}
-    #phaseCurrentLabel{
-      font-size:11px;font-weight:700;color:var(--text);
-      overflow:hidden;text-overflow:ellipsis;
-    }
-    #phaseCurrentNum{
-      font-size:10px;color:var(--sub);white-space:nowrap;flex-shrink:0;
-    }
 
-    /* Next step button — right side */
-    #phaseNextBtn{
-      display:flex;align-items:center;gap:5px;
+    /* ── USAGE WARNING MODAL ── */
+    #usageWarnOverlay{
+      display:none;position:fixed;inset:0;z-index:900;
+      background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+      align-items:center;justify-content:center;
+    }
+    #usageWarnOverlay.show{display:flex}
+    #usageWarnBox{
+      background:#0d0d1a;border:1px solid rgba(255,255,255,.1);
+      border-radius:20px;padding:32px 28px 24px;
+      max-width:400px;width:90%;
+      box-shadow:0 0 0 1px rgba(255,255,255,.04),0 32px 80px rgba(0,0,0,.7);
+      animation:warnIn .22s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes warnIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+    #usageWarnBox .uw-icon{
+      width:44px;height:44px;border-radius:12px;
+      background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+      display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+    }
+    #usageWarnBox .uw-icon svg{width:20px;height:20px;stroke:#fbbf24;fill:none;stroke-width:2;stroke-linecap:round}
+    #usageWarnBox h3{font-size:16px;font-weight:800;color:var(--text);margin:0 0 8px;letter-spacing:-.2px}
+    #usageWarnBox p{font-size:13px;color:var(--sub);line-height:1.65;margin:0 0 20px}
+    .uw-check{display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer}
+    .uw-check input{width:15px;height:15px;accent-color:var(--a1);cursor:pointer;flex-shrink:0}
+    .uw-check span{font-size:12px;color:var(--sub)}
+    .uw-btns{display:flex;gap:8px}
+    .uw-cancel{flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .12s}
+    .uw-cancel:hover{background:rgba(255,255,255,.09)}
+    .uw-confirm{flex:2;padding:10px;border-radius:10px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:opacity .12s;box-shadow:0 0 20px rgba(79,110,247,.3)}
+    .uw-confirm:hover{opacity:.88}
+
+    /* ── BRIEF LOADING STATE ── */
+    #briefLoadingBar{
+      display:none;align-items:center;gap:10px;
+      padding:10px 16px;margin:0 0 6px;
+      background:rgba(79,110,247,.06);border:1px solid rgba(79,110,247,.15);
+      border-radius:12px;font-size:12px;color:var(--a1);font-weight:600;
+    }
+    #briefLoadingBar.show{display:flex}
+    #briefLoadingBar .bl-dots span{
+      display:inline-block;width:4px;height:4px;border-radius:50%;
+      background:var(--a1);margin:0 2px;
+      animation:blDot .9s ease-in-out infinite;
+    }
+    #briefLoadingBar .bl-dots span:nth-child(2){animation-delay:.15s}
+    #briefLoadingBar .bl-dots span:nth-child(3){animation-delay:.3s}
+    @keyframes blDot{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+    /* ── CRITIQUE CARD ── */
+    .ai-critique{
+      margin:10px 0 4px;padding:14px 16px;
+      background:rgba(79,110,247,.05);border:1px solid rgba(79,110,247,.12);
+      border-radius:14px;
+    }
+    .ai-critique-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .ai-critique-score{
+      font-size:11px;font-weight:800;letter-spacing:.3px;
+      padding:3px 9px;border-radius:6px;
+    }
+    .ai-critique-score.high{background:rgba(34,197,94,.1);color:#4ade80}
+    .ai-critique-score.mid{background:rgba(251,191,36,.1);color:#fbbf24}
+    .ai-critique-score.low{background:rgba(244,63,94,.1);color:#f43f5e}
+    .ai-critique-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.3px;text-transform:uppercase}
+    .ai-critique-section{margin-bottom:8px}
+    .ai-critique-section:last-child{margin-bottom:0}
+    .ai-critique-section-title{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);margin-bottom:5px}
+    .ai-critique-item{font-size:12px;color:var(--text);line-height:1.5;padding:3px 0;display:flex;gap:6px}
+    .ai-critique-item::before{content:'·';color:var(--a1);font-weight:900;flex-shrink:0}
+    .ai-critique-improve .ai-critique-item::before{color:#fbbf24}
+    .ai-critique-fix-btn{
+      margin-top:10px;padding:7px 14px;border-radius:8px;
       background:linear-gradient(135deg,var(--a1),var(--a2));
-      border:none;border-radius:8px;padding:4px 12px 4px 10px;
-      cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:700;
-      color:#fff;white-space:nowrap;flex-shrink:0;
-      transition:opacity .15s,transform .15s;
-      box-shadow:0 0 12px rgba(79,110,247,.3);
+      border:none;color:#fff;font-size:11px;font-weight:700;
+      cursor:pointer;font-family:var(--sans);
+      box-shadow:0 0 14px rgba(79,110,247,.25);transition:opacity .12s;
     }
-    #phaseNextBtn:hover{opacity:.88;transform:translateY(-1px)}
-    #phaseNextBtn:disabled{opacity:.3;cursor:default;transform:none;box-shadow:none}
-    #phaseNextBtn svg{opacity:.8}
-
-    /* Steps popup */
-    #phasePopup{
-      display:none;position:fixed;z-index:600;
-      background:var(--s1);border:1px solid var(--b2);
-      border-radius:14px;padding:8px;
-      min-width:220px;
-      box-shadow:0 16px 48px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.3);
-      animation:phasePopIn .15s ease;
-    }
-    @keyframes phasePopIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-    #phasePopup.show{display:block}
-    .pp-title{
-      font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-      color:var(--sub);padding:4px 8px 8px;border-bottom:1px solid var(--b1);margin-bottom:6px;
-    }
-    .pp-item{
-      display:flex;align-items:center;gap:9px;
-      padding:7px 10px;border-radius:8px;cursor:pointer;
-      transition:background .12s;
-    }
-    .pp-item:hover{background:var(--b1)}
-    .pp-item.active{background:rgba(79,110,247,.08)}
-    .pp-check{
-      width:16px;height:16px;border-radius:50%;flex-shrink:0;
-      border:1.5px solid var(--b3);
-      display:flex;align-items:center;justify-content:center;
-      transition:all .15s;
-    }
-    .pp-item.done .pp-check{
-      background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.5);
-    }
-    .pp-item.active .pp-check{
-      border-color:var(--a1);background:rgba(79,110,247,.1);
-    }
-    .pp-item-name{
-      font-size:12px;font-weight:600;color:var(--sub);flex:1;
-      transition:color .12s;
-    }
-    .pp-item.active .pp-item-name{color:var(--text)}
-    .pp-item.done .pp-item-name{color:rgba(34,197,94,.8)}
-
-    /* ── YOUR WAY BUILDER MODAL ── */
-    #ywModal{
-      display:none;position:fixed;inset:0;z-index:9500;
-      background:rgba(0,0,0,.8);backdrop-filter:blur(12px);
-      align-items:center;justify-content:center;padding:20px;
-    }
-    #ywModal.show{display:flex}
-    #ywBox{
-      background:var(--s1);border:1px solid var(--b2);border-radius:20px;
-      width:min(92%,480px);max-height:85vh;display:flex;flex-direction:column;
-      box-shadow:0 32px 80px rgba(0,0,0,.7);overflow:hidden;
-    }
-    #ywHead{
-      padding:20px 22px 16px;border-bottom:1px solid var(--b1);flex-shrink:0;
-    }
-    #ywHead h2{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
-    #ywHead p{font-size:12px;color:var(--sub);line-height:1.5}
-    #ywPhaseList{
-      flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;
-    }
-    .yw-phase-row{
-      display:flex;align-items:center;gap:8px;
-      background:var(--b1);border:1px solid var(--b2);border-radius:10px;
-      padding:8px 10px;
-      animation:ywRowIn .18s ease;
-    }
-    @keyframes ywRowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    .yw-drag-handle{
-      cursor:grab;color:var(--b3);flex-shrink:0;display:flex;align-items:center;
-      padding:2px;border-radius:4px;transition:color .15s;
-    }
-    .yw-drag-handle:hover{color:var(--sub)}
-    .yw-drag-handle:active{cursor:grabbing}
-    .yw-phase-input{
-      flex:1;background:transparent;border:none;outline:none;
-      font-family:var(--sans);font-size:13px;color:var(--text);
-      padding:0;
-    }
-    .yw-phase-input::placeholder{color:var(--b3)}
-    .yw-del-btn{
-      width:20px;height:20px;border-radius:5px;background:transparent;
-      border:none;color:var(--b3);cursor:pointer;display:flex;align-items:center;
-      justify-content:center;transition:all .15s;flex-shrink:0;font-size:14px;line-height:1;
-    }
-    .yw-del-btn:hover{background:rgba(239,68,68,.12);color:var(--err)}
-    #ywAddBtn{
-      margin:4px 16px 0;padding:9px;border-radius:10px;
-      background:transparent;border:1px dashed var(--b3);
-      color:var(--sub);font-family:var(--sans);font-size:12px;font-weight:600;
-      cursor:pointer;width:calc(100% - 32px);transition:all .18s;
-    }
-    #ywAddBtn:hover{border-color:var(--a1);color:var(--text);background:rgba(79,110,247,.05)}
-    #ywFoot{
-      padding:14px 20px;border-top:1px solid var(--b1);
-      display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;
-    }
-    .yw-cancel{
-      background:var(--b1);border:1px solid var(--b2);color:var(--sub);
-      border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;
-      cursor:pointer;font-family:var(--sans);transition:all .15s;
-    }
-    .yw-cancel:hover{color:var(--text);background:var(--b2)}
-    .yw-start{
-      background:linear-gradient(135deg,var(--a1),var(--a2));border:none;
-      color:#fff;border-radius:9px;padding:8px 20px;font-size:12px;font-weight:700;
-      cursor:pointer;font-family:var(--sans);transition:opacity .15s;
-      box-shadow:0 0 16px rgba(79,110,247,.35);
-    }
-    .yw-start:hover{opacity:.88}
-    .yw-start:disabled{opacity:.3;cursor:default}
+    .ai-critique-fix-btn:hover{opacity:.88}
 
   </style>
 </head>
@@ -1346,7 +1270,7 @@
       <span class="ms-logo-t">VEXIUM<span>.AI</span></span>
     </div>
     <div class="ms-heading">What are you <span>building?</span></div>
-    <div class="ms-sub">Choose how you want to work — you can always change this later.</div>
+    <div class="ms-sub">Pick a mode. You can always change this later in settings.</div>
   </div>
 
   <div class="ms-cards">
@@ -1363,7 +1287,7 @@
       </div>
       <div class="ms-card-detail" id="detail-business">
         <div class="ms-card-detail-title">Business</div>
-        <div class="ms-card-detail-body">Structured end-to-end. Plan your idea, build your site, analyze performance, and launch with a marketing strategy built to convert. Best if you want to make money.</div>
+        <div class="ms-card-detail-body">Start with strategy. Plan your idea with the AI, then build a site around your goals. Best if you want to make money, not just make something.</div>
         <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-business')">Close</button>
       </div>
     </div>
@@ -1381,28 +1305,11 @@
       </div>
       <div class="ms-card-detail" id="detail-website">
         <div class="ms-card-detail-title">Website</div>
-        <div class="ms-card-detail-body">Just build. A clean prompt box, nothing imposed. Great for landing pages, personal sites, tools, or anything you want to ship fast without a structured process.</div>
+        <div class="ms-card-detail-body">Jump straight into the editor and build whatever you want. No structure, no phases — just you, the AI, and a blank canvas.</div>
         <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-website')">Close</button>
       </div>
     </div>
 
-    <!-- YOUR WAY -->
-    <div class="ms-card" data-mode="yourway" onclick="selectProjectMode('yourway')">
-      <button class="ms-card-info" onclick="toggleCardDetail(event,'detail-yourway')">···</button>
-      <div class="ms-card-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      </div>
-      <div class="ms-card-name">Your Way</div>
-      <div class="ms-card-tag">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Custom workflow
-      </div>
-      <div class="ms-card-detail" id="detail-yourway">
-        <div class="ms-card-detail-title">Your Way</div>
-        <div class="ms-card-detail-body">Define your own stages. Add context to each one and the AI follows your process step by step. Perfect if you already know how you like to work and just want the AI to power each phase.</div>
-        <button class="ms-card-detail-close" onclick="toggleCardDetail(event,'detail-yourway')">Close</button>
-      </div>
-    </div>
   </div>
 
   <div class="ms-footer">You can change this any time from project settings</div>
@@ -1418,25 +1325,6 @@
   <div class="tb-sep"></div>
   <span class="tb-proj" id="tbProj">Loading…</span>
   <span class="tb-saving" id="tbSaving">saving…</span>
-
-  <!-- Phase strip: shown instead of mode tabs for business/yourway projects -->
-  <div id="phaseStrip">
-    <button id="phaseCurrentBtn" onclick="togglePhasePopup(event)">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      <span id="phaseCurrentLabel">Plan</span>
-      <span id="phaseCurrentNum">1 of 5</span>
-    </button>
-    <button id="phaseNextBtn" onclick="advancePhase()">
-      Next step
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-  </div>
-
-  <!-- Phase steps popup (portal, positioned by JS) -->
-  <div id="phasePopup">
-    <div class="pp-title">Workflow</div>
-    <div id="phasePopupList"></div>
-  </div>
 
   <div class="tb-modes">
     <button class="tb-mode on" id="modeAI" onclick="handleModeClick(event,'ai')">AI ✦</button>
@@ -1494,24 +1382,6 @@
       </div>
 
       <div class="ep-div"></div>
-
-      <!-- PHASE / WORKFLOW (only shown for business projects) -->
-      <div id="epPhaseSection" style="display:none">
-        <div class="ep-sec">Workflow</div>
-        <div id="epPhaseList" style="display:flex;flex-direction:column;gap:4px;margin-top:6px"></div>
-        <button id="epNextPhaseBtn" onclick="epAdvancePhase()" style="
-          margin-top:10px;width:100%;padding:9px 14px;border-radius:10px;
-          background:linear-gradient(135deg,var(--a1),var(--a2));
-          border:none;color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;
-          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
-          box-shadow:0 0 16px rgba(79,110,247,.3);transition:opacity .15s;
-        ">
-          Move to next step
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-
-      <div id="epPhaseDivider" class="ep-div" style="display:none"></div>
 
       <!-- COLLABORATORS -->
       <div>
@@ -1705,7 +1575,11 @@
 
         <!-- chat area -->
         <div id="aiChatWrap" style="position:relative">
-          <div id="aiMessages"></div>
+          <div id="briefLoadingBar">
+          <div class="bl-dots"><span></span><span></span><span></span></div>
+          <span>Preparing your brief…</span>
+        </div>
+        <div id="aiMessages"></div>
           <button id="aiScrollBtn" onclick="aiScrollToBottom()" title="Scroll to bottom">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
@@ -1846,6 +1720,25 @@
 </head>
 <body>
 
+<!-- ══ USAGE WARNING MODAL ══ -->
+<div id="usageWarnOverlay">
+  <div id="usageWarnBox">
+    <div class="uw-icon">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3>This is a large build</h3>
+    <p>This request will generate a full multi-page website and will use a significant amount of AI credits. Make sure your request is ready before continuing.</p>
+    <label class="uw-check">
+      <input type="checkbox" id="uwDontWarn"/>
+      <span>Don't warn me again</span>
+    </label>
+    <div class="uw-btns">
+      <button class="uw-cancel" onclick="usageWarnCancel()">Cancel</button>
+      <button class="uw-confirm" onclick="usageWarnConfirm()">Build it</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>`;
 
@@ -1873,6 +1766,7 @@
     projectId = localStorage.getItem('vexium_current_project');
     await loadProject();
     loadMonaco();
+    loadUsageWarnPref(); // async, non-blocking
     // Show mode select only for brand new projects
     if (isDefaultCode(fileSystem) && !project.project_type) {
       showModeSelect();
@@ -1922,14 +1816,6 @@
     }, 420);
   }
 
-  // ── PROJECT TYPE + PHASE SYSTEM ──────────────────────────────────
-
-  // Business phases: fixed
-  var BUSINESS_PHASES = ['Plan','Build','Analyze','Launch','Marketing'];
-  // yourway phases: user-defined, saved to project
-  // current phase index
-  var currentPhaseIndex = 0;
-
   function saveProjectMeta(extraFields) {
     var updates = Object.assign({ updated_at: new Date().toISOString() }, extraFields || {});
     if (sb && project && project.id) {
@@ -1939,274 +1825,34 @@
         }
       });
     }
-    // Always keep localStorage in sync too
     try {
       var list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
-      var idx = list.findIndex(function(p) { return p.id === (project && project.id); });
-      if (idx >= 0) {
-        Object.assign(list[idx], updates);
-        localStorage.setItem('vexium_projects', JSON.stringify(list));
-      }
+      var idx2 = list.findIndex(function(p) { return p.id === (project && project.id); });
+      if (idx2 >= 0) { Object.assign(list[idx2], updates); localStorage.setItem('vexium_projects', JSON.stringify(list)); }
     } catch(e) {}
-    // Keep in-memory project updated
     if (project) Object.assign(project, updates);
   }
 
   function selectProjectMode(mode) {
     hideModeSelect(function() {
       if (mode === 'business') {
-        saveProjectMeta({ project_type: 'business', project_phases: JSON.stringify(BUSINESS_PHASES), current_phase: 0 });
-        currentPhaseIndex = 0;
-        renderPhaseBar(BUSINESS_PHASES, 0);
-        openPlanPhase(); // Business starts in plan mode
-      } else if (mode === 'yourway') {
-        // Show the yourway phase builder first
-        openYwModal();
+        saveProjectMeta({ project_type: 'business' });
+        openPlanPhase();
       } else {
-        // Website — no phases, just AI
-        saveProjectMeta({ project_type: 'website', project_phases: null, current_phase: 0 });
-        renderPhaseBar(null, 0);
+        saveProjectMeta({ project_type: 'website' });
         setMode('ai');
         setTimeout(function() {
-          var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
+          var inp = document.getElementById('aiBottomInput');
           if (inp) inp.focus();
         }, 100);
       }
     });
   }
 
-  // ── PHASE BAR ──────────────────────────────────────────────────────
 
-  function getProjectPhases() {
-    if (!project) return null;
-    if (project.project_type === 'business') return BUSINESS_PHASES;
-    try { return JSON.parse(project.project_phases || 'null'); } catch(e) { return null; }
-  }
+  // ── PROJECT TYPE + PHASE SYSTEM ──────────────────────────────────
 
-  // ── PHASE STRIP (topbar) ───────────────────────────────────────────
-
-  function renderPhaseStrip(phases, activeIdx) {
-    var strip    = document.getElementById('phaseStrip');
-    var label    = document.getElementById('phaseCurrentLabel');
-    var num      = document.getElementById('phaseCurrentNum');
-    var nextBtn  = document.getElementById('phaseNextBtn');
-    var modes    = document.querySelector('.tb-modes');
-
-    if (!phases || !phases.length) {
-      strip.classList.remove('show');
-      if (modes) modes.style.display = '';
-      return;
-    }
-
-    strip.classList.add('show');
-    if (modes) modes.style.display = 'none';
-
-    var name = phases[activeIdx] || phases[0];
-    label.textContent = name;
-    num.textContent   = (activeIdx + 1) + ' of ' + phases.length;
-    nextBtn.disabled  = (activeIdx >= phases.length - 1);
-
-    // Rebuild popup list
-    var list = document.getElementById('phasePopupList');
-    if (list) {
-      list.innerHTML = phases.map(function(p, i) {
-        var cls = 'pp-item' + (i === activeIdx ? ' active' : '') + (i < activeIdx ? ' done' : '');
-        var checkInner = i < activeIdx
-          ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(34,197,94,.8)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
-          : (i === activeIdx ? '<div style="width:6px;height:6px;border-radius:50%;background:var(--a1)"></div>' : '');
-        return '<div class="pp-item ' + cls + '" onclick="phasePopupClick(' + i + ')">' +
-          '<div class="pp-check">' + checkInner + '</div>' +
-          '<span class="pp-item-name">' + escHtml(p) + '</span>' +
-          '</div>';
-      }).join('');
-    }
-
-    // Settings phase section
-    renderSettingsPhaseList(phases, activeIdx);
-  }
-
-  function renderSettingsPhaseList(phases, activeIdx) {
-    var sec     = document.getElementById('epPhaseSection');
-    var divider = document.getElementById('epPhaseDivider');
-    var list    = document.getElementById('epPhaseList');
-    if (!sec || !list) return;
-    var show = !!(phases && phases.length);
-    sec.style.display     = show ? '' : 'none';
-    divider.style.display = show ? '' : 'none';
-    if (!show) return;
-    list.innerHTML = phases.map(function(p, i) {
-      var isDone   = i < activeIdx;
-      var isActive = i === activeIdx;
-      var dotCol   = isDone ? 'rgba(34,197,94,.7)' : isActive ? 'var(--a1)' : 'var(--b3)';
-      var nameCol  = isDone ? 'rgba(34,197,94,.8)' : isActive ? 'var(--text)' : 'var(--sub)';
-      var badge    = isDone
-        ? '<span style="font-size:9px;font-weight:700;color:rgba(34,197,94,.7);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:5px;padding:1px 6px">Done</span>'
-        : isActive
-          ? '<span style="font-size:9px;font-weight:700;color:var(--a1);background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);border-radius:5px;padding:1px 6px">Current</span>'
-          : '';
-      return '<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;background:' + (isActive ? 'rgba(79,110,247,.05)' : 'transparent') + '">' +
-        '<div style="width:7px;height:7px;border-radius:50%;background:' + dotCol + ';flex-shrink:0"></div>' +
-        '<span style="font-size:12px;font-weight:600;color:' + nameCol + ';flex:1">' + escHtml(p) + '</span>' +
-        badge +
-        '</div>';
-    }).join('');
-  }
-
-  function setPhase(idx, fromSettings) {
-    var phases = getProjectPhases();
-    if (!phases || idx < 0 || idx >= phases.length) return;
-    currentPhaseIndex = idx;
-    renderPhaseStrip(phases, idx);
-    saveProjectMeta({ current_phase: idx });
-    // Inject phase-transition divider into chat
-    var notice = document.createElement('div');
-    notice.style.cssText = 'text-align:center;padding:10px 0 2px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);opacity:.5;user-select:none';
-    notice.textContent = '── ' + phases[idx] + ' ──';
-    var msgs = document.getElementById('aiMessages');
-    if (msgs) msgs.appendChild(notice);
-    if (!fromSettings) closePhasePopup();
-    // Plan step navigates to plan section
-    if (phases[idx].toLowerCase() === 'plan') {
-      openPlanPhase();
-    } else {
-      setMode('ai');
-    }
-  }
-
-  function advancePhase() {
-    var phases = getProjectPhases();
-    if (!phases) return;
-    if (currentPhaseIndex < phases.length - 1) setPhase(currentPhaseIndex + 1);
-  }
-
-  function epAdvancePhase() {
-    // Advance from settings — close settings then move phase
-    closeEditorSettings();
-    setTimeout(function() { advancePhase(); }, 150);
-  }
-
-  // Popup open/close
-  function togglePhasePopup(e) {
-    e.stopPropagation();
-    var popup = document.getElementById('phasePopup');
-    if (popup.classList.contains('show')) { closePhasePopup(); return; }
-    // Position below the button
-    var btn  = document.getElementById('phaseCurrentBtn');
-    var rect = btn.getBoundingClientRect();
-    popup.style.top  = (rect.bottom + 6) + 'px';
-    popup.style.left = rect.left + 'px';
-    popup.classList.add('show');
-    // close on outside click
-    setTimeout(function() {
-      document.addEventListener('click', closePhasePopup, { once: true });
-    }, 0);
-  }
-
-  function closePhasePopup() {
-    var popup = document.getElementById('phasePopup');
-    if (popup) popup.classList.remove('show');
-  }
-
-  function phasePopupClick(idx) {
-    closePhasePopup();
-    setPhase(idx);
-  }
-
-  // Restore on project load
-  function restorePhaseBar() {
-    var phases = getProjectPhases();
-    var idx = (project && project.current_phase != null) ? (project.current_phase || 0) : 0;
-    currentPhaseIndex = idx;
-    renderPhaseStrip(phases, idx);
-  }
-
-  // alias kept for any remaining internal calls
-  function renderPhaseBar(phases, idx) { renderPhaseStrip(phases, idx); }
-
-  // ── YOUR WAY MODAL ─────────────────────────────────────────────────
-
-  var ywDragSrc = null;
-
-  function openYwModal() {
-    var modal = document.getElementById('ywModal');
-    var list = document.getElementById('ywPhaseList');
-    // Pre-populate with sensible defaults
-    list.innerHTML = '';
-    ['Research','Design','Build','Review','Launch'].forEach(function(p) { ywAddPhaseWithName(p); });
-    ywUpdateStartBtn();
-    modal.classList.add('show');
-  }
-
-  function ywCancel() {
-    document.getElementById('ywModal').classList.remove('show');
-    // Go back to mode select
-    showModeSelect();
-  }
-
-  function ywAddPhase() { ywAddPhaseWithName(''); }
-
-  function ywAddPhaseWithName(name) {
-    var list = document.getElementById('ywPhaseList');
-    var row = document.createElement('div');
-    row.className = 'yw-phase-row';
-    row.draggable = true;
-    row.innerHTML =
-      '<div class="yw-drag-handle" title="Drag to reorder">' +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>' +
-      '</div>' +
-      '<input class="yw-phase-input" placeholder="Phase name…" value="' + escHtml(name) + '" maxlength="32" oninput="ywUpdateStartBtn()" />' +
-      '<button class="yw-del-btn" onclick="ywDelPhase(this)" title="Remove">×</button>';
-    // Drag events
-    row.addEventListener('dragstart', function(e) {
-      ywDragSrc = row;
-      e.dataTransfer.effectAllowed = 'move';
-      row.style.opacity = '.4';
-    });
-    row.addEventListener('dragend', function() { row.style.opacity = ''; ywDragSrc = null; });
-    row.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-    row.addEventListener('drop', function(e) {
-      e.preventDefault();
-      if (ywDragSrc && ywDragSrc !== row) {
-        var list2 = document.getElementById('ywPhaseList');
-        var rows = Array.from(list2.children);
-        var srcIdx = rows.indexOf(ywDragSrc);
-        var dstIdx = rows.indexOf(row);
-        if (srcIdx < dstIdx) list2.insertBefore(ywDragSrc, row.nextSibling);
-        else list2.insertBefore(ywDragSrc, row);
-      }
-    });
-    list.appendChild(row);
-    // Focus empty inputs
-    if (!name) setTimeout(function() { row.querySelector('input').focus(); }, 50);
-    ywUpdateStartBtn();
-  }
-
-  function ywDelPhase(btn) {
-    btn.closest('.yw-phase-row').remove();
-    ywUpdateStartBtn();
-  }
-
-  function ywUpdateStartBtn() {
-    var inputs = document.querySelectorAll('#ywPhaseList .yw-phase-input');
-    var hasAny = Array.from(inputs).some(function(i) { return i.value.trim(); });
-    document.getElementById('ywStartBtn').disabled = !hasAny;
-  }
-
-  function ywStartWorkflow() {
-    var inputs = document.querySelectorAll('#ywPhaseList .yw-phase-input');
-    var phases = Array.from(inputs).map(function(i) { return i.value.trim(); }).filter(Boolean);
-    if (!phases.length) return;
-    document.getElementById('ywModal').classList.remove('show');
-    saveProjectMeta({ project_type: 'yourway', project_phases: JSON.stringify(phases), current_phase: 0 });
-    currentPhaseIndex = 0;
-    renderPhaseBar(phases, 0);
-    setMode('ai');
-    setTimeout(function() {
-      var inp = document.getElementById('aiInput') || document.getElementById('aiBottomInput');
-      if (inp) inp.focus();
-    }, 100);
-  }
-
+  // Business phases: fixed
   // ── TILT EFFECT ──
   function initCardTilt() {
     var cards = document.querySelectorAll('.ms-card');
@@ -2256,7 +1902,7 @@
         const { data: authData } = await sb.auth.getSession();
         const session = authData?.session;
         if (session) {
-          const { data, error } = await sb.from('projects').select('*,project_phases,current_phase').eq('id', projectId).maybeSingle();
+          const { data, error } = await sb.from('projects').select('*').eq('id', projectId).maybeSingle();
           if (data) {
             project = data;
             fileSystem = data.files || {};
@@ -2297,7 +1943,7 @@
     await aiLoadHistory();
     renderTemplates();
     startPlaceholderRotator();
-    restorePhaseBar();
+    // phase bar removed
   }
 
   // ── MONACO ──
@@ -2514,8 +2160,6 @@
     document.getElementById('epEmojiPicker').style.display = 'none';
     // Load collaborators
     await loadEpCollabs();
-    // Refresh phase section
-    renderSettingsPhaseList(getProjectPhases(), currentPhaseIndex);
     document.getElementById('epOverlay').classList.add('show');
   }
 
@@ -3733,10 +3377,22 @@
     }, 180); // fast but debounced — 180ms after last chunk
   }
 
+  var _pendingBrief = null;
+
   async function aiSend(fromBottom) {
     var input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
     var text = input.value.trim();
     if (!text || aiTyping) return;
+
+    // Usage warning for big builds
+    if (showUsageWarning && isBigBuild(text)) {
+      showUsageWarn(function() { aiSendExecute(input, text); });
+      return;
+    }
+    aiSendExecute(input, text);
+  }
+
+  async function aiSendExecute(input, text) {
     input.value = '';
     input.style.height = '';
     aiTransitionToChat();
@@ -3745,6 +3401,11 @@
     aiAddUser(text);
     aiHistory.push({ role: 'user', content: text });
     aiShowTyping();
+
+    // Fetch brief before building (always — it's fast and dramatically improves output)
+    _pendingBrief = null;
+    try { _pendingBrief = await fetchBrief(text); } catch(e) {}
+
     await aiCallAPI();
   }
 
@@ -3766,12 +3427,132 @@
         acpLiveContent = {};
         acpBoxMap = {};
         acpCurrentFile = null;
-        _acpRenderTimer = null;
         var pillsEl = document.getElementById('aiEditingPills');
         pillsEl.classList.remove('show');
         pillsEl.innerHTML = '';
         aiPillMap = {};
       }, 2500);
+    }
+  }
+
+  // ── USAGE WARNING + BRIEF INFERENCE ─────────────────────────────
+
+  var _usageWarnCallback = null;
+  var showUsageWarning = true; // loaded from profile on init
+
+  async function loadUsageWarnPref() {
+    if (!sb) return;
+    try {
+      var s = await sb.auth.getSession();
+      if (!s.data?.session) return;
+      var { data } = await sb.from('profiles').select('show_usage_warning').eq('id', s.data.session.user.id).single();
+      if (data && data.show_usage_warning === false) showUsageWarning = false;
+    } catch(e) {}
+  }
+
+  function isBigBuild(prompt) {
+    var p = prompt.toLowerCase();
+    var multiPageSignals = [
+      'multiple pages','multi-page','multipage','full website','full site',
+      'full web','about page','contact page','about us','contact us',
+      'home page and','landing page and','several pages','many pages',
+      'all pages','each page','every page','homepage and','5 pages','4 pages',
+      '3 pages','multiple sections with separate','e-commerce','ecommerce',
+      'online store','shop page','product page','dashboard','admin panel',
+      'blog with','portfolio with multiple','with navigation between'
+    ];
+    return multiPageSignals.some(function(s) { return p.includes(s); });
+  }
+
+  function showUsageWarn(onConfirm) {
+    _usageWarnCallback = onConfirm;
+    document.getElementById('uwDontWarn').checked = false;
+    document.getElementById('usageWarnOverlay').classList.add('show');
+  }
+
+  async function usageWarnConfirm() {
+    document.getElementById('usageWarnOverlay').classList.remove('show');
+    if (document.getElementById('uwDontWarn').checked) {
+      showUsageWarning = false;
+      if (sb) {
+        try {
+          var s = await sb.auth.getSession();
+          if (s.data?.session) {
+            await sb.from('profiles').update({ show_usage_warning: false }).eq('id', s.data.session.user.id);
+          }
+        } catch(e) {}
+      }
+    }
+    if (_usageWarnCallback) { _usageWarnCallback(); _usageWarnCallback = null; }
+  }
+
+  function usageWarnCancel() {
+    document.getElementById('usageWarnOverlay').classList.remove('show');
+    _usageWarnCallback = null;
+    // Re-enable input
+    aiTyping = false;
+    aiSetGenerating(false);
+  }
+
+  async function fetchBrief(prompt) {
+    var briefBar = document.getElementById('briefLoadingBar');
+    if (briefBar) briefBar.classList.add('show');
+    try {
+      // Collect plan chat context if available
+      var planSummary = '';
+      if (typeof planAllMessages !== 'undefined' && planAllMessages.length) {
+        planSummary = planAllMessages.slice(-8).map(function(m) {
+          return (m.role === 'user' ? 'User: ' : 'AI: ') + (m.text || '').slice(0, 400);
+        }).join('\n');
+      }
+      var res = await fetch(AI_EDGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          brief_mode: true,
+          messages: [{ role: 'user', content: prompt }],
+          plan_summary: planSummary
+        })
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch(e) { return null; }
+    finally { if (briefBar) briefBar.classList.remove('show'); }
+  }
+
+  function renderCritique(critique, targetEl) {
+    if (!critique || !targetEl) return;
+    var score = critique.score || 0;
+    var scoreClass = score >= 8 ? 'high' : score >= 6 ? 'mid' : 'low';
+    var strengths = (critique.strengths || []).map(function(s) {
+      return '<div class="ai-critique-item">' + escHtml(s) + '</div>';
+    }).join('');
+    var improvements = (critique.improvements || []).map(function(s) {
+      return '<div class="ai-critique-item">' + escHtml(s) + '</div>';
+    }).join('');
+    var fixBtn = improvements
+      ? '<button class="ai-critique-fix-btn" onclick="aiApplyImprovements(this)">Apply improvements</button>'
+      : '';
+    var card = document.createElement('div');
+    card.className = 'ai-critique';
+    card.innerHTML =
+      '<div class="ai-critique-head">' +
+        '<span class="ai-critique-score ' + scoreClass + '">' + score + '/10</span>' +
+        '<span class="ai-critique-label">Design critique</span>' +
+      '</div>' +
+      (strengths ? '<div class="ai-critique-section"><div class="ai-critique-section-title">What worked</div>' + strengths + '</div>' : '') +
+      (improvements ? '<div class="ai-critique-section ai-critique-improve"><div class="ai-critique-section-title">I\'d improve</div>' + improvements + fixBtn + '</div>' : '');
+    targetEl.appendChild(card);
+  }
+
+  function aiApplyImprovements(btn) {
+    var items = btn.closest('.ai-critique-improve').querySelectorAll('.ai-critique-item');
+    var list = Array.from(items).map(function(el) { return el.textContent.trim(); }).join('; ');
+    var inp = document.getElementById('aiBottomInput');
+    if (inp) {
+      inp.value = 'Apply these improvements: ' + list;
+      aiAutoResize(inp);
+      inp.focus();
     }
   }
 
@@ -3824,110 +3605,57 @@
   }
 
   // ── INLINE CODE BOX ───────────────────────────────────────────────
-  var acpBoxMap = {};       // name -> { el, numsEl, codeEl, linesEl, pulseEl, body }
-  var acpLiveContent = {};  // name -> accumulated content string
-  var acpCurrentFile = null; // which file is actively streaming right now
-  var _acpRenderTimer = null;
+  // Simple: show complete file when received, collapse after a pause.
+  var acpCurrentFile = null;
+  var acpLiveContent = {};
+  var acpBoxMap = {};
 
-  // Called on file_start — create the inline box inside the chat row
-  function acpFileStart(name, streamContent) {
+  function acpShowFile(name, code, streamContent) {
     acpCurrentFile = name;
-    acpLiveContent[name] = '';
+    acpLiveContent[name] = code;
     if (!aiPillMap[name]) aiAddEditingPill(name);
+    aiMarkPillDone(name);
 
     var lang = aiLangLabel(name);
+    var lines = code.split('\n');
 
     var box = document.createElement('div');
     box.className = 'ai-code-box';
+
+    // Build line numbers + highlighted code
+    var nums = lines.map(function(_, i) { return '<span>' + (i + 1) + '</span>'; }).join('');
+    var highlighted = acpHighlight(code, name);
+    var hlLines = highlighted.split('\n');
+    var codeHtml = hlLines.map(function(line) {
+      return '<span class="acp-line">' + line + '\n</span>';
+    }).join('');
+
     box.innerHTML =
       '<div class="ai-code-box-head">' +
         '<div class="ai-code-box-dot" style="background:' + lang.color + ';box-shadow:0 0 6px ' + lang.color + '55"></div>' +
         '<span class="ai-code-box-name">' + escHtml(name) + '</span>' +
         '<span class="ai-code-box-badge" style="background:' + lang.color + '18;color:' + lang.color + '">' + lang.label + '</span>' +
-        '<span class="ai-code-box-lines">0 lines</span>' +
-        '<div class="ai-code-box-pulse"></div>' +
+        '<span class="ai-code-box-lines">' + lines.length + ' lines</span>' +
       '</div>' +
       '<div class="ai-code-box-body">' +
-        '<div class="ai-code-box-nums"></div>' +
-        '<div class="ai-code-box-code"></div>' +
+        '<div class="ai-code-box-nums">' + nums + '</div>' +
+        '<div class="ai-code-box-code">' + codeHtml + '</div>' +
       '</div>';
 
-    // Insert at top of streamContent so it appears above the (hidden) message text
     streamContent.insertBefore(box, streamContent.firstChild);
+    acpBoxMap[name] = { el: box, body: box.querySelector('.ai-code-box-body') };
 
-    acpBoxMap[name] = {
-      el:      box,
-      numsEl:  box.querySelector('.ai-code-box-nums'),
-      codeEl:  box.querySelector('.ai-code-box-code'),
-      linesEl: box.querySelector('.ai-code-box-lines'),
-      pulseEl: box.querySelector('.ai-code-box-pulse'),
-      body:    box.querySelector('.ai-code-box-body'),
-    };
-  }
+    // Scroll code body to bottom
+    requestAnimationFrame(function() {
+      var b = acpBoxMap[name];
+      if (b) b.body.scrollTop = b.body.scrollHeight;
+    });
 
-  // Called on every file_delta — append chars + throttled render at ~60fps
-  function acpFileDelta(text) {
-    var name = acpCurrentFile;
-    if (!name || !acpBoxMap[name]) return;
-
-    acpLiveContent[name] += text;
-
-    if (!_acpRenderTimer) {
-      _acpRenderTimer = setTimeout(function() {
-        _acpRenderTimer = null;
-        if (acpCurrentFile) acpRenderBox(acpCurrentFile, true);
-      }, 16);
-    }
-  }
-
-  // Called when file event received — file complete
-  function acpFileDone(name) {
-    if (acpCurrentFile === name) acpCurrentFile = null;
-    if (aiPillMap[name]) aiMarkPillDone(name);
-    // Final render
-    acpRenderBox(name, false);
-    // Hide pulse dot
-    var b = acpBoxMap[name];
-    if (b && b.pulseEl) b.pulseEl.style.display = 'none';
-    // Collapse the box after a short pause
+    // Collapse after 2.5s
     setTimeout(function() {
-      var b2 = acpBoxMap[name];
-      if (!b2) return;
-      b2.el.classList.add('collapsing');
-      b2.el.addEventListener('animationend', function() {
-        b2.el.style.display = 'none';
-      }, { once: true });
-    }, 600);
-  }
-
-  function acpRenderBox(name, isWriting) {
-    var b = acpBoxMap[name];
-    if (!b) return;
-    var code  = acpLiveContent[name] || '';
-    var lines = code.split('\n');
-
-    b.linesEl.textContent = lines.length + ' lines';
-
-    b.numsEl.innerHTML = lines.map(function(_, i) {
-      return '<span>' + (i + 1) + '</span>';
-    }).join('');
-
-    if (isWriting) {
-      // Plain text while streaming — syntax highlighting on partial HTML
-      // produces broken mid-tag <span>s that the browser silently drops,
-      // making code lines go blank. textContent is always safe.
-      b.codeEl.textContent = code;
-    } else {
-      // File complete — safe to highlight the full, valid source
-      var highlighted = acpHighlight(code, name);
-      var hlLines = highlighted.split('\n');
-      b.codeEl.innerHTML = hlLines.map(function(line) {
-        return '<span class="acp-line">' + line + '\n</span>';
-      }).join('');
-    }
-
-    // Scroll to bottom while writing
-    if (isWriting) b.body.scrollTop = b.body.scrollHeight;
+      box.classList.add('collapsing');
+      box.addEventListener('animationend', function() { box.style.display = 'none'; }, { once: true });
+    }, 2500);
   }
 
   // Syntax highlighter
@@ -3986,7 +3714,7 @@
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
         },
-        body: JSON.stringify({ messages: aiHistory, files: fileSystem }),
+        body: JSON.stringify({ messages: aiHistory, files: fileSystem, brief: _pendingBrief || undefined }),
         signal: aiAbortController.signal
       });
 
@@ -4066,16 +3794,6 @@
             aiHideTyping();
           }
 
-          // ── file_start: new file beginning to stream ──
-          if (eventType === 'file_start' && data.name) {
-            acpFileStart(data.name, row._contentWrap || row);
-          }
-
-          // ── file_delta: live chars of current file content ──
-          if (eventType === 'file_delta' && data.text) {
-            acpFileDelta(data.text);
-          }
-
           // ── file: complete file received (base64) ──
           if (eventType === 'file' && data.name) {
             var content = data.content;
@@ -4087,8 +3805,8 @@
             dirtyFiles.add(data.name);
             if (!openTabs.includes(data.name)) openTabs.push(data.name);
             collectedFiles.push({ name: data.name, content: content });
-            // Mark file done in panel + pill
-            acpFileDone(data.name);
+            // Show code box inline in chat, then collapse after a moment
+            acpShowFile(data.name, content, row._contentWrap || row);
             // Live preview
             livePreviewUpdate();
           }
@@ -4153,6 +3871,13 @@
             aiAllMessages.push({ role: 'assistant', text: messageText, files: fileNames, time: aiNow() });
             aiSaveMsg('user', aiHistory[aiHistory.length - 2] ? aiHistory[aiHistory.length - 2].content : '', []);
             aiSaveMsg('assistant', historyContent, fileNames);
+            scrollIfSticky();
+          }
+
+          // ── critique: design score + suggestions ──
+          if (eventType === 'critique') {
+            var critiqueTarget = row._contentWrap || row;
+            renderCritique(data, critiqueTarget);
             scrollIfSticky();
           }
 
@@ -4612,20 +4337,5 @@ Be thorough. Every decision from the conversation should appear here. This is th
 </script>
 
 <!-- ══ YOUR WAY PHASE BUILDER ══ -->
-<div id="ywModal">
-  <div id="ywBox">
-    <div id="ywHead">
-      <h2>Build your workflow</h2>
-      <p>Add the phases you want to work through. You can rename, reorder, or delete them anytime before you start.</p>
-    </div>
-    <div id="ywPhaseList"></div>
-    <button id="ywAddBtn" onclick="ywAddPhase()">+ Add phase</button>
-    <div id="ywFoot">
-      <button class="yw-cancel" onclick="ywCancel()">Back</button>
-      <button class="yw-start" id="ywStartBtn" onclick="ywStartWorkflow()" disabled>Start building</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>

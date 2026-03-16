@@ -371,13 +371,17 @@
     .ai-text a{color:var(--a1);text-decoration:underline;text-underline-offset:2px}
     .ai-text a:hover{color:var(--a2)}
 
-    /* streaming cursor blink */
+    /* streaming cursor blink — thin line, not a block */
     .ai-stream-cursor::after{
-      content:'▋';display:inline-block;
-      color:var(--a1);animation:cursorBlink .9s step-end infinite;
-      font-size:.9em;vertical-align:-.05em;margin-left:1px;
+      content:'';display:inline-block;
+      width:2px;height:1.1em;
+      background:var(--a1);
+      border-radius:1px;
+      vertical-align:-0.15em;
+      margin-left:2px;
+      animation:cursorBlink .75s ease-in-out infinite;
     }
-    @keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+    @keyframes cursorBlink{0%,100%{opacity:1}45%,55%{opacity:0}}
 
     /* timestamp + actions — only on hover */
     .ai-msg-meta{display:flex;align-items:center;gap:6px;margin-top:5px;height:22px}
@@ -3749,7 +3753,7 @@
       streamAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>';
       streamInner.appendChild(streamAvatar);
       var streamContent = document.createElement('div');
-      streamContent.style.cssText = 'flex:1;min-width:0';
+      streamContent.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:0';
       textEl = document.createElement('div');
       textEl.className = 'ai-text ai-stream-cursor';
       streamContent.appendChild(textEl);

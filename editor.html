@@ -2313,37 +2313,62 @@
   }
 
   // ── PREVIEW ──
-  function refreshPreview() {
-    var frame = document.getElementById('previewFrame');
-    var bridgeSrc = '(function(){var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});})();';
-    var bridge = '<script>' + bridgeSrc + '<\/script>';
-    var html = fileSystem[mainFile] || '';
+  function buildPageHtml(pageName) {
+    var html = fileSystem[pageName] || '';
     Object.entries(fileSystem).forEach(function(entry) {
-      var fn = entry[0], content = entry[1];
-      if (!content) return;
+      var fn = entry[0], fc = entry[1];
+      if (!fc || fn === pageName) return;
       var safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       if (fn.endsWith('.css')) {
-        var safe = content.replace(/<\/style>/gi, '<\\/style>');
-        var re = new RegExp('<link[^>]+href=[\x22\x27]' + safeFn + '[\x22\x27][^>]*/?>','gi');
-        html = html.replace(re, '<style>' + safe + '<\/style>');
+        var safe = fc.replace(/<\/style>/gi, '<\\/style>');
+        html = html.replace(new RegExp('<link[^>]+href=[\x22\x27]' + safeFn + '[\x22\x27][^>]*/?>','gi'), '<style>' + safe + '<\/style>');
       } else if (fn.endsWith('.js')) {
-        var safe2 = content.replace(/<\/script>/gi, '<\\/script>');
-        var re2 = new RegExp('<script[^>]+src=[\x22\x27]' + safeFn + '[\x22\x27][^>]*><\/script>','gi');
-        html = html.replace(re2, '<script>' + safe2 + '<\/script>');
+        var safe2 = fc.replace(/<\/script>/gi, '<\\/script>');
+        html = html.replace(new RegExp('<script[^>]+src=[\x22\x27]' + safeFn + '[\x22\x27][^>]*><\/script>','gi'), '<script>' + safe2 + '<\/script>');
       }
     });
+    // Inject multi-page navigation interceptor + console bridge
+    var navInterceptor = [
+      '(function(){',
+      // Console bridge
+      'var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});',
+      'window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});',
+      // Multi-page link interception
+      'document.addEventListener("click",function(e){',
+      '  var a=e.target.closest("a");',
+      '  if(!a)return;',
+      '  var href=a.getAttribute("href")||"";',
+      '  if(!href||href.startsWith("#")||href.startsWith("http")||href.startsWith("mailto")||href.startsWith("tel"))return;',
+      '  var page=href.split("?")[0].split("#")[0];',
+      '  if(!page)return;',
+      '  e.preventDefault();',
+      '  window.parent.postMessage({type:"vexium_navigate",page:page},"*");',
+      '});',
+      '})();'
+    ].join('');
+    var bridge = '<script>' + navInterceptor + '<\/script>';
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
       html = bridge + html;
     }
+    return html;
+  }
+
+  function refreshPreview() {
+    refreshPreviewPage(mainFile);
+  }
+
+  function refreshPreviewPage(pageName) {
+    var frame = document.getElementById('previewFrame');
+    var html = buildPageHtml(pageName);
     var prev = frame._previewBlob;
     if (prev) URL.revokeObjectURL(prev);
     var blob = new Blob([html], { type: 'text/html' });
     var burl = URL.createObjectURL(blob);
     frame._previewBlob = burl;
     frame.src = burl;
-    setUrl(mainFile); pushHist(mainFile);
+    setUrl(pageName); pushHist(pageName);
   }
 
   function setUrl(u) { document.getElementById('prevUrl').textContent = u || mainFile; }
@@ -2359,6 +2384,15 @@
 
   // ── CONSOLE ──
   window.addEventListener('message', e => {
+    // Multi-page navigation from preview iframe
+    if (e.data?.type === 'vexium_navigate') {
+      var page = e.data.page;
+      if (page && fileSystem[page]) {
+        mainFile = page;
+        refreshPreviewPage(page);
+      }
+      return;
+    }
     if (e.data?.type !== 'console') return;
     const body = document.getElementById('consoleBody');
     document.getElementById('conEmpty')?.remove();

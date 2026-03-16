@@ -1720,25 +1720,6 @@
 </head>
 <body>
 
-<!-- ══ USAGE WARNING MODAL ══ -->
-<div id="usageWarnOverlay">
-  <div id="usageWarnBox">
-    <div class="uw-icon">
-      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <h3>This is a large build</h3>
-    <p>This request will generate a full multi-page website and will use a significant amount of AI credits. Make sure your request is ready before continuing.</p>
-    <label class="uw-check">
-      <input type="checkbox" id="uwDontWarn"/>
-      <span>Don't warn me again</span>
-    </label>
-    <div class="uw-btns">
-      <button class="uw-cancel" onclick="usageWarnCancel()">Cancel</button>
-      <button class="uw-confirm" onclick="usageWarnConfirm()">Build it</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>`;
 
@@ -4336,6 +4317,24 @@ Be thorough. Every decision from the conversation should appear here. This is th
   window.addEventListener('load', init);
 </script>
 
-<!-- ══ YOUR WAY PHASE BUILDER ══ -->
+<!-- ══ USAGE WARNING MODAL ══ -->
+<div id="usageWarnOverlay">
+  <div id="usageWarnBox">
+    <div class="uw-icon">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3>This is a large build</h3>
+    <p>This request will generate a full multi-page website and will use a significant amount of AI credits. Make sure your request is ready before continuing.</p>
+    <label class="uw-check">
+      <input type="checkbox" id="uwDontWarn"/>
+      <span>Don't warn me again</span>
+    </label>
+    <div class="uw-btns">
+      <button class="uw-cancel" onclick="usageWarnCancel()">Cancel</button>
+      <button class="uw-confirm" onclick="usageWarnConfirm()">Build it</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

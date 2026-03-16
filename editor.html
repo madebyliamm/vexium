@@ -580,142 +580,138 @@
     #previewInner{
       flex:1;display:flex;flex-direction:column;overflow:hidden;
       position:relative;background:#fff;
-      transition:background .2s;
     }
+    /* When in a device mode, previewInner becomes the viewport container */
     #previewInner.device-phone,
-    #previewInner.device-tablet,
     #previewInner.device-desktop{
-      background:var(--s2);align-items:center;justify-content:center;padding:16px 16px 0;
+      background:#0c0c1a;
+      align-items:center;justify-content:center;
+      overflow:hidden;
     }
 
-    /* ── device shell shared ── */
-    .device-shell{
-      display:flex;flex-direction:column;flex-shrink:0;
-      position:relative;overflow:hidden;
-      transition:box-shadow .3s;
+    /*
+     * Scale wrapper: sits between previewInner and the shell.
+     * JS sets --scale via inline style. transform-origin: top center
+     * so the device pins to the top of the container.
+     */
+    .device-scale-wrap{
+      transform-origin:top center;
+      transform:scale(var(--scale,1));
+      flex-shrink:0;
+      /* shadow lives here so it scales with the device */
     }
 
-    /* ── phone shell ── */
-    .device-shell.phone{
-      width:390px;max-width:calc(100% - 24px);
+    /* ── phone shell — FIXED real dimensions ── */
+    .device-shell-phone{
+      /* iPhone 16 Pro: 393×852 logical. We use 390×844. */
+      width:390px;
+      height:844px;
       border-radius:50px;
       border:10px solid #18182e;
       box-shadow:
-        0 0 0 1px rgba(255,255,255,.06),
-        0 0 0 1.5px #0a0a1a,
-        inset 0 0 0 1px rgba(255,255,255,.04),
-        0 28px 70px rgba(0,0,0,.75),
-        0 8px 24px rgba(0,0,0,.4);
+        inset 0 0 0 1px rgba(255,255,255,.07),
+        0 0 0 1px #0a0a18,
+        0 40px 100px rgba(0,0,0,.8),
+        0 8px 30px rgba(0,0,0,.5);
+      position:relative;
+      display:flex;flex-direction:column;
+      background:#000;overflow:hidden;
+      flex-shrink:0;
+    }
+    /* Dynamic Island pill */
+    .device-shell-phone::before{
+      content:'';
+      position:absolute;top:12px;left:50%;transform:translateX(-50%);
+      width:120px;height:34px;
       background:#000;
-      /* Height: 390:844 = iPhone aspect. Cap at panel height. */
-      height:min(calc((100vw - 24px) * 844 / 390), calc(100% - 8px));
-      max-height:780px;
+      border-radius:20px;
+      z-index:10;
+      box-shadow:0 0 0 1px rgba(255,255,255,.06);
     }
-    /* notch bar */
-    .device-notch{
-      height:36px;background:#0d0d1e;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      position:relative;z-index:2;
+    /* power button */
+    .device-shell-phone::after{
+      content:'';
+      position:absolute;right:-14px;top:140px;
+      width:4px;height:70px;
+      background:#111128;border-radius:0 3px 3px 0;
+      box-shadow:0 1px 0 rgba(255,255,255,.04);
     }
-    .device-notch-pill{
-      width:90px;height:28px;background:#000;border-radius:0 0 18px 18px;
-      display:flex;align-items:center;justify-content:center;gap:6px;
+    /* volume buttons via .device-side-btns injected in JS */
+    .device-vol-btn{
+      position:absolute;left:-14px;
+      width:4px;background:#111128;border-radius:3px 0 0 3px;
     }
-    .device-notch-cam{
-      width:10px;height:10px;border-radius:50%;
-      background:radial-gradient(circle at 35% 35%,#2a2a40,#0a0a18);
-      box-shadow:0 0 0 1.5px rgba(255,255,255,.05),inset 0 0 3px rgba(100,100,255,.1);
-    }
-    .device-notch-cam::after{
-      content:'';display:block;width:4px;height:4px;
-      border-radius:50%;background:rgba(150,160,255,.15);
-      margin:3px auto 0;
-    }
-    /* home indicator */
+    .device-notch-spacer{height:46px;flex-shrink:0;background:#000;position:relative;z-index:5}
     .device-home-bar{
-      height:26px;background:#0d0d1e;flex-shrink:0;
+      height:28px;background:#000;flex-shrink:0;
       display:flex;align-items:center;justify-content:center;
     }
     .device-home-pill{
-      width:120px;height:4px;border-radius:2px;
-      background:rgba(255,255,255,.22);
+      width:130px;height:5px;border-radius:3px;
+      background:rgba(255,255,255,.25);
     }
-    /* side buttons */
-    .device-shell.phone::before{
-      content:'';position:absolute;
-      left:-14px;top:80px;width:4px;height:32px;
-      background:#111128;border-radius:2px 0 0 2px;
-      box-shadow:0 44px 0 #111128,0 88px 0 #111128,-1px 0 0 rgba(255,255,255,.04);
-    }
-    .device-shell.phone::after{
-      content:'';position:absolute;
-      right:-14px;top:100px;width:4px;height:56px;
-      background:#111128;border-radius:0 2px 2px 0;
-      box-shadow:1px 0 0 rgba(255,255,255,.04);
-    }
-
-    /* ── desktop shell ── */
-    .device-shell.desktop{
-      width:min(960px,calc(100% - 24px));
-      border-radius:10px 10px 0 0;
-      border:1px solid rgba(255,255,255,.07);
-      border-bottom:none;
-      box-shadow:
-        0 0 0 1px #0a0a1a,
-        0 -1px 0 rgba(255,255,255,.04),
-        0 24px 60px rgba(0,0,0,.6);
-      background:#000;
-      height:min(600px,calc(100% - 8px));
-    }
-    /* browser chrome bar */
-    .device-browser-bar{
-      height:36px;background:#111120;flex-shrink:0;
-      display:flex;align-items:center;gap:0;padding:0 12px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-    .device-browser-dots{
-      display:flex;gap:5px;align-items:center;flex-shrink:0;
-    }
-    .device-browser-dot{
-      width:10px;height:10px;border-radius:50%;
-    }
-    .device-browser-dot.red{background:#ff5f57}
-    .device-browser-dot.yellow{background:#febc2e}
-    .device-browser-dot.green{background:#28c840}
-    .device-browser-url{
-      flex:1;margin:0 12px;
-      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
-      border-radius:6px;height:22px;
-      display:flex;align-items:center;justify-content:center;
-      font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.25);
-      overflow:hidden;
-    }
-    .device-browser-url-text{
-      max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .device-browser-actions{
-      display:flex;gap:8px;flex-shrink:0;
-    }
-    .device-browser-btn{
-      width:18px;height:18px;border-radius:4px;
-      background:transparent;border:none;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      color:rgba(255,255,255,.25);transition:color .12s;padding:0;
-    }
-    .device-browser-btn:hover{color:rgba(255,255,255,.55)}
-    .device-browser-btn svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;}
-
-    /* ── iframe inside device ── */
-    .device-frame-iframe{
+    .device-phone-iframe{
       flex:1;width:100%;border:none;background:#fff;display:block;min-height:0;
     }
 
-    /* ── device toggle buttons in toolbar ── */
+    /* ── desktop shell — FIXED real dimensions ── */
+    .device-shell-desktop{
+      /* 1440×900 — standard 16:10 desktop */
+      width:1440px;
+      height:900px;
+      border-radius:10px 10px 0 0;
+      border:1.5px solid rgba(255,255,255,.08);
+      border-bottom:none;
+      box-shadow:
+        0 0 0 1px #0a0a18,
+        0 -1px 0 rgba(255,255,255,.06),
+        0 32px 80px rgba(0,0,0,.7),
+        0 8px 24px rgba(0,0,0,.4);
+      position:relative;
+      display:flex;flex-direction:column;
+      background:#0d0d1e;overflow:hidden;
+      flex-shrink:0;
+    }
+    /* Browser chrome */
+    .device-browser-bar{
+      height:38px;background:#111120;flex-shrink:0;
+      display:flex;align-items:center;gap:0;padding:0 14px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .device-browser-dots{display:flex;gap:6px;align-items:center;flex-shrink:0}
+    .device-browser-dot{width:11px;height:11px;border-radius:50%}
+    .device-browser-dot.red{background:#ff5f57;box-shadow:0 0 4px rgba(255,95,87,.4)}
+    .device-browser-dot.yellow{background:#febc2e;box-shadow:0 0 4px rgba(254,188,46,.3)}
+    .device-browser-dot.green{background:#28c840;box-shadow:0 0 4px rgba(40,200,64,.3)}
+    .device-browser-url{
+      flex:1;margin:0 14px;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+      border-radius:6px;height:24px;
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);
+      overflow:hidden;padding:0 10px;
+    }
+    .device-browser-url span{
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;
+    }
+    .device-browser-reload{
+      width:22px;height:22px;border-radius:5px;background:transparent;border:none;
+      color:rgba(255,255,255,.25);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      transition:color .12s;padding:0;
+    }
+    .device-browser-reload:hover{color:rgba(255,255,255,.6)}
+    .device-browser-reload svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+    .device-desktop-iframe{
+      flex:1;width:100%;border:none;background:#fff;display:block;min-height:0;
+    }
+
+    /* ── toolbar: inline icon buttons instead of dropdown ── */
     .prev-device-group{
       display:flex;gap:1px;background:var(--b1);border-radius:6px;padding:2px;flex-shrink:0;
     }
     .prev-device-ico-btn{
-      width:26px;height:22px;border-radius:4px;
+      width:28px;height:22px;border-radius:4px;
       background:transparent;border:none;
       color:var(--sub);cursor:pointer;
       display:flex;align-items:center;justify-content:center;
@@ -723,7 +719,10 @@
     }
     .prev-device-ico-btn:hover{background:var(--b2);color:var(--text)}
     .prev-device-ico-btn.active{background:var(--b3);color:var(--text)}
-    .prev-device-ico-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+    .prev-device-ico-btn svg{
+      width:13px;height:13px;stroke:currentColor;fill:none;
+      stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+    }
 
     #previewFrame{flex:1;width:100%;border:none;background:#fff;display:block}
 
@@ -1649,11 +1648,11 @@
             <button class="prev-device-ico-btn active" id="dopt-default" onclick="setDeviceMode('default')" title="Full width">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
             </button>
-            <button class="prev-device-ico-btn" id="dopt-phone" onclick="setDeviceMode('phone')" title="Phone (390px)">
-              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+            <button class="prev-device-ico-btn" id="dopt-phone" onclick="setDeviceMode('phone')" title="iPhone (390×844)">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><circle cx="12" cy="18.5" r="1" fill="currentColor" stroke="none"/></svg>
             </button>
-            <button class="prev-device-ico-btn" id="dopt-desktop" onclick="setDeviceMode('desktop')" title="Desktop (960px)">
-              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><polyline points="8 22 12 18 16 22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+            <button class="prev-device-ico-btn" id="dopt-desktop" onclick="setDeviceMode('desktop')" title="Desktop (1440×900)">
+              <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
             </button>
           </div>
         </div>
@@ -2484,10 +2483,15 @@
 
   // ── DEVICE MODE ──
   var deviceMode = 'default';
+  // Fixed logical dimensions for each device
+  var DEVICE_DIMS = {
+    phone:   { w: 390,  h: 844  },  // iPhone 16 Pro logical px
+    desktop: { w: 1440, h: 900  }   // Standard 16:10 desktop
+  };
+  var _deviceRO = null; // ResizeObserver
 
   function setDeviceMode(mode) {
     deviceMode = mode;
-    // Update active button
     ['default','phone','desktop'].forEach(function(m) {
       var btn = document.getElementById('dopt-' + m);
       if (btn) btn.classList.toggle('active', m === mode);
@@ -2501,46 +2505,51 @@
     var frame = document.getElementById('previewFrame');
     if (!inner || !frame) return;
 
-    // Detach iframe before tearing down shell
-    var existingShell = inner.querySelector('.device-shell');
-    if (existingShell) {
-      inner.appendChild(frame);
-      existingShell.remove();
-    }
+    // Disconnect any existing ResizeObserver
+    if (_deviceRO) { _deviceRO.disconnect(); _deviceRO = null; }
 
-    // Reset inner class + frame styles
+    // Detach iframe and remove old shell/wrap
+    var oldWrap = inner.querySelector('.device-scale-wrap');
+    if (oldWrap) { inner.appendChild(frame); oldWrap.remove(); }
+
+    // Reset everything
     inner.className = '';
     frame.className = '';
-    frame.style.cssText = '';
+    frame.removeAttribute('style');
 
     if (deviceMode === 'default') {
-      // Bare iframe fills panel
-      frame.style.flex = '1';
-      frame.style.width = '100%';
-      frame.style.display = 'block';
-      frame.style.border = 'none';
+      frame.style.cssText = 'flex:1;width:100%;border:none;background:#fff;display:block;';
+      inner.appendChild(frame);
       return;
     }
+
+    var dims = DEVICE_DIMS[deviceMode];
+
+    // Scale wrapper — JS will set --scale on this element
+    var wrap = document.createElement('div');
+    wrap.className = 'device-scale-wrap';
+    wrap.style.cssText = 'transform-origin:top center;flex-shrink:0;';
 
     if (deviceMode === 'phone') {
       inner.classList.add('device-phone');
       var shell = document.createElement('div');
-      shell.className = 'device-shell phone';
+      shell.className = 'device-shell-phone';
 
-      // Notch
-      var notch = document.createElement('div');
-      notch.className = 'device-notch';
-      var pill = document.createElement('div');
-      pill.className = 'device-notch-pill';
-      var cam = document.createElement('div');
-      cam.className = 'device-notch-cam';
-      pill.appendChild(cam);
-      notch.appendChild(pill);
-      shell.appendChild(notch);
+      // Volume buttons (left side)
+      [72, 120, 168].forEach(function(top, i) {
+        var btn = document.createElement('div');
+        btn.className = 'device-vol-btn';
+        btn.style.cssText = 'top:' + top + 'px;height:' + (i === 0 ? 32 : 56) + 'px;';
+        shell.appendChild(btn);
+      });
+
+      // Notch spacer (sits above iframe, reserves space for Dynamic Island)
+      var notchSpacer = document.createElement('div');
+      notchSpacer.className = 'device-notch-spacer';
+      shell.appendChild(notchSpacer);
 
       // Iframe
-      frame.className = 'device-frame-iframe';
-      frame.style.border = 'none';
+      frame.className = 'device-phone-iframe';
       shell.appendChild(frame);
 
       // Home bar
@@ -2551,14 +2560,13 @@
       homeBar.appendChild(homePill);
       shell.appendChild(homeBar);
 
-      inner.appendChild(shell);
-      return;
-    }
+      wrap.appendChild(shell);
+      inner.appendChild(wrap);
 
-    if (deviceMode === 'desktop') {
+    } else if (deviceMode === 'desktop') {
       inner.classList.add('device-desktop');
       var shell = document.createElement('div');
-      shell.className = 'device-shell desktop';
+      shell.className = 'device-shell-desktop';
 
       // Browser chrome bar
       var bar = document.createElement('div');
@@ -2577,38 +2585,50 @@
       urlBar.className = 'device-browser-url';
       urlBar.id = 'deviceBrowserUrl';
       var urlText = document.createElement('span');
-      urlText.className = 'device-browser-url-text';
       urlText.textContent = document.getElementById('prevUrl').textContent || 'index.html';
       urlBar.appendChild(urlText);
       bar.appendChild(urlBar);
 
-      // Reload button in browser chrome
-      var actions = document.createElement('div');
-      actions.className = 'device-browser-actions';
       var reloadBtn = document.createElement('button');
-      reloadBtn.className = 'device-browser-btn';
+      reloadBtn.className = 'device-browser-reload';
       reloadBtn.title = 'Refresh';
       reloadBtn.onclick = refreshPreview;
       reloadBtn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-      actions.appendChild(reloadBtn);
-      bar.appendChild(actions);
+      bar.appendChild(reloadBtn);
 
       shell.appendChild(bar);
 
-      // Iframe
-      frame.className = 'device-frame-iframe';
-      frame.style.border = 'none';
+      frame.className = 'device-desktop-iframe';
       shell.appendChild(frame);
 
-      inner.appendChild(shell);
-      return;
+      wrap.appendChild(shell);
+      inner.appendChild(wrap);
     }
+
+    // Calculate and apply scale, then watch for resize
+    _scaleDevice(inner, wrap, dims);
+    _deviceRO = new ResizeObserver(function() { _scaleDevice(inner, wrap, dims); });
+    _deviceRO.observe(inner);
   }
 
-  // Keep desktop URL bar in sync when navigating
+  function _scaleDevice(inner, wrap, dims) {
+    var pad = 24; // padding around device inside the container
+    var availW = inner.clientWidth  - pad * 2;
+    var availH = inner.clientHeight - pad * 2;
+    var scaleW = availW / dims.w;
+    var scaleH = availH / dims.h;
+    var scale  = Math.min(scaleW, scaleH, 1); // never upscale
+    wrap.style.transform = 'scale(' + scale + ')';
+    // Shrink the layout footprint so the container doesn't overflow
+    wrap.style.width  = dims.w + 'px';
+    wrap.style.height = Math.round(dims.h * scale) + 'px';
+    wrap.style.marginBottom = Math.round(dims.h * (scale - 1)) + 'px';
+  }
+
+  // Keep desktop URL bar in sync
   function _syncDeviceUrl(url) {
     var el = document.getElementById('deviceBrowserUrl');
-    if (el) { var t = el.querySelector('.device-browser-url-text'); if (t) t.textContent = url; }
+    if (el) { var t = el.querySelector('span'); if (t) t.textContent = url; }
   }
 
   // ── RESIZE ──

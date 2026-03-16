@@ -441,83 +441,14 @@
     .ai-edit-pill.done .ai-edit-pill-anim{display:none}
     .ai-edit-pill.done{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05)}
     .ai-edit-pill.done .ai-edit-pill-dot{box-shadow:0 0 5px currentColor}
+    .ai-edit-pill-lines{
+      font-size:10px;font-weight:700;color:rgba(255,255,255,.25);
+      font-family:var(--mono);margin-left:1px;
+      transition:color .25s;
+    }
+    .ai-edit-pill.done .ai-edit-pill-lines{color:rgba(74,222,128,.55)}
 
-    /* ── INLINE CODE BOX (per-file, lives inside the chat row) ── */
-    .ai-code-box{
-      margin:10px 0 4px;
-      border-radius:14px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.07);
-      background:rgba(255,255,255,.03);
-      /* enter */
-      animation:codeBoxIn .18s ease;
-    }
-    @keyframes codeBoxIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    /* collapse-out when done */
-    .ai-code-box.collapsing{
-      animation:codeBoxOut .22s ease forwards;
-    }
-    @keyframes codeBoxOut{
-      from{opacity:1;max-height:400px}
-      to{opacity:0;max-height:0;margin:0;padding:0;border-width:0}
-    }
-
-    /* header bar */
-    .ai-code-box-head{
-      display:flex;align-items:center;gap:8px;
-      padding:9px 12px 8px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-      background:rgba(255,255,255,.02);
-    }
-    .ai-code-box-dot{
-      width:7px;height:7px;border-radius:50%;flex-shrink:0;
-    }
-    .ai-code-box-name{
-      font-family:var(--mono);font-size:11.5px;font-weight:600;
-      color:var(--text);flex:1;
-    }
-    .ai-code-box-badge{
-      font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
-      padding:2px 6px;border-radius:4px;flex-shrink:0;
-    }
-    .ai-code-box-lines{
-      font-size:10px;font-weight:500;color:var(--sub);
-      font-family:var(--mono);flex-shrink:0;
-    }
-    .ai-code-box-pulse{
-      width:5px;height:5px;border-radius:50%;flex-shrink:0;
-      background:var(--a1);
-      animation:cbPulse .9s ease-in-out infinite;
-    }
-    @keyframes cbPulse{0%,100%{opacity:.25;transform:scale(.75)}50%{opacity:1;transform:scale(1)}}
-
-    /* code body */
-    .ai-code-box-body{
-      display:flex;
-      max-height:420px;overflow-y:auto;
-      font-family:var(--mono);font-size:12px;line-height:1.65;
-    }
-    .ai-code-box-nums{
-      padding:10px 0 10px 12px;min-width:40px;
-      text-align:right;color:rgba(255,255,255,.15);
-      user-select:none;flex-shrink:0;
-      border-right:1px solid rgba(255,255,255,.04);
-    }
-    .ai-code-box-nums span{display:block;padding-right:10px;font-size:10.5px}
-    .ai-code-box-code{
-      padding:10px 14px;flex:1;
-      white-space:pre;overflow-x:auto;
-      color:rgba(210,200,255,.7);min-width:0;
-    }
-    /* syntax tokens */
-    .tok-tag{color:#7dd3fc}
-    .tok-attr{color:#c4b5fd}
-    .tok-str{color:#86efac}
-    .tok-kw{color:#a5b4fc}
-    .tok-cmt{color:rgba(255,255,255,.28);font-style:italic}
-    .tok-fn{color:#fbbf24}
-    .tok-num{color:#fb923c}
-    .tok-punct{color:rgba(255,255,255,.32)}
+    /* code preview removed — pills show filename + line count instead */
 
     @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
@@ -2337,7 +2268,7 @@
       '(function(){',
       // Console bridge
       'var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});',
-      'window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});',
+      'window.addEventListener("error",function(e){var msg=e.message;if(!msg||msg==="Script error.")return;window.parent.postMessage({type:"console",kind:"error",msg:msg+(e.lineno?" (line "+e.lineno+")":"")},"*");});',
       // Multi-page link interception
       'document.addEventListener("click",function(e){',
       '  var a=e.target.closest("a");',
@@ -2665,9 +2596,6 @@
     return '#818cf8';
   }
 
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
 
   function aiAutoResize(el) {
     el.style.height = 'auto';
@@ -3422,9 +3350,14 @@
     aiHistory.push({ role: 'user', content: text });
     aiShowTyping();
 
-    // Fetch brief before building (always — it's fast and dramatically improves output)
+    // Fetch brief in parallel with a 4s cap — don't block the UI
     _pendingBrief = null;
-    try { _pendingBrief = await fetchBrief(text); } catch(e) {}
+    try {
+      _pendingBrief = await Promise.race([
+        fetchBrief(text).catch(function() { return null; }),
+        new Promise(function(res) { setTimeout(function() { res(null); }, 4000); })
+      ]);
+    } catch(e) { _pendingBrief = null; }
 
     await aiCallAPI();
   }
@@ -3608,14 +3541,21 @@
     var pill = document.createElement('div');
     pill.className = 'ai-edit-pill';
     pill.dataset.file = name;
+    var safeId = name.replace(/[^a-z0-9]/gi, '_');
     pill.innerHTML =
       '<div class="ai-edit-pill-dot" style="background:' + col + ';box-shadow:0 0 6px ' + col + '55"></div>' +
       '<span style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
+      '<span class="ai-edit-pill-lines" id="pill-lines-' + safeId + '">0 ln</span>' +
       '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
 
     pillsEl.appendChild(pill);
     aiPillMap[name] = pill;
     return pill;
+  }
+
+  function aiUpdatePillLines(name, lineCount) {
+    var el = document.getElementById('pill-lines-' + name.replace(/[^a-z0-9]/gi, '_'));
+    if (el) el.textContent = lineCount + ' ln';
   }
 
   function aiMarkPillDone(name) {
@@ -3630,88 +3570,14 @@
   var acpLiveContent = {};
   var acpBoxMap = {};
 
-  function acpShowFile(name, code, streamContent) {
+  // Simplified: no inline code preview — pill shows filename + final line count
+  function acpShowFile(name, code, _streamContent) {
     acpCurrentFile = name;
     acpLiveContent[name] = code;
     if (!aiPillMap[name]) aiAddEditingPill(name);
+    aiUpdatePillLines(name, code.split('\n').length);
     aiMarkPillDone(name);
-
-    var lang = aiLangLabel(name);
-    var lines = code.split('\n');
-
-    var box = document.createElement('div');
-    box.className = 'ai-code-box';
-
-    // Build line numbers + highlighted code
-    var nums = lines.map(function(_, i) { return '<span>' + (i + 1) + '</span>'; }).join('');
-    var highlighted = acpHighlight(code, name);
-    var hlLines = highlighted.split('\n');
-    var codeHtml = hlLines.map(function(line) {
-      return '<span class="acp-line">' + line + '\n</span>';
-    }).join('');
-
-    box.innerHTML =
-      '<div class="ai-code-box-head">' +
-        '<div class="ai-code-box-dot" style="background:' + lang.color + ';box-shadow:0 0 6px ' + lang.color + '55"></div>' +
-        '<span class="ai-code-box-name">' + escHtml(name) + '</span>' +
-        '<span class="ai-code-box-badge" style="background:' + lang.color + '18;color:' + lang.color + '">' + lang.label + '</span>' +
-        '<span class="ai-code-box-lines">' + lines.length + ' lines</span>' +
-      '</div>' +
-      '<div class="ai-code-box-body">' +
-        '<div class="ai-code-box-nums">' + nums + '</div>' +
-        '<div class="ai-code-box-code">' + codeHtml + '</div>' +
-      '</div>';
-
-    streamContent.insertBefore(box, streamContent.firstChild);
-    acpBoxMap[name] = { el: box, body: box.querySelector('.ai-code-box-body') };
-
-    // Scroll code body to bottom
-    requestAnimationFrame(function() {
-      var b = acpBoxMap[name];
-      if (b) b.body.scrollTop = b.body.scrollHeight;
-    });
-
-    // Collapse after 2.5s
-    setTimeout(function() {
-      box.classList.add('collapsing');
-      box.addEventListener('animationend', function() { box.style.display = 'none'; }, { once: true });
-    }, 2500);
   }
-
-  // Syntax highlighter
-  function acpHighlight(code, filename) {
-    var ext = (filename.split('.').pop() || '').toLowerCase();
-    var s = code
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-    if (ext === 'html') {
-      s = s.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-cmt">$1</span>');
-      s = s.replace(/(&lt;\/?)([\w-]+)/g, '<span class="tok-punct">$1</span><span class="tok-tag">$2</span>');
-      s = s.replace(/\s([\w-]+)(=)/g, ' <span class="tok-attr">$1</span><span class="tok-punct">$2</span>');
-      s = s.replace(/(["'])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
-      return s;
-    }
-    if (ext === 'css') {
-      s = s.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-cmt">$1</span>');
-      s = s.replace(/([\w-]+)(\s*:)(?!:)/g, '<span class="tok-attr">$1</span><span class="tok-punct">$2</span>');
-      s = s.replace(/(["'])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
-      s = s.replace(/\b(\d+\.?\d*)(px|em|rem|vh|vw|%|s|ms|deg)?\b/g, '<span class="tok-num">$1$2</span>');
-      s = s.replace(/(@[\w-]+)/g, '<span class="tok-kw">$1</span>');
-      return s;
-    }
-    if (ext === 'js' || ext === 'ts') {
-      s = s.replace(/(\/\/[^\n]*)/g, '<span class="tok-cmt">$1</span>');
-      s = s.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-cmt">$1</span>');
-      s = s.replace(/(["'`])((?:(?!\1).)*)\1/g, '<span class="tok-str">$1$2$1</span>');
-      s = s.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await|try|catch|new|this|typeof|null|undefined|true|false)\b/g, '<span class="tok-kw">$1</span>');
-      s = s.replace(/\b([\w$]+)(\s*\()/g, '<span class="tok-fn">$1</span><span class="tok-punct">$2</span>');
-      s = s.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
-      return s;
-    }
-    return s;
-  }
-
 
 
   async function aiCallAPI() {

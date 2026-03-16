@@ -441,13 +441,10 @@
     .ai-edit-pill.done .ai-edit-pill-anim{display:none}
     .ai-edit-pill.done{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05)}
     .ai-edit-pill.done .ai-edit-pill-dot{box-shadow:0 0 5px currentColor}
-    .ai-edit-pill-lines{
-      font-size:10px;font-weight:700;color:rgba(255,255,255,.25);
-      font-family:var(--mono);margin-left:1px;transition:color .25s;
-    }
+    .ai-edit-pill-lines{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);font-family:var(--mono);margin-left:1px;transition:color .25s}
     .ai-edit-pill.done .ai-edit-pill-lines{color:rgba(74,222,128,.55)}
 
-    /* code preview removed — pills show filename + line count instead */
+    /* code preview removed — pills show filename + line count */
 
     @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
@@ -581,29 +578,31 @@
       flex:1;display:flex;flex-direction:column;overflow:hidden;
       position:relative;background:#fff;
     }
-    /* When in a device mode, previewInner becomes the viewport container */
     #previewInner.device-phone,
     #previewInner.device-desktop{
       background:#0c0c1a;
-      align-items:center;justify-content:center;
+      /* center the scale-wrap in both axes */
+      align-items:center;
+      justify-content:center;
       overflow:hidden;
     }
 
     /*
-     * Scale wrapper: sits between previewInner and the shell.
-     * JS sets --scale via inline style. transform-origin: top center
-     * so the device pins to the top of the container.
+     * Scale wrapper: always sized to the POST-scale pixel footprint so flexbox
+     * can center it correctly. The shell inside is full native size and scaled
+     * down with transform. transform-origin: center center is critical — it
+     * scales toward the middle, not the top, so nothing falls off screen.
      */
     .device-scale-wrap{
-      transform-origin:top center;
-      transform:scale(var(--scale,1));
+      display:flex;
+      align-items:center;
+      justify-content:center;
       flex-shrink:0;
-      /* shadow lives here so it scales with the device */
+      /* JS sets width/height to scaled footprint and transform to scale() */
     }
 
-    /* ── phone shell — FIXED real dimensions ── */
+    /* ── phone shell — fixed native dimensions ── */
     .device-shell-phone{
-      /* iPhone 16 Pro: 393×852 logical. We use 390×844. */
       width:390px;
       height:844px;
       border-radius:50px;
@@ -611,37 +610,34 @@
       box-shadow:
         inset 0 0 0 1px rgba(255,255,255,.07),
         0 0 0 1px #0a0a18,
-        0 40px 100px rgba(0,0,0,.8),
+        0 40px 100px rgba(0,0,0,.85),
         0 8px 30px rgba(0,0,0,.5);
-      position:relative;
       display:flex;flex-direction:column;
-      background:#000;overflow:hidden;
-      flex-shrink:0;
+      background:#000;overflow:hidden;flex-shrink:0;
+      position:relative;
     }
-    /* Dynamic Island pill */
+    /* Dynamic Island */
     .device-shell-phone::before{
       content:'';
       position:absolute;top:12px;left:50%;transform:translateX(-50%);
       width:120px;height:34px;
-      background:#000;
-      border-radius:20px;
-      z-index:10;
+      background:#000;border-radius:20px;z-index:10;
       box-shadow:0 0 0 1px rgba(255,255,255,.06);
     }
-    /* power button */
+    /* Power button */
     .device-shell-phone::after{
       content:'';
-      position:absolute;right:-14px;top:140px;
-      width:4px;height:70px;
+      position:absolute;right:-14px;top:160px;
+      width:4px;height:72px;
       background:#111128;border-radius:0 3px 3px 0;
-      box-shadow:0 1px 0 rgba(255,255,255,.04);
     }
-    /* volume buttons via .device-side-btns injected in JS */
     .device-vol-btn{
       position:absolute;left:-14px;
       width:4px;background:#111128;border-radius:3px 0 0 3px;
     }
-    .device-notch-spacer{height:46px;flex-shrink:0;background:#000;position:relative;z-index:5}
+    .device-notch-spacer{
+      height:46px;flex-shrink:0;background:#000;position:relative;z-index:5;
+    }
     .device-home-bar{
       height:28px;background:#000;flex-shrink:0;
       display:flex;align-items:center;justify-content:center;
@@ -654,9 +650,8 @@
       flex:1;width:100%;border:none;background:#fff;display:block;min-height:0;
     }
 
-    /* ── desktop shell — FIXED real dimensions ── */
+    /* ── desktop shell — fixed native dimensions ── */
     .device-shell-desktop{
-      /* 1440×900 — standard 16:10 desktop */
       width:1440px;
       height:900px;
       border-radius:10px 10px 0 0;
@@ -667,12 +662,9 @@
         0 -1px 0 rgba(255,255,255,.06),
         0 32px 80px rgba(0,0,0,.7),
         0 8px 24px rgba(0,0,0,.4);
-      position:relative;
       display:flex;flex-direction:column;
-      background:#0d0d1e;overflow:hidden;
-      flex-shrink:0;
+      background:#0d0d1e;overflow:hidden;flex-shrink:0;
     }
-    /* Browser chrome */
     .device-browser-bar{
       height:38px;background:#111120;flex-shrink:0;
       display:flex;align-items:center;gap:0;padding:0 14px;
@@ -680,9 +672,9 @@
     }
     .device-browser-dots{display:flex;gap:6px;align-items:center;flex-shrink:0}
     .device-browser-dot{width:11px;height:11px;border-radius:50%}
-    .device-browser-dot.red{background:#ff5f57;box-shadow:0 0 4px rgba(255,95,87,.4)}
-    .device-browser-dot.yellow{background:#febc2e;box-shadow:0 0 4px rgba(254,188,46,.3)}
-    .device-browser-dot.green{background:#28c840;box-shadow:0 0 4px rgba(40,200,64,.3)}
+    .device-browser-dot.red{background:#ff5f57}
+    .device-browser-dot.yellow{background:#febc2e}
+    .device-browser-dot.green{background:#28c840}
     .device-browser-url{
       flex:1;margin:0 14px;
       background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
@@ -701,12 +693,15 @@
       transition:color .12s;padding:0;
     }
     .device-browser-reload:hover{color:rgba(255,255,255,.6)}
-    .device-browser-reload svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+    .device-browser-reload svg{
+      width:11px;height:11px;stroke:currentColor;stroke-width:2.2;
+      fill:none;stroke-linecap:round;
+    }
     .device-desktop-iframe{
       flex:1;width:100%;border:none;background:#fff;display:block;min-height:0;
     }
 
-    /* ── toolbar: inline icon buttons instead of dropdown ── */
+    /* ── toolbar: 3 inline icon buttons ── */
     .prev-device-group{
       display:flex;gap:1px;background:var(--b1);border-radius:6px;padding:2px;flex-shrink:0;
     }
@@ -2483,12 +2478,11 @@
 
   // ── DEVICE MODE ──
   var deviceMode = 'default';
-  // Fixed logical dimensions for each device
   var DEVICE_DIMS = {
-    phone:   { w: 390,  h: 844  },  // iPhone 16 Pro logical px
-    desktop: { w: 1440, h: 900  }   // Standard 16:10 desktop
+    phone:   { w: 390,  h: 844 },
+    desktop: { w: 1440, h: 900 }
   };
-  var _deviceRO = null; // ResizeObserver
+  var _deviceRO = null;
 
   function setDeviceMode(mode) {
     deviceMode = mode;
@@ -2505,14 +2499,12 @@
     var frame = document.getElementById('previewFrame');
     if (!inner || !frame) return;
 
-    // Disconnect any existing ResizeObserver
     if (_deviceRO) { _deviceRO.disconnect(); _deviceRO = null; }
 
-    // Detach iframe and remove old shell/wrap
+    // Detach iframe before removing old shell
     var oldWrap = inner.querySelector('.device-scale-wrap');
     if (oldWrap) { inner.appendChild(frame); oldWrap.remove(); }
 
-    // Reset everything
     inner.className = '';
     frame.className = '';
     frame.removeAttribute('style');
@@ -2525,34 +2517,30 @@
 
     var dims = DEVICE_DIMS[deviceMode];
 
-    // Scale wrapper — JS will set --scale on this element
+    // Wrap: JS sizes this to the scaled footprint so flexbox centers it
     var wrap = document.createElement('div');
     wrap.className = 'device-scale-wrap';
-    wrap.style.cssText = 'transform-origin:top center;flex-shrink:0;';
 
     if (deviceMode === 'phone') {
       inner.classList.add('device-phone');
       var shell = document.createElement('div');
       shell.className = 'device-shell-phone';
 
-      // Volume buttons (left side)
-      [72, 120, 168].forEach(function(top, i) {
-        var btn = document.createElement('div');
-        btn.className = 'device-vol-btn';
-        btn.style.cssText = 'top:' + top + 'px;height:' + (i === 0 ? 32 : 56) + 'px;';
-        shell.appendChild(btn);
+      // Volume buttons
+      [72, 120, 172].forEach(function(top, i) {
+        var b = document.createElement('div');
+        b.className = 'device-vol-btn';
+        b.style.cssText = 'top:' + top + 'px;height:' + (i === 0 ? 32 : 56) + 'px;';
+        shell.appendChild(b);
       });
 
-      // Notch spacer (sits above iframe, reserves space for Dynamic Island)
-      var notchSpacer = document.createElement('div');
-      notchSpacer.className = 'device-notch-spacer';
-      shell.appendChild(notchSpacer);
+      var spacer = document.createElement('div');
+      spacer.className = 'device-notch-spacer';
+      shell.appendChild(spacer);
 
-      // Iframe
       frame.className = 'device-phone-iframe';
       shell.appendChild(frame);
 
-      // Home bar
       var homeBar = document.createElement('div');
       homeBar.className = 'device-home-bar';
       var homePill = document.createElement('div');
@@ -2561,14 +2549,12 @@
       shell.appendChild(homeBar);
 
       wrap.appendChild(shell);
-      inner.appendChild(wrap);
 
     } else if (deviceMode === 'desktop') {
       inner.classList.add('device-desktop');
       var shell = document.createElement('div');
       shell.className = 'device-shell-desktop';
 
-      // Browser chrome bar
       var bar = document.createElement('div');
       bar.className = 'device-browser-bar';
 
@@ -2595,37 +2581,36 @@
       reloadBtn.onclick = refreshPreview;
       reloadBtn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
       bar.appendChild(reloadBtn);
-
       shell.appendChild(bar);
 
       frame.className = 'device-desktop-iframe';
       shell.appendChild(frame);
 
       wrap.appendChild(shell);
-      inner.appendChild(wrap);
     }
 
-    // Calculate and apply scale, then watch for resize
+    inner.appendChild(wrap);
     _scaleDevice(inner, wrap, dims);
     _deviceRO = new ResizeObserver(function() { _scaleDevice(inner, wrap, dims); });
     _deviceRO.observe(inner);
   }
 
   function _scaleDevice(inner, wrap, dims) {
-    var pad = 24; // padding around device inside the container
+    var pad = 24;
     var availW = inner.clientWidth  - pad * 2;
     var availH = inner.clientHeight - pad * 2;
-    var scaleW = availW / dims.w;
-    var scaleH = availH / dims.h;
-    var scale  = Math.min(scaleW, scaleH, 1); // never upscale
+    if (availW <= 0 || availH <= 0) return;
+    var scale = Math.min(availW / dims.w, availH / dims.h, 1);
+    // Size the wrapper to the scaled footprint — flexbox centers this in the container
+    var scaledW = Math.round(dims.w * scale);
+    var scaledH = Math.round(dims.h * scale);
+    wrap.style.width  = scaledW + 'px';
+    wrap.style.height = scaledH + 'px';
+    // Scale the shell from its center within the wrapper
     wrap.style.transform = 'scale(' + scale + ')';
-    // Shrink the layout footprint so the container doesn't overflow
-    wrap.style.width  = dims.w + 'px';
-    wrap.style.height = Math.round(dims.h * scale) + 'px';
-    wrap.style.marginBottom = Math.round(dims.h * (scale - 1)) + 'px';
+    wrap.style.transformOrigin = 'center center';
   }
 
-  // Keep desktop URL bar in sync
   function _syncDeviceUrl(url) {
     var el = document.getElementById('deviceBrowserUrl');
     if (el) { var t = el.querySelector('span'); if (t) t.textContent = url; }
@@ -3722,7 +3707,6 @@
     aiPillMap[name] = pill;
     return pill;
   }
-
   function aiUpdatePillLines(name, lineCount) {
     var el = document.getElementById('pill-lines-' + name.replace(/[^a-z0-9]/gi, '_'));
     if (el) el.textContent = lineCount + ' ln';

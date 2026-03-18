@@ -444,12 +444,24 @@
     .ai-edit-pill-lines{
       font-size:10px;font-weight:700;
       color:rgba(255,255,255,.22);
-      font-family:var(--mono);
-      margin-left:2px;min-width:32px;
+      font-family:var(--mono);margin-left:2px;min-width:36px;
       transition:color .3s;letter-spacing:.02em;
     }
+    /* patch mode: "patching…" italic label */
+    .ai-edit-pill-patch{
+      color:rgba(155,121,252,.55);font-style:italic;font-weight:600;
+      animation:patchPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes patchPulse{0%,100%{opacity:.5}50%{opacity:1}}
+    /* patch done: green diff stats */
+    .ai-edit-pill-patch-done{
+      color:rgba(74,222,128,.75);font-style:normal;font-weight:700;
+    }
+    .ai-edit-pill.done .ai-edit-pill-lines:not(.ai-edit-pill-patch){
+      color:rgba(74,222,128,.7);
+    }
 
-    /* code preview removed — pills show filename + live line count */
+    /* code preview removed — pills show live line count or patch diff */
 
     @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
@@ -579,17 +591,9 @@
     .prev-open:hover{background:var(--b2);color:var(--text)}
 
     /* ── device view ── */
-    #previewInner{
-      flex:1;display:flex;flex-direction:column;overflow:hidden;
-      position:relative;background:#fff;
-    }
-    #previewInner.device-phone,
-    #previewInner.device-desktop{
-      background:#0c0c1a;align-items:center;justify-content:center;overflow:hidden;
-    }
-    .device-scale-wrap{
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    }
+    #previewInner{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff}
+    #previewInner.device-phone,#previewInner.device-desktop{background:#0c0c1a;align-items:center;justify-content:center;overflow:hidden}
+    .device-scale-wrap{display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .device-shell-phone{
       width:390px;height:844px;border-radius:50px;
       border:10px solid #18182e;
@@ -597,22 +601,10 @@
       position:relative;overflow:hidden;flex-shrink:0;background:#000;
     }
     .device-phone-iframe{position:absolute;inset:0;width:100%;height:100%;border:none;background:#fff;display:block}
-    .device-di{
-      position:absolute;top:12px;left:50%;transform:translateX(-50%);
-      width:120px;height:34px;background:#000;border-radius:20px;
-      z-index:10;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.06);
-    }
-    .device-home-bar{
-      position:absolute;bottom:0;left:0;right:0;height:28px;
-      display:flex;align-items:center;justify-content:center;
-      z-index:10;pointer-events:none;
-      background:linear-gradient(transparent,rgba(0,0,0,.18));
-    }
+    .device-di{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:20px;z-index:10;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+    .device-home-bar{position:absolute;bottom:0;left:0;right:0;height:28px;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none;background:linear-gradient(transparent,rgba(0,0,0,.18))}
     .device-home-pill{width:130px;height:5px;border-radius:3px;background:rgba(255,255,255,.25)}
-    .device-shell-phone::after{
-      content:'';position:absolute;right:-14px;top:160px;
-      width:4px;height:72px;background:#111128;border-radius:0 3px 3px 0;
-    }
+    .device-shell-phone::after{content:'';position:absolute;right:-14px;top:160px;width:4px;height:72px;background:#111128;border-radius:0 3px 3px 0}
     .device-vol-btn{position:absolute;left:-14px;width:4px;background:#111128;border-radius:3px 0 0 3px}
     .device-shell-desktop{
       width:1440px;height:900px;border-radius:10px 10px 0 0;
@@ -620,33 +612,18 @@
       box-shadow:0 0 0 1px #0a0a18,0 -1px 0 rgba(255,255,255,.06),0 32px 80px rgba(0,0,0,.7);
       display:flex;flex-direction:column;background:#0d0d1e;overflow:hidden;flex-shrink:0;
     }
-    .device-browser-bar{
-      height:38px;background:#111120;flex-shrink:0;
-      display:flex;align-items:center;padding:0 14px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
+    .device-browser-bar{height:38px;background:#111120;flex-shrink:0;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.05)}
     .device-browser-dots{display:flex;gap:6px;align-items:center;flex-shrink:0}
     .device-browser-dot{width:11px;height:11px;border-radius:50%}
     .device-browser-dot.red{background:#ff5f57}.device-browser-dot.yellow{background:#febc2e}.device-browser-dot.green{background:#28c840}
-    .device-browser-url{
-      flex:1;margin:0 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
-      border-radius:6px;height:24px;display:flex;align-items:center;justify-content:center;
-      font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);overflow:hidden;padding:0 10px;
-    }
+    .device-browser-url{flex:1;margin:0 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:6px;height:24px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);overflow:hidden;padding:0 10px}
     .device-browser-url span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px}
-    .device-browser-reload{
-      width:22px;height:22px;border-radius:5px;background:transparent;border:none;
-      color:rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;transition:color .12s;padding:0;
-    }
+    .device-browser-reload{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .12s;padding:0}
     .device-browser-reload:hover{color:rgba(255,255,255,.6)}
     .device-browser-reload svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
     .device-desktop-iframe{flex:1;width:100%;border:none;background:#fff;display:block;min-height:0}
     .prev-device-group{display:flex;gap:1px;background:var(--b1);border-radius:6px;padding:2px;flex-shrink:0}
-    .prev-device-ico-btn{
-      width:28px;height:22px;border-radius:4px;background:transparent;border:none;color:var(--sub);
-      cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;
-    }
+    .prev-device-ico-btn{width:28px;height:22px;border-radius:4px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
     .prev-device-ico-btn:hover{background:var(--b2);color:var(--text)}
     .prev-device-ico-btn.active{background:var(--b3);color:var(--text)}
     .prev-device-ico-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -2409,17 +2386,16 @@
 
   // ── DEVICE MODE ──
   var deviceMode = 'default';
-  var DEVICE_DIMS = { phone: { w:390, h:844 }, desktop: { w:1440, h:900 } };
+  var DEVICE_DIMS = { phone:{w:390,h:844}, desktop:{w:1440,h:900} };
   var _deviceRO = null;
 
   function setDeviceMode(mode) {
     deviceMode = mode;
     ['default','phone','desktop'].forEach(function(m) {
-      var btn = document.getElementById('dopt-' + m);
-      if (btn) btn.classList.toggle('active', m === mode);
+      var btn = document.getElementById('dopt-'+m);
+      if (btn) btn.classList.toggle('active', m===mode);
     });
-    applyDeviceMode();
-    refreshPreview();
+    applyDeviceMode(); refreshPreview();
   }
 
   function applyDeviceMode() {
@@ -2435,61 +2411,51 @@
       inner.appendChild(frame); return;
     }
     var dims = DEVICE_DIMS[deviceMode];
-    var wrap = document.createElement('div');
-    wrap.className = 'device-scale-wrap';
+    var wrap = document.createElement('div'); wrap.className = 'device-scale-wrap';
     if (deviceMode === 'phone') {
       inner.classList.add('device-phone');
-      var shell = document.createElement('div');
-      shell.className = 'device-shell-phone';
-      [72,120,172].forEach(function(top,i) {
-        var b = document.createElement('div');
-        b.className = 'device-vol-btn';
-        b.style.cssText = 'top:'+top+'px;height:'+(i===0?32:56)+'px;';
-        shell.appendChild(b);
-      });
-      frame.className = 'device-phone-iframe'; shell.appendChild(frame);
-      var di = document.createElement('div'); di.className = 'device-di'; shell.appendChild(di);
-      var hb = document.createElement('div'); hb.className = 'device-home-bar';
-      var hp = document.createElement('div'); hp.className = 'device-home-pill';
-      hb.appendChild(hp); shell.appendChild(hb);
+      var shell = document.createElement('div'); shell.className = 'device-shell-phone';
+      [72,120,172].forEach(function(top,i){var b=document.createElement('div');b.className='device-vol-btn';b.style.cssText='top:'+top+'px;height:'+(i===0?32:56)+'px;';shell.appendChild(b);});
+      frame.className='device-phone-iframe'; shell.appendChild(frame);
+      var di=document.createElement('div');di.className='device-di';shell.appendChild(di);
+      var hb=document.createElement('div');hb.className='device-home-bar';
+      var hp=document.createElement('div');hp.className='device-home-pill';hb.appendChild(hp);shell.appendChild(hb);
       wrap.appendChild(shell);
     } else if (deviceMode === 'desktop') {
       inner.classList.add('device-desktop');
-      var shell = document.createElement('div'); shell.className = 'device-shell-desktop';
-      var bar = document.createElement('div'); bar.className = 'device-browser-bar';
-      var dots = document.createElement('div'); dots.className = 'device-browser-dots';
-      ['red','yellow','green'].forEach(function(c){ var d=document.createElement('div'); d.className='device-browser-dot '+c; dots.appendChild(d); });
+      var shell=document.createElement('div');shell.className='device-shell-desktop';
+      var bar=document.createElement('div');bar.className='device-browser-bar';
+      var dots=document.createElement('div');dots.className='device-browser-dots';
+      ['red','yellow','green'].forEach(function(c){var d=document.createElement('div');d.className='device-browser-dot '+c;dots.appendChild(d);});
       bar.appendChild(dots);
-      var urlBar = document.createElement('div'); urlBar.className = 'device-browser-url'; urlBar.id = 'deviceBrowserUrl';
-      var urlText = document.createElement('span'); urlText.textContent = document.getElementById('prevUrl').textContent || 'index.html';
-      urlBar.appendChild(urlText); bar.appendChild(urlBar);
-      var rb = document.createElement('button'); rb.className = 'device-browser-reload'; rb.title = 'Refresh'; rb.onclick = refreshPreview;
-      rb.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-      bar.appendChild(rb); shell.appendChild(bar);
-      frame.className = 'device-desktop-iframe'; shell.appendChild(frame);
+      var urlBar=document.createElement('div');urlBar.className='device-browser-url';urlBar.id='deviceBrowserUrl';
+      var urlText=document.createElement('span');urlText.textContent=document.getElementById('prevUrl').textContent||'index.html';
+      urlBar.appendChild(urlText);bar.appendChild(urlBar);
+      var rb=document.createElement('button');rb.className='device-browser-reload';rb.title='Refresh';rb.onclick=refreshPreview;
+      rb.innerHTML='<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+      bar.appendChild(rb);shell.appendChild(bar);
+      frame.className='device-desktop-iframe';shell.appendChild(frame);
       wrap.appendChild(shell);
     }
     inner.appendChild(wrap);
-    _scaleDevice(inner, wrap, dims);
-    _deviceRO = new ResizeObserver(function() { _scaleDevice(inner, wrap, dims); });
+    _scaleDevice(inner,wrap,dims);
+    _deviceRO=new ResizeObserver(function(){_scaleDevice(inner,wrap,dims);});
     _deviceRO.observe(inner);
   }
 
-  function _scaleDevice(inner, wrap, dims) {
-    var pad = 24;
-    var availW = inner.clientWidth - pad*2;
-    var availH = inner.clientHeight - pad*2;
-    if (availW <= 0 || availH <= 0) return;
-    var scale = Math.min(availW/dims.w, availH/dims.h, 1);
-    wrap.style.width = Math.round(dims.w*scale)+'px';
-    wrap.style.height = Math.round(dims.h*scale)+'px';
-    wrap.style.transform = 'scale('+scale+')';
-    wrap.style.transformOrigin = 'center center';
+  function _scaleDevice(inner,wrap,dims) {
+    var pad=24,availW=inner.clientWidth-pad*2,availH=inner.clientHeight-pad*2;
+    if(availW<=0||availH<=0)return;
+    var scale=Math.min(availW/dims.w,availH/dims.h,1);
+    wrap.style.width=Math.round(dims.w*scale)+'px';
+    wrap.style.height=Math.round(dims.h*scale)+'px';
+    wrap.style.transform='scale('+scale+')';
+    wrap.style.transformOrigin='center center';
   }
 
   function _syncDeviceUrl(url) {
-    var el = document.getElementById('deviceBrowserUrl');
-    if (el) { var t = el.querySelector('span'); if (t) t.textContent = url; }
+    var el=document.getElementById('deviceBrowserUrl');
+    if(el){var t=el.querySelector('span');if(t)t.textContent=url;}
   }
 
   // ── RESIZE ──
@@ -3414,6 +3380,7 @@
         acpBoxMap = {};
         acpCurrentFile = null;
         aiLineCounts = {};
+        aiPatchMode = {};
         var pillsEl = document.getElementById('aiEditingPills');
         pillsEl.classList.remove('show');
         pillsEl.innerHTML = '';
@@ -3567,7 +3534,7 @@
   }
 
   // ── PILL ──────────────────────────────────────────────────────────
-  function aiAddEditingPill(name) {
+  function aiAddEditingPill(name, isPatch) {
     var pillsEl = document.getElementById('aiEditingPills');
     pillsEl.classList.add('show');
     var col = aiFileColor(name);
@@ -3576,10 +3543,14 @@
     var pill = document.createElement('div');
     pill.className = 'ai-edit-pill';
     pill.dataset.file = name;
+    // Patch pills show "patching..." label; stream pills show live line count
+    var counterHtml = isPatch
+      ? '<span class="ai-edit-pill-lines ai-edit-pill-patch" id="' + safeId + '">patching…</span>'
+      : '<span class="ai-edit-pill-lines" id="' + safeId + '">0 ln</span>';
     pill.innerHTML =
       '<div class="ai-edit-pill-dot" style="background:' + col + ';box-shadow:0 0 6px ' + col + '55"></div>' +
       '<span style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
-      '<span class="ai-edit-pill-lines" id="' + safeId + '">0 ln</span>' +
+      counterHtml +
       '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
 
     pillsEl.appendChild(pill);
@@ -3590,15 +3561,25 @@
 
   function aiUpdatePillLines(name, count) {
     var el = document.getElementById('pill-lines-' + name.replace(/[^a-z0-9]/gi, '_'));
-    if (el) el.textContent = count + ' ln';
+    if (el && !el.classList.contains('ai-edit-pill-patch')) el.textContent = count + ' ln';
+  }
+
+  function aiUpdatePillPatchStats(name, added, removed, newLines) {
+    var el = document.getElementById('pill-lines-' + name.replace(/[^a-z0-9]/gi, '_'));
+    if (!el) return;
+    el.classList.add('ai-edit-pill-patch-done');
+    el.classList.remove('ai-edit-pill-patch');
+    // Show "+12 -3" diff stats
+    var parts = [];
+    if (added > 0)   parts.push('+' + added);
+    if (removed > 0) parts.push('-' + removed);
+    el.textContent = parts.length ? parts.join(' ') + ' ln' : newLines + ' ln';
   }
 
   function aiMarkPillDone(name) {
     var pill = aiPillMap[name];
     if (!pill) return;
     pill.classList.add('done');
-    var el = document.getElementById('pill-lines-' + name.replace(/[^a-z0-9]/gi, '_'));
-    if (el) el.style.color = 'rgba(74,222,128,.7)';
   }
 
   // ── INLINE CODE BOX ───────────────────────────────────────────────
@@ -3606,13 +3587,14 @@
   var acpCurrentFile = null;
   var acpLiveContent = {};
   var acpBoxMap = {};
-  var aiLineCounts = {};
+  var aiLineCounts = {};   // live newline counts while streaming
+  var aiPatchMode = {};    // name -> true if this file is being patched not streamed
 
-  // acpShowFile: sets final line count on pill when file is fully received
+  // Called when a content-mode (full file) is received — set final line count and mark done
   function acpShowFile(name, code, _unused) {
     acpCurrentFile = name;
     acpLiveContent[name] = code;
-    if (!aiPillMap[name]) aiAddEditingPill(name);
+    if (!aiPillMap[name]) aiAddEditingPill(name, false);
     var finalLines = code.split('\n').length;
     aiLineCounts[name] = finalLines;
     aiUpdatePillLines(name, finalLines);
@@ -3721,21 +3703,29 @@
             aiHideTyping();
           }
 
-          // ── file_start: file started streaming — create pill immediately ──
+          // ── file_start: AI started a file — show pill immediately ──
           if (eventType === 'file_start' && data.name) {
             acpCurrentFile = data.name;
-            if (!aiPillMap[data.name]) aiAddEditingPill(data.name);
+            var isPatch = data.mode === 'patch';
+            aiPatchMode[data.name] = isPatch;
+            if (!aiPillMap[data.name]) aiAddEditingPill(data.name, isPatch);
           }
 
-          // ── file_delta: chars streaming in — count newlines, update pill live ──
+          // ── file_delta: chars streaming in — count newlines live ──
           if (eventType === 'file_delta' && data.text) {
             var _fn = acpCurrentFile;
-            if (_fn && aiLineCounts[_fn] !== undefined) {
+            if (_fn && !aiPatchMode[_fn] && aiLineCounts[_fn] !== undefined) {
               for (var _ci = 0; _ci < data.text.length; _ci++) {
                 if (data.text[_ci] === '\n') aiLineCounts[_fn]++;
               }
               aiUpdatePillLines(_fn, aiLineCounts[_fn] + 1);
             }
+          }
+
+          // ── file_patch_stats: patch was applied — show diff on pill ──
+          if (eventType === 'file_patch_stats' && data.name) {
+            aiUpdatePillPatchStats(data.name, data.added, data.removed, data.newLines);
+            aiMarkPillDone(data.name);
           }
 
           // ── file: complete file received (base64) ──

@@ -2398,10 +2398,6 @@
     bi.addEventListener('keydown', function(e) {
       var mod = e.metaKey || e.ctrlKey;
 
-      // ── Cmd/Ctrl shortcuts on selected text ──
-      if (mod && e.key === 'b') { e.preventDefault(); fmtWrapInput(bi, '**', '**'); return; }
-      if (mod && e.key === 'u') { e.preventDefault(); fmtWrapInput(bi, '<u>', '</u>'); return; }
-
       // ── Enter handling ──
       if (e.key === 'Enter') {
         var val = bi.value;
@@ -2431,13 +2427,13 @@
             e.preventDefault(); aiSend(true); return;
           }
 
-          // Shift+Enter continues the list
+          // Shift+Enter continues the list with a blank line for visual spacing
           e.preventDefault();
           var nextPrefix;
           if (bulletMatch) {
-            nextPrefix = '\n- ';
+            nextPrefix = '\n\n- ';
           } else {
-            nextPrefix = '\n' + (parseInt(numMatch[1]) + 1) + '. ';
+            nextPrefix = '\n\n' + (parseInt(numMatch[1]) + 1) + '. ';
           }
           bi.setRangeText(nextPrefix, pos, pos, 'end');
           aiAutoResize(bi);

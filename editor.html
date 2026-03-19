@@ -586,22 +586,7 @@
     #aiBottom.show{display:flex}
     #aiBottomWrap{width:var(--chat-w,min(680px,90%))}
 
-    /* formatting toolbar */
-    #fmtToolbar{
-      display:flex;align-items:center;gap:2px;padding:5px 6px;
-      border-bottom:1px solid var(--b1);
-    }
-    .fmt-btn{
-      width:26px;height:26px;border-radius:7px;background:transparent;
-      border:none;color:var(--sub);cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      font-family:var(--sans);font-size:11px;font-weight:700;
-      transition:all .12s;flex-shrink:0;
-    }
-    .fmt-btn:hover{background:var(--b2);color:var(--text)}
-    .fmt-btn.active{background:rgba(79,110,247,.18);color:var(--a1)}
-    .fmt-sep{width:1px;height:14px;background:var(--b2);margin:0 3px;flex-shrink:0}
-    #fmtToolbar svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    /* formatting: smart typing only, no toolbar */    
 
     #aiBottomInputArea{
       border-radius:20px;border:1px solid var(--b2);background:var(--s1);
@@ -1404,17 +1389,6 @@
         <div id="aiBottom">
           <div id="aiBottomWrap">
             <div id="aiBottomInputArea">
-              <div id="fmtToolbar">
-                <button class="fmt-btn" onclick="fmtWrap('**','**')" title="Bold (⌘B)"><svg viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
-                <button class="fmt-btn" onclick="fmtWrap('*','*')" title="Italic (⌘I)"><svg viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
-                <button class="fmt-btn" onclick="fmtWrap('`','`')" title="Code (⌘E)"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
-                <div class="fmt-sep"></div>
-                <button class="fmt-btn" onclick="fmtHeading()" title="Heading"><svg viewBox="0 0 24 24"><path d="M4 12h16M4 6h7m-7 12h7M17 6v12"/></svg></button>
-                <button class="fmt-btn" onclick="fmtList('bullet')" title="Bullet list"><svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/></svg></button>
-                <button class="fmt-btn" onclick="fmtList('numbered')" title="Numbered list"><svg viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
-                <div class="fmt-sep"></div>
-                <button class="fmt-btn" onclick="fmtWrap('> ','')" title="Quote"><svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg></button>
-              </div>
               <div id="aiInputRow">
                 <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
                 <button id="aiStopBtn" onclick="aiStop()" style="display:none">
@@ -2422,11 +2396,81 @@
     var bi = document.getElementById('aiBottomInput');
     bi.addEventListener('input', function() { aiAutoResize(bi); });
     bi.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); return; }
       var mod = e.metaKey || e.ctrlKey;
-      if (mod && e.key === 'b') { e.preventDefault(); fmtWrap('**','**'); return; }
-      if (mod && e.key === 'i') { e.preventDefault(); fmtWrap('*','*'); return; }
-      if (mod && e.key === 'e') { e.preventDefault(); fmtWrap('`','`'); return; }
+
+      // ── Cmd/Ctrl shortcuts on selected text ──
+      if (mod && e.key === 'b') { e.preventDefault(); fmtWrapInput(bi, '**', '**'); return; }
+      if (mod && e.key === 'u') { e.preventDefault(); fmtWrapInput(bi, '<u>', '</u>'); return; }
+
+      // ── Enter handling ──
+      if (e.key === 'Enter') {
+        var val = bi.value;
+        var pos = bi.selectionStart;
+        var lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+        var lineText = val.slice(lineStart, pos);
+
+        // Check if we're in a list
+        var bulletMatch = lineText.match(/^(- )(.*)/);
+        var numMatch    = lineText.match(/^(\d+)\. (.*)/);
+
+        if (bulletMatch || numMatch) {
+          var content = bulletMatch ? bulletMatch[2] : numMatch[2];
+
+          if (!content.trim()) {
+            // Empty list item — Shift+Enter exits list, Enter also exits
+            e.preventDefault();
+            // Remove the empty prefix on the current line
+            var prefixLen = bulletMatch ? 2 : (numMatch[1].length + 2);
+            bi.setRangeText('', lineStart, lineStart + prefixLen, 'end');
+            aiAutoResize(bi);
+            return;
+          }
+
+          if (!e.shiftKey) {
+            // Enter sends message — normal behavior
+            e.preventDefault(); aiSend(true); return;
+          }
+
+          // Shift+Enter continues the list
+          e.preventDefault();
+          var nextPrefix;
+          if (bulletMatch) {
+            nextPrefix = '\n- ';
+          } else {
+            nextPrefix = '\n' + (parseInt(numMatch[1]) + 1) + '. ';
+          }
+          bi.setRangeText(nextPrefix, pos, pos, 'end');
+          aiAutoResize(bi);
+          return;
+        }
+
+        // Normal Enter = send, Shift+Enter = newline
+        if (!e.shiftKey) { e.preventDefault(); aiSend(true); }
+        return;
+      }
+
+      // ── Space after list trigger: "- " or "1. " ──
+      if (e.key === ' ') {
+        var val = bi.value;
+        var pos = bi.selectionStart;
+        var lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+        var lineText = val.slice(lineStart, pos);
+        // "1." at start of line → convert to numbered list
+        if (/^\d+\.?$/.test(lineText)) {
+          e.preventDefault();
+          var num = lineText.replace('.','');
+          bi.setRangeText(num + '. ', lineStart, pos, 'end');
+          aiAutoResize(bi);
+          return;
+        }
+        // "-" at start of line → bullet
+        if (lineText === '-') {
+          e.preventDefault();
+          bi.setRangeText('- ', lineStart, pos, 'end');
+          aiAutoResize(bi);
+          return;
+        }
+      }
     });
     // Scroll-to-bottom button
     var msgs = document.getElementById('aiMessages');
@@ -3047,18 +3091,22 @@
   }
 
   // ── FORMATTING TOOLBAR ────────────────────────────────────────────
-  function fmtWrap(before, after) {
-    var ta = document.getElementById('aiBottomInput');
+  // Wrap selected text (or insert placeholder) with before/after markers
+  function fmtWrapInput(ta, before, after) {
     if (!ta) return;
     ta.focus();
     var start = ta.selectionStart, end = ta.selectionEnd;
     var selected = ta.value.slice(start, end);
-    var replacement = before + (selected || 'text') + after;
-    ta.setRangeText(replacement, start, end, 'select');
-    // Select just the inner text
-    ta.selectionStart = start + before.length;
-    ta.selectionEnd   = start + before.length + (selected || 'text').length;
+    if (selected) {
+      ta.setRangeText(before + selected + after, start, end, 'end');
+    } else {
+      ta.setRangeText(before + after, start, end, 'end');
+      ta.selectionStart = ta.selectionEnd = start + before.length;
+    }
     aiAutoResize(ta);
+  }
+  function fmtWrap(before, after) {
+    fmtWrapInput(document.getElementById('aiBottomInput'), before, after);
   }
 
   function fmtList(type) {

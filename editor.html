@@ -597,6 +597,7 @@
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.45);box-shadow:0 0 0 3px rgba(79,110,247,.07),0 4px 28px rgba(0,0,0,.3)}
     #aiInputRow{display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 18px}
     #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
+    #aiBottomInput.list-mode{padding-left:24px;text-indent:-24px}
     #aiBottomInput::placeholder{color:var(--b3)}
     #aiBottomSend{
       width:34px;height:34px;min-width:34px;min-height:34px;
@@ -2394,7 +2395,13 @@
     document.getElementById('aiChatWrap').classList.add('show');
     document.getElementById('aiBottom').classList.add('show');
     var bi = document.getElementById('aiBottomInput');
-    bi.addEventListener('input', function() { aiAutoResize(bi); });
+    bi.addEventListener('input', function() {
+      aiAutoResize(bi);
+      // Toggle hanging indent when in a list
+      var firstLine = bi.value.split('\n')[0];
+      var inList = /^(\d+\.\s|- )/.test(firstLine) || /\n(\d+\.\s|- )/.test(bi.value);
+      bi.classList.toggle('list-mode', inList);
+    });
     bi.addEventListener('keydown', function(e) {
       var mod = e.metaKey || e.ctrlKey;
 
@@ -2427,13 +2434,13 @@
             e.preventDefault(); aiSend(true); return;
           }
 
-          // Shift+Enter continues the list with a blank line for visual spacing
+          // Shift+Enter continues the list
           e.preventDefault();
           var nextPrefix;
           if (bulletMatch) {
-            nextPrefix = '\n\n- ';
+            nextPrefix = '\n- ';
           } else {
-            nextPrefix = '\n\n' + (parseInt(numMatch[1]) + 1) + '. ';
+            nextPrefix = '\n' + (parseInt(numMatch[1]) + 1) + '. ';
           }
           bi.setRangeText(nextPrefix, pos, pos, 'end');
           aiAutoResize(bi);

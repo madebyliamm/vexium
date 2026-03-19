@@ -1053,8 +1053,24 @@
     #usageWarnBox .uw-icon svg{width:20px;height:20px;stroke:#fbbf24;fill:none;stroke-width:2;stroke-linecap:round}
     #usageWarnBox h3{font-size:16px;font-weight:800;color:var(--text);margin:0 0 8px;letter-spacing:-.2px}
     #usageWarnBox p{font-size:13px;color:var(--sub);line-height:1.65;margin:0 0 20px}
-    .uw-check{display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer}
-    .uw-check input{width:15px;height:15px;accent-color:var(--a1);cursor:pointer;flex-shrink:0}
+    .uw-check{display:flex;align-items:center;gap:9px;margin-bottom:20px;cursor:pointer;user-select:none}
+    .uw-check input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+    .uw-check-box{
+      width:16px;height:16px;border-radius:4px;flex-shrink:0;
+      border:1.5px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.04);
+      display:flex;align-items:center;justify-content:center;
+      transition:all .15s;
+    }
+    .uw-check input:checked + .uw-check-box{
+      background:var(--a1);border-color:var(--a1);
+    }
+    .uw-check input:checked + .uw-check-box::after{
+      content:'';display:block;
+      width:9px;height:5px;
+      border-left:2px solid #fff;border-bottom:2px solid #fff;
+      transform:rotate(-45deg) translateY(-1px);
+    }
     .uw-check span{font-size:12px;color:var(--sub)}
     .uw-btns{display:flex;gap:8px}
     .uw-cancel{flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .12s}
@@ -1388,6 +1404,17 @@
         <div id="aiBottom">
           <div id="aiBottomWrap">
             <div id="aiBottomInputArea">
+              <div id="fmtToolbar">
+                <button class="fmt-btn" onclick="fmtWrap('**','**')" title="Bold (⌘B)"><svg viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+                <button class="fmt-btn" onclick="fmtWrap('*','*')" title="Italic (⌘I)"><svg viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+                <button class="fmt-btn" onclick="fmtWrap('`','`')" title="Code (⌘E)"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+                <div class="fmt-sep"></div>
+                <button class="fmt-btn" onclick="fmtHeading()" title="Heading"><svg viewBox="0 0 24 24"><path d="M4 12h16M4 6h7m-7 12h7M17 6v12"/></svg></button>
+                <button class="fmt-btn" onclick="fmtList('bullet')" title="Bullet list"><svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/></svg></button>
+                <button class="fmt-btn" onclick="fmtList('numbered')" title="Numbered list"><svg viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+                <div class="fmt-sep"></div>
+                <button class="fmt-btn" onclick="fmtWrap('> ','')" title="Quote"><svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg></button>
+              </div>
               <div id="aiInputRow">
                 <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
                 <button id="aiStopBtn" onclick="aiStop()" style="display:none">
@@ -1648,7 +1675,7 @@
           'editorLineNumber.foreground': '#14142a',
           'editorLineNumber.activeForeground': '#2a2a50',
           'editor.lineHighlightBackground': '#08081880',
-          'editor.selectionBackground': '#4f6ef720',
+          'editor.selectionBackground': '#4f6ef755',
           'editorCursor.foreground': '#9b79fc',
           'editorGutter.background': '#020209',
           'editorIndentGuide.background': '#0a0a20',
@@ -2395,7 +2422,11 @@
     var bi = document.getElementById('aiBottomInput');
     bi.addEventListener('input', function() { aiAutoResize(bi); });
     bi.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); return; }
+      var mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === 'b') { e.preventDefault(); fmtWrap('**','**'); return; }
+      if (mod && e.key === 'i') { e.preventDefault(); fmtWrap('*','*'); return; }
+      if (mod && e.key === 'e') { e.preventDefault(); fmtWrap('`','`'); return; }
     });
     // Scroll-to-bottom button
     var msgs = document.getElementById('aiMessages');
@@ -4061,6 +4092,7 @@ Be thorough. Every decision from the conversation should appear here. This is th
     <p>This request will generate a full multi-page website and will use a significant amount of AI credits. Make sure your request is ready before continuing.</p>
     <label class="uw-check">
       <input type="checkbox" id="uwDontWarn"/>
+      <div class="uw-check-box"></div>
       <span>Don't warn me again</span>
     </label>
     <div class="uw-btns">

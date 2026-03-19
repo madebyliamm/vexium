@@ -706,7 +706,7 @@
     }
     .prev-device-opt:hover,.prev-device-opt.sel{background:var(--b1);color:var(--text)}
     .prev-device-opt.sel{color:var(--a1)}
-    .prev-device-icon{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .prev-device-icon{font-size:13px}
     #previewFrame{flex:1;width:100%;border:none;background:#fff;display:block}
 
     /* ══ PLAN PANEL ══ */
@@ -1622,22 +1622,28 @@
           <button class="prev-nav" id="btnFwd" onclick="prevForward()" disabled title="Forward">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
-          <div class="prev-url" id="prevUrl">index.html</div>
           <button class="prev-refresh" onclick="refreshPreview()" title="Refresh">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
-          <button class="prev-open" onclick="openInViewer()">Open ↗</button>
+          <div class="prev-url" id="prevUrl">index.html</div>
           <div style="position:relative">
             <button class="prev-device-btn" id="prevDeviceBtn" onclick="toggleDeviceDrop(event)" title="Device view">
               <svg id="prevDeviceIco" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
               <span id="prevDeviceLbl">Default</span>
             </button>
             <div class="prev-device-drop" id="prevDeviceDrop">
-              <div class="prev-device-opt sel" id="dopt-default" onclick="setDeviceMode('default')"><svg class="prev-device-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Default</div>
-              <div class="prev-device-opt" id="dopt-phone" onclick="setDeviceMode('phone')"><svg class="prev-device-icon" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><circle cx="12" cy="18.5" r="1" fill="currentColor" stroke="none"/></svg>Phone</div>
-              <div class="prev-device-opt" id="dopt-desktop" onclick="setDeviceMode('desktop')"><svg class="prev-device-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>Desktop</div>
+              <div class="prev-device-opt sel" id="dopt-default" onclick="setDeviceMode('default')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Default
+              </div>
+              <div class="prev-device-opt" id="dopt-phone" onclick="setDeviceMode('phone')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="17" x2="12" y2="17"/></svg>Phone
+              </div>
+              <div class="prev-device-opt" id="dopt-desktop" onclick="setDeviceMode('desktop')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>Desktop
+              </div>
             </div>
           </div>
+          <button class="prev-open" onclick="openInViewer()">Open</button>
         </div>
         <div id="previewInner">
           <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>

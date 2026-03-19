@@ -441,27 +441,13 @@
     .ai-edit-pill.done .ai-edit-pill-anim{display:none}
     .ai-edit-pill.done{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05)}
     .ai-edit-pill.done .ai-edit-pill-dot{box-shadow:0 0 5px currentColor}
-    .ai-edit-pill-lines{
-      font-size:10px;font-weight:700;
-      color:rgba(255,255,255,.22);
-      font-family:var(--mono);margin-left:2px;min-width:36px;
-      transition:color .3s;letter-spacing:.02em;
-    }
-    /* patch mode: "patching…" italic label */
-    .ai-edit-pill-patch{
-      color:rgba(155,121,252,.55);font-style:italic;font-weight:600;
-      animation:patchPulse 1.4s ease-in-out infinite;
-    }
+    .ai-edit-pill-lines{font-size:10px;font-weight:700;color:rgba(255,255,255,.22);font-family:var(--mono);margin-left:2px;min-width:36px;transition:color .3s;letter-spacing:.02em}
+    .ai-edit-pill-patch{color:rgba(155,121,252,.55);font-style:italic;font-weight:600;animation:patchPulse 1.4s ease-in-out infinite}
     @keyframes patchPulse{0%,100%{opacity:.5}50%{opacity:1}}
-    /* patch done: green diff stats */
-    .ai-edit-pill-patch-done{
-      color:rgba(74,222,128,.75);font-style:normal;font-weight:700;
-    }
-    .ai-edit-pill.done .ai-edit-pill-lines:not(.ai-edit-pill-patch){
-      color:rgba(74,222,128,.7);
-    }
+    .ai-edit-pill-patch-done{color:rgba(74,222,128,.75);font-style:normal;font-weight:700}
+    .ai-edit-pill.done .ai-edit-pill-lines:not(.ai-edit-pill-patch){color:rgba(74,222,128,.7)}
 
-    /* code preview removed — pills show live line count or patch diff */
+    /* code preview removed */
 
     @keyframes acpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
@@ -578,40 +564,63 @@
 
     /* ── PREVIEW TOOLBAR ── */
     #previewToolbar{
-      height:38px;background:var(--s2);border-bottom:1px solid var(--b1);
-      display:flex;align-items:center;gap:5px;padding:0 8px;flex-shrink:0;
+      height:36px;background:var(--s2);border-bottom:1px solid var(--b1);
+      display:flex;align-items:center;gap:2px;padding:0 6px;flex-shrink:0;
     }
-    .prev-nav{width:26px;height:26px;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-    .prev-nav:hover:not(:disabled){background:var(--b2);color:var(--text)}
-    .prev-nav:disabled{opacity:.25;cursor:default}
-    .prev-url{flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--sub);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .prev-refresh{width:26px;height:26px;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    /* borderless icon buttons — back, forward, refresh */
+    .prev-nav{
+      width:26px;height:26px;background:transparent;border:none;
+      border-radius:5px;color:var(--sub);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:background .12s,color .12s;flex-shrink:0;
+    }
+    .prev-nav:hover:not(:disabled){background:var(--b1);color:var(--text)}
+    .prev-nav:disabled{opacity:.22;cursor:default}
+    /* url bar — takes all remaining space, refresh icon lives inside on the right */
+    .prev-url-wrap{
+      flex:1;min-width:0;
+      display:flex;align-items:center;
+      background:var(--bg);border:1px solid var(--b2);border-radius:6px;
+      padding:0 6px 0 10px;height:24px;gap:4px;
+      transition:border-color .15s;
+    }
+    .prev-url-wrap:focus-within{border-color:rgba(79,110,247,.35)}
+    .prev-url{
+      flex:1;min-width:0;
+      background:transparent;border:none;outline:none;
+      font-size:10px;color:var(--sub);font-family:var(--mono);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .prev-refresh{
+      width:20px;height:20px;background:transparent;border:none;
+      border-radius:4px;color:var(--sub);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:background .12s,color .12s;flex-shrink:0;padding:0;
+    }
     .prev-refresh:hover{background:var(--b2);color:var(--text)}
-    .prev-open{padding:4px 10px;background:transparent;border:1px solid var(--b2);border-radius:5px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;flex-shrink:0}
-    .prev-open:hover{background:var(--b2);color:var(--text)}
+    /* open button — minimal */
+    .prev-open{
+      padding:3px 8px;background:transparent;border:none;
+      border-radius:5px;font-size:10px;font-weight:600;
+      color:var(--sub);cursor:pointer;font-family:var(--sans);
+      transition:background .12s,color .12s;white-space:nowrap;flex-shrink:0;
+    }
+    .prev-open:hover{background:var(--b1);color:var(--text)}
+    /* separator */
+    .prev-sep{width:1px;height:14px;background:var(--b2);flex-shrink:0;margin:0 2px}
 
     /* ── device view ── */
     #previewInner{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff}
     #previewInner.device-phone,#previewInner.device-desktop{background:#0c0c1a;align-items:center;justify-content:center;overflow:hidden}
     .device-scale-wrap{display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .device-shell-phone{
-      width:390px;height:844px;border-radius:50px;
-      border:10px solid #18182e;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 0 0 1px #0a0a18,0 40px 100px rgba(0,0,0,.85),0 8px 30px rgba(0,0,0,.5);
-      position:relative;overflow:hidden;flex-shrink:0;background:#000;
-    }
+    .device-shell-phone{width:390px;height:844px;border-radius:50px;border:10px solid #18182e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 0 0 1px #0a0a18,0 40px 100px rgba(0,0,0,.85);position:relative;overflow:hidden;flex-shrink:0;background:#000}
     .device-phone-iframe{position:absolute;inset:0;width:100%;height:100%;border:none;background:#fff;display:block}
     .device-di{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:20px;z-index:10;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
     .device-home-bar{position:absolute;bottom:0;left:0;right:0;height:28px;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none;background:linear-gradient(transparent,rgba(0,0,0,.18))}
     .device-home-pill{width:130px;height:5px;border-radius:3px;background:rgba(255,255,255,.25)}
     .device-shell-phone::after{content:'';position:absolute;right:-14px;top:160px;width:4px;height:72px;background:#111128;border-radius:0 3px 3px 0}
     .device-vol-btn{position:absolute;left:-14px;width:4px;background:#111128;border-radius:3px 0 0 3px}
-    .device-shell-desktop{
-      width:1440px;height:900px;border-radius:10px 10px 0 0;
-      border:1.5px solid rgba(255,255,255,.08);border-bottom:none;
-      box-shadow:0 0 0 1px #0a0a18,0 -1px 0 rgba(255,255,255,.06),0 32px 80px rgba(0,0,0,.7);
-      display:flex;flex-direction:column;background:#0d0d1e;overflow:hidden;flex-shrink:0;
-    }
+    .device-shell-desktop{width:1440px;height:900px;border-radius:10px 10px 0 0;border:1.5px solid rgba(255,255,255,.08);border-bottom:none;box-shadow:0 0 0 1px #0a0a18,0 32px 80px rgba(0,0,0,.7);display:flex;flex-direction:column;background:#0d0d1e;overflow:hidden;flex-shrink:0}
     .device-browser-bar{height:38px;background:#111120;flex-shrink:0;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.05)}
     .device-browser-dots{display:flex;gap:6px;align-items:center;flex-shrink:0}
     .device-browser-dot{width:11px;height:11px;border-radius:50%}
@@ -623,7 +632,7 @@
     .device-browser-reload svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
     .device-desktop-iframe{flex:1;width:100%;border:none;background:#fff;display:block;min-height:0}
     .prev-device-group{display:flex;gap:1px;background:var(--b1);border-radius:6px;padding:2px;flex-shrink:0}
-    .prev-device-ico-btn{width:28px;height:22px;border-radius:4px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+    .prev-device-ico-btn{width:26px;height:22px;border-radius:4px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
     .prev-device-ico-btn:hover{background:var(--b2);color:var(--text)}
     .prev-device-ico-btn.active{background:var(--b3);color:var(--text)}
     .prev-device-ico-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1536,17 +1545,22 @@
       <!-- PREVIEW + CONSOLE -->
       <div id="rightPanel" class="hidden">
         <div id="previewToolbar">
+          <!-- back / forward -->
           <button class="prev-nav" id="btnBack" onclick="prevBack()" disabled title="Back">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <button class="prev-nav" id="btnFwd" onclick="prevForward()" disabled title="Forward">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
-          <div class="prev-url" id="prevUrl">index.html</div>
-          <button class="prev-refresh" onclick="refreshPreview()" title="Refresh">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          </button>
-          <button class="prev-open" onclick="openInViewer()">Open ↗</button>
+          <!-- url bar with refresh inside -->
+          <div class="prev-url-wrap">
+            <div class="prev-url" id="prevUrl">index.html</div>
+            <button class="prev-refresh" onclick="refreshPreview()" title="Refresh">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+          <div class="prev-sep"></div>
+          <!-- device group -->
           <div class="prev-device-group">
             <button class="prev-device-ico-btn active" id="dopt-default" onclick="setDeviceMode('default')" title="Full width">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
@@ -1558,6 +1572,9 @@
               <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
             </button>
           </div>
+          <div class="prev-sep"></div>
+          <!-- open -->
+          <button class="prev-open" onclick="openInViewer()" title="Open in new tab">↗</button>
         </div>
         <div id="previewInner">
           <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>
@@ -2302,8 +2319,8 @@
     _syncDeviceUrl(val);
   }
   function pushHist(u) { if (prevHistory[prevHistIdx] === u) return; prevHistory = prevHistory.slice(0, prevHistIdx + 1); prevHistory.push(u); prevHistIdx = prevHistory.length - 1; updateNavBtns(); }
-  function prevBack() { if (prevHistIdx <= 0) return; prevHistIdx--; refreshPreview(); updateNavBtns(); }
-  function prevForward() { if (prevHistIdx >= prevHistory.length - 1) return; prevHistIdx++; refreshPreview(); updateNavBtns(); }
+  function prevBack() { if (prevHistIdx <= 0) return; prevHistIdx--; refreshPreviewPage(prevHistory[prevHistIdx]); updateNavBtns(); }
+  function prevForward() { if (prevHistIdx >= prevHistory.length - 1) return; prevHistIdx++; refreshPreviewPage(prevHistory[prevHistIdx]); updateNavBtns(); }
   function updateNavBtns() { document.getElementById('btnBack').disabled = prevHistIdx <= 0; document.getElementById('btnFwd').disabled = prevHistIdx >= prevHistory.length - 1; }
 
   function openInViewer() {
@@ -3350,7 +3367,7 @@
     aiHistory.push({ role: 'user', content: text });
     aiShowTyping();
 
-    // Fetch brief in parallel — don't block UI. 4s cap.
+    // Fetch brief in parallel — 4s cap
     _pendingBrief = null;
     try {
       _pendingBrief = await Promise.race([
@@ -3539,11 +3556,9 @@
     pillsEl.classList.add('show');
     var col = aiFileColor(name);
     var safeId = 'pill-lines-' + name.replace(/[^a-z0-9]/gi, '_');
-
     var pill = document.createElement('div');
     pill.className = 'ai-edit-pill';
     pill.dataset.file = name;
-    // Patch pills show "patching..." label; stream pills show live line count
     var counterHtml = isPatch
       ? '<span class="ai-edit-pill-lines ai-edit-pill-patch" id="' + safeId + '">patching…</span>'
       : '<span class="ai-edit-pill-lines" id="' + safeId + '">0 ln</span>';
@@ -3552,7 +3567,6 @@
       '<span style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
       counterHtml +
       '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
-
     pillsEl.appendChild(pill);
     aiPillMap[name] = pill;
     aiLineCounts[name] = 0;
@@ -3569,9 +3583,8 @@
     if (!el) return;
     el.classList.add('ai-edit-pill-patch-done');
     el.classList.remove('ai-edit-pill-patch');
-    // Show "+12 -3" diff stats
     var parts = [];
-    if (added > 0)   parts.push('+' + added);
+    if (added > 0) parts.push('+' + added);
     if (removed > 0) parts.push('-' + removed);
     el.textContent = parts.length ? parts.join(' ') + ' ln' : newLines + ' ln';
   }
@@ -3587,18 +3600,14 @@
   var acpCurrentFile = null;
   var acpLiveContent = {};
   var acpBoxMap = {};
-  var aiLineCounts = {};   // live newline counts while streaming
-  var aiPatchMode = {};    // name -> true if this file is being patched not streamed
+  var aiLineCounts = {};
+  var aiPatchMode = {};
 
-  // Called when a content-mode (full file) is received — set final line count and mark done
   function acpShowFile(name, code, _unused) {
-    acpCurrentFile = name;
-    acpLiveContent[name] = code;
+    acpCurrentFile = name; acpLiveContent[name] = code;
     if (!aiPillMap[name]) aiAddEditingPill(name, false);
-    var finalLines = code.split('\n').length;
-    aiLineCounts[name] = finalLines;
-    aiUpdatePillLines(name, finalLines);
-    aiMarkPillDone(name);
+    var fl = code.split('\n').length;
+    aiLineCounts[name] = fl; aiUpdatePillLines(name, fl); aiMarkPillDone(name);
   }
 
 
@@ -3703,15 +3712,14 @@
             aiHideTyping();
           }
 
-          // ── file_start: AI started a file — show pill immediately ──
+          // ── file_start ──
           if (eventType === 'file_start' && data.name) {
             acpCurrentFile = data.name;
-            var isPatch = data.mode === 'patch';
-            aiPatchMode[data.name] = isPatch;
-            if (!aiPillMap[data.name]) aiAddEditingPill(data.name, isPatch);
+            var _isPatch = data.mode === 'patch';
+            aiPatchMode[data.name] = _isPatch;
+            if (!aiPillMap[data.name]) aiAddEditingPill(data.name, _isPatch);
           }
-
-          // ── file_delta: chars streaming in — count newlines live ──
+          // ── file_delta: count newlines live for stream-mode files ──
           if (eventType === 'file_delta' && data.text) {
             var _fn = acpCurrentFile;
             if (_fn && !aiPatchMode[_fn] && aiLineCounts[_fn] !== undefined) {
@@ -3721,13 +3729,11 @@
               aiUpdatePillLines(_fn, aiLineCounts[_fn] + 1);
             }
           }
-
-          // ── file_patch_stats: patch was applied — show diff on pill ──
+          // ── file_patch_stats: show diff on pill ──
           if (eventType === 'file_patch_stats' && data.name) {
             aiUpdatePillPatchStats(data.name, data.added, data.removed, data.newLines);
             aiMarkPillDone(data.name);
           }
-
           // ── file: complete file received (base64) ──
           if (eventType === 'file' && data.name) {
             var content = data.content;

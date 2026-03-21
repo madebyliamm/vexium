@@ -909,6 +909,52 @@
       white-space:nowrap;transition:color .3s;
     }
     #planBarChatLabel.ready{color:#4ade80}
+    /* logo cards */
+    .plan-logo-cards{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;width:var(--plan-w);
+    }
+    .plan-logo-card{
+      position:relative;width:100px;height:100px;border-radius:12px;
+      border:2px solid var(--b2);background:var(--s1);
+      cursor:pointer;overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
+      transition:border-color .15s,transform .12s,box-shadow .15s;
+      flex-shrink:0;
+    }
+    .plan-logo-card:hover{border-color:rgba(129,140,248,.5);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .plan-logo-card.selected{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.2)}
+    .plan-logo-card-inner{width:84px;height:84px;display:flex;align-items:center;justify-content:center;pointer-events:none;user-select:none}
+    .plan-logo-actions{
+      position:absolute;top:4px;right:4px;
+      display:flex;gap:3px;opacity:0;transition:opacity .15s;
+    }
+    .plan-logo-card:hover .plan-logo-actions{opacity:1}
+    .plan-logo-action-btn{
+      width:20px;height:20px;border-radius:5px;border:none;
+      background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+      color:rgba(255,255,255,.8);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;transition:background .12s;padding:0;
+    }
+    .plan-logo-action-btn:hover{background:rgba(0,0,0,.8)}
+    .plan-logo-action-btn svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+    .plan-logo-skip{
+      margin-top:10px;font-size:11px;color:var(--sub);
+      background:none;border:none;cursor:pointer;font-family:var(--sans);
+      padding:3px 0;transition:color .12s;
+    }
+    .plan-logo-skip:hover{color:var(--text)}
+    .plan-logo-chosen{
+      display:flex;align-items:center;gap:10px;margin-top:10px;
+      padding:8px 12px;border-radius:10px;
+      background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);
+      width:fit-content;
+    }
+    .plan-logo-chosen-preview{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+    .plan-logo-chosen-label{font-size:11px;font-weight:600;color:rgba(167,139,250,.9)}
+    .plan-logo-chosen-change{font-size:10px;color:var(--sub);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0;margin-left:4px;transition:color .12s}
+    .plan-logo-chosen-change:hover{color:var(--text)}
+
     .plan-go-build-btn{
       background:linear-gradient(135deg,var(--a1),var(--a2));
       border:none;border-radius:8px;color:#fff;
@@ -3742,6 +3788,7 @@
   // PLAN PHASE
   // ══════════════════════════════════════════════
   var planHistory = [];
+  var planSelectedLogo = null; // { html, index }
   var planAllMessages = [];
   var planReadiness = 0;
   var planInChat = false;
@@ -3749,41 +3796,45 @@
   var planAbortController = null;
   var PLAN_VIRTUAL_WINDOW = 40;
 
-  var PLAN_SYSTEM = `You are a planning assistant inside Vexium, an AI website builder. Your ONLY job is to gather exactly what the user wants so the builder can create their ENTIRE website — every page, every link, every feature — in one shot without follow-up.
+  var PLAN_SYSTEM = `You are a planning assistant inside Vexium, an AI website builder. Your job is to collect just enough to build the ENTIRE website in one shot — every page, every link, every feature.
 
-## YOUR MENTAL CHECKLIST
-Collect all of these before scoring 100%:
+## WHAT YOU NEED (in order of priority)
 1. What the site is and does
-2. Every page the site needs (not just the homepage)
-3. How pages connect — what buttons and links go where
-4. Design vibe — colors, mood, dark/light, any references
-5. Target audience
-6. Specific features — forms, cart, auth, payments, search, etc.
-7. Site name and key copy/headlines if they have them
+2. Every page needed (not just homepage — think about the full site)
+3. Design vibe — mood, colors, dark/light, any references
+4. Site name
+5. Any specific features — forms, cart, auth, payments, etc.
 
-Skip any item the user already answered in their opening message.
+If the user's message already answers some of these, skip them. Don't ask what you already know.
 
-## HOW TO RESPOND
-- ONE question per message, at the end
-- Acknowledge what they said, maybe a quick take, then ask the next most important missing thing
-- For multi-page sites explicitly map all pages: "So we'd have: Home, Shop, Product pages, Cart, About — anything else?"
-- Suggest things they might not have thought of: "You'll probably want a Cart and a Thank You page — want those too?"
-- Keep it short and energetic. No essays.
-- When you have everything, say: "I've got everything I need — this is going to come out great. Hit Go to Build whenever you're ready!" and score 100.
-
-## PERSONALITY
-Encouraging and direct. Like a skilled friend who's done this before. Light suggestions are welcome, but don't push. If something sounds complex, mention it briefly.
+## CONVERSATION FLOW
+- ONE question per message
+- Keep it short and energetic — no essays
+- For multi-page sites, map ALL pages explicitly: "So we'd have: Home, Shop, Product pages, Cart, About — anything else?"
+- Suggest things they might not have thought of: "You'll probably want a Cart and Thank You page — want those?"
+- When you know items 1-4, generate logo options (see below)
+- When you have everything including a logo choice or skip, score 100 and say: "I've got everything — this is going to come out great. Hit Go to Build whenever you're ready!"
 
 ## FULL SITE MINDSET
-The builder creates EVERY file. Make sure no page gets forgotten.
-- "Clothing brand" → Home, Shop/Collection, Product pages, Cart, Checkout, About, Contact
-- "Portfolio" → Home, Work/Projects, Project detail pages, About, Contact
-- "SaaS" → Landing, Features, Pricing, Dashboard (logged in), Auth pages
-Spell it all out and confirm with the user.
+Think about every file the builder needs. Never let a page go unplanned.
+- "Clothing brand" → index.html, shop.html, product.html, cart.html, about.html, contact.html
+- "Portfolio" → index.html, work.html, project.html, about.html, contact.html
+- "SaaS" → index.html, features.html, pricing.html, dashboard.html, login.html
+
+## LOGO GENERATION
+After the user gives or confirms the site name, generate 3-4 HTML logo options.
+Output them as a JSON array inside <logos> tags. Each logo is self-contained HTML+CSS — a small wordmark or icon+wordmark that fits in an 84x84px square card.
+Make each one a distinct visual style (e.g. minimal wordmark, bold icon+text, geometric mark+text).
+Use the site name and brand vibe. Inline all styles.
+
+Example format (always after your message text):
+<logos>["<div style=\"font-family:Georgia,serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase\">NAME</div>", "<div style=\"...\">...</div>"]</logos>
+
+## PERSONALITY
+Encouraging and direct. Like a skilled friend who's done this before. Light suggestions welcome. Keep it snappy.
 
 ## READINESS SCORE
-Required for 100%: all 7 checklist items known.
-Jump meaningfully when key info comes in — don't drip 5% per message. Max 100. Never go backwards.
+Jump meaningfully when key info comes in. Hit 100 only when you have the name, pages, vibe, and logo decision. Never go backwards. Max 100.
 
 ALWAYS end every response with:
 <readiness>{"score": 0}</readiness>`
@@ -3825,6 +3876,133 @@ ALWAYS end every response with:
     if (goBtn) goBtn.style.display = planReadiness >= 100 ? '' : 'none';
   }
 
+  // ── LOGO CARDS ──────────────────────────────────────────────────
+  function planBuildLogoCards(logos, msgIdx) {
+    var wrap = document.createElement('div');
+    wrap.className = 'plan-logo-wrap';
+    wrap.dataset.msgIdx = msgIdx;
+
+    var cards = document.createElement('div');
+    cards.className = 'plan-logo-cards';
+
+    logos.forEach(function(logoHtml, i) {
+      var card = document.createElement('div');
+      card.className = 'plan-logo-card';
+      card.dataset.idx = i;
+
+      var inner = document.createElement('div');
+      inner.className = 'plan-logo-card-inner';
+      inner.innerHTML = logoHtml;
+      card.appendChild(inner);
+
+      // Action buttons (shown on hover)
+      var actions = document.createElement('div');
+      actions.className = 'plan-logo-actions';
+      // Refresh button
+      actions.innerHTML =
+        '<button class="plan-logo-action-btn" title="New options" onclick="planRefreshLogos(this)" style="font-size:11px">↻</button>';
+      card.appendChild(actions);
+
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.plan-logo-action-btn')) return;
+        planSelectLogo(logoHtml, i, wrap, logos);
+      });
+
+      cards.appendChild(card);
+    });
+
+    var skipBtn = document.createElement('button');
+    skipBtn.className = 'plan-logo-skip';
+    skipBtn.textContent = 'Skip — no logo needed';
+    skipBtn.onclick = function() { planSelectLogo(null, -1, wrap, logos); };
+
+    wrap.appendChild(cards);
+    wrap.appendChild(skipBtn);
+    return wrap;
+  }
+
+  function planSelectLogo(logoHtml, idx, wrap, logos) {
+    planSelectedLogo = logoHtml ? { html: logoHtml, idx: idx } : null;
+    // Replace card UI with a "chosen" confirmation
+    wrap.innerHTML = '';
+    if (logoHtml) {
+      var chosen = document.createElement('div');
+      chosen.className = 'plan-logo-chosen';
+      var preview = document.createElement('div');
+      preview.className = 'plan-logo-chosen-preview';
+      preview.innerHTML = logoHtml;
+      var label = document.createElement('span');
+      label.className = 'plan-logo-chosen-label';
+      label.textContent = 'Logo selected ✓';
+      var change = document.createElement('button');
+      change.className = 'plan-logo-chosen-change';
+      change.textContent = 'Change';
+      change.onclick = function() {
+        planSelectedLogo = null;
+        wrap.innerHTML = '';
+        wrap.appendChild(planBuildLogoCards(logos, wrap.dataset.msgIdx).firstChild);
+        var newSkip = document.createElement('button');
+        newSkip.className = 'plan-logo-skip';
+        newSkip.textContent = 'Skip — no logo needed';
+        newSkip.onclick = function() { planSelectLogo(null, -1, wrap, logos); };
+        wrap.appendChild(newSkip);
+      };
+      chosen.appendChild(preview);
+      chosen.appendChild(label);
+      chosen.appendChild(change);
+      wrap.appendChild(chosen);
+    } else {
+      var skipped = document.createElement('span');
+      skipped.style.cssText = 'font-size:11px;color:var(--sub)';
+      skipped.textContent = 'No logo — skipped';
+      wrap.appendChild(skipped);
+    }
+  }
+
+  async function planRefreshLogos(btn) {
+    var wrap = btn.closest('.plan-logo-wrap');
+    if (!wrap) return;
+    var cardsEl = wrap.querySelector('.plan-logo-cards');
+    if (cardsEl) { cardsEl.style.opacity = '0.4'; cardsEl.style.pointerEvents = 'none'; }
+    // Ask AI for new logo options
+    try {
+      var name = planSelectedLogo ? '' : '';
+      // Extract site name from history if possible
+      var nameGuess = '';
+      for (var i = planHistory.length-1; i >= 0; i--) {
+        var m = planHistory[i].content.match(/name[:\s]+([A-Z][^.,\n]+)/i);
+        if (m) { nameGuess = m[1].trim(); break; }
+      }
+      var resp = await fetch((typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '') + '/functions/v1/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '') },
+        body: JSON.stringify({
+          plan_mode: true, stream: false,
+          system: 'Generate 3 different HTML logo designs for a website called "' + (nameGuess||'the site') + '". Output ONLY a JSON array of 3 HTML strings, each a self-contained logo using inline CSS. Each should be a distinct visual style. No explanation, just the JSON array.',
+          messages: [{ role: 'user', content: 'Give me 3 new logo options. Different styles from before.' }]
+        })
+      });
+      var data = await resp.json();
+      var text = (data.content||[]).map(function(b){return b.text||'';}).join('');
+      var cleaned = text.replace(/```json|```/g,'').trim();
+      var newLogos = JSON.parse(cleaned);
+      if (Array.isArray(newLogos) && newLogos.length) {
+        var newWrap = planBuildLogoCards(newLogos, wrap.dataset.msgIdx);
+        wrap.innerHTML = newWrap.innerHTML;
+        wrap.querySelectorAll('.plan-logo-card').forEach(function(card, i) {
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.plan-logo-action-btn')) return;
+            planSelectLogo(newLogos[i], i, wrap, newLogos);
+          });
+        });
+        var skipBtn = wrap.querySelector('.plan-logo-skip');
+        if (skipBtn) skipBtn.onclick = function() { planSelectLogo(null, -1, wrap, newLogos); };
+      }
+    } catch(e) {
+      if (cardsEl) { cardsEl.style.opacity = '1'; cardsEl.style.pointerEvents = ''; }
+    }
+  }
+
   function planFormatText(text) {
     return text
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -3851,7 +4029,7 @@ ALWAYS end every response with:
     return cards;
   }
 
-  function planBuildRow(m) {
+  function planBuildRow(m, msgIdx) {
     var row = document.createElement('div');
     row.className = 'plan-row ' + m.role;
     if (m.role === 'user') {
@@ -3867,6 +4045,9 @@ ALWAYS end every response with:
       }
       row.appendChild(textDiv);
       if (m.insights && m.insights.length) row.appendChild(planBuildInsightCards(m.insights));
+      if (m.logos && m.logos.length && !m.streaming) {
+        row.appendChild(planBuildLogoCards(m.logos, msgIdx !== undefined ? msgIdx : planAllMessages.length - 1));
+      }
     }
     return row;
   }
@@ -3876,7 +4057,7 @@ ALWAYS end every response with:
     var total = planAllMessages.length;
     var visible = planAllMessages.slice(Math.max(0, total - PLAN_VIRTUAL_WINDOW));
     msgs.innerHTML = '';
-    visible.forEach(function(m) { msgs.appendChild(planBuildRow(m)); });
+    visible.forEach(function(m, i) { msgs.appendChild(planBuildRow(m, i)); });
     msgs.scrollTop = msgs.scrollHeight;
   }
 
@@ -3898,6 +4079,7 @@ ALWAYS end every response with:
     if (!el) return;
     var clean = msg.text
       .replace(/<readiness>[\s\S]*?<\/readiness>/g,'')
+      .replace(/<logos>[\s\S]*/,'')
       .replace(/<insights>[\s\S]*/,'')
       .trim();
     el.innerHTML = clean ? planFormatText(clean) : '<p style="color:var(--sub);font-style:italic">Thinking\u2026</p>';
@@ -3907,9 +4089,18 @@ ALWAYS end every response with:
   function planFinalizeMessage(msg, insights) {
     msg.streaming = false;
     msg.insights = insights || [];
+    // Parse logos before stripping tags
+    var lm = msg.text.match(/<logos>([\s\S]*?)<\/logos>/);
+    if (lm) {
+      try {
+        var parsedLogos = JSON.parse(lm[1].trim());
+        if (Array.isArray(parsedLogos) && parsedLogos.length) msg.logos = parsedLogos;
+      } catch(e) {}
+    }
     msg.text = msg.text
       .replace(/<readiness>[\s\S]*?<\/readiness>/g,'')
       .replace(/<insights>[\s\S]*?<\/insights>/g,'')
+      .replace(/<logos>[\s\S]*?<\/logos>/g,'')
       .trim();
     planRenderMessages();
   }
@@ -4010,7 +4201,11 @@ ALWAYS end every response with:
     // Brief pause so user sees 100%, then transition
     await new Promise(function(res) { setTimeout(res, 600); });
 
-    var buildPrompt = 'Build my website now based on this plan:\n\n' + brief + '\n\nFollow every decision in the brief exactly. Make it look polished and premium. Output the full website files.';
+    var logoInstructions = '';
+    if (planSelectedLogo && planSelectedLogo.html) {
+      logoInstructions = '\n\nLOGO: Use this exact HTML as the logo in the navigation bar of every page:\n' + planSelectedLogo.html + '\n\nFAVICON: Generate a favicon.ico as a data URL by encoding a 32x32 version of the logo. Include a <link rel="icon"> tag in every HTML file pointing to it.';
+    }
+    var buildPrompt = 'Build my website now based on this plan:\n\n' + brief + logoInstructions + '\n\nFollow every decision in the brief exactly. Make it look polished and premium. Output the full website files.';
     var displayMessage = 'Build my website ✦';
     setMode('ai');
     setTimeout(async function() {

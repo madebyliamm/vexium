@@ -1813,7 +1813,14 @@
       if (imgPane) imgPane.classList.remove('show');
       if (monacoWrap) monacoWrap.style.display = '';
     }
-    if (m === 'editor' && editor) editor.layout();
+    if (m === 'editor') {
+      // Ensure a file is always open when switching to editor
+      if (!activeFile || !fileSystem[activeFile]) {
+        var fallback = mainFile || Object.keys(fileSystem).find(function(f) { return !isImageFile(f); });
+        if (fallback) openFile(fallback);
+      }
+      if (editor) editor.layout();
+    }
     // Entrance animations
     if (m === 'ai') { var ac = document.getElementById('aiCenter'); if (ac && !ac.classList.contains('hidden')) triggerIntroEntrance('aiCenter'); }
     if (m === 'plan') triggerIntroEntrance('planCenter');
@@ -1918,12 +1925,7 @@
 
   function closeTab(e, f) {
     e.stopPropagation();
-    // Don't allow closing if it's the last code (non-image) tab
-    var codeTabsAfter = openTabs.filter(function(x) { return x !== f && !isImageFile(x); });
-    if (!isImageFile(f) && codeTabsAfter.length === 0) {
-      showToast('!', 'At least one file must stay open');
-      return;
-    }
+    if (f === mainFile) { showToast('!', 'Cannot close the main file'); return; }
     openTabs = openTabs.filter(x => x !== f);
     if (activeFile === f) {
       const next = openTabs[openTabs.length - 1] || null;
@@ -2414,10 +2416,9 @@
     // Only show "Set as main" for .html files
     var setMainItem = m.querySelector('[onclick="ctxSetMain()"]');
     if (setMainItem) setMainItem.style.display = f.endsWith('.html') ? '' : 'none';
-    // Hide Delete if it's the last code file
-    var codeFiles = Object.keys(fileSystem).filter(function(cf) { return !isImageFile(cf); });
+    // Hide Delete for the main file
     var deleteItem = m.querySelector('[onclick="ctxDelete()"]');
-    if (deleteItem) deleteItem.style.display = (!isImageFile(f) && codeFiles.length <= 1) ? 'none' : '';
+    if (deleteItem) deleteItem.style.display = (f === mainFile) ? 'none' : '';
     m.classList.add('show');
   }
   document.addEventListener('click', () => document.getElementById('ctxMenu').classList.remove('show'));
@@ -2444,9 +2445,7 @@
 
   function ctxDelete() {
     if (!ctxTarget) return;
-    var codeFiles = Object.keys(fileSystem).filter(function(f) { return !isImageFile(f); });
-    if (!isImageFile(ctxTarget) && codeFiles.length <= 1) { showToast('!', 'Cannot delete last file'); return; }
-    if (Object.keys(fileSystem).length <= 1) { showToast('!', 'Cannot delete last file'); return; }
+    if (ctxTarget === mainFile) { showToast('!', 'Cannot delete the main file'); return; }
     if (!confirm('Delete ' + ctxTarget + '?')) return;
     delete fileSystem[ctxTarget];
     openTabs = openTabs.filter(f => f !== ctxTarget);

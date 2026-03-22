@@ -619,23 +619,27 @@
     /* attachment chips */
     #aiAttachChips{display:none;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
     #aiAttachChips.has-chips{display:flex}
+    @keyframes chipPop{from{opacity:0;transform:scale(0.7) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
     .ai-attach-chip{
       display:inline-flex;align-items:center;gap:5px;
       padding:4px 10px 4px 8px;border-radius:999px;
-      background:var(--b1);border:1px solid var(--b2);
-      font-size:11px;font-weight:600;color:var(--text);
-      cursor:pointer;transition:background .12s;max-width:180px;
+      background:rgba(79,110,247,.15);
+      border:1px solid rgba(79,110,247,.3);
+      font-size:11px;font-weight:600;color:rgba(167,180,255,.95);
+      cursor:pointer;max-width:180px;
+      animation:chipPop .2s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      transition:transform .15s cubic-bezier(0.34,1.56,0.64,1), background .12s, border-color .12s;
     }
-    .ai-attach-chip:hover{background:var(--b2)}
-    .ai-attach-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;opacity:.7}
+    .ai-attach-chip:hover{transform:scale(1.06);background:rgba(79,110,247,.25);border-color:rgba(79,110,247,.5)}
+    .ai-attach-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;opacity:.8}
     .ai-attach-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ai-attach-chip-x{
-      width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);
-      border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;
+      width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.08);
+      border:none;color:rgba(167,180,255,.6);cursor:pointer;display:flex;align-items:center;
       justify-content:center;flex-shrink:0;padding:0;margin-left:2px;font-size:10px;
       transition:background .12s,color .12s;
     }
-    .ai-attach-chip-x:hover{background:rgba(239,68,68,.2);color:#f87171}
+    .ai-attach-chip-x:hover{background:rgba(239,68,68,.25);color:#f87171}
     /* attachment preview popup */
     #aiAttachPreview{
       display:none;position:fixed;inset:0;z-index:1000;
@@ -658,19 +662,37 @@
     #aiAttachPreviewBody img{max-width:100%;border-radius:8px}
     #aiAttachPreviewBody pre{font-family:var(--mono);font-size:12px;color:var(--text);white-space:pre-wrap;word-break:break-all;margin:0}
     /* + attach button */
+    /* attach button — two instances: left (single-line) and above-send (multiline) */
     .ai-attach-btn{
-      width:30px;height:30px;border-radius:50%;background:transparent;
-      border:1px solid var(--b2);color:var(--sub);cursor:pointer;
+      width:28px;height:28px;border-radius:50%;background:transparent;
+      border:none;color:rgba(255,255,255,.45);cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;transition:all .2s;align-self:flex-end;
+      flex-shrink:0;padding:0;
+      transition:opacity .18s ease, transform .18s ease, color .15s;
     }
-    .ai-attach-btn:hover{background:var(--b1);color:var(--text)}
-    .ai-attach-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
-    /* when multiline: move + on top of send */
-    #aiInputRow.multiline .ai-attach-btn{
-      position:absolute;bottom:10px;right:54px;
+    .ai-attach-btn:hover{color:rgba(255,255,255,.85);transform:scale(1.12)}
+    .ai-attach-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+    /* left button: visible single-line, hidden multiline */
+    #aiAttachBtnLeft{
+      opacity:1;transform:scale(1);pointer-events:all;
+      transition:opacity .18s ease, transform .18s ease;
+      align-self:flex-end;margin-bottom:3px;
     }
-    #aiInputRow.multiline{position:relative}
+    #aiInputRow.multiline #aiAttachBtnLeft{
+      opacity:0;transform:scale(0.5);pointer-events:none;
+      width:0;margin:0;overflow:hidden;
+    }
+    /* above-send stack */
+    .ai-send-stack{position:relative;flex-shrink:0;display:flex;align-items:flex-end}
+    #aiAttachBtnAbove{
+      position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%) scale(0.5);
+      opacity:0;pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    #aiInputRow.multiline #aiAttachBtnAbove{
+      opacity:1;transform:translateX(-50%) scale(1);pointer-events:all;
+    }
+    #aiInputRow{display:flex;align-items:flex-end;gap:8px;padding:12px 12px 12px 14px;transition:padding .18s}
     /* user bubble attachment chips */
     .ai-bubble-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
     .ai-bubble-chip{
@@ -682,7 +704,7 @@
     .ai-bubble-chip:hover{background:rgba(255,255,255,.14)}
     .ai-bubble-chip svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;opacity:.7}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.45);box-shadow:0 0 0 3px rgba(79,110,247,.07),0 4px 28px rgba(0,0,0,.3)}
-    #aiInputRow{display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 18px}
+    /* #aiInputRow defined above */
     #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
     #aiBottomInput.list-mode{padding-left:24px;text-indent:-24px}
     #aiBottomInput::placeholder{color:var(--b3)}
@@ -1439,6 +1461,9 @@
           <div class="ai-center-h">Build anything with me.</div>
           <div id="aiCenterInput">
             <div id="aiInputArea">
+              <button class="ai-attach-btn" onclick="aiAttachClick()" title="Attach file" style="align-self:center;margin-bottom:0">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
               <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
               <button id="aiSend" onclick="aiSend()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
@@ -1525,16 +1550,21 @@
             <div id="aiBottomInputArea">
               <div id="aiAttachChips"></div>
               <div id="aiInputRow">
-                <button class="ai-attach-btn" id="aiAttachBtn" onclick="aiAttachClick()" title="Attach file">
+                <button class="ai-attach-btn" id="aiAttachBtnLeft" onclick="aiAttachClick()" title="Attach file">
                   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
                 <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
-                <button id="aiStopBtn" onclick="aiStop()" style="display:none">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
-                </button>
-                <button id="aiBottomSend" onclick="aiSend(true)">
-                  <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                </button>
+                <div class="ai-send-stack">
+                  <button class="ai-attach-btn" id="aiAttachBtnAbove" onclick="aiAttachClick()" title="Attach file">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <button id="aiStopBtn" onclick="aiStop()" style="display:none">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+                  </button>
+                  <button id="aiBottomSend" onclick="aiSend(true)">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                  </button>
+                </div>
               </div>
               <input type="file" id="aiAttachInput" style="display:none" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" onchange="aiHandleFileAttach(event)"/>
             </div>
@@ -3427,9 +3457,7 @@
 
   // ── ATTACHMENTS ──────────────────────────────────────────────────
 
-  function aiAttachClick() {
-    document.getElementById('aiAttachInput').click();
-  }
+  function aiAttachClick() { document.getElementById('aiAttachInput').click(); }
 
   function aiHandleFileAttach(event) {
     var files = event.target.files;
@@ -3500,7 +3528,8 @@
     var row = document.getElementById('aiInputRow');
     if (!ta || !row) return;
     var lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 22;
-    var multiline = ta.scrollHeight > lineHeight * 1.8;
+    // Use 2.2x to give a bit more buffer before switching
+    var multiline = ta.scrollHeight > lineHeight * 2.2;
     row.classList.toggle('multiline', multiline);
   }
 

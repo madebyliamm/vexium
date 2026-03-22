@@ -910,50 +910,45 @@
     }
     #planBarChatLabel.ready{color:#4ade80}
     /* logo cards */
+    .plan-logo-wrap{margin-top:12px;width:var(--plan-w)}
     .plan-logo-cards{
-      display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;width:var(--plan-w);
+      display:flex;gap:8px;width:100%;
     }
     .plan-logo-card{
-      position:relative;width:100px;height:100px;border-radius:12px;
+      flex:1;aspect-ratio:1/1;border-radius:14px;
       border:2px solid var(--b2);background:var(--s1);
       cursor:pointer;overflow:hidden;
       display:flex;align-items:center;justify-content:center;
       transition:border-color .15s,transform .12s,box-shadow .15s;
-      flex-shrink:0;
     }
-    .plan-logo-card:hover{border-color:rgba(129,140,248,.5);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .plan-logo-card:hover{border-color:rgba(129,140,248,.5);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
     .plan-logo-card.selected{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.2)}
-    .plan-logo-card-inner{width:84px;height:84px;display:flex;align-items:center;justify-content:center;pointer-events:none;user-select:none}
-    .plan-logo-actions{
-      position:absolute;top:4px;right:4px;
-      display:flex;gap:3px;opacity:0;transition:opacity .15s;
-    }
-    .plan-logo-card:hover .plan-logo-actions{opacity:1}
-    .plan-logo-action-btn{
-      width:20px;height:20px;border-radius:5px;border:none;
-      background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
-      color:rgba(255,255,255,.8);cursor:pointer;
+    .plan-logo-card-inner{
+      width:75%;height:75%;
       display:flex;align-items:center;justify-content:center;
-      font-size:10px;transition:background .12s;padding:0;
+      pointer-events:none;user-select:none;
     }
-    .plan-logo-action-btn:hover{background:rgba(0,0,0,.8)}
-    .plan-logo-action-btn svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
-    .plan-logo-skip{
-      margin-top:10px;font-size:11px;color:var(--sub);
-      background:none;border:none;cursor:pointer;font-family:var(--sans);
-      padding:3px 0;transition:color .12s;
+    /* bottom controls row */
+    .plan-logo-controls{
+      display:flex;justify-content:center;gap:8px;margin-top:10px;
     }
-    .plan-logo-skip:hover{color:var(--text)}
+    .plan-logo-ctrl-btn{
+      width:34px;height:34px;border-radius:999px;
+      border:1px solid var(--b2);background:var(--s1);
+      color:var(--sub);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:background .12s,color .12s,border-color .12s;
+      padding:0;
+    }
+    .plan-logo-ctrl-btn:hover{background:var(--b2);color:var(--text)}
+    .plan-logo-ctrl-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .plan-logo-chosen{
-      display:flex;align-items:center;gap:10px;margin-top:10px;
-      padding:8px 12px;border-radius:10px;
+      display:inline-flex;align-items:center;gap:10px;margin-top:10px;
+      padding:8px 14px;border-radius:10px;
       background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);
-      width:fit-content;
     }
-    .plan-logo-chosen-preview{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+    .plan-logo-chosen-preview{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
     .plan-logo-chosen-label{font-size:11px;font-weight:600;color:rgba(167,139,250,.9)}
-    .plan-logo-chosen-change{font-size:10px;color:var(--sub);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0;margin-left:4px;transition:color .12s}
-    .plan-logo-chosen-change:hover{color:var(--text)}
 
     .plan-go-build-btn{
       background:linear-gradient(135deg,var(--a1),var(--a2));
@@ -3822,13 +3817,23 @@ Think about every file the builder needs. Never let a page go unplanned.
 - "SaaS" → index.html, features.html, pricing.html, dashboard.html, login.html
 
 ## LOGO GENERATION
-After the user gives or confirms the site name, generate 3-4 HTML logo options.
-Output them as a JSON array inside <logos> tags. Each logo is self-contained HTML+CSS — a small wordmark or icon+wordmark that fits in an 84x84px square card.
-Make each one a distinct visual style (e.g. minimal wordmark, bold icon+text, geometric mark+text).
-Use the site name and brand vibe. Inline all styles.
+After the user confirms the site name, generate 3 logo options.
+Output a JSON array inside <logos> tags. Each logo is self-contained HTML+CSS fitting a square card.
 
-Example format (always after your message text):
-<logos>["<div style=\"font-family:Georgia,serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase\">NAME</div>", "<div style=\"...\">...</div>"]</logos>
+CRITICAL — make these actual logo MARKS, not just text in different fonts:
+- A letter or initials inside a geometric shape (circle, rounded square, hexagon)
+- An abstract minimal SVG icon related to the brand
+- A symbol + name combo where the symbol is a real shape/icon
+Use inline styles only. Background should be transparent or dark. Colors should match the brand vibe.
+
+Example (letter mark):
+<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff">M</div>
+
+Example (icon + text):
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="#6366f1"/><path d="M10 18h16M18 10l8 8-8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span style="font-family:sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px">NAME</span></div>
+
+Always output EXACTLY 3 logos. Format:
+<logos>["...logo1 html...", "...logo2 html...", "...logo3 html..."]</logos>
 
 ## PERSONALITY
 Encouraging and direct. Like a skilled friend who's done this before. Light suggestions welcome. Keep it snappy.
@@ -3881,6 +3886,8 @@ ALWAYS end every response with:
     var wrap = document.createElement('div');
     wrap.className = 'plan-logo-wrap';
     wrap.dataset.msgIdx = msgIdx;
+    // Store logos on wrap for refresh
+    wrap._logos = logos;
 
     var cards = document.createElement('div');
     cards.className = 'plan-logo-cards';
@@ -3888,120 +3895,92 @@ ALWAYS end every response with:
     logos.forEach(function(logoHtml, i) {
       var card = document.createElement('div');
       card.className = 'plan-logo-card';
-      card.dataset.idx = i;
-
       var inner = document.createElement('div');
       inner.className = 'plan-logo-card-inner';
       inner.innerHTML = logoHtml;
       card.appendChild(inner);
-
-      // Action buttons (shown on hover)
-      var actions = document.createElement('div');
-      actions.className = 'plan-logo-actions';
-      // Refresh button
-      actions.innerHTML =
-        '<button class="plan-logo-action-btn" title="New options" onclick="planRefreshLogos(this)" style="font-size:11px">↻</button>';
-      card.appendChild(actions);
-
-      card.addEventListener('click', function(e) {
-        if (e.target.closest('.plan-logo-action-btn')) return;
-        planSelectLogo(logoHtml, i, wrap, logos);
+      card.addEventListener('click', function() {
+        planSelectLogo(logoHtml, i + 1, wrap);
       });
-
       cards.appendChild(card);
     });
 
+    // Bottom controls: X (skip) and refresh
+    var controls = document.createElement('div');
+    controls.className = 'plan-logo-controls';
+
     var skipBtn = document.createElement('button');
-    skipBtn.className = 'plan-logo-skip';
-    skipBtn.textContent = 'Skip — no logo needed';
-    skipBtn.onclick = function() { planSelectLogo(null, -1, wrap, logos); };
+    skipBtn.className = 'plan-logo-ctrl-btn';
+    skipBtn.title = 'Skip logo';
+    skipBtn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    skipBtn.onclick = function() { planSelectLogo(null, 0, wrap); };
+
+    var refreshBtn = document.createElement('button');
+    refreshBtn.className = 'plan-logo-ctrl-btn';
+    refreshBtn.title = 'New options';
+    refreshBtn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+    refreshBtn.onclick = function() { planRefreshLogos(wrap); };
+
+    controls.appendChild(skipBtn);
+    controls.appendChild(refreshBtn);
 
     wrap.appendChild(cards);
-    wrap.appendChild(skipBtn);
+    wrap.appendChild(controls);
     return wrap;
   }
 
-  function planSelectLogo(logoHtml, idx, wrap, logos) {
-    planSelectedLogo = logoHtml ? { html: logoHtml, idx: idx } : null;
-    // Replace card UI with a "chosen" confirmation
-    wrap.innerHTML = '';
-    if (logoHtml) {
-      var chosen = document.createElement('div');
-      chosen.className = 'plan-logo-chosen';
-      var preview = document.createElement('div');
-      preview.className = 'plan-logo-chosen-preview';
-      preview.innerHTML = logoHtml;
-      var label = document.createElement('span');
-      label.className = 'plan-logo-chosen-label';
-      label.textContent = 'Logo selected ✓';
-      var change = document.createElement('button');
-      change.className = 'plan-logo-chosen-change';
-      change.textContent = 'Change';
-      change.onclick = function() {
-        planSelectedLogo = null;
-        wrap.innerHTML = '';
-        wrap.appendChild(planBuildLogoCards(logos, wrap.dataset.msgIdx).firstChild);
-        var newSkip = document.createElement('button');
-        newSkip.className = 'plan-logo-skip';
-        newSkip.textContent = 'Skip — no logo needed';
-        newSkip.onclick = function() { planSelectLogo(null, -1, wrap, logos); };
-        wrap.appendChild(newSkip);
-      };
-      chosen.appendChild(preview);
-      chosen.appendChild(label);
-      chosen.appendChild(change);
-      wrap.appendChild(chosen);
-    } else {
-      var skipped = document.createElement('span');
-      skipped.style.cssText = 'font-size:11px;color:var(--sub)';
-      skipped.textContent = 'No logo — skipped';
-      wrap.appendChild(skipped);
-    }
+  function planSelectLogo(logoHtml, optionNum, wrap) {
+    planSelectedLogo = logoHtml ? { html: logoHtml, idx: optionNum } : null;
+    // Send a user message
+    var msg = logoHtml ? 'Option ' + optionNum : 'skip';
+    planSendMessage(msg);
   }
 
-  async function planRefreshLogos(btn) {
-    var wrap = btn.closest('.plan-logo-wrap');
-    if (!wrap) return;
-    var cardsEl = wrap.querySelector('.plan-logo-cards');
-    if (cardsEl) { cardsEl.style.opacity = '0.4'; cardsEl.style.pointerEvents = 'none'; }
-    // Ask AI for new logo options
+  async function planRefreshLogos(wrap) {
+    var cards = wrap.querySelector('.plan-logo-cards');
+    var ctrl = wrap.querySelector('.plan-logo-controls');
+    if (cards) { cards.style.opacity = '0.4'; cards.style.pointerEvents = 'none'; }
+    if (ctrl) ctrl.style.opacity = '0.4';
+
+    var nameGuess = '';
+    for (var i = planHistory.length - 1; i >= 0; i--) {
+      var m = planHistory[i].content.match(/name[:\s]+([A-Za-z][^.,\n]+)/i);
+      if (m) { nameGuess = m[1].trim(); break; }
+    }
+
     try {
-      var name = planSelectedLogo ? '' : '';
-      // Extract site name from history if possible
-      var nameGuess = '';
-      for (var i = planHistory.length-1; i >= 0; i--) {
-        var m = planHistory[i].content.match(/name[:\s]+([A-Z][^.,\n]+)/i);
-        if (m) { nameGuess = m[1].trim(); break; }
-      }
       var resp = await fetch((typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '') + '/functions/v1/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '') },
         body: JSON.stringify({
           plan_mode: true, stream: false,
-          system: 'Generate 3 different HTML logo designs for a website called "' + (nameGuess||'the site') + '". Output ONLY a JSON array of 3 HTML strings, each a self-contained logo using inline CSS. Each should be a distinct visual style. No explanation, just the JSON array.',
-          messages: [{ role: 'user', content: 'Give me 3 new logo options. Different styles from before.' }]
+          system: 'Generate 3 different simple logo designs for a site called "' + (nameGuess || 'the site') + '". Each logo should be a dead-simple mark — a letter in a shape, a geometric symbol, or a minimal icon. NOT just text in a font. Output ONLY a valid JSON array of 3 HTML strings, each self-contained with inline styles, fitting in a square. No explanation, no backticks.',
+          messages: [{ role: 'user', content: 'Give me 3 new logo options, different styles from before.' }]
         })
       });
       var data = await resp.json();
-      var text = (data.content||[]).map(function(b){return b.text||'';}).join('');
-      var cleaned = text.replace(/```json|```/g,'').trim();
+      var text = (data.content || []).map(function(b) { return b.text || ''; }).join('');
+      var cleaned = text.replace(/```json|```/g, '').trim();
       var newLogos = JSON.parse(cleaned);
       if (Array.isArray(newLogos) && newLogos.length) {
         var newWrap = planBuildLogoCards(newLogos, wrap.dataset.msgIdx);
         wrap.innerHTML = newWrap.innerHTML;
+        wrap._logos = newLogos;
+        // Re-attach events
         wrap.querySelectorAll('.plan-logo-card').forEach(function(card, i) {
-          card.addEventListener('click', function(e) {
-            if (e.target.closest('.plan-logo-action-btn')) return;
-            planSelectLogo(newLogos[i], i, wrap, newLogos);
-          });
+          card.addEventListener('click', function() { planSelectLogo(newLogos[i], i + 1, wrap); });
         });
-        var skipBtn = wrap.querySelector('.plan-logo-skip');
-        if (skipBtn) skipBtn.onclick = function() { planSelectLogo(null, -1, wrap, newLogos); };
+        var newSkip = wrap.querySelector('.plan-logo-ctrl-btn:first-child');
+        if (newSkip) newSkip.onclick = function() { planSelectLogo(null, 0, wrap); };
+        var newRefresh = wrap.querySelector('.plan-logo-ctrl-btn:last-child');
+        if (newRefresh) newRefresh.onclick = function() { planRefreshLogos(wrap); };
       }
     } catch(e) {
-      if (cardsEl) { cardsEl.style.opacity = '1'; cardsEl.style.pointerEvents = ''; }
+      if (cards) { cards.style.opacity = '1'; cards.style.pointerEvents = ''; }
+      if (ctrl) ctrl.style.opacity = '1';
     }
   }
+
 
   function planFormatText(text) {
     return text
@@ -4138,6 +4117,13 @@ ALWAYS end every response with:
       planShowChat();
       planRenderMessages();
     } catch(e) { console.warn('planLoadHistory:', e); }
+  }
+
+  function planSendMessage(text) {
+    var input = document.getElementById('planBottomInput');
+    if (!input) return;
+    input.value = text;
+    planSend(true);
   }
 
   function planBuildSummary() {

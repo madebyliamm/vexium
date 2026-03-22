@@ -165,6 +165,17 @@
     .add-dd{display:none;position:absolute;top:30px;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:4px;min-width:140px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.7)}
     .add-dd.show{display:block}
     #fileTree{flex:1;overflow-y:auto;padding:4px 0}
+    .tree-item.image .tree-ico{display:none}
+    .tree-img-thumb{width:14px;height:14px;border-radius:2px;object-fit:cover;flex-shrink:0;opacity:.8}
+    /* image preview in editor area */
+    #imgPreviewPane{
+      display:none;flex-direction:column;align-items:center;justify-content:center;
+      gap:14px;flex:1;background:var(--bg);padding:32px;
+    }
+    #imgPreviewPane.show{display:flex}
+    #imgPreviewPane img{max-width:100%;max-height:60vh;border-radius:8px;border:1px solid var(--b2);object-fit:contain}
+    #imgPreviewPane .img-name{font-size:12px;color:var(--sub);font-family:var(--mono)}
+    #imgPreviewPane .img-size{font-size:10px;color:var(--b3)}
     .tree-item{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 12px;font-size:11px;cursor:pointer;transition:background .1s;position:relative;font-family:var(--mono);color:var(--sub)}
     .tree-item:hover{background:var(--b1);color:var(--text)}
     .tree-item.active{background:rgba(79,110,247,.07);color:var(--text)}
@@ -1255,10 +1266,15 @@
             <svg class="ctx-ico" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             New file
           </div>
+          <div class="ctx-item" onclick="closeAddDD();document.getElementById('uploadFileInput').click()">
+            <svg class="ctx-ico" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Upload file
+          </div>
         </div>
       </div>
     </div>
     <div id="fileTree"></div>
+    <input type="file" id="uploadFileInput" accept="image/*,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico" style="display:none" onchange="handleFileUpload(event)"/>
   </div>
 
   <!-- MAIN -->
@@ -1268,6 +1284,12 @@
       <div class="editor-pane" id="editorPane">
         <div class="pane-tabs" id="paneTabs"></div>
         <div class="monaco-wrap" id="monacoWrap"></div>
+      </div>
+
+      <!-- IMAGE PREVIEW PANE -->
+      <div id="imgPreviewPane">
+        <img id="imgPreviewImg" src="" alt=""/>
+        <div class="img-name" id="imgPreviewName"></div>
       </div>
 
       <!-- PLAN PANEL -->
@@ -1812,15 +1834,24 @@
     if (!files.length) { el.innerHTML = '<div style="padding:8px 12px;font-size:10px;color:var(--sub)">No files</div>'; return; }
     el.innerHTML = files.map(f => {
       const n = f.includes('/') ? f.split('/').pop() : f;
-      const ext = n.split('.').pop();
-      const col = ext === 'html' ? '#60a5fa' : ext === 'css' ? '#a78bfa' : ext === 'js' ? '#fbbf24' : '#5555a0';
-      return `<div class="tree-item${f === activeFile ? ' active' : ''}" onclick="openFile('${esc(f)}')">
-        <svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      const ext = n.split('.').pop().toLowerCase();
+      const isImg = ['png','jpg','jpeg','gif','webp','svg','ico','bmp'].includes(ext);
+      const col = ext === 'html' ? '#60a5fa' : ext === 'css' ? '#a78bfa' : ext === 'js' ? '#fbbf24' : isImg ? '#34d399' : '#5555a0';
+      const ico = isImg
+        ? `<img class="tree-img-thumb" src="${fileSystem[f]||''}" alt=""/>`
+        : `<svg class="tree-ico" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+      return `<div class="tree-item${f === activeFile ? ' active' : ''}${isImg ? ' image' : ''}" onclick="openFile('${esc(f)}')">
+        ${ico}
         <span class="tree-name">${esc(n)}</span>
         ${f === mainFile ? '<div class="tree-main-dot" title="Main file"></div>' : ''}
         <button class="tree-ctx" onclick="openCtx(event,'${esc(f)}')">⋯</button>
       </div>`;
     }).join('');
+  }
+
+  function isImageFile(f) {
+    var ext = f.split('.').pop().toLowerCase();
+    return ['png','jpg','jpeg','gif','webp','svg','ico','bmp'].includes(ext);
   }
 
   // ── OPEN FILE ──
@@ -1829,6 +1860,20 @@
     if (!fileSystem.hasOwnProperty(f)) return;
     if (!openTabs.includes(f)) openTabs.push(f);
     activeFile = f;
+
+    // Image files — show preview pane instead of editor
+    var imgPane = document.getElementById('imgPreviewPane');
+    var edPane  = document.getElementById('editorPane');
+    if (isImageFile(f)) {
+      if (imgPane) { imgPane.classList.add('show'); document.getElementById('imgPreviewImg').src = fileSystem[f]; document.getElementById('imgPreviewName').textContent = f; }
+      if (edPane)  edPane.style.display = 'none';
+      renderTabs(); renderFileTree();
+      return;
+    } else {
+      if (imgPane) imgPane.classList.remove('show');
+      if (edPane)  edPane.style.display = '';
+    }
+
     const lang = getLang(f);
     const model = monaco.editor.createModel(fileSystem[f] || '', lang);
     editor.setModel(model);
@@ -2087,6 +2132,11 @@
       } else if (fn.endsWith('.js')) {
         var safe2 = fc.replace(/<\/script>/gi, '<\\/script>');
         html = html.replace(new RegExp('<script[^>]+src=[\x22\x27]' + safeFn + '[\x22\x27][^>]*><\/script>','gi'), '<script>' + safe2 + '<\/script>');
+      } else if (isImageFile(fn) && fc && fc.startsWith('data:')) {
+        // Replace src="image.png" with data URL so images render in sandboxed iframe
+        html = html.replace(new RegExp('(src=[\x22\x27])' + safeFn + '([\x22\x27])', 'gi'), '$1' + fc + '$2');
+        // Also handle CSS url() references
+        html = html.replace(new RegExp('url\\([\x22\x27]?' + safeFn + '[\x22\x27]?\\)', 'gi'), 'url(' + fc + ')');
       }
     });
     // Inject multi-page navigation interceptor + console bridge
@@ -2317,6 +2367,35 @@
     if (b.endsWith('.js')) return `// ${b}\n\n`;
     if (b.endsWith('.json')) return '{}';
     return '';
+  }
+
+  function handleFileUpload(event) {
+    var files = event.target.files;
+    if (!files || !files.length) return;
+    Array.from(files).forEach(function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var name = file.name;
+        // Avoid name collisions
+        if (fileSystem[name]) {
+          var parts = name.split('.');
+          var ext = parts.pop();
+          name = parts.join('.') + '_' + Date.now() + '.' + ext;
+        }
+        fileSystem[name] = dataUrl;
+        dirtyFiles.add(name);
+        if (!openTabs.includes(name)) openTabs.push(name);
+        renderFileTree();
+        renderTabs();
+        openFile(name);
+        saveNow();
+        showToast('✓', file.name + ' uploaded');
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset input so same file can be re-uploaded
+    event.target.value = '';
   }
 
   function toggleAddDD(e) { e.stopPropagation(); document.getElementById('addDD').classList.toggle('show'); }

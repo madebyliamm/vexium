@@ -616,6 +616,71 @@
       transition:border-color .15s,box-shadow .15s;
       box-shadow:0 4px 28px rgba(0,0,0,.3);
     }
+    /* attachment chips */
+    #aiAttachChips{display:none;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
+    #aiAttachChips.has-chips{display:flex}
+    .ai-attach-chip{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px 4px 8px;border-radius:999px;
+      background:var(--b1);border:1px solid var(--b2);
+      font-size:11px;font-weight:600;color:var(--text);
+      cursor:pointer;transition:background .12s;max-width:180px;
+    }
+    .ai-attach-chip:hover{background:var(--b2)}
+    .ai-attach-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;opacity:.7}
+    .ai-attach-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ai-attach-chip-x{
+      width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);
+      border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0;padding:0;margin-left:2px;font-size:10px;
+      transition:background .12s,color .12s;
+    }
+    .ai-attach-chip-x:hover{background:rgba(239,68,68,.2);color:#f87171}
+    /* attachment preview popup */
+    #aiAttachPreview{
+      display:none;position:fixed;inset:0;z-index:1000;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      align-items:center;justify-content:center;
+    }
+    #aiAttachPreview.show{display:flex}
+    #aiAttachPreviewInner{
+      background:var(--s1);border:1px solid var(--b2);border-radius:16px;
+      max-width:min(700px,90vw);max-height:80vh;overflow:hidden;
+      display:flex;flex-direction:column;
+    }
+    #aiAttachPreviewHeader{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px;border-bottom:1px solid var(--b1);flex-shrink:0;
+    }
+    #aiAttachPreviewTitle{font-size:12px;font-weight:700;color:var(--text);font-family:var(--mono)}
+    #aiAttachPreviewClose{background:none;border:none;color:var(--sub);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px}
+    #aiAttachPreviewBody{overflow:auto;padding:16px;flex:1}
+    #aiAttachPreviewBody img{max-width:100%;border-radius:8px}
+    #aiAttachPreviewBody pre{font-family:var(--mono);font-size:12px;color:var(--text);white-space:pre-wrap;word-break:break-all;margin:0}
+    /* + attach button */
+    .ai-attach-btn{
+      width:30px;height:30px;border-radius:50%;background:transparent;
+      border:1px solid var(--b2);color:var(--sub);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:all .2s;align-self:flex-end;
+    }
+    .ai-attach-btn:hover{background:var(--b1);color:var(--text)}
+    .ai-attach-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+    /* when multiline: move + on top of send */
+    #aiInputRow.multiline .ai-attach-btn{
+      position:absolute;bottom:10px;right:54px;
+    }
+    #aiInputRow.multiline{position:relative}
+    /* user bubble attachment chips */
+    .ai-bubble-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+    .ai-bubble-chip{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:3px 8px;border-radius:999px;
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+      font-size:10px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;
+    }
+    .ai-bubble-chip:hover{background:rgba(255,255,255,.14)}
+    .ai-bubble-chip svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;opacity:.7}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.45);box-shadow:0 0 0 3px rgba(79,110,247,.07),0 4px 28px rgba(0,0,0,.3)}
     #aiInputRow{display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 18px}
     #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
@@ -1458,7 +1523,11 @@
         <div id="aiBottom">
           <div id="aiBottomWrap">
             <div id="aiBottomInputArea">
+              <div id="aiAttachChips"></div>
               <div id="aiInputRow">
+                <button class="ai-attach-btn" id="aiAttachBtn" onclick="aiAttachClick()" title="Attach file">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
                 <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
                 <button id="aiStopBtn" onclick="aiStop()" style="display:none">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
@@ -1467,6 +1536,7 @@
                   <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
                 </button>
               </div>
+              <input type="file" id="aiAttachInput" style="display:none" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" onchange="aiHandleFileAttach(event)"/>
             </div>
           </div>
         </div>
@@ -1560,6 +1630,15 @@
   </div>
 </div>
 
+<div id="aiAttachPreview" onclick="if(event.target===this)aiClosePreview()">
+  <div id="aiAttachPreviewInner">
+    <div id="aiAttachPreviewHeader">
+      <span id="aiAttachPreviewTitle"></span>
+      <button id="aiAttachPreviewClose" onclick="aiClosePreview()">×</button>
+    </div>
+    <div id="aiAttachPreviewBody"></div>
+  </div>
+</div>
 <div id="toast"><span id="toastIcon"></span><span id="toastMsg" style="margin-left:4px"></span></div>
 
 <script>var require={paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}};</script>
@@ -2493,7 +2572,8 @@
 
   // ── AI CHAT ──
   var aiHistory = [];
-  var aiAllMessages = [];   // virtual DOM: all AI chat messages ever
+  var aiAllMessages = [];
+  var aiAttachments = []; // pending attachments [{name, type, dataUrl, text}]   // virtual DOM: all AI chat messages ever
   var AI_VIRTUAL_WINDOW = 40;
   var aiTyping = false;
   var aiStarted = false;
@@ -2524,6 +2604,7 @@
     const newH = Math.min(el.scrollHeight, maxH);
     el.style.height = newH + 'px';
     el.style.overflow = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    if (el.id === 'aiBottomInput') aiCheckMultiline();
   }
 
   function aiNow() {
@@ -2690,13 +2771,29 @@
   }
 
   // Separate from aiAddUser — just appends DOM row without tracking allMessages
-  function aiAddUserRow(text) {
+  function aiAddUserRow(text, attachments) {
     var msgs = document.getElementById('aiMessages');
     var row = document.createElement('div');
     row.className = 'ai-row user';
     var bubble = document.createElement('div');
     bubble.className = 'ai-bubble';
-    bubble.textContent = text;
+    // Show attachment chips in bubble
+    if (attachments && attachments.length) {
+      var chipsEl = document.createElement('div');
+      chipsEl.className = 'ai-bubble-chips';
+      attachments.forEach(function(att) {
+        var isImg = att.type === 'image';
+        var chip = document.createElement('div');
+        chip.className = 'ai-bubble-chip';
+        chip.innerHTML = '<svg viewBox="0 0 24 24">' + (isImg
+          ? '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/>'
+          : '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>') + '</svg>' +
+          escHtml(att.name);
+        bubble.appendChild(chipsEl);
+        chipsEl.appendChild(chip);
+      });
+    }
+    bubble.appendChild(document.createTextNode(text));
     row.appendChild(bubble);
     if (text.length > 320 || text.split('\n').length > 6) {
       bubble.classList.add('collapsed');
@@ -3048,8 +3145,9 @@
   }
 
   // Add a user bubble — also tracks in allMessages virtual DOM
-  function aiAddUser(text) {
-    aiAllMessages.push({ role: 'user', text: text, files: [], time: aiNow() });
+  function aiAddUser(text, attachments) {
+    aiAllMessages.push({ role: 'user', text: text, files: [], time: aiNow(), attachments: attachments || [] });
+    aiAddUserRow(text, attachments);
     aiAddUserRow(text);
   }
 
@@ -3327,6 +3425,116 @@
 
   var _pendingBrief = null;
 
+  // ── ATTACHMENTS ──────────────────────────────────────────────────
+
+  function aiAttachClick() {
+    document.getElementById('aiAttachInput').click();
+  }
+
+  function aiHandleFileAttach(event) {
+    var files = event.target.files;
+    if (!files || !files.length) return;
+    Array.from(files).forEach(function(file) {
+      var reader = new FileReader();
+      var isImg = file.type.startsWith('image/');
+      reader.onload = function(e) {
+        aiAddAttachment({ name: file.name, type: isImg ? 'image' : 'text', dataUrl: e.target.result, text: isImg ? null : e.target.result });
+      };
+      if (isImg) reader.readAsDataURL(file);
+      else reader.readAsText(file);
+    });
+    event.target.value = '';
+  }
+
+  function aiAddAttachment(att) {
+    aiAttachments.push(att);
+    aiRenderChips();
+  }
+
+  function aiRemoveAttachment(idx) {
+    aiAttachments.splice(idx, 1);
+    aiRenderChips();
+  }
+
+  function aiRenderChips() {
+    var el = document.getElementById('aiAttachChips');
+    if (!el) return;
+    el.innerHTML = '';
+    el.classList.toggle('has-chips', aiAttachments.length > 0);
+    aiAttachments.forEach(function(att, i) {
+      var chip = document.createElement('div');
+      chip.className = 'ai-attach-chip';
+      var isImg = att.type === 'image';
+      chip.innerHTML =
+        '<svg viewBox="0 0 24 24">' + (isImg
+          ? '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/>'
+          : '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>') +
+        '</svg>' +
+        '<span class="ai-attach-chip-name">' + escHtml(att.name) + '</span>' +
+        '<button class="ai-attach-chip-x" onclick="event.stopPropagation();aiRemoveAttachment(' + i + ')">×</button>';
+      chip.addEventListener('click', function() { aiPreviewAttachment(i); });
+      el.appendChild(chip);
+    });
+  }
+
+  function aiPreviewAttachment(idx) {
+    var att = aiAttachments[idx];
+    if (!att) return;
+    var popup = document.getElementById('aiAttachPreview');
+    document.getElementById('aiAttachPreviewTitle').textContent = att.name;
+    var body = document.getElementById('aiAttachPreviewBody');
+    if (att.type === 'image') {
+      body.innerHTML = '<img src="' + att.dataUrl + '" alt="' + escHtml(att.name) + '"/>';
+    } else {
+      body.innerHTML = '<pre>' + escHtml(att.text || '') + '</pre>';
+    }
+    popup.classList.add('show');
+  }
+
+  function aiClosePreview() {
+    document.getElementById('aiAttachPreview').classList.remove('show');
+  }
+
+  function aiCheckMultiline() {
+    var ta = document.getElementById('aiBottomInput');
+    var row = document.getElementById('aiInputRow');
+    if (!ta || !row) return;
+    var lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+    var multiline = ta.scrollHeight > lineHeight * 1.8;
+    row.classList.toggle('multiline', multiline);
+  }
+
+  // Handle paste — large text or image becomes attachment
+  document.addEventListener('DOMContentLoaded', function() {
+    var bi = document.getElementById('aiBottomInput');
+    if (!bi) return;
+    bi.addEventListener('paste', function(e) {
+      // Image paste
+      var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          e.preventDefault();
+          var blob = items[i].getAsFile();
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            aiAddAttachment({ name: 'pasted', type: 'image', dataUrl: ev.target.result, text: null });
+          };
+          reader.readAsDataURL(blob);
+          return;
+        }
+      }
+      // Large text paste — convert to attachment after a tick
+      setTimeout(function() {
+        if (bi.value.length > 800) {
+          var pasted = bi.value;
+          bi.value = '';
+          bi.style.height = '';
+          aiAddAttachment({ name: 'pasted', type: 'text', dataUrl: null, text: pasted });
+        }
+      }, 0);
+    });
+  });
+
   async function aiSend(fromBottom) {
     var input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
     var text = input.value.trim();
@@ -3346,8 +3554,33 @@
     aiTransitionToChat();
     aiTyping = true;
     aiSetGenerating(true);
-    aiAddUser(text);
-    aiHistory.push({ role: 'user', content: text });
+
+    // Build message content — include attachments if any
+    var attachSnapshot = aiAttachments.slice();
+    aiAttachments = [];
+    aiRenderChips();
+    document.getElementById('aiInputRow').classList.remove('multiline');
+
+    aiAddUser(text, attachSnapshot);
+
+    // Build API content — multimodal if attachments present
+    var apiContent;
+    if (attachSnapshot.length > 0) {
+      apiContent = [];
+      attachSnapshot.forEach(function(att) {
+        if (att.type === 'image' && att.dataUrl) {
+          var b64 = att.dataUrl.split(',')[1];
+          var mime = att.dataUrl.split(';')[0].split(':')[1] || 'image/png';
+          apiContent.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } });
+        } else if (att.text) {
+          apiContent.push({ type: 'text', text: '[File: ' + att.name + ']\n' + att.text });
+        }
+      });
+      if (text) apiContent.push({ type: 'text', text: text });
+    } else {
+      apiContent = text;
+    }
+    aiHistory.push({ role: 'user', content: apiContent });
     aiShowTyping();
 
     // Fetch brief before building (always — it's fast and dramatically improves output)

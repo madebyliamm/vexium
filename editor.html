@@ -170,7 +170,8 @@
     /* image preview in editor area */
     #imgPreviewPane{
       display:none;flex-direction:column;align-items:center;justify-content:center;
-      gap:14px;flex:1;background:var(--bg);padding:32px;
+      gap:14px;flex:1;background:var(--bg);padding:32px;position:absolute;
+      inset:0;top:0;z-index:1;
     }
     #imgPreviewPane.show{display:flex}
     #imgPreviewPane img{max-width:100%;max-height:60vh;border-radius:8px;border:1px solid var(--b2);object-fit:contain}
@@ -201,7 +202,7 @@
     #editorArea{flex:1;display:flex;min-height:0;overflow:hidden}
 
     /* ── EDITOR PANE ── */
-    .editor-pane{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+    .editor-pane{flex:1;display:none;flex-direction:column;min-width:0;overflow:hidden}
     .pane-tabs{height:34px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:flex-end;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
     .pane-tabs::-webkit-scrollbar{display:none}
     .pane-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:32px;font-size:11px;font-family:var(--mono);cursor:pointer;border-right:1px solid var(--b1);border-top:2px solid transparent;white-space:nowrap;color:var(--sub);flex-shrink:0;transition:all .1s}
@@ -223,7 +224,6 @@
 
     /* ── AI PANEL ── */
     #aiPanel{flex:1;display:none;flex-direction:column;background:var(--bg);min-width:0;overflow:hidden;position:relative}
-    #aiPanel.show{display:flex}
 
     /* ── EMPTY STATE ── */
     @keyframes introFadeUp{
@@ -1284,12 +1284,10 @@
       <div class="editor-pane" id="editorPane">
         <div class="pane-tabs" id="paneTabs"></div>
         <div class="monaco-wrap" id="monacoWrap"></div>
-      </div>
-
-      <!-- IMAGE PREVIEW PANE -->
-      <div id="imgPreviewPane">
-        <img id="imgPreviewImg" src="" alt=""/>
-        <div class="img-name" id="imgPreviewName"></div>
+        <div id="imgPreviewPane">
+          <img id="imgPreviewImg" src="" alt=""/>
+          <div class="img-name" id="imgPreviewName"></div>
+        </div>
       </div>
 
       <!-- PLAN PANEL -->
@@ -1692,7 +1690,16 @@
 
     renderFileTree();
     setUrl(mainFile);
-    setMode('ai');
+    // Always open at least one code file in the editor tabs
+    var codeFiles = Object.keys(fileSystem).filter(function(f) { return !isImageFile(f); });
+    if (codeFiles.length > 0 && openTabs.length === 0) {
+      var toOpen = codeFiles.includes(mainFile) ? mainFile : codeFiles[0];
+      openTabs.push(toOpen);
+      activeFile = toOpen;
+    }
+    var lastMode = 'ai';
+    try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
+    setMode(lastMode);
     await aiLoadHistory();
     renderTemplates();
     startPlaceholderRotator();
@@ -1757,40 +1764,19 @@
         document.getElementById('stCol').textContent = e.position.column;
       });
       openFile(mainFile);
+      // Re-apply current mode after Monaco loads — openFile can show editorPane
+      var currentMode = 'ai';
+      try { currentMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
+      if (currentMode !== 'editor') {
+        document.getElementById('editorPane').style.display = 'none';
+      }
       if (previewVisible) setTimeout(refreshPreview, 400);
     });
   }
 
   // ── MODE ──
-  var splitMode = false;
-
   function handleModeClick(e, m) {
-    if (e.shiftKey) {
-      splitMode = !splitMode;
-      if (splitMode) setSplitMode();
-      else setMode(m === 'ai' ? 'editor' : 'ai');
-    } else {
-      splitMode = false;
-      setMode(m);
-    }
-  }
-
-  function setSplitMode() {
-    document.getElementById('modeAI').classList.add('on');
-    document.getElementById('modeEditor').classList.add('on');
-    document.getElementById('editorPane').style.display = '';
-    document.getElementById('aiPanel').classList.add('show');
-    document.getElementById('editorArea').classList.add('split');
-    document.getElementById('sidebar').style.display = 'none';
-    document.getElementById('statusbar').classList.add('hidden');
-    // If preview/console open in split: stack them vertically
-    var rp = document.getElementById('rightPanel');
-    if (previewVisible || consoleVisible) {
-      rp.style.flexDirection = 'column';
-      document.getElementById('previewFrame').style.flex = '1';
-      document.getElementById('previewFrame').style.width = '100%';
-    }
-    if (editor) editor.layout();
+    setMode(m);
   }
 
   function triggerIntroEntrance(id) {
@@ -1803,11 +1789,13 @@
   }
 
   function setMode(m) {
-    splitMode = false;
-    document.getElementById('editorArea').classList.remove('split');
+    document.getElementById('editorArea').classList.remove('split'); // no-op, split mode removed
     document.getElementById('modeEditor').classList.toggle('on', m === 'editor');
     document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
+    // Persist last mode so refresh restores it
+    if (m === 'ai' || m === 'editor') { try { localStorage.setItem('vexium_last_mode', m); } catch(e) {} }
     document.getElementById('editorPane').style.display = m === 'editor' ? '' : 'none';
+    document.getElementById('aiPanel').style.display = m === 'ai' ? 'flex' : 'none';
     document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
     document.getElementById('planPanel').classList.toggle('show', m === 'plan');
     document.getElementById('sidebar').style.display = (m === 'ai' || m === 'plan') ? 'none' : '';
@@ -1818,6 +1806,13 @@
     document.body.classList.toggle('plan-active', m === 'plan');
     var planLbl = document.getElementById('tbPlanLabel');
     if (planLbl) planLbl.style.display = m === 'plan' ? 'block' : 'none';
+    // Reset image preview state when leaving editor
+    if (m !== 'editor') {
+      var imgPane = document.getElementById('imgPreviewPane');
+      var monacoWrap = document.getElementById('monacoWrap');
+      if (imgPane) imgPane.classList.remove('show');
+      if (monacoWrap) monacoWrap.style.display = '';
+    }
     if (m === 'editor' && editor) editor.layout();
     // Entrance animations
     if (m === 'ai') { var ac = document.getElementById('aiCenter'); if (ac && !ac.classList.contains('hidden')) triggerIntroEntrance('aiCenter'); }
@@ -1861,17 +1856,20 @@
     if (!openTabs.includes(f)) openTabs.push(f);
     activeFile = f;
 
-    // Image files — show preview pane instead of editor
+    // Image files — show editorPane (for tabs) + imgPreviewPane, hide monaco
     var imgPane = document.getElementById('imgPreviewPane');
-    var edPane  = document.getElementById('editorPane');
+    var monacoWrap = document.getElementById('monacoWrap');
+    var edPane = document.getElementById('editorPane');
     if (isImageFile(f)) {
+      if (edPane) edPane.style.display = 'flex';
+      if (monacoWrap) monacoWrap.style.display = 'none';
       if (imgPane) { imgPane.classList.add('show'); document.getElementById('imgPreviewImg').src = fileSystem[f]; document.getElementById('imgPreviewName').textContent = f; }
-      if (edPane)  edPane.style.display = 'none';
       renderTabs(); renderFileTree();
       return;
     } else {
       if (imgPane) imgPane.classList.remove('show');
-      if (edPane)  edPane.style.display = '';
+      if (monacoWrap) monacoWrap.style.display = '';
+      if (edPane) edPane.style.display = 'flex';
     }
 
     const lang = getLang(f);
@@ -1920,6 +1918,12 @@
 
   function closeTab(e, f) {
     e.stopPropagation();
+    // Don't allow closing if it's the last code (non-image) tab
+    var codeTabsAfter = openTabs.filter(function(x) { return x !== f && !isImageFile(x); });
+    if (!isImageFile(f) && codeTabsAfter.length === 0) {
+      showToast('!', 'At least one file must stay open');
+      return;
+    }
     openTabs = openTabs.filter(x => x !== f);
     if (activeFile === f) {
       const next = openTabs[openTabs.length - 1] || null;
@@ -2407,6 +2411,13 @@
     const m = document.getElementById('ctxMenu');
     m.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
     m.style.top = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+    // Only show "Set as main" for .html files
+    var setMainItem = m.querySelector('[onclick="ctxSetMain()"]');
+    if (setMainItem) setMainItem.style.display = f.endsWith('.html') ? '' : 'none';
+    // Hide Delete if it's the last code file
+    var codeFiles = Object.keys(fileSystem).filter(function(cf) { return !isImageFile(cf); });
+    var deleteItem = m.querySelector('[onclick="ctxDelete()"]');
+    if (deleteItem) deleteItem.style.display = (!isImageFile(f) && codeFiles.length <= 1) ? 'none' : '';
     m.classList.add('show');
   }
   document.addEventListener('click', () => document.getElementById('ctxMenu').classList.remove('show'));
@@ -2433,6 +2444,8 @@
 
   function ctxDelete() {
     if (!ctxTarget) return;
+    var codeFiles = Object.keys(fileSystem).filter(function(f) { return !isImageFile(f); });
+    if (!isImageFile(ctxTarget) && codeFiles.length <= 1) { showToast('!', 'Cannot delete last file'); return; }
     if (Object.keys(fileSystem).length <= 1) { showToast('!', 'Cannot delete last file'); return; }
     if (!confirm('Delete ' + ctxTarget + '?')) return;
     delete fileSystem[ctxTarget];

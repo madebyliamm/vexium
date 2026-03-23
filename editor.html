@@ -242,7 +242,7 @@
     .ai-star{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 0 32px rgba(79,110,247,.4);pointer-events:none}
     .ai-star svg{width:26px;height:26px;fill:#fff}
     .ai-center-h{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-bottom:22px}
-    #aiCenterInput{width:min(92%,580px);pointer-events:all}
+    #aiCenterInput{width:min(92%,800px);pointer-events:all}
     #aiCenterInput #aiInputArea{border-radius:14px;border:1px solid var(--b2);background:var(--s1);padding:9px 9px 9px 16px;transition:border-color .15s}
     #aiCenterInput #aiInputArea:focus-within{border-color:rgba(79,110,247,.5);box-shadow:0 0 0 3px rgba(79,110,247,.06)}
     #aiInput{transition:opacity .18s ease}
@@ -323,7 +323,7 @@
     #aiInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
     #aiInput::placeholder{color:var(--sub)}
     /* Center state send — bigger */
-    #aiSend{width:30px;height:30px;min-width:30px;min-height:30px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .15s;box-shadow:0 0 16px rgba(79,110,247,.4)}
+    #aiSend{width:38px;height:38px;min-width:38px;min-height:38px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .15s;box-shadow:0 0 16px rgba(79,110,247,.4)}
     #aiSend:hover{opacity:.88;transform:scale(1.06)}
     #aiSend:disabled{opacity:.25;cursor:default;transform:none}
     #aiSend svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -663,36 +663,26 @@
     #aiAttachPreviewBody pre{font-family:var(--mono);font-size:12px;color:var(--text);white-space:pre-wrap;word-break:break-all;margin:0}
     /* + attach button */
     /* attach button — two instances: left (single-line) and above-send (multiline) */
+    /* attach button */
     .ai-attach-btn{
-      width:28px;height:28px;border-radius:50%;background:transparent;
-      border:none;color:rgba(255,255,255,.45);cursor:pointer;
+      width:38px;height:38px;border-radius:50%;background:transparent;
+      border:none;color:rgba(255,255,255,.9);cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;padding:0;
-      transition:opacity .18s ease, transform .18s ease, color .15s;
+      flex-shrink:0;padding:0;align-self:center;
+      position:relative;transition:color .15s;
     }
-    .ai-attach-btn:hover{color:rgba(255,255,255,.85);transform:scale(1.12)}
-    .ai-attach-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
-    /* left button: visible single-line, hidden multiline */
-    #aiAttachBtnLeft{
-      opacity:1;transform:scale(1);pointer-events:all;
-      transition:opacity .18s ease, transform .18s ease;
-      align-self:flex-end;margin-bottom:3px;
+    .ai-attach-btn::before{
+      content:'';position:absolute;inset:0;border-radius:50%;
+      background:rgba(255,255,255,.0);
+      transition:background .15s;
     }
-    #aiInputRow.multiline #aiAttachBtnLeft{
-      opacity:0;transform:scale(0.5);pointer-events:none;
-      width:0;margin:0;overflow:hidden;
-    }
-    /* above-send stack */
-    .ai-send-stack{position:relative;flex-shrink:0;display:flex;align-items:flex-end}
-    #aiAttachBtnAbove{
-      position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%) scale(0.5);
-      opacity:0;pointer-events:none;
-      transition:opacity .18s ease, transform .18s ease;
-    }
-    #aiInputRow.multiline #aiAttachBtnAbove{
-      opacity:1;transform:translateX(-50%) scale(1);pointer-events:all;
-    }
-    #aiInputRow{display:flex;align-items:flex-end;gap:8px;padding:12px 12px 12px 14px;transition:padding .18s}
+    .ai-attach-btn:hover::before{background:rgba(255,255,255,.1)}
+    .ai-attach-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;position:relative;z-index:1}
+    /* outer bar wrapper — + on left, input in middle, send on right */
+    #aiBottomBar{display:flex;align-items:flex-end;gap:8px;width:100%}
+    #aiBottomInputArea{flex:1;min-width:0}
+    #aiInputRow{display:flex;align-items:center;padding:0 14px;min-height:46px}
+    #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh;padding:12px 0;align-self:center;}
     /* user bubble attachment chips */
     .ai-bubble-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
     .ai-bubble-chip{
@@ -704,12 +694,12 @@
     .ai-bubble-chip:hover{background:rgba(255,255,255,.14)}
     .ai-bubble-chip svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;opacity:.7}
     #aiBottomInputArea:focus-within{border-color:rgba(79,110,247,.45);box-shadow:0 0 0 3px rgba(79,110,247,.07),0 4px 28px rgba(0,0,0,.3)}
-    /* #aiInputRow defined above */
-    #aiBottomInput{flex:1;background:transparent;border:none;font-size:14px;color:var(--text);font-family:var(--sans);resize:none;outline:none;line-height:1.55;overflow:hidden;min-height:22px;max-height:25vh}
+
+
     #aiBottomInput.list-mode{padding-left:24px;text-indent:-24px}
     #aiBottomInput::placeholder{color:var(--b3)}
     #aiBottomSend{
-      width:34px;height:34px;min-width:34px;min-height:34px;
+      width:38px;height:38px;min-width:38px;min-height:38px;
       background:linear-gradient(135deg,var(--a1),var(--a2));
       border:none;border-radius:50%;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
@@ -720,7 +710,7 @@
     #aiBottomSend:disabled{opacity:.25;cursor:default;transform:none}
     #aiBottomSend svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
     #aiStopBtn{
-      width:34px;height:34px;min-width:34px;
+      width:38px;height:38px;min-width:38px;
       background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
       border-radius:50%;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
@@ -1460,11 +1450,13 @@
           </div>
           <div class="ai-center-h">Build anything with me.</div>
           <div id="aiCenterInput">
-            <div id="aiInputArea">
-              <button class="ai-attach-btn" onclick="aiAttachClick()" title="Attach file" style="align-self:center;margin-bottom:0">
+            <div style="display:flex;align-items:center;gap:10px;width:min(92%,800px);margin:0 auto">
+              <button class="ai-attach-btn" onclick="aiAttachClick()" title="Attach file">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
-              <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
+              <div id="aiInputArea" style="flex:1">
+                <textarea id="aiInput" placeholder="Ask me to build something, or just chat…" rows="1"></textarea>
+              </div>
               <button id="aiSend" onclick="aiSend()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
@@ -1547,27 +1539,24 @@
         <!-- bottom input -->
         <div id="aiBottom">
           <div id="aiBottomWrap">
-            <div id="aiBottomInputArea">
-              <div id="aiAttachChips"></div>
-              <div id="aiInputRow">
-                <button class="ai-attach-btn" id="aiAttachBtnLeft" onclick="aiAttachClick()" title="Attach file">
-                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-                <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
-                <div class="ai-send-stack">
-                  <button class="ai-attach-btn" id="aiAttachBtnAbove" onclick="aiAttachClick()" title="Attach file">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
-                  <button id="aiStopBtn" onclick="aiStop()" style="display:none">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
-                  </button>
-                  <button id="aiBottomSend" onclick="aiSend(true)">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                  </button>
+            <div id="aiBottomBar">
+              <button class="ai-attach-btn" id="aiAttachBtn" onclick="aiAttachClick()" title="Attach file">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div id="aiBottomInputArea">
+                <div id="aiAttachChips"></div>
+                <div id="aiInputRow">
+                  <textarea id="aiBottomInput" placeholder="Ask me anything…" rows="1"></textarea>
                 </div>
               </div>
-              <input type="file" id="aiAttachInput" style="display:none" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" onchange="aiHandleFileAttach(event)"/>
+              <button id="aiStopBtn" onclick="aiStop()" style="display:none">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(239,68,68,.9)"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+              </button>
+              <button id="aiBottomSend" onclick="aiSend(true)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
             </div>
+            <input type="file" id="aiAttachInput" style="display:none" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" onchange="aiHandleFileAttach(event)"/>
           </div>
         </div>
       </div>
@@ -1799,13 +1788,15 @@
 
     renderFileTree();
     setUrl(mainFile);
-    // Always open at least one code file in the editor tabs
-    var codeFiles = Object.keys(fileSystem).filter(function(f) { return !isImageFile(f); });
-    if (codeFiles.length > 0 && openTabs.length === 0) {
-      var toOpen = codeFiles.includes(mainFile) ? mainFile : codeFiles[0];
-      openTabs.push(toOpen);
-      activeFile = toOpen;
+    // Always open main file in the editor tabs
+    if (mainFile && fileSystem[mainFile] && !openTabs.includes(mainFile)) {
+      openTabs.unshift(mainFile);
+      activeFile = mainFile;
+    } else if (openTabs.length === 0) {
+      var codeFiles = Object.keys(fileSystem).filter(function(f) { return !isImageFile(f); });
+      if (codeFiles.length > 0) { openTabs.push(codeFiles[0]); activeFile = codeFiles[0]; }
     }
+    renderTabs();
     var lastMode = 'ai';
     try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
     setMode(lastMode);
@@ -1873,6 +1864,7 @@
         document.getElementById('stCol').textContent = e.position.column;
       });
       openFile(mainFile);
+      renderTabs();
       // Re-apply current mode after Monaco loads — openFile can show editorPane
       var currentMode = 'ai';
       try { currentMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
@@ -1903,7 +1895,7 @@
     document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
     // Persist last mode so refresh restores it
     if (m === 'ai' || m === 'editor') { try { localStorage.setItem('vexium_last_mode', m); } catch(e) {} }
-    document.getElementById('editorPane').style.display = m === 'editor' ? '' : 'none';
+    document.getElementById('editorPane').style.display = m === 'editor' ? 'flex' : 'none';
     document.getElementById('aiPanel').style.display = m === 'ai' ? 'flex' : 'none';
     document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
     document.getElementById('planPanel').classList.toggle('show', m === 'plan');
@@ -1928,6 +1920,11 @@
         var fallback = mainFile || Object.keys(fileSystem).find(function(f) { return !isImageFile(f); });
         if (fallback) openFile(fallback);
       }
+      // Ensure main file is always in the tab bar
+      if (mainFile && fileSystem[mainFile] && !openTabs.includes(mainFile)) {
+        openTabs.unshift(mainFile);
+      }
+      renderTabs();
       if (editor) editor.layout();
     }
     // Entrance animations
@@ -3523,46 +3520,59 @@
     document.getElementById('aiAttachPreview').classList.remove('show');
   }
 
-  function aiCheckMultiline() {
-    var ta = document.getElementById('aiBottomInput');
-    var row = document.getElementById('aiInputRow');
-    if (!ta || !row) return;
-    var lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 22;
-    // Use 2.2x to give a bit more buffer before switching
-    var multiline = ta.scrollHeight > lineHeight * 2.2;
-    row.classList.toggle('multiline', multiline);
-  }
+  function aiCheckMultiline() { /* no-op — layout no longer needs this */ }
 
-  // Handle paste — large text or image becomes attachment
-  document.addEventListener('DOMContentLoaded', function() {
-    var bi = document.getElementById('aiBottomInput');
-    if (!bi) return;
-    bi.addEventListener('paste', function(e) {
-      // Image paste
-      var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-      for (var i = 0; i < items.length; i++) {
-        if (items[i].type.startsWith('image/')) {
-          e.preventDefault();
-          var blob = items[i].getAsFile();
-          var reader = new FileReader();
-          reader.onload = function(ev) {
-            aiAddAttachment({ name: 'pasted', type: 'image', dataUrl: ev.target.result, text: null });
-          };
-          reader.readAsDataURL(blob);
-          return;
+  // Attach paste + drag handlers directly (script runs after DOM is ready)
+  (function() {
+    function attachHandlers() {
+      var bi = document.getElementById('aiBottomInput');
+      var area = document.getElementById('aiBottomInputArea') || document.getElementById('aiBottom');
+      if (!bi) return;
+
+      // Paste handler
+      bi.addEventListener('paste', function(e) {
+        var items = (e.clipboardData || e.originalEvent && e.originalEvent.clipboardData || {}).items || [];
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type && items[i].type.startsWith('image/')) {
+            e.preventDefault();
+            var blob = items[i].getAsFile();
+            var reader = new FileReader();
+            reader.onload = function(ev) { aiAddAttachment({ name: 'pasted', type: 'image', dataUrl: ev.target.result, text: null }); };
+            reader.readAsDataURL(blob);
+            return;
+          }
         }
+        // Also check intro screen input
+        setTimeout(function() {
+          if (bi.value.length > 600) {
+            var pasted = bi.value; bi.value = ''; bi.style.height = '';
+            aiAddAttachment({ name: 'pasted', type: 'text', dataUrl: null, text: pasted });
+          }
+        }, 0);
+      });
+
+      // Drag and drop onto the input area
+      if (area) {
+        area.addEventListener('dragover', function(e) { e.preventDefault(); area.style.borderColor = 'rgba(79,110,247,.6)'; });
+        area.addEventListener('dragleave', function() { area.style.borderColor = ''; });
+        area.addEventListener('drop', function(e) {
+          e.preventDefault(); area.style.borderColor = '';
+          var files = e.dataTransfer.files;
+          if (!files || !files.length) return;
+          Array.from(files).forEach(function(file) {
+            var isImg = file.type.startsWith('image/');
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+              aiAddAttachment({ name: file.name, type: isImg ? 'image' : 'text', dataUrl: isImg ? ev.target.result : null, text: isImg ? null : ev.target.result });
+            };
+            if (isImg) reader.readAsDataURL(file); else reader.readAsText(file);
+          });
+        });
       }
-      // Large text paste — convert to attachment after a tick
-      setTimeout(function() {
-        if (bi.value.length > 800) {
-          var pasted = bi.value;
-          bi.value = '';
-          bi.style.height = '';
-          aiAddAttachment({ name: 'pasted', type: 'text', dataUrl: null, text: pasted });
-        }
-      }, 0);
-    });
-  });
+    }
+    // Run immediately since script is at end of body
+    attachHandlers();
+  })();
 
   async function aiSend(fromBottom) {
     var input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
@@ -3588,7 +3598,7 @@
     var attachSnapshot = aiAttachments.slice();
     aiAttachments = [];
     aiRenderChips();
-    document.getElementById('aiInputRow').classList.remove('multiline');
+
 
     aiAddUser(text, attachSnapshot);
 

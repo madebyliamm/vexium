@@ -2132,9 +2132,10 @@ function openFile(f) {
   const imgPane    = document.getElementById('imgPreviewPane');
   const monacoWrap = document.getElementById('monacoWrap');
   const edPane     = document.getElementById('editorPane');
+  const currentMode = document.getElementById('modeEditor').classList.contains('on') ? 'editor' : 'ai';
 
   if (isImageFile(f)) {
-    if (edPane) edPane.style.display = 'flex';
+    if (currentMode === 'editor' && edPane) edPane.style.display = 'flex';
     if (monacoWrap) monacoWrap.style.display = 'none';
     if (imgPane) {
       imgPane.classList.add('show');
@@ -2147,12 +2148,13 @@ function openFile(f) {
 
   if (imgPane) imgPane.classList.remove('show');
   if (monacoWrap) monacoWrap.style.display = '';
-  if (edPane) edPane.style.display = 'flex';
+  // Only show editor pane if we're actually in editor mode
+  if (currentMode === 'editor' && edPane) edPane.style.display = 'flex';
 
   const lang = getLang(f);
   const model = monaco.editor.createModel(fileSystem[f] || '', lang);
   editor.setModel(model);
-  editor.focus();
+  if (currentMode === 'editor') editor.focus();
   model.onDidChangeContent(() => {
     if (activeFile !== f) return;
     fileSystem[f] = editor.getValue();
@@ -3576,6 +3578,7 @@ async function aiCallAPI() {
     const decoder = new TextDecoder();
     let buf = '';
     const collectedFiles = [];
+    const collectedNames = new Set(); // prevent duplicates from auto-fix pass
     // Track which file is currently streaming for pill line count updates
     let currentStreamingFile = null;
 
@@ -3625,7 +3628,11 @@ async function aiCallAPI() {
           // Save to fileSystem — this is the critical step
           fileSystem[data.name] = content;
           dirtyFiles.add(data.name);
-          collectedFiles.push({ name: data.name });
+          // Only add to collectedFiles once — auto-fix may re-emit the same filename
+          if (!collectedNames.has(data.name)) {
+            collectedFiles.push({ name: data.name });
+            collectedNames.add(data.name);
+          }
           aiMarkPillDone(data.name);
           currentStreamingFile = null;
           livePreviewUpdate();

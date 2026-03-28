@@ -1371,8 +1371,38 @@
     .tpl-btn-save:hover { background: #3d5df0; }
 
     /* ─────────────────────────────────────────────
-       TOAST
+       DROP OVERLAY
     ───────────────────────────────────────────── */
+    #aiDropOverlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 200;
+      background: rgba(2, 2, 9, .85);
+      backdrop-filter: blur(6px);
+      border: 2px dashed rgba(79, 110, 247, .5);
+      border-radius: var(--r-lg);
+      margin: 8px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+    #aiDropOverlay.show { display: flex; }
+    .ai-drop-ico {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(79, 110, 247, .15);
+      border: 1px solid rgba(79, 110, 247, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-drop-ico svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ai-drop-label { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
+    .ai-drop-sub { font-size: 12px; color: var(--muted); }
     #toast {
       position: fixed;
       bottom: 18px;
@@ -1567,7 +1597,16 @@
       <!-- AI PANEL -->
       <div id="aiPanel">
 
-        <!-- Empty state -->
+        <!-- Drop overlay -->
+      <div id="aiDropOverlay">
+        <div class="ai-drop-ico">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="ai-drop-label">Drop files to attach</div>
+        <div class="ai-drop-sub">Images, text, code — anything</div>
+      </div>
+
+      <!-- Empty state -->
         <div id="aiCenter">
           <div class="ai-star">
             <svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>
@@ -1714,6 +1753,10 @@
             <span class="con-title">Console</span>
             <span class="con-badge con-err-bg" id="errCount"></span>
             <span class="con-badge con-warn-bg" id="warnCount"></span>
+            <button id="consoleReport" onclick="reportConsoleToChat()" title="Send errors to AI" style="margin-left:auto;display:none;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.2);border-radius:4px;color:#93c5fd;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all var(--t-fast)">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Ask AI
+            </button>
             <button id="consoleClear" onclick="clearConsole()" title="Clear">
               <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -2420,8 +2463,18 @@ window.addEventListener('message', e => {
   line.innerHTML = `<span class="con-badge-inline">${e.data.kind.toUpperCase()}</span><span class="con-msg">${escHtml(e.data.msg)}</span>`;
   body.appendChild(line);
   body.scrollTop = body.scrollHeight;
-  if (e.data.kind === 'error') { errCnt++; const el = document.getElementById('errCount'); el.textContent = errCnt + ' err'; el.className = 'con-badge con-err-bg show'; }
-  if (e.data.kind === 'warn')  { warnCnt++; const el = document.getElementById('warnCount'); el.textContent = warnCnt + ' warn'; el.className = 'con-badge con-warn-bg show'; }
+  if (e.data.kind === 'error') {
+    errCnt++;
+    const el = document.getElementById('errCount');
+    el.textContent = errCnt + ' err'; el.className = 'con-badge con-err-bg show';
+    document.getElementById('consoleReport').style.display = 'flex';
+  }
+  if (e.data.kind === 'warn') {
+    warnCnt++;
+    const el = document.getElementById('warnCount');
+    el.textContent = warnCnt + ' warn'; el.className = 'con-badge con-warn-bg show';
+    document.getElementById('consoleReport').style.display = 'flex';
+  }
   if (!consoleVisible) {
     consoleVisible = true;
     document.getElementById('consolePanel').classList.remove('hidden');
@@ -2430,11 +2483,29 @@ window.addEventListener('message', e => {
   }
 });
 
+function reportConsoleToChat() {
+  const lines = document.querySelectorAll('#consoleBody .con-line');
+  if (!lines.length) return;
+  const text = Array.from(lines).map(el => {
+    const kind = el.classList.contains('error') ? 'ERROR' : el.classList.contains('warn') ? 'WARN' : 'LOG';
+    const msg = el.querySelector('.con-msg')?.textContent?.trim() || '';
+    return '[' + kind + '] ' + msg;
+  }).join('\n');
+  const inp = document.getElementById('aiBottomInput');
+  if (inp) {
+    inp.value = 'Fix these console errors:\n\n' + text;
+    aiAutoResize(inp);
+    inp.focus();
+    setMode('ai');
+  }
+}
+
 function clearConsole() {
   errCnt = 0; warnCnt = 0;
   document.getElementById('consoleBody').innerHTML = '<div class="con-empty" id="conEmpty">No output yet.</div>';
   document.getElementById('errCount').className = 'con-badge';
   document.getElementById('warnCount').className = 'con-badge';
+  document.getElementById('consoleReport').style.display = 'none';
 }
 
 // ── TOGGLE PREVIEW ────────────────────────────────────────────────────────────
@@ -3272,9 +3343,9 @@ function aiClosePreview() { document.getElementById('aiAttachPreview').classList
 // Paste + drag handlers
 (function() {
   function attachHandlers() {
-    const bi   = document.getElementById('aiBottomInput');
-    const area = document.getElementById('aiBottomInputArea');
+    const bi = document.getElementById('aiBottomInput');
     if (!bi) return;
+
     bi.addEventListener('paste', e => {
       const items = (e.clipboardData || {}).items || [];
       for (let i = 0; i < items.length; i++) {
@@ -3294,21 +3365,40 @@ function aiClosePreview() { document.getElementById('aiAttachPreview').classList
         }
       }, 0);
     });
-    if (area) {
-      area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'rgba(79,110,247,.6)'; });
-      area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
-      area.addEventListener('drop', e => {
-        e.preventDefault(); area.style.borderColor = '';
-        const files = e.dataTransfer.files;
-        if (!files || !files.length) return;
-        Array.from(files).forEach(file => {
-          const isImg = file.type.startsWith('image/');
-          const reader = new FileReader();
-          reader.onload = ev => aiAddAttachment({ name: file.name, type: isImg ? 'image' : 'text', dataUrl: isImg ? ev.target.result : null, text: isImg ? null : ev.target.result });
-          if (isImg) reader.readAsDataURL(file); else reader.readAsText(file);
-        });
+
+    const panel = document.getElementById('aiPanel');
+    const overlay = document.getElementById('aiDropOverlay');
+    if (!panel || !overlay) return;
+    let dragCounter = 0;
+
+    panel.addEventListener('dragenter', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault();
+      dragCounter++;
+      overlay.classList.add('show');
+    });
+    panel.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault();
+    });
+    panel.addEventListener('dragleave', () => {
+      dragCounter--;
+      if (dragCounter <= 0) { dragCounter = 0; overlay.classList.remove('show'); }
+    });
+    panel.addEventListener('drop', e => {
+      e.preventDefault();
+      dragCounter = 0;
+      overlay.classList.remove('show');
+      const files = e.dataTransfer.files;
+      if (!files || !files.length) return;
+      aiTransitionToChat();
+      Array.from(files).forEach(file => {
+        const isImg = file.type.startsWith('image/');
+        const reader = new FileReader();
+        reader.onload = ev => aiAddAttachment({ name: file.name, type: isImg ? 'image' : 'text', dataUrl: isImg ? ev.target.result : null, text: isImg ? null : ev.target.result });
+        if (isImg) reader.readAsDataURL(file); else reader.readAsText(file);
       });
-    }
+    });
   }
   attachHandlers();
 })();

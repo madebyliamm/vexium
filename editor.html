@@ -2394,7 +2394,13 @@ function updateNavBtns() {
 
 function openInViewer() {
   if (!project) return;
-  saveNow().then(() => window.open('viewer.html?project=' + project.id, '_blank'));
+  // Open the window immediately (synchronous — preserves user gesture, avoids popup blocker)
+  const win = window.open('', '_blank');
+  if (!win) { showToast('!', 'Popup blocked — allow popups for this site'); return; }
+  win.document.write('<html><body style="background:#020209;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">Loading…</body></html>');
+  saveNow().then(() => {
+    win.location.href = 'viewer.html?project=' + project.id;
+  });
 }
 
 // ── CONSOLE ───────────────────────────────────────────────────────────────────

@@ -2763,14 +2763,8 @@ function aiAddUserRow(text, attachments) {
 
 function aiAddAI(text, files) {
   const msgs = document.getElementById('aiMessages');
-  const row   = document.createElement('div');
+  const row  = document.createElement('div');
   row.className = 'ai-row ai';
-  const inner = document.createElement('div');
-  inner.className = 'ai-row-inner';
-  const avatar = document.createElement('div');
-  avatar.className = 'ai-avatar';
-  avatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>';
-  inner.appendChild(avatar);
   const contentWrap = document.createElement('div');
   contentWrap.style.cssText = 'flex:1;min-width:0';
   const textEl = document.createElement('div');
@@ -2796,8 +2790,8 @@ function aiAddAI(text, files) {
   meta.className = 'ai-msg-meta';
   meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
   contentWrap.appendChild(meta);
-  inner.appendChild(contentWrap);
-  row.appendChild(inner);
+  row.appendChild(contentWrap);
+  row._contentWrap = contentWrap;
   msgs.appendChild(row);
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -2828,7 +2822,22 @@ function aiCopyEl(btn) {
 }
 
 // ── PERSISTENCE ───────────────────────────────────────────────────────────────
+function aiLocalKey() { return 'vexium_chat_' + (projectId || 'local'); }
+
+function aiSaveMsgLocal(role, content, fileNames) {
+  try {
+    const key = aiLocalKey();
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push({ role, content, file_names: fileNames || [], created_at: new Date().toISOString() });
+    // Keep last 200 messages locally
+    if (existing.length > 200) existing.splice(0, existing.length - 200);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch(e) {}
+}
+
 async function aiSaveMsg(role, content, fileNames) {
+  // Always save locally first — guarantees history survives session expiry
+  aiSaveMsgLocal(role, content, fileNames);
   if (!sb || !projectId) return;
   try {
     const s = await sb.auth.getSession();
@@ -2838,37 +2847,48 @@ async function aiSaveMsg(role, content, fileNames) {
 }
 
 async function aiLoadHistory() {
-  if (!sb || !projectId) return;
-  try {
-    const { data } = await sb.from('ai_messages')
-      .select('role,content,file_names,created_at')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .limit(120);
-    if (!data || !data.length) return;
-    data.forEach(row => {
-      aiHistory.push({ role: row.role, content: row.content });
-      const d = new Date(row.created_at);
-      let h = d.getHours(); const mn = d.getMinutes(); const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      const time = h + ':' + mn.toString().padStart(2,'0') + ' ' + ampm;
-      let displayText = row.content;
-      if (row.role === 'assistant') {
-        try { const parsed = JSON.parse(row.content); displayText = parsed.message || row.content; } catch(e) {}
-      }
-      aiAllMessages.push({ role: row.role, text: displayText, files: row.file_names || [], time });
-    });
-    // Session message count stays 0 — loaded history doesn't count toward readiness limit
-    aiTransitionToChat();
-    // Re-render from history
-    const msgs = document.getElementById('aiMessages');
-    msgs.innerHTML = '';
-    aiAllMessages.forEach(m => {
-      if (m.role === 'user') aiAddUserRow(m.text, []);
-      else aiAddAI(m.text, m.files || []);
-    });
-    msgs.scrollTop = msgs.scrollHeight;
-  } catch(e) { console.warn('aiLoadHistory:', e); }
+  let rows = [];
+  // Try Supabase first
+  if (sb && projectId) {
+    try {
+      const { data } = await sb.from('ai_messages')
+        .select('role,content,file_names,created_at')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true })
+        .limit(120);
+      if (data && data.length) rows = data;
+    } catch(e) {}
+  }
+  // Fall back to localStorage if Supabase returned nothing
+  if (!rows.length) {
+    try {
+      const local = JSON.parse(localStorage.getItem(aiLocalKey()) || '[]');
+      if (local.length) rows = local;
+    } catch(e) {}
+  }
+  if (!rows.length) return;
+
+  rows.forEach(row => {
+    aiHistory.push({ role: row.role, content: row.content });
+    const d = new Date(row.created_at);
+    let h = d.getHours(); const mn = d.getMinutes(); const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    const time = h + ':' + mn.toString().padStart(2,'0') + ' ' + ampm;
+    let displayText = row.content;
+    if (row.role === 'assistant') {
+      try { const parsed = JSON.parse(row.content); displayText = parsed.message || row.content; } catch(e) {}
+    }
+    aiAllMessages.push({ role: row.role, text: displayText, files: row.file_names || [], time });
+  });
+
+  aiTransitionToChat();
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML = '';
+  aiAllMessages.forEach(m => {
+    if (m.role === 'user') aiAddUserRow(m.text, []);
+    else aiAddAI(m.text, m.files || []);
+  });
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // ── MARKDOWN RENDERER ─────────────────────────────────────────────────────────
@@ -3332,6 +3352,8 @@ async function aiSend(fromBottom) {
     apiContent = text;
   }
   aiHistory.push({ role: 'user', content: apiContent });
+  // Save user message immediately so DB order is guaranteed before assistant response arrives
+  aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), []);
   aiShowTyping();
 
   // ── READINESS CHECK (only on fresh projects, first 2 session messages) ──
@@ -3416,19 +3438,12 @@ async function aiChatMode(suggestedQuestions) {
   // Stream the chat response
   const row = document.createElement('div');
   row.className = 'ai-row ai';
-  const inner = document.createElement('div');
-  inner.className = 'ai-row-inner';
-  const avatar = document.createElement('div');
-  avatar.className = 'ai-avatar';
-  avatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>';
-  inner.appendChild(avatar);
   const contentWrap = document.createElement('div');
   contentWrap.style.cssText = 'flex:1;min-width:0';
   const textEl = document.createElement('div');
   textEl.className = 'ai-text ai-stream-cursor';
   contentWrap.appendChild(textEl);
-  inner.appendChild(contentWrap);
-  row.appendChild(inner);
+  row.appendChild(contentWrap);
   msgs.appendChild(row);
 
   const reader = chatRes.body.getReader();
@@ -3557,19 +3572,12 @@ async function aiCallAPI() {
     // Create the AI response row
     row = document.createElement('div');
     row.className = 'ai-row ai';
-    const streamInner = document.createElement('div');
-    streamInner.className = 'ai-row-inner';
-    const streamAvatar = document.createElement('div');
-    streamAvatar.className = 'ai-avatar';
-    streamAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>';
-    streamInner.appendChild(streamAvatar);
     const streamContent = document.createElement('div');
     streamContent.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:0';
     textEl = document.createElement('div');
     textEl.className = 'ai-text ai-stream-cursor';
     streamContent.appendChild(textEl);
-    streamInner.appendChild(streamContent);
-    row.appendChild(streamInner);
+    row.appendChild(streamContent);
     msgs.appendChild(row);
     row._contentWrap = streamContent;
     scrollIfSticky();
@@ -3737,9 +3745,6 @@ async function aiCallAPI() {
           const historyContent = JSON.stringify({ message: fullMessage, files: collectedFiles });
           aiHistory.push({ role: 'assistant', content: historyContent });
           aiAllMessages.push({ role: 'assistant', text: fullMessage, files: collectedFiles.map(f => f.name), time: aiNow() });
-          const lastUserMsg = aiHistory[aiHistory.length - 2];
-          const userContent = lastUserMsg ? (typeof lastUserMsg.content === 'string' ? lastUserMsg.content : JSON.stringify(lastUserMsg.content)) : '';
-          aiSaveMsg('user', userContent, []);
           aiSaveMsg('assistant', historyContent, collectedFiles.map(f => f.name));
           scrollIfSticky();
         }

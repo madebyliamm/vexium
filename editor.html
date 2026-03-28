@@ -3354,13 +3354,19 @@ async function aiSend(fromBottom) {
     }
   }
 
-  // Ready to build — fetch brief + spec speculatively then build
+  // Ready to build — fetch brief + spec only for fresh projects, with delays to avoid 429
   _pendingBrief = null;
   _pendingSpec  = null;
-  try {
-    _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
-    if (_pendingBrief) _pendingSpec = await fetchJSON({ spec_mode: true, messages: aiHistory.filter(m => m.role === 'user'), brief: _pendingBrief });
-  } catch(e) {}
+  if (isDefaultCode(fileSystem)) {
+    try {
+      _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
+      if (_pendingBrief) {
+        await new Promise(r => setTimeout(r, 400));
+        _pendingSpec = await fetchJSON({ spec_mode: true, messages: aiHistory.filter(m => m.role === 'user'), brief: _pendingBrief });
+        await new Promise(r => setTimeout(r, 400));
+      }
+    } catch(e) {}
+  }
 
   await aiCallAPI();
 }

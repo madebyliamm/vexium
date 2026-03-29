@@ -700,7 +700,7 @@
       flex: 1;
       background: transparent;
       border: none;
-      font-size: 14px;
+      font-size: clamp(14px, 1.1vw, 16px);
       color: var(--text);
       font-family: var(--sans);
       resize: none;
@@ -790,7 +790,7 @@
       display: none;
       flex-direction: column;
       min-height: 0;
-      --chat-w: min(680px, 90%);
+      --chat-w: min(820px, 92%);
       position: relative;
     }
     #aiChatWrap.show { display: flex; }
@@ -818,7 +818,7 @@
       color: #fff;
       padding: 11px 16px;
       border-radius: 20px 20px 4px 20px;
-      font-size: 13px;
+      font-size: clamp(14px, 1.1vw, 16px);
       line-height: 1.65;
       max-width: 80%;
       word-break: break-word;
@@ -885,7 +885,7 @@
     .ai-avatar svg { width: 10px; height: 10px; fill: #fff; }
 
     /* AI text */
-    .ai-text { font-size: 14px; line-height: 1.82; color: var(--text); word-break: break-word; width: 100%; }
+    .ai-text { font-size: clamp(14px, 1.1vw, 16px); line-height: 1.82; color: var(--text); word-break: break-word; width: 100%; }
     .ai-text p { margin: 0 0 10px; }
     .ai-text p:last-child { margin: 0; }
     .ai-text h1 { font-size: 20px; font-weight: 800; margin: 16px 0 8px; letter-spacing: -.3px; }
@@ -908,18 +908,7 @@
     .ai-text a:hover { color: var(--accent2); }
 
     /* Streaming cursor */
-    .ai-stream-cursor::after {
-      content: '';
-      display: inline-block;
-      width: 2px;
-      height: 1.1em;
-      background: var(--accent);
-      border-radius: 1px;
-      vertical-align: -.15em;
-      margin-left: 2px;
-      animation: cursorBlink .75s ease-in-out infinite;
-    }
-    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 45%, 55% { opacity: 0; } }
+    .ai-stream-cursor::after { display: none; }
 
     /* Message meta (hover to reveal) */
     .ai-msg-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; height: 22px; }
@@ -1086,7 +1075,7 @@
       flex: 1;
       background: transparent;
       border: none;
-      font-size: 14px;
+      font-size: clamp(14px, 1.1vw, 16px);
       color: var(--text);
       font-family: var(--sans);
       resize: none;

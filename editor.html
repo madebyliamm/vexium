@@ -2903,50 +2903,71 @@ function aiResend(btn) {
 }
 
 // ── PERSISTENCE ───────────────────────────────────────────────────────────────
-function aiLocalKey() { return 'vexium_chat_' + (projectId || 'local'); }
+function aiLocalKey() {
+  // Always use projectId if available, never fall back to 'local' — different projects must not share history
+  if (!projectId) return null;
+  return 'vexium_chat_' + projectId;
+}
 
 function aiSaveMsgLocal(role, content, fileNames) {
+  const key = aiLocalKey();
+  if (!key) return; // No projectId yet — don't save to wrong bucket
   try {
-    const key = aiLocalKey();
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
     existing.push({ role, content, file_names: fileNames || [], created_at: new Date().toISOString() });
-    // Keep last 200 messages locally
-    if (existing.length > 200) existing.splice(0, existing.length - 200);
+    if (existing.length > 300) existing.splice(0, existing.length - 300);
     localStorage.setItem(key, JSON.stringify(existing));
-  } catch(e) {}
+  } catch(e) { console.warn('aiSaveMsgLocal failed:', e); }
 }
 
 async function aiSaveMsg(role, content, fileNames) {
-  // Always save locally first — guarantees history survives session expiry
+  // localStorage is source of truth — always write here first, synchronously
   aiSaveMsgLocal(role, content, fileNames);
+  // Supabase is a backup — fire and forget, failures don't matter
   if (!sb || !projectId) return;
   try {
     const s = await sb.auth.getSession();
-    if (!s.data.session) return;
-    await sb.from('ai_messages').insert({ project_id: projectId, user_id: s.data.session.user.id, role, content, file_names: fileNames || [] });
-  } catch(e) {}
+    if (!s?.data?.session) return;
+    await sb.from('ai_messages').insert({
+      project_id: projectId,
+      user_id: s.data.session.user.id,
+      role,
+      content,
+      file_names: fileNames || []
+    });
+  } catch(e) { /* Supabase failure is fine — localStorage already has it */ }
 }
 
 async function aiLoadHistory() {
+  const key = aiLocalKey();
+
+  // Always try localStorage first — it's always up to date
   let rows = [];
-  // Try Supabase first
-  if (sb && projectId) {
+  if (key) {
+    try {
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      if (local.length) rows = local;
+    } catch(e) {}
+  }
+
+  // If localStorage empty, try Supabase (e.g. user switched devices)
+  if (!rows.length && sb && projectId) {
     try {
       const { data } = await sb.from('ai_messages')
         .select('role,content,file_names,created_at')
         .eq('project_id', projectId)
         .order('created_at', { ascending: true })
-        .limit(120);
-      if (data && data.length) rows = data;
+        .limit(200);
+      if (data && data.length) {
+        rows = data;
+        // Backfill localStorage so future loads are instant
+        if (key) {
+          try { localStorage.setItem(key, JSON.stringify(rows)); } catch(e) {}
+        }
+      }
     } catch(e) {}
   }
-  // Fall back to localStorage if Supabase returned nothing
-  if (!rows.length) {
-    try {
-      const local = JSON.parse(localStorage.getItem(aiLocalKey()) || '[]');
-      if (local.length) rows = local;
-    } catch(e) {}
-  }
+
   if (!rows.length) return;
 
   rows.forEach(row => {

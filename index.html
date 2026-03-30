@@ -627,11 +627,1028 @@
       100% { transform: translateX(-50%); }
     }
 
-    /* ── Below-fold placeholder ───────────────────────────────────── */
-    .section-placeholder {
-      height: 80vh; display: flex; align-items: center; justify-content: center;
+    /* ── PRICING ───────────────────────────────────────────────────────── */
+    #pricing {
+      padding: clamp(80px, 10vw, 140px) clamp(20px, 5vw, 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .section-placeholder p { font-size: 11px; color: var(--border2); text-transform: uppercase; letter-spacing: .1em; }
+    .price-inner {
+      width: 100%;
+      max-width: 1100px;
+    }
+    .price-header {
+      margin-bottom: clamp(40px, 5vw, 64px);
+    }
+    .price-label {
+      font-size: clamp(10px, 0.8vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: clamp(12px, 1.2vw, 18px);
+    }
+    .price-headline {
+      font-size: clamp(28px, 4vw, 54px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: clamp(12px, 1.2vw, 18px);
+    }
+    .price-headline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .price-sub {
+      font-size: clamp(14px, 1.05vw, 16px);
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: clamp(24px, 2.5vw, 36px);
+    }
+
+    /* Toggle */
+    .price-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .price-toggle-label {
+      font-size: clamp(12px, 0.9vw, 14px);
+      font-weight: 600;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .price-toggle-label.active { color: var(--text); }
+    .price-toggle {
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--border2);
+      border: 1px solid var(--border2);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .price-toggle.annual { background: var(--accent); }
+    .price-toggle-knob {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .price-toggle.annual .price-toggle-knob { transform: translateX(18px); }
+    .price-save-badge {
+      font-size: clamp(10px, 0.75vw, 12px);
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(74,222,128,0.1);
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+
+    /* Cards grid — 3 columns */
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 1vw, 14px);
+      align-items: start;
+      margin-bottom: clamp(24px, 3vw, 40px);
+    }
+
+    /* Free trial banner */
+    .price-free-banner {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1px 1fr;
+      gap: clamp(24px, 3vw, 48px);
+      align-items: center;
+      background: linear-gradient(135deg, #07071f 0%, #0a0a22 60%, #0c0820 100%);
+      border: 1px solid rgba(79,110,247,0.25);
+      border-radius: clamp(14px, 1.4vw, 20px);
+      padding: clamp(24px, 2.5vw, 36px) clamp(28px, 3vw, 44px);
+      margin-bottom: clamp(10px, 1vw, 14px);
+      overflow: hidden;
+      will-change: transform;
+      transform-style: preserve-3d;
+      box-shadow: 0 0 0 1px rgba(79,110,247,0.08), 0 12px 40px rgba(79,110,247,0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.6s ease, transform 0.6s ease;
+    }
+    .price-free-glow {
+      position: absolute;
+      top: -60px; left: -40px;
+      width: 300px; height: 200px;
+      background: radial-gradient(ellipse, rgba(79,110,247,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .price-free-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      min-width: clamp(100px, 10vw, 140px);
+    }
+    .price-free-eyebrow {
+      font-size: clamp(10px, 0.75vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .price-free-big {
+      font-size: clamp(52px, 6vw, 80px);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      color: var(--text);
+    }
+    .price-free-sub {
+      font-size: clamp(11px, 0.82vw, 13px);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .price-free-divider {
+      width: 1px;
+      height: clamp(80px, 10vw, 130px);
+      background: var(--border2);
+      flex-shrink: 0;
+    }
+    .price-free-right {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 1.4vw, 20px);
+      position: relative;
+      z-index: 1;
+    }
+    .price-free-desc {
+      font-size: clamp(13px, 0.95vw, 15px);
+      color: rgba(255,255,255,0.55);
+      line-height: 1.65;
+      max-width: 560px;
+    }
+    .price-free-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px clamp(16px, 2vw, 28px);
+    }
+    .price-free-check {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: clamp(12px, 0.9vw, 14px);
+      color: rgba(255,255,255,0.6);
+    }
+    .price-free-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: clamp(10px, 0.9vw, 13px) clamp(22px, 2vw, 30px);
+      border-radius: 999px;
+      font-size: clamp(13px, 0.9vw, 14px);
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      background: var(--accent);
+      box-shadow: 0 0 20px rgba(79,110,247,0.3);
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+      width: fit-content;
+    }
+    .price-free-cta:hover {
+      background: #3d5df0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 24px rgba(79,110,247,0.45);
+    }
+
+    /* Mobile */
+    @media (max-width: 760px) {
+      .price-free-banner {
+        grid-template-columns: 1fr;
+      }
+      .price-free-divider { display: none; }
+      .price-free-big { font-size: clamp(44px, 12vw, 64px); }
+    }
+
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: clamp(12px, 1.2vw, 18px);
+      padding: clamp(20px, 2vw, 28px);
+      position: relative;
+      will-change: transform;
+      transform-style: preserve-3d;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    /* Pro card */
+    .price-card-pro {
+      background: linear-gradient(160deg, #07071e 0%, #0a0a20 100%);
+      border-color: rgba(79,110,247,0.3);
+      box-shadow: 0 0 0 1px rgba(79,110,247,0.1), 0 16px 48px rgba(79,110,247,0.1);
+    }
+    .price-card-pro:hover {
+      border-color: rgba(79,110,247,0.5);
+      box-shadow: 0 0 0 1px rgba(79,110,247,0.15), 0 20px 60px rgba(79,110,247,0.15);
+    }
+    .price-popular-badge {
+      position: absolute;
+      top: -1px; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(9px, 0.72vw, 11px);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 0 0 8px 8px;
+      background: var(--accent);
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .price-card-top { display: flex; flex-direction: column; gap: clamp(10px, 1vw, 14px); }
+    .price-tier {
+      font-size: clamp(12px, 0.9vw, 14px);
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .price-card-pro .price-tier { color: var(--accent); }
+    .price-amount-wrap { display: flex; align-items: baseline; gap: 4px; }
+    .price-amount {
+      font-size: clamp(32px, 3.5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      line-height: 1;
+      transition: all 0.3s ease;
+    }
+    .price-period {
+      font-size: clamp(12px, 0.9vw, 14px);
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .price-desc {
+      font-size: clamp(12px, 0.88vw, 13px);
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* CTAs */
+    .price-cta {
+      display: block;
+      text-align: center;
+      padding: clamp(9px, 0.85vw, 12px) 0;
+      border-radius: 8px;
+      font-size: clamp(12px, 0.88vw, 14px);
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s, transform 0.15s;
+    }
+    .price-cta-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(79,110,247,0.3);
+    }
+    .price-cta-primary:hover { background: #3d5df0; transform: translateY(-1px); }
+    .price-cta-ghost {
+      border: 1px solid var(--border2);
+      color: var(--muted);
+    }
+    .price-cta-ghost:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+    .price-divider {
+      height: 1px;
+      background: var(--border);
+      margin: clamp(16px, 1.6vw, 24px) 0;
+    }
+
+    /* Feature list */
+    .price-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 0.8vw, 11px);
+    }
+    .price-features li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: clamp(12px, 0.88vw, 13px);
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .price-check {
+      color: #4ade80;
+      font-size: 13px;
+      flex-shrink: 0;
+      font-style: normal;
+    }
+    .price-x {
+      color: var(--border2);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .price-card-pro .price-features li { color: rgba(255,255,255,0.65); }
+
+    .price-note {
+      font-size: clamp(11px, 0.82vw, 13px);
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Reveal */
+    .price-reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .price-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Mobile */
+    @media (max-width: 860px) {
+      .price-cards { grid-template-columns: 1fr 1fr; }
+      .price-free-banner { flex-direction: column; align-items: flex-start; }
+      .price-free-right { justify-content: flex-start; }
+    }
+    @media (max-width: 560px) {
+      .price-cards { grid-template-columns: 1fr; }
+    }
+
+    /* ── FEATURES ─────────────────────────────────────────────────────── */
+    #features {
+      padding: clamp(80px, 10vw, 140px) clamp(20px, 5vw, 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .feat-inner {
+      width: 100%;
+      max-width: 1100px;
+    }
+    .feat-header {
+      margin-bottom: clamp(40px, 5vw, 64px);
+    }
+    .feat-label {
+      font-size: clamp(10px, 0.8vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: clamp(12px, 1.2vw, 18px);
+    }
+    .feat-headline {
+      font-size: clamp(28px, 4vw, 54px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: clamp(14px, 1.5vw, 22px);
+    }
+    .feat-headline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .feat-sub {
+      font-size: clamp(14px, 1.05vw, 16px);
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    /* Bento grid */
+    .feat-bento {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto;
+      gap: clamp(10px, 1vw, 14px);
+    }
+
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: clamp(12px, 1.2vw, 18px);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform;
+      transform-style: preserve-3d;
+    }
+    .feat-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .feat-card-inner {
+      padding: clamp(20px, 2vw, 30px);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1vw, 14px);
+    }
+
+    /* Icons */
+    .feat-icon {
+      width: clamp(36px, 3.2vw, 46px);
+      height: clamp(36px, 3.2vw, 46px);
+      border-radius: clamp(8px, 0.8vw, 12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feat-icon svg { width: 18px; height: 18px; }
+    .feat-icon-ai       { background: rgba(79,110,247,0.1);  border: 1px solid rgba(79,110,247,0.2);  color: var(--accent); }
+    .feat-icon-marketing{ background: rgba(34,197,94,0.1);   border: 1px solid rgba(34,197,94,0.2);   color: #4ade80; }
+    .feat-icon-design   { background: rgba(155,121,252,0.1); border: 1px solid rgba(155,121,252,0.2); color: var(--accent2); }
+    .feat-icon-payments { background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.2);  color: #fbbf24; }
+    .feat-icon-accounts { background: rgba(56,189,248,0.1);  border: 1px solid rgba(56,189,248,0.2);  color: #38bdf8; }
+    .feat-icon-sitai    { background: rgba(79,110,247,0.1);  border: 1px solid rgba(79,110,247,0.2);  color: var(--accent); }
+    .feat-icon-analytics{ background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.2); color: #fb7185; }
+    .feat-icon-publish  { background: rgba(34,197,94,0.1);   border: 1px solid rgba(34,197,94,0.2);   color: #4ade80; }
+    .feat-icon-collab   { background: rgba(155,121,252,0.1); border: 1px solid rgba(155,121,252,0.2); color: var(--accent2); }
+
+    /* Tag badge */
+    .feat-card-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(79,110,247,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(79,110,247,0.2);
+      width: fit-content;
+    }
+    .feat-card-h {
+      font-size: clamp(14px, 1.2vw, 18px);
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .feat-card-p {
+      font-size: clamp(12px, 0.9vw, 14px);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* Grid placement */
+    .feat-card-ai       { grid-column: 1; grid-row: 1 / 3; }
+    .feat-card-marketing{ grid-column: 2; grid-row: 1; }
+    .feat-card-design   { grid-column: 3; grid-row: 1; }
+    .feat-card-payments { grid-column: 2; grid-row: 2; }
+    .feat-card-accounts { grid-column: 3; grid-row: 2; }
+    .feat-card-sitai    { grid-column: 1; grid-row: 3; }
+    .feat-card-analytics{ grid-column: 2; grid-row: 3; }
+    .feat-card-publish  { grid-column: 3; grid-row: 3; }
+    .feat-card-collab   { grid-column: 1 / 4; grid-row: 4; }
+
+    /* Staggered card reveal delays */
+    .feat-card:nth-child(1) { transition-delay: 0.05s; }
+    .feat-card:nth-child(2) { transition-delay: 0.10s; }
+    .feat-card:nth-child(3) { transition-delay: 0.15s; }
+    .feat-card:nth-child(4) { transition-delay: 0.20s; }
+    .feat-card:nth-child(5) { transition-delay: 0.25s; }
+    .feat-card:nth-child(6) { transition-delay: 0.30s; }
+    .feat-card:nth-child(7) { transition-delay: 0.35s; }
+    .feat-card:nth-child(8) { transition-delay: 0.40s; }
+    .feat-card:nth-child(9) { transition-delay: 0.45s; }
+
+    /* AI card demo widget */
+    .feat-ai-demo {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: clamp(8px, 0.8vw, 12px);
+      padding: clamp(12px, 1.2vw, 18px);
+    }
+    .feat-ai-msg { font-size: clamp(10px, 0.82vw, 12px); line-height: 1.5; }
+    .feat-ai-msg-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg,#3b4fd8,#6c3fc5);
+      color: #fff;
+      padding: 7px 11px;
+      border-radius: 10px 10px 3px 10px;
+      max-width: 85%;
+    }
+    .feat-ai-msg-ai { display: flex; flex-direction: column; gap: 7px; }
+    .feat-ai-response-head {
+      font-size: clamp(9px, 0.75vw, 11px);
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+    }
+    .feat-ai-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+    .feat-ai-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.03);
+      font-size: clamp(8px, 0.68vw, 10px);
+      font-weight: 600;
+      font-family: monospace;
+      color: rgba(255,255,255,0.55);
+    }
+    .feat-ai-pill-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--c, #fff);
+      flex-shrink: 0;
+    }
+    .feat-ai-pill-dot-pulse { animation: dotPulse 1s ease infinite; }
+    @keyframes dotPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    .feat-ai-pill-n { font-size: clamp(7px,0.6vw,9px); color: var(--muted); margin-left: 2px; }
+
+    /* Marketing tags */
+    .feat-marketing-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+    }
+    .feat-marketing-tags span {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: clamp(10px, 0.75vw, 12px);
+      font-weight: 600;
+      color: rgba(74,222,128,0.8);
+      border: 1px solid rgba(74,222,128,0.15);
+      background: rgba(74,222,128,0.06);
+    }
+
+    /* Collaborate card — full width, horizontal layout */
+    .feat-card-collab .feat-card-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: clamp(20px, 3vw, 48px);
+    }
+    .feat-collab-left { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .feat-collab-avatars {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .feat-collab-av {
+      width: clamp(32px, 3vw, 44px);
+      height: clamp(32px, 3vw, 44px);
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(11px, 1vw, 14px);
+      font-weight: 800;
+      margin-left: -10px;
+    }
+    .feat-collab-av:first-child { margin-left: 0; }
+    .feat-collab-av-add {
+      background: rgba(79,110,247,0.1);
+      border: 1.5px dashed rgba(79,110,247,0.3);
+      color: var(--accent);
+      font-size: clamp(16px, 1.4vw, 20px);
+      font-weight: 400;
+    }
+
+    /* Reveal */
+    .feat-reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .feat-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Mobile */
+    @media (max-width: 860px) {
+      .feat-bento { grid-template-columns: 1fr 1fr; }
+      .feat-card-ai       { grid-column: 1 / 3; grid-row: auto; }
+      .feat-card-marketing{ grid-column: 1;      grid-row: auto; }
+      .feat-card-design   { grid-column: 2;      grid-row: auto; }
+      .feat-card-payments { grid-column: 1;      grid-row: auto; }
+      .feat-card-accounts { grid-column: 2;      grid-row: auto; }
+      .feat-card-sitai    { grid-column: 1;      grid-row: auto; }
+      .feat-card-analytics{ grid-column: 2;      grid-row: auto; }
+      .feat-card-publish  { grid-column: 1;      grid-row: auto; }
+      .feat-card-collab   { grid-column: 1 / 3;  grid-row: auto; }
+      .feat-card-collab .feat-card-inner { flex-direction: column; }
+    }
+    @media (max-width: 560px) {
+      .feat-bento { grid-template-columns: 1fr; }
+      .feat-card-ai, .feat-card-marketing, .feat-card-design,
+      .feat-card-payments, .feat-card-accounts, .feat-card-sitai,
+      .feat-card-analytics, .feat-card-publish, .feat-card-collab { grid-column: 1; grid-row: auto; }
+    }
+
+    /* ── HOW IT WORKS ─────────────────────────────────────────────────── */
+    #how-it-works {
+      position: relative;
+      padding: clamp(80px, 10vw, 140px) clamp(20px, 5vw, 80px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hiw-inner {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* Section label + headline */
+    .hiw-label {
+      font-size: clamp(10px, 0.8vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: clamp(12px, 1.2vw, 18px);
+      opacity: 0;
+    }
+    .hiw-headline {
+      font-size: clamp(28px, 4vw, 58px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      max-width: 700px;
+      margin-bottom: clamp(64px, 9vw, 120px);
+      opacity: 0;
+    }
+    .hiw-headline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Steps */
+    .hiw-steps {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(80px, 11vw, 140px);
+    }
+
+    .hiw-step {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(40px, 6vw, 100px);
+      align-items: center;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    }
+    .hiw-step.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Odd steps: text left, visual right. Even: visual left, text right */
+    .hiw-step:nth-child(even) .hiw-text { order: 2; }
+    .hiw-step:nth-child(even) .hiw-visual { order: 1; }
+
+    /* Text side */
+    .hiw-text { display: flex; flex-direction: column; }
+    .hiw-num {
+      font-size: clamp(64px, 8vw, 110px);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      color: transparent;
+      -webkit-text-stroke: 1px var(--border2);
+      margin-bottom: clamp(-8px, -0.5vw, -4px);
+      user-select: none;
+    }
+    .hiw-step-label {
+      font-size: clamp(10px, 0.75vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: clamp(10px, 1vw, 16px);
+    }
+    .hiw-step-h {
+      font-size: clamp(22px, 2.4vw, 36px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: clamp(14px, 1.4vw, 22px);
+    }
+    .hiw-step-p {
+      font-size: clamp(14px, 1.05vw, 16px);
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 420px;
+    }
+
+    /* Visual side — shared card */
+    .hiw-visual {
+      border-radius: clamp(12px, 1.2vw, 18px);
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative;
+    }
+
+    /* ── Step 1 visual: typing prompt ─────────────────────────────── */
+    .hiw-v1 {
+      padding: clamp(24px, 2.5vw, 40px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 1.5vw, 22px);
+      min-height: clamp(200px, 22vw, 320px);
+      justify-content: center;
+    }
+    .hiw-v1-label {
+      font-size: clamp(10px, 0.75vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hiw-v1-input {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: clamp(8px, 0.8vw, 12px);
+      padding: clamp(14px, 1.5vw, 22px);
+      font-size: clamp(13px, 1.1vw, 16px);
+      color: var(--text);
+      line-height: 1.6;
+      position: relative;
+    }
+    .hiw-v1-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      border-radius: 1px;
+      animation: cursorBlink 0.9s ease infinite;
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .hiw-v1-examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .hiw-v1-chip {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      font-size: clamp(10px, 0.78vw, 12px);
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--bg);
+    }
+
+    /* ── Step 2 visual: build progress ───────────────────────────── */
+    .hiw-v2 {
+      padding: clamp(20px, 2vw, 32px);
+      min-height: clamp(200px, 22vw, 320px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1vw, 16px);
+      justify-content: center;
+    }
+    .hiw-v2-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1vw, 16px);
+    }
+    .hiw-v2-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(10px, 0.85vw, 13px);
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: rgba(255,255,255,0.6);
+      min-width: clamp(80px, 8vw, 120px);
+    }
+    .hiw-v2-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .hiw-v2-bar-wrap {
+      flex: 1;
+      height: clamp(4px, 0.4vw, 6px);
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .hiw-v2-bar {
+      height: 100%;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 1.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .hiw-v2-lines {
+      font-size: clamp(9px, 0.72vw, 11px);
+      font-weight: 700;
+      font-family: monospace;
+      min-width: clamp(44px, 4vw, 60px);
+      text-align: right;
+    }
+    .hiw-v2-status {
+      font-size: clamp(10px, 0.78vw, 12px);
+      color: var(--muted);
+      text-align: center;
+      padding-top: 4px;
+    }
+    .hiw-v2-done {
+      font-size: clamp(11px, 0.85vw, 14px);
+      font-weight: 700;
+      color: #4ade80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding-top: 4px;
+      opacity: 0;
+      transition: opacity 0.5s ease 2.2s;
+    }
+    .hiw-v2-done svg {
+      width: 16px; height: 16px;
+      stroke: #4ade80; fill: none; stroke-width: 2.5; stroke-linecap: round;
+    }
+    .hiw-step.visible .hiw-v2-done { opacity: 1; }
+
+    /* Animate bars when step becomes visible */
+    .hiw-step.visible .hiw-v2-bar-1 { width: 100%; transition-delay: 0.1s; }
+    .hiw-step.visible .hiw-v2-bar-2 { width: 100%; transition-delay: 0.4s; }
+    .hiw-step.visible .hiw-v2-bar-3 { width: 87%; transition-delay: 0.7s; }
+    .hiw-step.visible .hiw-v2-bar-4 { width: 100%; transition-delay: 1.0s; }
+
+    /* ── Step 3 visual: live site with notification ───────────────── */
+    .hiw-v3 {
+      min-height: clamp(200px, 22vw, 320px);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Mini browser chrome */
+    .hiw-v3-chrome {
+      background: #07071a;
+      border-bottom: 1px solid var(--border);
+      padding: clamp(7px, 0.7vw, 10px) clamp(12px, 1.2vw, 18px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hiw-v3-dots { display: flex; gap: 4px; }
+    .hiw-v3-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); }
+    .hiw-v3-url {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-size: clamp(8px, 0.7vw, 10px);
+      color: var(--muted);
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hiw-v3-url-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+    }
+    /* Mini site */
+    .hiw-v3-site {
+      background: linear-gradient(160deg, #04040f 0%, #080822 60%, #0c0830 100%);
+      height: clamp(140px, 15vw, 220px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .hiw-v3-site::before {
+      content: '';
+      position: absolute;
+      top: 20%; left: 50%; transform: translateX(-50%);
+      width: 200px; height: 120px;
+      background: radial-gradient(ellipse, rgba(79,110,247,0.15) 0%, transparent 70%);
+    }
+    .hiw-v3-site-h { font-size: clamp(13px, 1.3vw, 20px); font-weight: 800; color: #fff; letter-spacing: -0.025em; position: relative; z-index: 1; }
+    .hiw-v3-site-sub { font-size: clamp(9px, 0.75vw, 11px); color: rgba(255,255,255,0.3); position: relative; z-index: 1; }
+    .hiw-v3-site-btn { font-size: clamp(9px, 0.72vw, 11px); font-weight: 700; color: #fff; background: var(--accent); padding: 5px 14px; border-radius: 6px; position: relative; z-index: 1; }
+
+    /* Payment notification — floats in from right */
+    .hiw-v3-notif {
+      position: absolute;
+      bottom: clamp(12px, 1.5vw, 20px);
+      right: clamp(12px, 1.5vw, 20px);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: clamp(8px, 0.8vw, 12px);
+      padding: clamp(10px, 1vw, 14px) clamp(12px, 1.2vw, 18px);
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 0.8vw, 12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transform: translateX(140%);
+      opacity: 0;
+      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease;
+      z-index: 10;
+    }
+    .hiw-step.visible .hiw-v3-notif {
+      transform: translateX(0);
+      opacity: 1;
+      transition-delay: 0.5s;
+    }
+    .hiw-v3-notif-icon {
+      width: clamp(28px, 2.5vw, 38px);
+      height: clamp(28px, 2.5vw, 38px);
+      border-radius: 8px;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .hiw-v3-notif-icon svg { width: 14px; height: 14px; stroke: #4ade80; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .hiw-v3-notif-text { display: flex; flex-direction: column; gap: 2px; }
+    .hiw-v3-notif-title { font-size: clamp(10px, 0.8vw, 12px); font-weight: 700; color: var(--text); }
+    .hiw-v3-notif-sub { font-size: clamp(9px, 0.7vw, 11px); color: var(--muted); }
+
+    /* Bottom CTA under steps */
+    .hiw-bottom {
+      margin-top: clamp(64px, 9vw, 120px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(16px, 1.8vw, 24px);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .hiw-bottom.visible { opacity: 1; transform: translateY(0); }
+    .hiw-bottom-p {
+      font-size: clamp(14px, 1.1vw, 18px);
+      color: var(--muted);
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .hiw-bottom-cta {
+      padding: clamp(11px, 1vw, 14px) clamp(28px, 2.5vw, 40px);
+      border-radius: 999px;
+      font-size: clamp(13px, 0.95vw, 15px);
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      background: var(--accent);
+      box-shadow: 0 0 24px rgba(79,110,247,0.3);
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .hiw-bottom-cta:hover {
+      background: #3d5df0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 28px rgba(79,110,247,0.45);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .hiw-step { grid-template-columns: 1fr; }
+      .hiw-step:nth-child(even) .hiw-text { order: 1; }
+      .hiw-step:nth-child(even) .hiw-visual { order: 2; }
+      .hiw-headline { margin-bottom: clamp(40px, 6vw, 60px); }
+    }
+
+    /* Reveal animations — trigger via IntersectionObserver */
+    .hiw-reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .hiw-reveal.visible { opacity: 1; transform: translateY(0); }
+
   </style>
 </head>
 <body>
@@ -642,8 +1659,8 @@
       <span class="nav-logo-name">VEXIUM<span>.AI</span></span>
     </a>
     <div class="nav-links">
-      <a href="#features"     class="nav-link">Features</a>
       <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="#features"     class="nav-link">Features</a>
       <a href="#pricing"      class="nav-link">Pricing</a>
     </div>
     <div class="nav-right">
@@ -763,7 +1780,396 @@
     </div>
   </div>
 
-  <div class="section-placeholder"><p>Features coming next</p></div>
+  <!-- ═══════════════════════════════════════════
+       HOW IT WORKS
+  ═══════════════════════════════════════════ -->
+  <section id="how-it-works">
+    <div class="hiw-inner">
+
+    <div class="hiw-label hiw-reveal">How it works</div>
+    <h2 class="hiw-headline hiw-reveal">From idea to income<br><em>in under an hour.</em></h2>
+
+    <div class="hiw-steps">
+
+      <!-- ── Step 1 ───────────────────────────────── -->
+      <div class="hiw-step">
+        <div class="hiw-text">
+          <div class="hiw-num">01</div>
+          <div class="hiw-step-label">You have an idea</div>
+          <h3 class="hiw-step-h">It doesn't have to be perfect. Just type what you want.</h3>
+          <p class="hiw-step-p">A clothing brand, a SaaS tool, an online course, a service business — describe it in plain English. No forms. No templates. No decisions to make upfront. Vexium figures out the rest.</p>
+        </div>
+        <div class="hiw-visual">
+          <div class="hiw-v1">
+            <div class="hiw-v1-label">What do you want to build?</div>
+            <div class="hiw-v1-input" id="typingPrompt">
+              <span id="typingText"></span><span class="hiw-v1-cursor"></span>
+            </div>
+            <div class="hiw-v1-examples">
+              <div class="hiw-v1-chip">Clothing brand</div>
+              <div class="hiw-v1-chip">SaaS landing page</div>
+              <div class="hiw-v1-chip">Online course</div>
+              <div class="hiw-v1-chip">Freelance portfolio</div>
+              <div class="hiw-v1-chip">Coaching business</div>
+              <div class="hiw-v1-chip">Digital products</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 2 ───────────────────────────────── -->
+      <div class="hiw-step">
+        <div class="hiw-text">
+          <div class="hiw-num">02</div>
+          <div class="hiw-step-label">Watch it come to life</div>
+          <h3 class="hiw-step-h">A complete website builds itself in real time.</h3>
+          <p class="hiw-step-p">Not a template you fight with — real pages, real design, real code. Watch the files appear as Vexium writes every line. Then ask it to change anything. It listens.</p>
+        </div>
+        <div class="hiw-visual">
+          <div class="hiw-v2">
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#a78bfa"></div>style.css</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-1" style="background:linear-gradient(90deg,#a78bfa,#7c5fc7)"></div></div>
+              <div class="hiw-v2-lines" style="color:#a78bfa" id="hiwLines1">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#60a5fa"></div>index.html</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-2" style="background:linear-gradient(90deg,#60a5fa,#3b82f6)"></div></div>
+              <div class="hiw-v2-lines" style="color:#60a5fa" id="hiwLines2">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#fbbf24"></div>main.js</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-3" style="background:linear-gradient(90deg,#fbbf24,#d97706)"></div></div>
+              <div class="hiw-v2-lines" style="color:#fbbf24" id="hiwLines3">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#34d399"></div>about.html</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-4" style="background:linear-gradient(90deg,#34d399,#059669)"></div></div>
+              <div class="hiw-v2-lines" style="color:#34d399" id="hiwLines4">0 lines</div>
+            </div>
+            <div class="hiw-v2-done" id="hiwDone">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Built in 14 seconds
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 3 ───────────────────────────────── -->
+      <div class="hiw-step">
+        <div class="hiw-text">
+          <div class="hiw-num">03</div>
+          <div class="hiw-step-label">You're open for business</div>
+          <h3 class="hiw-step-h">Payments, accounts, AI — everything's already there.</h3>
+          <p class="hiw-step-p">Hit publish and your site goes live on your own domain. Stripe payments are ready. User accounts work. Your AI tools are built in. Share the link. Start making money. That's it.</p>
+        </div>
+        <div class="hiw-visual">
+          <div class="hiw-v3">
+            <div class="hiw-v3-chrome">
+              <div class="hiw-v3-dots">
+                <div class="hiw-v3-dot"></div>
+                <div class="hiw-v3-dot"></div>
+                <div class="hiw-v3-dot"></div>
+              </div>
+              <div class="hiw-v3-url">
+                <div class="hiw-v3-url-dot"></div>
+                yourstore.vexium.ai
+              </div>
+            </div>
+            <div class="hiw-v3-site">
+              <div class="hiw-v3-site-h">Your Business Name</div>
+              <div class="hiw-v3-site-sub">Built with Vexium in under an hour</div>
+              <div class="hiw-v3-site-btn">Shop now</div>
+            </div>
+            <div class="hiw-v3-notif">
+              <div class="hiw-v3-notif-icon">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="hiw-v3-notif-text">
+                <div class="hiw-v3-notif-title">Payment received — $49.00</div>
+                <div class="hiw-v3-notif-sub">Your first sale. Just now.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end hiw-steps -->
+
+    <!-- Bottom CTA -->
+    <div class="hiw-bottom" id="hiwBottom">
+      <p class="hiw-bottom-p">No code. No design skills. No team. Just you, an idea, and Vexium.</p>
+      <a href="/auth.html?signup=1" class="hiw-bottom-cta">Build your business free</a>
+    </div>
+
+    </div><!-- end hiw-inner -->
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       FEATURES
+  ═══════════════════════════════════════════ -->
+  <section id="features">
+    <div class="feat-inner">
+
+      <div class="feat-header">
+        <div class="feat-label feat-reveal">Everything included</div>
+        <h2 class="feat-headline feat-reveal">Everything your business needs.<br><em>Already included.</em></h2>
+        <p class="feat-sub feat-reveal">No plugins. No third-party services. No hidden costs. Every tool you need to build, launch, and grow is built into Vexium from day one.</p>
+      </div>
+
+      <div class="feat-bento feat-reveal">
+
+        <!-- ① BIG: AI Builder — spans 2 rows left -->
+        <div class="feat-card feat-card-ai feat-card-tall">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-ai">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>
+            </div>
+            <div class="feat-card-tag">Core</div>
+            <h3 class="feat-card-h">AI that builds entire businesses</h3>
+            <p class="feat-card-p">Not a helper. Not a template filler. Describe what you want and Vexium builds every page, every section, every line of code — then refines it in conversation until it's exactly right.</p>
+            <div class="feat-ai-demo">
+              <div class="feat-ai-msg feat-ai-msg-user">Build me a 4-page SaaS site for a scheduling tool called Calvy. Dark, modern.</div>
+              <div class="feat-ai-msg feat-ai-msg-ai">
+                <div class="feat-ai-response-head">Building Calvy — 4 pages</div>
+                <div class="feat-ai-pills">
+                  <div class="feat-ai-pill" style="--c:#a78bfa"><span class="feat-ai-pill-dot"></span>style.css<span class="feat-ai-pill-n">224 lines</span></div>
+                  <div class="feat-ai-pill" style="--c:#60a5fa"><span class="feat-ai-pill-dot"></span>index.html<span class="feat-ai-pill-n">387 lines</span></div>
+                  <div class="feat-ai-pill" style="--c:#fbbf24"><span class="feat-ai-pill-dot"></span>main.js<span class="feat-ai-pill-n">118 lines</span></div>
+                  <div class="feat-ai-pill feat-ai-pill-building" style="--c:#34d399"><span class="feat-ai-pill-dot feat-ai-pill-dot-pulse"></span>pricing.html<span class="feat-ai-pill-n" id="featPillN">0 lines</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② Marketing guidance -->
+        <div class="feat-card feat-card-marketing">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-marketing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            <div class="feat-card-tag">Unique</div>
+            <h3 class="feat-card-h">Marketing guidance built in</h3>
+            <p class="feat-card-p">Vexium analyzes your site and tells you exactly how to get customers — SEO fixes, social strategy, ad copy, content ideas. Specific to your business, not generic advice.</p>
+            <div class="feat-marketing-tags">
+              <span>SEO audit</span><span>Social strategy</span><span>Ad copy</span><span>Content ideas</span><span>Conversion tips</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ Advanced AI design -->
+        <div class="feat-card feat-card-design">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-design">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M13.5 9v3l-3.5 2M13.5 9v3l3.5 2"/></svg>
+            </div>
+            <h3 class="feat-card-h">Advanced AI design intelligence</h3>
+            <p class="feat-card-p">Typography, color theory, conversion psychology, layout hierarchy — the AI knows what makes websites actually work and applies it automatically.</p>
+          </div>
+        </div>
+
+        <!-- ④ Payments -->
+        <div class="feat-card feat-card-payments">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-payments">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <h3 class="feat-card-h">Accept payments instantly</h3>
+            <p class="feat-card-p">Stripe is built in. Your site takes real money from day one — no setup, no plugins, no developer needed.</p>
+          </div>
+        </div>
+
+        <!-- ⑤ User accounts -->
+        <div class="feat-card feat-card-accounts">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-accounts">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="feat-card-h">User accounts & logins</h3>
+            <p class="feat-card-p">Full auth system — sign up, log in, protected pages, user profiles. Stuff that normally needs a developer.</p>
+          </div>
+        </div>
+
+        <!-- ⑥ AI inside your site -->
+        <div class="feat-card feat-card-sitai">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-sitai">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h3 class="feat-card-h">AI inside your site</h3>
+            <p class="feat-card-p">Add AI chatbots, content generators, and recommendation engines to the sites you build. Your customers get AI. You get an edge.</p>
+          </div>
+        </div>
+
+        <!-- ⑦ Analytics -->
+        <div class="feat-card feat-card-analytics">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-analytics">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3 class="feat-card-h">Analytics & insights</h3>
+            <p class="feat-card-p">See who's visiting, where they came from, and what's converting — all inside Vexium. No separate tool to connect.</p>
+          </div>
+        </div>
+
+        <!-- ⑧ Publish & domain -->
+        <div class="feat-card feat-card-publish">
+          <div class="feat-card-inner">
+            <div class="feat-icon feat-icon-publish">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3 class="feat-card-h">Publish to your domain</h3>
+            <p class="feat-card-p">One click. Your site goes live at your own custom domain — or a free Vexium subdomain to start.</p>
+          </div>
+        </div>
+
+        <!-- ⑨ Collaborate -->
+        <div class="feat-card feat-card-collab">
+          <div class="feat-card-inner">
+            <div class="feat-collab-left">
+              <div class="feat-icon feat-icon-collab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
+              </div>
+              <h3 class="feat-card-h">Collaborate with your team</h3>
+              <p class="feat-card-p">Invite teammates, clients, or friends. Everyone can edit, chat with AI, and see changes in real time.</p>
+            </div>
+            <div class="feat-collab-avatars">
+              <div class="feat-collab-av" style="background:linear-gradient(135deg,#3b4fd8,#6c3fc5)">L</div>
+              <div class="feat-collab-av" style="background:linear-gradient(135deg,#059669,#34d399)">A</div>
+              <div class="feat-collab-av" style="background:linear-gradient(135deg,#b45309,#fbbf24)">M</div>
+              <div class="feat-collab-av" style="background:linear-gradient(135deg,#9333ea,#e879f9)">J</div>
+              <div class="feat-collab-av feat-collab-av-add">+</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end bento -->
+    </div><!-- end feat-inner -->
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       PRICING
+  ═══════════════════════════════════════════ -->
+  <section id="pricing">
+    <div class="price-inner">
+
+      <div class="price-header">
+        <div class="price-label price-reveal">Pricing</div>
+        <h2 class="price-headline price-reveal">Simple pricing.<br><em>No surprises.</em></h2>
+        <p class="price-sub price-reveal">Start free. Upgrade when you're ready. Cancel anytime.</p>
+
+        <!-- Toggle -->
+        <div class="price-toggle-wrap price-reveal">
+          <span class="price-toggle-label" id="toggleLabelMonthly">Monthly</span>
+          <button class="price-toggle" id="billingToggle" aria-label="Toggle billing period">
+            <span class="price-toggle-knob"></span>
+          </button>
+          <span class="price-toggle-label" id="toggleLabelAnnual">Annual</span>
+          <span class="price-save-badge">Save 20%</span>
+        </div>
+      </div>
+
+      <!-- Free trial — horizontal banner above the 3 cards -->
+      <div class="price-free-banner price-reveal">
+        <div class="price-free-glow"></div>
+        <div class="price-free-left">
+          <div class="price-free-eyebrow">Start for free</div>
+          <div class="price-free-big">$0</div>
+          <div class="price-free-sub">3-day free trial · No credit card required</div>
+        </div>
+        <div class="price-free-divider"></div>
+        <div class="price-free-right">
+          <p class="price-free-desc">Try the full Vexium AI builder — build a real website, see what it can do, and decide if it's worth it. Most people decide in the first 10 minutes.</p>
+          <div class="price-free-checks">
+            <div class="price-free-check"><span class="price-check">✓</span>Full AI builder & chat</div>
+            <div class="price-free-check"><span class="price-check">✓</span>1 complete project</div>
+            <div class="price-free-check"><span class="price-check">✓</span>Live preview & editor</div>
+            <div class="price-free-check"><span class="price-check">✓</span>No card, no commitment</div>
+          </div>
+          <a href="/auth.html?signup=1" class="price-free-cta">Start building free</a>
+        </div>
+      </div>
+
+      <div class="price-cards price-reveal">
+
+        <!-- Starter -->
+        <div class="price-card">
+          <div class="price-card-top">
+            <div class="price-tier">Starter</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="12" data-annual="10">$12</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For founders launching their first real business online.</p>
+            <a href="/auth.html?signup=1" class="price-cta price-cta-ghost">Start Starter</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>3 projects</li>
+            <li><span class="price-check">✓</span>Full AI builder</li>
+            <li><span class="price-check">✓</span>Custom domain</li>
+            <li><span class="price-check">✓</span>Remove Vexium branding</li>
+            <li><span class="price-check">✓</span>Publish & host</li>
+            <li><span class="price-x">✗</span>Payments & accounts</li>
+            <li><span class="price-x">✗</span>AI inside your site</li>
+          </ul>
+        </div>
+
+        <!-- Pro — highlighted -->
+        <div class="price-card price-card-pro">
+          <div class="price-popular-badge">Recommended</div>
+          <div class="price-card-top">
+            <div class="price-tier">Pro</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="29" data-annual="23">$29</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For entrepreneurs building serious income online.</p>
+            <a href="/auth.html?signup=1" class="price-cta price-cta-primary">Start Pro</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>Unlimited projects</li>
+            <li><span class="price-check">✓</span>Priority AI</li>
+            <li><span class="price-check">✓</span>Payments & Stripe</li>
+            <li><span class="price-check">✓</span>User accounts & auth</li>
+            <li><span class="price-check">✓</span>AI inside your site</li>
+            <li><span class="price-check">✓</span>Analytics dashboard</li>
+            <li><span class="price-check">✓</span>Marketing guidance</li>
+          </ul>
+        </div>
+
+        <!-- Max -->
+        <div class="price-card">
+          <div class="price-card-top">
+            <div class="price-tier">Max</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="79" data-annual="63">$79</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For agencies and power users managing multiple clients.</p>
+            <a href="/auth.html?signup=1" class="price-cta price-cta-ghost">Start Max</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>Everything in Pro</li>
+            <li><span class="price-check">✓</span>White label</li>
+            <li><span class="price-check">✓</span>Client management</li>
+            <li><span class="price-check">✓</span>Team collaboration</li>
+            <li><span class="price-check">✓</span>Priority support</li>
+            <li><span class="price-check">✓</span>Custom integrations</li>
+            <li><span class="price-check">✓</span>Advanced analytics</li>
+          </ul>
+        </div>
+
+      </div><!-- end price-cards -->
+
+      <!-- Bottom note -->
+      <p class="price-note price-reveal">All plans include a 5% revenue share on payments processed through your Vexium sites. Annual billing saves 20% — billed once per year.</p>
+
+    </div><!-- end price-inner -->
+  </section>
 
   <script>
     // Nav scroll
@@ -931,6 +2337,258 @@
       track.appendChild(buildSet());
       track.appendChild(buildSet());
     })();
+    // ── HOW IT WORKS — scroll reveal ────────────────────────────────
+    (function() {
+      const step2Triggered = { done: false };
+
+      // Count up numbers for build bars
+      function hiwCount(el, target, delay, dur) {
+        if (!el) return;
+        setTimeout(() => {
+          const t0 = performance.now();
+          (function tick(now) {
+            const p = Math.min((now - t0) / dur, 1);
+            const e = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(e * target) + ' lines';
+            if (p < 1) requestAnimationFrame(tick);
+          })(performance.now());
+        }, delay);
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('visible');
+
+          // Step 2: trigger bar counters when it becomes visible
+          if (entry.target.classList.contains('hiw-step') && !step2Triggered.done) {
+            const bars = entry.target.querySelectorAll('.hiw-v2-bar');
+            if (bars.length) {
+              step2Triggered.done = true;
+              hiwCount(document.getElementById('hiwLines1'), 224, 200,  1800);
+              hiwCount(document.getElementById('hiwLines2'), 387, 500,  1800);
+              hiwCount(document.getElementById('hiwLines3'), 118, 800,  1400);
+              hiwCount(document.getElementById('hiwLines4'), 201, 1100, 1800);
+            }
+          }
+
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+      // Observe reveal elements
+      document.querySelectorAll('.hiw-reveal, .hiw-step, #hiwBottom').forEach(el => observer.observe(el));
+
+      // ── Typing animation for step 1 visual ────────────────────────
+      const prompt = 'Build me an online clothing store called MNML. Dark, minimal aesthetic. I need a shop page, product detail page, and a simple checkout.';
+      const typingEl = document.getElementById('typingText');
+      let typed = 0, typingStarted = false;
+
+      const typingObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting || typingStarted) return;
+          typingStarted = true;
+          typingObserver.disconnect();
+          setTimeout(() => {
+            function typeChar() {
+              if (typed < prompt.length) {
+                typingEl.textContent = prompt.slice(0, ++typed);
+                setTimeout(typeChar, typed < 10 ? 60 : 28 + Math.random() * 30);
+              }
+            }
+            typeChar();
+          }, 400);
+        });
+      }, { threshold: 0.3 });
+
+      const step1Visual = document.getElementById('typingPrompt');
+      if (step1Visual) typingObserver.observe(step1Visual);
+    })();
+
+    // ── PRICING CARD TILT ────────────────────────────────────────────
+    (function() {
+      const TILT_MAX = 4, SCALE_ON = 1.02;
+      const EASE_OUT = '0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      document.querySelectorAll('.price-card, .price-free-banner').forEach(card => {
+        let raf = null;
+        let cX = 0, cY = 0, cS = 1, tX = 0, tY = 0, tS = 1, hovering = false;
+        const lerp = (a, b, t) => a + (b - a) * t;
+        function tick() {
+          cX = lerp(cX, tX, 0.12); cY = lerp(cY, tY, 0.12); cS = lerp(cS, tS, 0.12);
+          card.style.transform = 'perspective(900px) rotateX('+cY+'deg) rotateY('+cX+'deg) scale3d('+cS+','+cS+','+cS+')';
+          const still = Math.abs(cX-tX)>0.001||Math.abs(cY-tY)>0.001||Math.abs(cS-tS)>0.0001;
+          if (hovering || still) raf = requestAnimationFrame(tick);
+          else card.style.transform = '';
+        }
+        card.addEventListener('mouseenter', () => {
+          hovering = true; tS = SCALE_ON;
+          card.style.transition = 'border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.6s ease';
+          card.style.borderColor = 'rgba(79,110,247,0.3)';
+          card.style.boxShadow   = '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,110,247,0.1)';
+          cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+        });
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          tX =  ((e.clientX - r.left) / r.width  - 0.5) * TILT_MAX;
+          tY = -((e.clientY - r.top)  / r.height - 0.5) * TILT_MAX;
+        });
+        card.addEventListener('mouseleave', () => {
+          hovering = false; tX = 0; tY = 0; tS = 1;
+          card.style.transition = EASE_OUT + ', border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.6s ease';
+          card.style.borderColor = ''; card.style.boxShadow = '';
+          cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+        });
+      });
+    })();
+
+    // ── PRICING — toggle & reveal ────────────────────────────────────
+    (function() {
+      let isAnnual = false;
+      const toggle = document.getElementById('billingToggle');
+      const labelMonthly = document.getElementById('toggleLabelMonthly');
+      const labelAnnual  = document.getElementById('toggleLabelAnnual');
+      const amounts = document.querySelectorAll('.price-amount[data-monthly]');
+
+      function updatePricing() {
+        amounts.forEach(el => {
+          const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
+          el.textContent = '$' + val;
+        });
+        toggle.classList.toggle('annual', isAnnual);
+        labelMonthly.classList.toggle('active', !isAnnual);
+        labelAnnual.classList.toggle('active',  isAnnual);
+      }
+
+      if (toggle) {
+        toggle.addEventListener('click', () => { isAnnual = !isAnnual; updatePricing(); });
+        labelMonthly.classList.add('active');
+      }
+
+      // Scroll reveal
+      document.querySelectorAll('.price-reveal').forEach((el, i) => {
+        el.style.transitionDelay = (i * 0.08) + 's';
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } });
+        }, { threshold: 0.1 });
+        obs.observe(el);
+      });
+    })();
+
+
+    (function() {
+      // Reveal header elements
+      document.querySelectorAll('.feat-reveal').forEach((el, i) => {
+        el.style.transitionDelay = (i * 0.08) + 's';
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } });
+        }, { threshold: 0.15 });
+        obs.observe(el);
+      });
+
+      // Reveal cards with stagger
+      let featTriggered = false;
+      const featObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (!e.isIntersecting || featTriggered) return;
+          featTriggered = true;
+          document.querySelectorAll('.feat-card').forEach((card, i) => {
+            setTimeout(() => card.classList.add('visible'), i * 60);
+          });
+          featObs.disconnect();
+        });
+      }, { threshold: 0.05 });
+      const bento = document.querySelector('.feat-bento');
+      if (bento) featObs.observe(bento);
+
+      // Pill counter on AI card
+      const pillEl = document.getElementById('featPillN');
+      let pillStarted = false;
+      if (pillEl) {
+        const pillObs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (!e.isIntersecting || pillStarted) return;
+            pillStarted = true;
+            pillObs.disconnect();
+            const t0 = performance.now();
+            (function tick(now) {
+              const p = Math.min((now - t0) / 2200, 1);
+              const ease = 1 - Math.pow(1 - p, 3);
+              pillEl.textContent = Math.round(ease * 163) + ' lines';
+              if (p < 1) requestAnimationFrame(tick);
+              else pillEl.style.color = '#4ade80';
+            })(performance.now());
+          });
+        }, { threshold: 0.3 });
+        pillObs.observe(pillEl);
+      }
+    })();
+
+    // ── FEATURE CARD TILT ────────────────────────────────────────────
+    (function() {
+      const TILT_MAX   = 4;
+      const SCALE_ON   = 1.02;
+      const EASE_OUT   = '0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      document.querySelectorAll('.feat-card').forEach(card => {
+        let raf = null;
+        let currentX = 0, currentY = 0, currentS = 1;
+        let targetX  = 0, targetY  = 0, targetS  = 1;
+        let hovering = false;
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function tick() {
+          currentX = lerp(currentX, targetX, 0.12);
+          currentY = lerp(currentY, targetY, 0.12);
+          currentS = lerp(currentS, targetS, 0.12);
+          card.style.transform =
+            'perspective(900px) ' +
+            'rotateX(' + currentY + 'deg) ' +
+            'rotateY(' + currentX + 'deg) ' +
+            'scale3d(' + currentS + ',' + currentS + ',' + currentS + ')';
+          const stillMoving =
+            Math.abs(currentX - targetX) > 0.001 ||
+            Math.abs(currentY - targetY) > 0.001 ||
+            Math.abs(currentS - targetS) > 0.0001;
+          if (hovering || stillMoving) {
+            raf = requestAnimationFrame(tick);
+          } else {
+            card.style.transform = '';
+          }
+        }
+
+        card.addEventListener('mouseenter', () => {
+          hovering = true;
+          targetS = SCALE_ON;
+          card.style.transition = 'border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.6s ease';
+          card.style.borderColor = 'rgba(79,110,247,0.3)';
+          card.style.boxShadow   = '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,110,247,0.1)';
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(tick);
+        });
+
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width  - 0.5;
+          const y = (e.clientY - rect.top)  / rect.height - 0.5;
+          targetX =  x * TILT_MAX;
+          targetY = -y * TILT_MAX;
+        });
+
+        card.addEventListener('mouseleave', () => {
+          hovering = false;
+          targetX = 0;
+          targetY = 0;
+          targetS = 1;
+          card.style.transition = EASE_OUT + ', border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.6s ease';
+          card.style.borderColor = '';
+          card.style.boxShadow   = '';
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(tick);
+        });
+      });
+    })();
+
   </script>
 </body>
 </html>

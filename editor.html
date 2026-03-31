@@ -3444,10 +3444,11 @@ function aiApplyImprovements(btn) {
 // ── LIVE PREVIEW ──────────────────────────────────────────────────────────────
 let _livePreviewDebounce = null;
 
-function livePreviewUpdate() {
+function livePreviewUpdate(isHtml) {
   clearTimeout(_livePreviewDebounce);
   _livePreviewDebounce = setTimeout(() => {
     if (!previewVisible) {
+      if (!isHtml) return; // don't auto-open for CSS/JS — wait for HTML
       previewVisible = true;
       document.getElementById('rightPanel').classList.remove('hidden');
       document.getElementById('previewFrame').style.display = 'block';
@@ -4001,7 +4002,7 @@ async function aiCallAPI() {
           }
           aiMarkPillDone(data.name);
           currentStreamingFile = null;
-          if (data.name.endsWith('.html')) livePreviewUpdate();
+          livePreviewUpdate(data.name.endsWith('.html'));
         }
 
         // ── AUTO-FIX EVENTS — update fileSystem silently ──────────────────
@@ -4025,7 +4026,7 @@ async function aiCallAPI() {
             const model = editor.getModel();
             if (model) model.setValue(content);
           }
-          if (data.name.endsWith('.html')) livePreviewUpdate();
+          livePreviewUpdate(data.name.endsWith('.html'));
         }
 
         if (eventType === 'done') {
@@ -4226,7 +4227,8 @@ async function aiCallPageBuilds(pageNames) {
             aiMarkPillDone(data.name);
             renderFileTree();
             renderTabs();
-            if (data.name.endsWith('.html')) livePreviewUpdate();
+            if (data.name.endsWith('.html')) livePreviewUpdate(true);
+            else livePreviewUpdate(false);
           }
         }
       };

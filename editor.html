@@ -1196,60 +1196,163 @@
 
     /* Preview area */
     #previewInner { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #fff; }
-    #previewInner.device-phone, #previewInner.device-desktop { background: var(--bg); align-items: center; justify-content: center; padding: 20px; }
+    #previewInner.device-phone, #previewInner.device-desktop { background: var(--bg); align-items: center; justify-content: center; padding: 16px; }
 
-    /* Phone frame */
+    /* ── iPhone — fixed 390:844 ratio, scaled to fit ─── */
     .device-shell-phone {
-      width: 375px;
+      /* Scale by height first, but cap so width never overflows */
+      height: 100%;
+      aspect-ratio: 390 / 844;
       max-width: calc(100% - 32px);
-      border-radius: 44px;
-      overflow: hidden;
-      border: 8px solid #1a1a2e;
-      box-shadow: 0 0 0 1px #0a0a1a, 0 30px 80px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.06);
+      max-height: calc(100% - 32px);
       position: relative;
-      flex-shrink: 0;
-      height: calc(min(100%, (375px - 16px) * 844 / 390));
-      max-height: calc(100% - 40px);
+      border-radius: clamp(36px, 5vw, 50px);
+      background: #1a1a1f;
+      box-shadow:
+        0 0 0 1px #2a2a35,
+        0 0 0 2px #111116,
+        inset 0 0 0 1px rgba(255,255,255,.08),
+        0 40px 100px rgba(0,0,0,.8);
       display: flex;
       flex-direction: column;
-      background: #000;
+      overflow: hidden;
+      flex-shrink: 0;
     }
+    /* Volume buttons */
     .device-shell-phone::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 28px;
-      background: #1a1a2e;
-      border-radius: 0 0 20px 20px;
-      z-index: 10;
+      left: -3px; top: 22%;
+      width: 3px; height: 8%;
+      background: #2a2a35;
+      border-radius: 2px 0 0 2px;
+      box-shadow: 0 calc(130% + 5px) 0 #2a2a35, 0 calc(260% + 10px) 0 #2a2a35;
     }
-
-    /* Desktop frame */
-    .device-shell-desktop {
-      width: min(900px, calc(100% - 32px));
-      border-radius: 12px 12px 0 0;
+    /* Power button */
+    .device-shell-phone::after {
+      content: '';
+      position: absolute;
+      right: -3px; top: 28%;
+      width: 3px; height: 12%;
+      background: #2a2a35;
+      border-radius: 0 2px 2px 0;
+    }
+    .device-phone-screen {
+      flex: 1;
+      border-radius: clamp(30px, 4.5vw, 44px);
       overflow: hidden;
-      border: 6px solid #1a1a2e;
-      border-bottom: none;
-      box-shadow: 0 0 0 1px #0a0a1a, 0 20px 60px rgba(0,0,0,.7);
       position: relative;
-      flex-shrink: 0;
-      height: min(580px, calc(100% - 60px));
+      background: #fff;
       display: flex;
       flex-direction: column;
-      background: #000;
     }
-    .device-shell-desktop::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 28px; background: #1a1a2e; z-index: 10; }
-    .device-shell-desktop::after { content: '● ● ●'; position: absolute; top: 7px; left: 12px; font-size: 8px; letter-spacing: 4px; color: rgba(255,255,255,.25); z-index: 11; }
-    .device-frame-iframe { flex: 1; width: 100%; border: none; background: #fff; display: block; }
-    .device-shell-phone .device-frame-iframe { margin-top: 28px; height: calc(100% - 28px); }
-    .device-shell-desktop .device-frame-iframe { margin-top: 28px; height: calc(100% - 28px); }
+    .device-phone-island {
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      width: 28%; height: 20px;
+      background: #1a1a1f;
+      border-radius: 999px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .device-shell-phone .device-frame-iframe {
+      flex: 1; width: 100%; border: none; background: #fff;
+      padding-top: 36px; /* clear Dynamic Island */
+    }
 
+    /* ── Laptop — fixed 16:10 ratio, scaled to fit ────── */
+    .device-shell-desktop {
+      /* Scale by width, but cap so height never overflows */
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-width: calc(100% - 32px);
+      max-height: calc(100% - 32px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .device-laptop-lid {
+      flex: 1;
+      min-height: 0;
+      background: linear-gradient(to bottom, #111120, #0c0c18);
+      border-radius: clamp(6px, 1vw, 12px) clamp(6px, 1vw, 12px) 0 0;
+      padding: clamp(5px, 0.7vw, 10px);
+      padding-bottom: clamp(3px, 0.4vw, 6px);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05), inset 0 1px 0 rgba(255,255,255,.04);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .device-laptop-lid::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.1) 30%, rgba(255,255,255,.08) 70%, transparent);
+    }
+    .device-laptop-lid::after {
+      content: '';
+      position: absolute;
+      top: clamp(3px, 0.4vw, 5px); left: 50%; transform: translateX(-50%);
+      width: clamp(4px, 0.5vw, 6px); height: clamp(4px, 0.5vw, 6px);
+      border-radius: 50%;
+      background: #0a0a16;
+      border: 1px solid rgba(255,255,255,.07);
+      z-index: 6;
+    }
+    .device-laptop-screen {
+      flex: 1; min-height: 0;
+      border-radius: clamp(3px, 0.4vw, 6px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #03030c;
+    }
+    .device-laptop-bar {
+      height: clamp(16px, 2vw, 26px);
+      background: #06061a;
+      border-bottom: 1px solid #0e0e22;
+      display: flex;
+      align-items: center;
+      padding: 0 clamp(6px, 0.8vw, 12px);
+      gap: clamp(3px, 0.4vw, 5px);
+      flex-shrink: 0;
+    }
+    .device-laptop-dot {
+      width: clamp(5px, 0.6vw, 8px); height: clamp(5px, 0.6vw, 8px);
+      border-radius: 50%; background: var(--border2);
+    }
+    .device-shell-desktop .device-frame-iframe {
+      flex: 1; width: 100%; border: none; background: #fff; min-height: 0;
+    }
+    .device-laptop-hinge {
+      width: 88%; margin: 0 auto;
+      height: clamp(3px, 0.3vw, 5px);
+      background: linear-gradient(to bottom, #08080f, #0e0e1a);
+      border-radius: 0 0 2px 2px;
+      flex-shrink: 0;
+    }
+    .device-laptop-base {
+      width: 108%; margin-left: -4%;
+      height: clamp(8px, 1vw, 16px);
+      background: linear-gradient(to bottom, #0d0d1c, #0a0a16 40%, #08080f);
+      border-radius: 0 0 clamp(4px, 0.5vw, 7px) clamp(4px, 0.5vw, 7px);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.03);
+      flex-shrink: 0;
+    }
+    .device-laptop-shadow {
+      width: 80%; height: clamp(16px, 2.5vw, 32px);
+      margin: 0 auto;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,0,0,.5) 0%, transparent 75%);
+      flex-shrink: 0;
+    }
+
+    .device-frame-iframe { flex: 1; width: 100%; border: none; background: #fff; display: block; }
     #previewFrame { flex: 1; width: 100%; border: none; background: #fff; display: block; }
     @keyframes previewFlash { 0% { opacity: .6; } 100% { opacity: 1; } }
+
     .preview-refreshing { animation: previewFlash .3s ease; }
 
     /* Console */
@@ -2550,31 +2653,84 @@ function applyDeviceMode() {
   const inner = document.getElementById('previewInner');
   const frame = document.getElementById('previewFrame');
   if (!inner || !frame) return;
-  const existingShell = inner.querySelector('.device-shell-phone,.device-shell-desktop');
-  if (existingShell) { inner.appendChild(frame); existingShell.remove(); }
+
+  // Pull frame out before removing old shell
+  if (!inner.contains(frame)) inner.appendChild(frame);
+  inner.querySelectorAll('.device-shell-phone,.device-shell-desktop').forEach(el => el.remove());
   inner.className = '';
+  frame.className = '';
+  frame.style.cssText = '';
+
   if (deviceMode === 'default') {
-    frame.style.width = '100%';
-    frame.style.height = '';
     frame.style.flex = '1';
-    frame.className = '';
+    frame.style.width = '100%';
+    frame.style.border = 'none';
+    frame.style.background = '#fff';
+
   } else if (deviceMode === 'phone') {
     inner.classList.add('device-phone');
     const shell = document.createElement('div');
     shell.className = 'device-shell-phone';
+
+    // Screen wrapper (rounded inside bezel)
+    const screen = document.createElement('div');
+    screen.className = 'device-phone-screen';
+
+    // Dynamic Island
+    const island = document.createElement('div');
+    island.className = 'device-phone-island';
+    screen.appendChild(island);
+
+    // iframe
     frame.className = 'device-frame-iframe';
-    frame.style.width = '100%';
-    frame.style.flex = '';
-    shell.appendChild(frame);
+    screen.appendChild(frame);
+    shell.appendChild(screen);
     inner.appendChild(shell);
+
   } else if (deviceMode === 'desktop') {
     inner.classList.add('device-desktop');
     const shell = document.createElement('div');
     shell.className = 'device-shell-desktop';
+
+    // Lid
+    const lid = document.createElement('div');
+    lid.className = 'device-laptop-lid';
+
+    // Screen area inside lid
+    const screen = document.createElement('div');
+    screen.className = 'device-laptop-screen';
+
+    // MacOS bar with dots
+    const bar = document.createElement('div');
+    bar.className = 'device-laptop-bar';
+    ['','',''].forEach(() => {
+      const dot = document.createElement('div');
+      dot.className = 'device-laptop-dot';
+      bar.appendChild(dot);
+    });
+    screen.appendChild(bar);
+
+    // iframe
     frame.className = 'device-frame-iframe';
-    frame.style.width = '100%';
-    frame.style.flex = '';
-    shell.appendChild(frame);
+    screen.appendChild(frame);
+    lid.appendChild(screen);
+    shell.appendChild(lid);
+
+    // Hinge
+    const hinge = document.createElement('div');
+    hinge.className = 'device-laptop-hinge';
+    shell.appendChild(hinge);
+
+    // Base
+    const base = document.createElement('div');
+    base.className = 'device-laptop-base';
+    shell.appendChild(base);
+
+    // Shadow
+    const shadow = document.createElement('div');
+    shadow.className = 'device-laptop-shadow';
+    shell.appendChild(shadow);
+
     inner.appendChild(shell);
   }
 }
@@ -3466,32 +3622,48 @@ async function aiSend(fromBottom) {
   aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), []);
   aiShowTyping();
 
-  // ── READINESS CHECK (only on fresh projects, first 2 session messages) ──
-  const hasExistingFiles = !isDefaultCode(fileSystem);
+  // ── INTENT DETECTION — route to conversation, build, or edit ─────────────
+  const intentRes = await fetchJSON({
+    intent_mode: true,
+    files: fileSystem,
+    messages: [{ role: 'user', content: text }]
+  });
 
-  if (!hasExistingFiles && aiSessionMessageCount <= 2) {
-    // Check if we have enough to build
-    const readinessRes = await fetchJSON({
-      readiness_mode: true,
-      files: fileSystem,
-      messages: aiHistory.filter(m => m.role === 'user').map(m => ({ role: 'user', content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) })),
-      message_count: aiSessionMessageCount
-    });
+  const intent = intentRes?.intent || 'chat';
 
-    if (readinessRes && readinessRes.ready === false && readinessRes.questions && readinessRes.questions.length > 0) {
-      // AI needs to ask a question — route to chat_mode
-      aiHideTyping();
-      aiTyping = false;
-      aiSetGenerating(false);
-      await aiChatMode(readinessRes.questions);
-      return;
+  // Pure conversation — questions, advice, strategy, brainstorming
+  if (intent === 'chat') {
+    aiHideTyping();
+    aiTyping = false;
+    aiSetGenerating(false);
+    await aiConvoMode();
+    return;
+  }
+
+  // Build from scratch — run readiness check first
+  if (intent === 'build') {
+    const hasExistingFiles = !isDefaultCode(fileSystem);
+    if (!hasExistingFiles && aiSessionMessageCount <= 2) {
+      const readinessRes = await fetchJSON({
+        readiness_mode: true,
+        files: fileSystem,
+        messages: aiHistory.filter(m => m.role === 'user').map(m => ({ role: 'user', content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) })),
+        message_count: aiSessionMessageCount
+      });
+      if (readinessRes && readinessRes.ready === false && readinessRes.questions?.length > 0) {
+        aiHideTyping();
+        aiTyping = false;
+        aiSetGenerating(false);
+        await aiChatMode(readinessRes.questions);
+        return;
+      }
     }
   }
 
-  // Ready to build — fetch brief + spec only for fresh projects, with delays to avoid 429
+  // Build or edit — run brief + spec pipeline then build
   _pendingBrief = null;
   _pendingSpec  = null;
-  if (isDefaultCode(fileSystem)) {
+  if (intent === 'build' && isDefaultCode(fileSystem)) {
     try {
       _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
       if (_pendingBrief) {
@@ -3518,7 +3690,83 @@ async function fetchJSON(body) {
   } catch(e) { return null; }
 }
 
-// ── CHAT MODE — AI asks a clarifying question ─────────────────────────────────
+// ── CONVERSATION MODE — general chat, questions, advice ───────────────────────
+async function aiConvoMode() {
+  const msgs = document.getElementById('aiMessages');
+  aiSetGenerating(true);
+
+  const convoRes = await fetch(AI_EDGE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+    body: JSON.stringify({
+      convo_mode: true,
+      messages: aiHistory,
+      files: fileSystem,
+      stream: true
+    })
+  });
+
+  if (!convoRes.ok || !convoRes.body) {
+    aiHideTyping();
+    aiSetGenerating(false);
+    aiAddAI('Something went wrong. Try again.', []);
+    return;
+  }
+
+  aiHideTyping();
+
+  const row = document.createElement('div');
+  row.className = 'ai-row ai';
+  const contentWrap = document.createElement('div');
+  contentWrap.style.cssText = 'flex:1;min-width:0';
+  const textEl = document.createElement('div');
+  textEl.className = 'ai-text';
+  contentWrap.appendChild(textEl);
+  row.appendChild(contentWrap);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const reader = convoRes.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '', fullText = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(5).trim();
+        if (raw === '[DONE]') continue;
+        let parsed;
+        try { parsed = JSON.parse(raw); } catch { continue; }
+        if (parsed.text) {
+          fullText += parsed.text;
+          textEl.innerHTML = formatChatText(fullText);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      }
+    }
+  } catch(e) {}
+
+  textEl.innerHTML = formatChatText(fullText);
+
+  // Add meta row with copy button
+  const meta = document.createElement('div');
+  meta.className = 'ai-msg-meta';
+  meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
+  contentWrap.appendChild(meta);
+
+  aiHistory.push({ role: 'assistant', content: fullText });
+  aiAllMessages.push({ role: 'assistant', text: fullText, files: [], time: aiNow() });
+  aiSaveMsg('assistant', fullText, []);
+
+  aiSetGenerating(false);
+  msgs.scrollTop = msgs.scrollHeight;
+}
 async function aiChatMode(suggestedQuestions) {
   // Build a message that asks the questions naturally
   const questionText = suggestedQuestions.join('\n\n');
@@ -3753,7 +4001,7 @@ async function aiCallAPI() {
           }
           aiMarkPillDone(data.name);
           currentStreamingFile = null;
-          livePreviewUpdate();
+          if (data.name.endsWith('.html')) livePreviewUpdate();
         }
 
         // ── AUTO-FIX EVENTS — update fileSystem silently ──────────────────
@@ -3777,7 +4025,7 @@ async function aiCallAPI() {
             const model = editor.getModel();
             if (model) model.setValue(content);
           }
-          livePreviewUpdate();
+          if (data.name.endsWith('.html')) livePreviewUpdate();
         }
 
         if (eventType === 'done') {
@@ -3978,7 +4226,7 @@ async function aiCallPageBuilds(pageNames) {
             aiMarkPillDone(data.name);
             renderFileTree();
             renderTabs();
-            livePreviewUpdate();
+            if (data.name.endsWith('.html')) livePreviewUpdate();
           }
         }
       };

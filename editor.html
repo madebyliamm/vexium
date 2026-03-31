@@ -4057,24 +4057,30 @@ async function aiCallAPI() {
             setTimeout(refreshPreview, 120);
             saveNow();
 
-            // Sequential page builds — use brief.pageStructure which lists actual page filenames
+            // Sequential page builds — detect missing pages
             const isMultiPage = (_pendingSpec && _pendingSpec.is_multi_page) || (_pendingBrief && _pendingBrief.isMultiPage);
-            if (isMultiPage) {
-              const builtNames = new Set(collectedFiles.map(f => f.name));
-              // pageStructure from brief lists pages like "index.html", "about.html", "contact.html"
-              const pageList = (_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [];
-              const missingPages = pageList
-                .map(p => {
-                  // Normalize: if it looks like a section name (no dot), convert to filename
-                  if (!p.includes('.')) return p.toLowerCase().replace(/\s+/g, '-') + '.html';
-                  return p;
-                })
-                .filter(p => p.endsWith('.html') && !builtNames.has(p) && p !== 'index.html');
+            const builtNames = new Set(collectedFiles.map(f => f.name));
 
-              if (missingPages.length > 0) {
-                // Keep pills visible during sequential builds
-                setTimeout(() => aiCallPageBuilds(missingPages), 600);
-              }
+            // Build page list from spec/brief OR parse directly from the user's last message
+            let pageList = (_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [];
+
+            // Fallback: scan the conversation for explicitly named .html files
+            if (!pageList.length || !isMultiPage) {
+              const lastUserMsg = aiHistory.filter(m => m.role === 'user').slice(-3)
+                .map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join(' ');
+              const found = lastUserMsg.match(/[\w-]+\.html/g);
+              if (found && found.length > 1) pageList = [...new Set(found)];
+            }
+
+            const missingPages = pageList
+              .map(p => {
+                if (!p.includes('.')) return p.toLowerCase().replace(/\s+/g, '-') + '.html';
+                return p;
+              })
+              .filter(p => p.endsWith('.html') && !builtNames.has(p) && p !== 'index.html');
+
+            if (missingPages.length > 0) {
+              setTimeout(() => aiCallPageBuilds(missingPages), 600);
             }
 
             // Add file cards to the AI message

@@ -23,14 +23,14 @@
     /* ══ TOPBAR ══ */
     #topbar{
       position:sticky;top:0;z-index:200;
-      height:54px;padding:0 clamp(12px,3vw,40px);
+      height:clamp(50px,4.5vw,66px);padding:0 clamp(16px,4vw,56px);
       display:flex;align-items:center;gap:clamp(8px,1.5vw,16px);
       background:rgba(2,2,9,.92);backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(255,255,255,.04);
     }
     .tb-logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
     .tb-logo img{width:clamp(18px,2.2vw,22px);height:clamp(18px,2.2vw,22px);border-radius:5px}
-    .tb-logo-t{font-size:clamp(12px,1.4vw,15px);font-weight:800;white-space:nowrap}
+    .tb-logo-t{font-size:clamp(12px,1.2vw,16px);font-weight:800;white-space:nowrap}
     .tb-logo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
     /* search */
@@ -79,10 +79,10 @@
     .notif-empty{padding:36px 16px;text-align:center;font-size:12px;color:var(--sub)}
 
     /* ══ PAGE ══ */
-    .page{max-width:1040px;margin:0 auto;padding:48px clamp(16px,4vw,40px)}
+    .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(32px,5vw,72px) clamp(16px,4vw,56px)}
     .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;gap:12px;flex-wrap:wrap}
-    .page-title{font-size:24px;font-weight:800;letter-spacing:-.5px}
-    .page-sub{font-size:13px;color:var(--sub);margin-top:3px}
+    .page-title{font-size:clamp(20px,2.2vw,32px);font-weight:800;letter-spacing:-.5px}
+    .page-sub{font-size:clamp(11px,1vw,14px);color:var(--sub);margin-top:3px}
     .new-btn{display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);box-shadow:0 0 20px rgba(79,110,247,.25);transition:all .2s;white-space:nowrap}
     .new-btn:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.45)}
 
@@ -94,8 +94,8 @@
 
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 
-    .proj-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
-    .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .proj-card{background:var(--s1);border:1px solid transparent;border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
+    .proj-card:hover{border-color:rgba(255,255,255,.07);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
     .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
@@ -124,13 +124,13 @@
     .pc-vis{position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;pointer-events:none;line-height:1.4}
     .pc-vis.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
     .pc-vis.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
-    .pc-emoji{font-size:44px;line-height:1;margin-bottom:14px;display:block}
+    .pc-emoji{font-size:44px;line-height:1;margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
     .pc-name{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
 
     .section-head{margin:52px 0 20px}
-    .section-title{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+    .section-title{font-size:clamp(15px,1.6vw,22px);font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
     .section-sub{font-size:13px;color:var(--sub)}
     .loading{text-align:center;padding:60px;color:var(--sub);font-size:13px}
 
@@ -212,6 +212,51 @@
     #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:10px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
     #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
+    /* ══ FRIENDS SLIDER ══ */
+    .friends-section{margin-bottom:clamp(28px,3vw,44px)}
+    .friends-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .friends-title{font-size:clamp(13px,1.1vw,16px);font-weight:700;letter-spacing:-.2px}
+    .friends-see-all{font-size:11px;font-weight:600;color:var(--sub);text-decoration:none;transition:color .15s}
+    .friends-see-all:hover{color:var(--text)}
+    .friends-track-wrap{overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none;margin:0 -4px;padding:4px}
+    .friends-track-wrap::-webkit-scrollbar{display:none}
+    .friends-track-wrap.grabbing{cursor:grabbing}
+    .friends-track{display:flex;gap:clamp(8px,1vw,12px);width:max-content}
+    .friend-card{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      background:var(--s1);border-radius:14px;
+      padding:clamp(14px,1.5vw,20px) clamp(16px,1.8vw,24px);
+      min-width:clamp(90px,8vw,120px);
+      cursor:pointer;transition:background .15s,transform .15s;
+      text-decoration:none;flex-shrink:0;
+    }
+    .friend-card:hover{background:var(--s2);transform:translateY(-2px)}
+    .friend-av{
+      width:clamp(36px,3.5vw,48px);height:clamp(36px,3.5vw,48px);
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      display:flex;align-items:center;justify-content:center;
+      font-size:clamp(14px,1.4vw,18px);font-weight:800;color:#fff;
+      flex-shrink:0;position:relative;
+    }
+    .friend-av-img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+    .friend-name{font-size:clamp(10px,0.85vw,12px);font-weight:700;color:var(--text);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis}
+    .friend-handle{font-size:clamp(9px,0.75vw,11px);color:var(--sub);white-space:nowrap}
+    /* Suggestion card (no friends yet) */
+    .friend-card.suggest{opacity:.6;border:1px dashed var(--b2)}
+    .friend-card.suggest:hover{opacity:1}
+    .friend-card-add{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      background:transparent;border:1px dashed var(--b2);border-radius:14px;
+      padding:clamp(14px,1.5vw,20px) clamp(16px,1.8vw,24px);
+      min-width:clamp(90px,8vw,120px);cursor:pointer;
+      transition:all .15s;text-decoration:none;flex-shrink:0;
+    }
+    .friend-card-add:hover{background:var(--s1);border-color:var(--b3)}
+    .friend-add-ico{width:clamp(36px,3.5vw,48px);height:clamp(36px,3.5vw,48px);border-radius:50%;background:var(--b1);display:flex;align-items:center;justify-content:center}
+    .friend-add-ico svg{width:16px;height:16px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round}
+    .friend-add-label{font-size:clamp(10px,0.85vw,12px);font-weight:700;color:var(--sub);white-space:nowrap}
+
     @media(max-width:500px){
       .tb-name{display:none}
       .tb-search{max-width:none}
@@ -261,8 +306,19 @@
     </button>
   </div>
   <div class="loading" id="loadingState">Loading projects…</div>
+
+  <!-- Friends / People slider -->
+  <div class="friends-section" id="friendsSection" style="display:none">
+    <div class="friends-head">
+      <div class="friends-title">People</div>
+      <a href="explore.html" class="friends-see-all">See all →</a>
+    </div>
+    <div class="friends-track-wrap" id="friendsTrackWrap">
+      <div class="friends-track" id="friendsTrack"></div>
+    </div>
+  </div>
   <div class="empty" id="emptyState">
-    <div class="empty-icon">💻</div>
+    <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--b3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
     <div class="empty-t">No projects yet</div>
     <div class="empty-s">Create your first project and start building.</div>
     <button class="new-btn" style="margin:0 auto" onclick="openNewModal()">+ New project</button>
@@ -400,6 +456,7 @@
     buildNewEmojiRow();
     await loadProjects();
     await loadShared();
+    renderFriendsSlider();
     if(session&&sb){
       loadNotifications();
       loadSocialGraph();
@@ -424,6 +481,7 @@
       ]);
       myFollowing=(fwing||[]).map(r=>({id:r.following_id,...r.profiles}));
       myFollowers=(fwers||[]).map(r=>({id:r.follower_id,...r.profiles}));
+      renderFriendsSlider();
     }catch(e){}
   }
 
@@ -448,9 +506,12 @@
       const upd=relTime(new Date(p.updated_at||Date.now()));
       const isPub=!!p.is_public;
       return `<div class="proj-card" onclick="openProject(event,'${p.id}')">
-        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub?'🌐 Public':'🔒 Private'}</div>
+        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub
+          ?'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Public'
+          :'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Private'
+        }</div>
         <button class="pc-more" onclick="openPsModal(event,'${p.id}')">···</button>
-        <div class="pc-emoji">${p.emoji||'💻'}</div>
+        <div class="pc-emoji">${getProjIcon(p.emoji)}</div>
         <div class="pc-name">${esc(p.name||'Untitled')}</div>
         <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${upd}</span></div>
       </div>`;
@@ -481,7 +542,7 @@
         const fc=Object.keys(p.files||{}).length;
         const badge=isPending
           ?`<div class="pc-vis" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">⏳ Invited</div>`
-          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>`;
+          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Shared</div>`;
         const inviteActions=isPending?`
           <div class="pc-invite-actions">
             <button class="pc-invite-btn decline" onclick="quickDecline(event,'${p.id}')">Decline</button>
@@ -489,7 +550,7 @@
           </div>`:''
         return `<div class="proj-card" onclick="openShared('${p.id}','${isPending}','${esc(p.emoji||'💻')}','${esc(p.name||'Untitled')}')">
           ${badge}
-          <div class="pc-emoji">${p.emoji||'💻'}</div>
+          <div class="pc-emoji">${getProjIcon(p.emoji)}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
           <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Pending invite':'Collaborator'}</span></div>
           ${inviteActions}
@@ -990,6 +1051,69 @@
   function relTime(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
   let toastT;
   function showToast(msg){clearTimeout(toastT);document.getElementById('toastMsg').textContent=msg;document.getElementById('toast').classList.add('show');toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2600);}
+
+
+  /* ── PROJ ICON MAP ── */
+  const PROJ_ICONS = {
+    '💻': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    '🤖': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/></svg>',
+    '⚡': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    '🌐': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    '📱': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    '🎨': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="9" r="1.5" fill="currentColor"/><circle cx="15" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="14" r="1.5" fill="currentColor"/><circle cx="15" cy="14" r="1.5" fill="currentColor"/></svg>',
+    '🛒': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+    '📊': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    '🔐': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    '🎯': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  };
+  function getProjIcon(emoji){
+    return PROJ_ICONS[emoji] || PROJ_ICONS['💻'];
+  }
+
+  /* ── FRIENDS SLIDER ── */
+  function renderFriendsSlider(){
+    const mutual = myFollowing.filter(f => myFollowers.find(r => r.id === f.id));
+    const section = document.getElementById('friendsSection');
+    const track = document.getElementById('friendsTrack');
+    if(!section || !track) return;
+
+    let html = '';
+    if(mutual.length){
+      html = mutual.map(u => {
+        const n = u.display_name || u.username || '?';
+        const initial = n.charAt(0).toUpperCase();
+        return `<a class="friend-card" href="profile.html?user=${encodeURIComponent(u.username||'')}">
+          <div class="friend-av">${initial}</div>
+          <div class="friend-name">${esc(n)}</div>
+          <div class="friend-handle">@${esc(u.username||'')}</div>
+        </a>`;
+      }).join('');
+    } else {
+      // No mutual friends yet — show placeholder suggestion cards
+      const suggestions = [
+        {label:'Find friends', sub:'Search by username'},
+        {label:'Go public', sub:'Let others find you'},
+        {label:'Share your work', sub:'Make a project public'},
+      ];
+      html = suggestions.map(s =>
+        `<a class="friend-card-add" href="profile.html">
+          <div class="friend-add-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="friend-add-label">${s.label}</div>
+          <div class="friend-handle" style="color:var(--sub)">${s.sub}</div>
+        </a>`
+      ).join('');
+    }
+    track.innerHTML = html;
+    section.style.display = '';
+
+    // Drag-to-scroll
+    const wrap = document.getElementById('friendsTrackWrap');
+    let isDown=false, startX=0, scrollLeft=0;
+    wrap.addEventListener('mousedown', e=>{isDown=true;wrap.classList.add('grabbing');startX=e.pageX-wrap.offsetLeft;scrollLeft=wrap.scrollLeft;});
+    wrap.addEventListener('mouseleave', ()=>{isDown=false;wrap.classList.remove('grabbing');});
+    wrap.addEventListener('mouseup', ()=>{isDown=false;wrap.classList.remove('grabbing');});
+    wrap.addEventListener('mousemove', e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-wrap.offsetLeft;wrap.scrollLeft=scrollLeft-(x-startX);});
+  }
 
   window.addEventListener('load',init);
 </script>

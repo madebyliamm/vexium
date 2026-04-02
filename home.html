@@ -124,7 +124,7 @@
     .pc-vis{position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;pointer-events:none;line-height:1.4}
     .pc-vis.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
     .pc-vis.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
-    .pc-emoji{font-size:44px;line-height:1;margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+    .pc-emoji{font-size:44px;line-height:1;margin-bottom:14px;display:block}
     .pc-name{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
@@ -318,7 +318,7 @@
     </div>
   </div>
   <div class="empty" id="emptyState">
-    <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--b3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+    <div class="empty-icon">💻</div>
     <div class="empty-t">No projects yet</div>
     <div class="empty-s">Create your first project and start building.</div>
     <button class="new-btn" style="margin:0 auto" onclick="openNewModal()">+ New project</button>
@@ -456,7 +456,6 @@
     buildNewEmojiRow();
     await loadProjects();
     await loadShared();
-    renderFriendsSlider();
     if(session&&sb){
       loadNotifications();
       loadSocialGraph();
@@ -506,12 +505,9 @@
       const upd=relTime(new Date(p.updated_at||Date.now()));
       const isPub=!!p.is_public;
       return `<div class="proj-card" onclick="openProject(event,'${p.id}')">
-        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub
-          ?'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Public'
-          :'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Private'
-        }</div>
+        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub?'🌐 Public':'🔒 Private'}</div>
         <button class="pc-more" onclick="openPsModal(event,'${p.id}')">···</button>
-        <div class="pc-emoji">${getProjIcon(p.emoji)}</div>
+        <div class="pc-emoji">${p.emoji||'💻'}</div>
         <div class="pc-name">${esc(p.name||'Untitled')}</div>
         <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${upd}</span></div>
       </div>`;
@@ -542,7 +538,7 @@
         const fc=Object.keys(p.files||{}).length;
         const badge=isPending
           ?`<div class="pc-vis" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">⏳ Invited</div>`
-          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Shared</div>`;
+          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>`;
         const inviteActions=isPending?`
           <div class="pc-invite-actions">
             <button class="pc-invite-btn decline" onclick="quickDecline(event,'${p.id}')">Decline</button>
@@ -550,7 +546,7 @@
           </div>`:''
         return `<div class="proj-card" onclick="openShared('${p.id}','${isPending}','${esc(p.emoji||'💻')}','${esc(p.name||'Untitled')}')">
           ${badge}
-          <div class="pc-emoji">${getProjIcon(p.emoji)}</div>
+          <div class="pc-emoji">${p.emoji||'💻'}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
           <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Pending invite':'Collaborator'}</span></div>
           ${inviteActions}
@@ -1072,38 +1068,28 @@
 
   /* ── FRIENDS SLIDER ── */
   function renderFriendsSlider(){
-    const mutual = myFollowing.filter(f => myFollowers.find(r => r.id === f.id));
     const section = document.getElementById('friendsSection');
     const track = document.getElementById('friendsTrack');
     if(!section || !track) return;
 
-    let html = '';
-    if(mutual.length){
-      html = mutual.map(u => {
-        const n = u.display_name || u.username || '?';
-        const initial = n.charAt(0).toUpperCase();
-        return `<a class="friend-card" href="profile.html?user=${encodeURIComponent(u.username||'')}">
-          <div class="friend-av">${initial}</div>
-          <div class="friend-name">${esc(n)}</div>
-          <div class="friend-handle">@${esc(u.username||'')}</div>
-        </a>`;
-      }).join('');
-    } else {
-      // No mutual friends yet — show placeholder suggestion cards
-      const suggestions = [
-        {label:'Find friends', sub:'Search by username'},
-        {label:'Go public', sub:'Let others find you'},
-        {label:'Share your work', sub:'Make a project public'},
-      ];
-      html = suggestions.map(s =>
-        `<a class="friend-card-add" href="profile.html">
-          <div class="friend-add-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-          <div class="friend-add-label">${s.label}</div>
-          <div class="friend-handle" style="color:var(--sub)">${s.sub}</div>
-        </a>`
-      ).join('');
+    // Show people you follow as your friends list
+    const friends = myFollowing;
+
+    if(!friends.length) {
+      section.style.display = 'none';
+      return;
     }
-    track.innerHTML = html;
+
+    track.innerHTML = friends.map(u => {
+      const n = u.display_name || u.username || '?';
+      const initial = n.charAt(0).toUpperCase();
+      return `<a class="friend-card" href="profile.html?user=${encodeURIComponent(u.username||'')}">
+        <div class="friend-av">${initial}</div>
+        <div class="friend-name">${esc(n)}</div>
+        <div class="friend-handle">@${esc(u.username||'')}</div>
+      </a>`;
+    }).join('');
+
     section.style.display = '';
 
     // Drag-to-scroll

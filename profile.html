@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Profile — Vexium</title>
+  <title>Home — Vexium</title>
   <link rel="icon" type="image/png" href="vexium_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -13,22 +13,47 @@
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
       --bg:#020209;--s1:#0c0c1d;--s2:#0f0f22;--b1:#16163a;--b2:#1e1e3a;--b3:#26264a;
-      --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;--err:#ef4444;--ok:#22c55e;
+      --a1:#4f6ef7;--a2:#9b79fc;--text:#f0f0ff;--sub:#6060a0;
+      --ok:#22c55e;--err:#ef4444;
       --sans:'Plus Jakarta Sans',sans-serif;
     }
     html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
 
-    /* TOPBAR */
-    #topbar{position:sticky;top:0;z-index:100;height:54px;padding:0 clamp(12px,3vw,40px);display:flex;align-items:center;gap:clamp(8px,1.5vw,16px);justify-content:space-between;background:rgba(2,2,9,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.04)}
+    /* ══ TOPBAR ══ */
+    #topbar{
+      position:sticky;top:0;z-index:200;
+      height:clamp(50px,4.5vw,66px);padding:0 clamp(16px,4vw,56px);
+      display:flex;align-items:center;gap:clamp(8px,1.5vw,16px);
+      background:rgba(2,2,9,.92);backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(255,255,255,.04);
+    }
     .tb-logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
     .tb-logo img{width:clamp(18px,2.2vw,22px);height:clamp(18px,2.2vw,22px);border-radius:5px}
-    .tb-logo-t{font-size:clamp(12px,1.4vw,15px);font-weight:800;white-space:nowrap}
+    .tb-logo-t{font-size:clamp(12px,1.2vw,16px);font-weight:800;white-space:nowrap}
     .tb-logo-t span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .tb-r{display:flex;align-items:center;gap:clamp(6px,1vw,12px);flex-shrink:0}
-    .tb-link{font-size:13px;color:var(--sub);padding:6px 14px;border-radius:7px;font-weight:600;transition:all .15s}
-    .tb-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
+
+    /* search */
+    .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:320px;margin:0 auto}
+    .tb-search-ico{position:absolute;left:10px;width:13px;height:13px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none}
+    .tb-search-input{width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;transition:border-color .2s,background .2s}
+    .tb-search-input:focus{border-color:rgba(79,110,247,.4);background:var(--b1)}
+    .tb-search-input::placeholder{color:var(--sub)}
+    .search-drop{position:absolute;top:calc(100% + 6px);left:0;min-width:240px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:6px;z-index:400;box-shadow:0 12px 40px rgba(0,0,0,.7);display:none}
+    .search-drop.show{display:block}
+    .sd-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:4px 8px 2px;margin-top:2px}
+    .search-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
+    .search-item:hover{background:var(--b2)}
+    .si-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+    .si-name{font-size:12px;font-weight:700;line-height:1.3}
+    .si-handle{font-size:10px;color:var(--sub)}
+    .si-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(79,110,247,.12);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .search-msg{font-size:12px;color:var(--sub);padding:12px;text-align:center}
+
+    .tb-right{display:flex;align-items:center;gap:clamp(6px,1vw,12px);flex-shrink:0}
+    .tb-name{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap;max-width:clamp(50px,8vw,100px);overflow:hidden;text-overflow:ellipsis}
     .tb-pfp{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
+
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border-radius:8px;transition:background .15s}
     .tb-bell svg{width:17px;height:17px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
     .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
@@ -53,145 +78,237 @@
     .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--a1);flex-shrink:0;margin-top:6px}
     .notif-empty{padding:36px 16px;text-align:center;font-size:12px;color:var(--sub)}
 
-    /* PAGE */
-    .page{max-width:900px;margin:0 auto;padding:48px 40px}
+    /* ══ PAGE ══ */
+    .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(32px,5vw,72px) clamp(16px,4vw,56px)}
+    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;gap:12px;flex-wrap:wrap}
+    .page-title{font-size:clamp(20px,2.2vw,32px);font-weight:800;letter-spacing:-.5px}
+    .page-sub{font-size:clamp(11px,1vw,14px);color:var(--sub);margin-top:3px}
+    .new-btn{display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);box-shadow:0 0 20px rgba(79,110,247,.25);transition:all .2s;white-space:nowrap}
+    .new-btn:hover{transform:translateY(-1px);box-shadow:0 0 36px rgba(79,110,247,.45)}
 
-    /* PROFILE HERO */
-    .hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:32px}
-    .hero-left{display:flex;align-items:flex-start;gap:22px}
-    .pfp{width:86px;height:86px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;flex-shrink:0;border:3px solid var(--b2)}
-    .info{}
-    .name-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
-    .prof-name{font-size:24px;font-weight:800;letter-spacing:-.5px}
-    /* FIX 4: prof-badge removed */
-    .prof-handle{font-size:13px;color:var(--sub);margin-bottom:9px}
-    .prof-bio{font-size:13px;color:var(--sub);line-height:1.65;margin-bottom:13px;max-width:480px}
-    .stats-row{display:flex;gap:22px}
-    .stat{cursor:pointer}
-    .stat:hover .stat-n{color:var(--a1)}
-    .stat-n{font-size:15px;font-weight:800;transition:color .15s}
-    .stat-l{font-size:11px;color:var(--sub)}
-    .hero-right{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-top:4px}
-    .btn-follow{padding:9px 22px;border-radius:9px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;box-shadow:0 0 20px rgba(79,110,247,.2)}
-    .btn-follow:hover{opacity:.88;transform:translateY(-1px)}
-    .btn-follow.unfollow{background:transparent;border:1px solid var(--b2);color:var(--sub);box-shadow:none}
-    .btn-follow.unfollow:hover{border-color:#ef4444;color:#ef4444}
-    .btn-icon{width:36px;height:36px;border-radius:9px;background:var(--s1);border:1px solid var(--b2);color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-    .btn-icon:hover{background:var(--b2);color:var(--text)}
-    .btn-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .empty{text-align:center;padding:80px 20px;border:1px dashed var(--b2);border-radius:14px;display:none}
+    .empty.show{display:block}
+    .empty-icon{font-size:40px;margin-bottom:16px}
+    .empty-t{font-size:16px;font-weight:700;margin-bottom:6px}
+    .empty-s{font-size:13px;color:var(--sub);margin-bottom:24px}
 
-    .privacy-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;transition:all .15s;margin-bottom:28px;user-select:none}
-    .privacy-pill.pub{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);color:#4ade80}
-    .privacy-pill.priv{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171}
-    .privacy-pill:hover{opacity:.78}
+    .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 
-    /* TABS */
-    .tabs{display:flex;gap:2px;border-bottom:1px solid var(--b1);margin-bottom:28px}
-    .tab{padding:10px 18px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
-    .tab:hover{color:var(--text)}
-    .tab.active{color:var(--text);border-bottom-color:var(--a1)}
-
-    /* GRIDS */
-    .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-    .proj-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:28px 18px 22px;cursor:pointer;transition:all .2s;position:relative;text-align:center}
-    .proj-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
-    .pc-badge{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;pointer-events:none}
-    .pc-badge.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
-    .pc-badge.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;position:absolute;top:10px;left:10px;z-index:2}
+    .proj-card{background:var(--s1);border:1px solid transparent;border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
+    .proj-card:hover{border-color:rgba(255,255,255,.07);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
-    .pc-emoji{font-size:38px;line-height:1;margin-bottom:12px;display:block}
-    .pc-name{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:5px}
-    .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub)}
-    .pc-collabs{display:flex;align-items:center;justify-content:center;margin-top:10px;gap:-4px}
-    .pc-collab-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));border:2px solid var(--s1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;margin-left:-4px}
-    .pc-collab-av:first-child{margin-left:0}
+    /* shared invite actions */
+    .pc-invite-actions{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,var(--s1) 80%,transparent);gap:7px;z-index:3}
+    .proj-card:hover .pc-invite-actions{display:flex}
+    .pc-invite-btn{flex:1;padding:7px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .pc-invite-btn.accept{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+    .pc-invite-btn.accept:hover{background:rgba(34,197,94,.25)}
+    .pc-invite-btn.decline{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+    .pc-invite-btn.decline:hover{background:rgba(239,68,68,.2)}
+    /* collab status badges */
+    .cl-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
+    .cl-status.joined{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+    .cl-status.pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+    .cl-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:8px 0 4px;margin-top:4px}
+    /* accept popup overlay */
+    #acceptOverlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
+    #acceptOverlay.show{display:flex}
+    .accept-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:360px;max-width:100%;padding:28px 28px 24px;box-shadow:0 40px 100px rgba(0,0,0,.9);text-align:center}
+    .accept-modal-emoji{font-size:44px;margin-bottom:14px}
+    .accept-modal-title{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
+    .accept-modal-sub{font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:22px}
+    .accept-modal-btns{display:flex;gap:10px}
+    .accept-modal-btns button{flex:1;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .pc-vis{position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;pointer-events:none;line-height:1.4}
+    .pc-vis.pub{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
+    .pc-vis.priv{background:rgba(96,96,160,.1);color:var(--sub);border:1px solid var(--b2)}
+    .pc-emoji{font-size:44px;line-height:1;margin-bottom:14px;display:block}
+    .pc-name{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px}
+    .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub);flex-shrink:0}
 
-    .empty{text-align:center;padding:60px 20px;border:1px dashed var(--b2);border-radius:14px;display:none}
-    .empty.show{display:block}
-    .empty-ico{font-size:34px;margin-bottom:12px}
-    .empty-t{font-size:15px;font-weight:700;margin-bottom:6px}
-    .empty-s{font-size:12px;color:var(--sub)}
+    .section-head{margin:52px 0 20px}
+    .section-title{font-size:clamp(15px,1.6vw,22px);font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+    .section-sub{font-size:13px;color:var(--sub)}
+    .loading{text-align:center;padding:60px;color:var(--sub);font-size:13px}
 
-    /* CTX */
-    .ctx{position:fixed;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;min-width:168px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none}
-    .ctx.show{display:block}
-    .ctx-item{padding:8px 12px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px;color:var(--text);transition:background .1s}
-    .ctx-item:hover{background:var(--b2)}
-    .ctx-item.danger{color:#ef4444}
-    .ctx-item.danger:hover{background:rgba(239,68,68,.1)}
-    .ctx-ico{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-
-    /* OVERLAYS */
-    .overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);align-items:center;justify-content:center}
+    /* ══ OVERLAYS ══ */
+    .overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
     .overlay.show{display:flex}
-    .modal{background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:32px;width:430px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.7)}
-    .modal-t{font-size:18px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
-    .modal-sub{font-size:12px;color:var(--sub);margin-bottom:22px}
-    .m-field{margin-bottom:14px}
-    .m-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block}
-    .m-input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:border-color .15s}
-    .m-input:focus{border-color:rgba(79,110,247,.4)}
-    .m-input::placeholder{color:var(--sub)}
-    .mdivider{height:1px;background:var(--b1);margin:20px 0}
-    .sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sub);margin-bottom:12px}
-    .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
-    .mbtn{padding:9px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
+
+    /* ══ PROJECT SETTINGS MODAL ══ */
+    .ps-modal{background:var(--s1);border:1px solid var(--b2);border-radius:20px;width:480px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column;}
+    .ps-hero{background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));border-bottom:1px solid var(--b1);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+    .ps-hero-left{display:flex;align-items:center;gap:12px}
+    .ps-hero-emoji{font-size:36px;line-height:1}
+    .ps-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
+    .ps-hero-meta{font-size:11px;color:var(--sub);margin-top:2px}
+    .ps-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
+    .ps-close:hover{background:var(--b2);color:var(--text)}
+    .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
+    .ps-field{display:flex;flex-direction:column;gap:6px}
+    .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
+    .ps-input{background:var(--b1);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
+    .ps-input:focus{border-color:rgba(79,110,247,.5)}
+    .ps-input::placeholder{color:var(--sub)}
+    /* FIX 3: emoji strip 5x2 grid */
+    .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+    .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;}
+    .emoji-opt:hover{background:var(--b2)}
+    .emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
+    .ps-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .ps-vis-label{font-size:13px;font-weight:700}
+    .ps-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
+    .lock-btn:hover{background:var(--b2);color:var(--text)}
+    .lock-btn.unlocked{color:#4ade80}
+    .lock-btn.unlocked:hover{background:rgba(34,197,94,.08);color:#4ade80}
+    .lock-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .ps-div{height:1px;background:var(--b1);margin:0 -24px}
+    .collab-list{display:flex;flex-direction:column;gap:4px}
+    .cl-item{display:flex;align-items:center;gap:10px;padding:7px 0}
+    .cl-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+    .cl-info{flex:1;min-width:0}
+    .cl-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cl-handle{font-size:10px;color:var(--sub)}
+    .cl-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
+    .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .cl-rm:hover{color:#ef4444}
+    .cl-none{font-size:11px;color:var(--sub);padding:2px 0}
+    .invite-search-wrap{position:relative}
+    .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
+    .invite-drop.show{display:block}
+    .invite-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .1s}
+    .invite-item:hover{background:var(--b2)}
+    .inv-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
+    .inv-name{font-size:12px;font-weight:700}
+    .inv-handle{font-size:10px;color:var(--sub)}
+    .inv-rel{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(79,110,247,.1);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .invite-msg{font-size:11px;margin-top:5px;min-height:14px}
+    .invite-msg.ok{color:var(--ok)} .invite-msg.err{color:var(--err)}
+    .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .ps-delete-btn:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+    .ps-delete-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .ps-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+    .mbtn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
     .mbtn-cancel{background:var(--b2);color:var(--sub)}
     .mbtn-cancel:hover{background:var(--b3);color:var(--text)}
-    .mbtn-ok{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
+    .mbtn-ok{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 0 16px rgba(79,110,247,.3)}
     .mbtn-ok:hover{opacity:.9}
-    .mbtn-danger{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#ef4444}
-    .mbtn-danger:hover{background:rgba(239,68,68,.16)}
 
-    /* FOLLOW LIST */
-    .follow-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto}
-    .fi{display:flex;align-items:center;gap:12px;padding:10px;border-radius:9px;cursor:pointer;transition:background .12s}
-    .fi:hover{background:var(--b1)}
-    .fi-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
-    .fi-name{font-size:13px;font-weight:700}
-    .fi-handle{font-size:11px;color:var(--sub)}
+    /* ══ NEW PROJECT MODAL ══ */
+    .modal{background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:30px;width:360px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.8)}
+    .modal-t{font-size:18px;font-weight:800;margin-bottom:22px;letter-spacing:-.3px}
+    .m-field{margin-bottom:14px}
+    .m-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;display:block}
+    .m-input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--sans);transition:border-color .15s}
+    .m-input:focus{border-color:rgba(79,110,247,.4)}
+    .m-input::placeholder{color:var(--sub)}
+    .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 
-    /* COLLAB LIST */
-    .cl-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-    .cl-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:1px solid var(--b1);border-radius:9px}
-    .cl-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
-    .cl-name{flex:1;font-size:12px;font-weight:600}
-    .cl-role{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8}
-    .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
-    .cl-rm:hover{background:rgba(239,68,68,.1);color:#ef4444}
-    .invite-row{display:flex;gap:8px}
-
-    .msg{font-size:11px;min-height:14px;margin-top:6px}
-    .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
-    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:10px 20px;font-size:12px;display:flex;align-items:center;gap:8px;opacity:0;transition:all .22s;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap}
+    /* ══ TOAST ══ */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:10px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
     #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-    @media(max-width:640px){
-      .page{padding:32px 16px}
-      .hero{flex-direction:column}
-      .hero-left{flex-direction:column;gap:14px}
-      .hero-right{margin-top:0}
+    /* ══ FRIENDS SLIDER ══ */
+    .friends-section{margin-bottom:clamp(28px,3vw,44px)}
+    .friends-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .friends-title{font-size:clamp(13px,1.1vw,16px);font-weight:700;letter-spacing:-.2px}
+
+    /* Dropdown */
+    .friends-dd-wrap{position:relative}
+    .friends-dd-btn{
+      display:flex;align-items:center;gap:5px;
+      background:none;border:none;cursor:pointer;
+      font-size:clamp(13px,1.1vw,16px);font-weight:700;
+      color:var(--text);font-family:var(--sans);
+      padding:0;transition:opacity .15s;
     }
+    .friends-dd-btn:hover{opacity:.75}
+    .friends-dd-btn svg{opacity:.5}
+    .friends-dd-menu{
+      position:absolute;top:calc(100% + 6px);left:0;
+      background:var(--s2);border:1px solid var(--b2);
+      border-radius:10px;padding:4px;min-width:160px;
+      z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);
+      display:none;
+    }
+    .friends-dd-menu.show{display:block}
+    .friends-dd-opt{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 10px;border-radius:7px;cursor:pointer;
+      font-size:13px;font-weight:600;color:var(--sub);
+      transition:background .1s,color .1s;
+    }
+    .friends-dd-opt:hover{background:var(--b2);color:var(--text)}
+    .friends-dd-opt.active{color:var(--text);background:var(--b1)}
+    .friends-dd-count{font-size:11px;font-weight:700;color:var(--sub);background:var(--b2);padding:1px 6px;border-radius:20px}
 
-    /* ── pref toggle ── */
-    #prefUsageWarn:checked + #prefUsageWarnTrack { background: var(--a1); }
-    #prefUsageWarn:checked ~ #prefUsageWarnThumb { transform: translateX(16px); }
+    .friends-see-all{font-size:11px;font-weight:600;color:var(--sub);text-decoration:none;transition:color .15s}
+    .friends-see-all:hover{color:var(--text)}
+    .friends-track-wrap{overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none;margin:0 -4px;padding:4px}
+    .friends-track-wrap::-webkit-scrollbar{display:none}
+    .friends-track-wrap.grabbing{cursor:grabbing}
+    .friends-track{display:flex;gap:clamp(8px,1vw,12px);width:max-content}
+    .friend-card{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      background:var(--s1);border-radius:14px;
+      padding:clamp(14px,1.5vw,20px) clamp(16px,1.8vw,24px);
+      min-width:clamp(90px,8vw,120px);
+      cursor:pointer;transition:background .15s,transform .15s;
+      text-decoration:none;flex-shrink:0;
+    }
+    .friend-card:hover{background:var(--s2);transform:translateY(-2px)}
+    .friend-av{
+      width:clamp(36px,3.5vw,48px);height:clamp(36px,3.5vw,48px);
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--a1),var(--a2));
+      display:flex;align-items:center;justify-content:center;
+      font-size:clamp(14px,1.4vw,18px);font-weight:800;color:#fff;
+      flex-shrink:0;position:relative;
+    }
+    .friend-av-img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+    .friend-name{font-size:clamp(10px,0.85vw,12px);font-weight:700;color:var(--text);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis}
+    .friend-handle{font-size:clamp(9px,0.75vw,11px);color:var(--sub);white-space:nowrap}
+    /* Suggestion card (no friends yet) */
+    .friend-card.suggest{opacity:.6;border:1px dashed var(--b2)}
+    .friend-card.suggest:hover{opacity:1}
+    .friend-card-add{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      background:transparent;border:1px dashed var(--b2);border-radius:14px;
+      padding:clamp(14px,1.5vw,20px) clamp(16px,1.8vw,24px);
+      min-width:clamp(90px,8vw,120px);cursor:pointer;
+      transition:all .15s;text-decoration:none;flex-shrink:0;
+    }
+    .friend-card-add:hover{background:var(--s1);border-color:var(--b3)}
+    .friend-add-ico{width:clamp(36px,3.5vw,48px);height:clamp(36px,3.5vw,48px);border-radius:50%;background:var(--b1);display:flex;align-items:center;justify-content:center}
+    .friend-add-ico svg{width:16px;height:16px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round}
+    .friend-add-label{font-size:clamp(10px,0.85vw,12px);font-weight:700;color:var(--sub);white-space:nowrap}
 
+    @media(max-width:500px){
+      .tb-name{display:none}
+      .tb-search{max-width:none}
+    }
   </style>
 </head>
 <body>
 
 <div id="topbar">
-  <a href="home.html" class="tb-logo">
+  <a href="index.html" class="tb-logo">
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
   </a>
-  <div class="tb-r">
-    <a href="home.html" class="tb-link">Projects</a>
-    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
+
+  <div class="tb-search" id="tbSearchWrap">
+    <svg class="tb-search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="tb-search-input" id="tbSearchInput" placeholder="Find users…" autocomplete="off"
+      oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)"/>
+    <div class="search-drop" id="searchDrop"></div>
+  </div>
+
+  <div class="tb-right">
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <div class="bell-dot" id="bellDot"></div>
@@ -203,683 +320,872 @@
         <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
       </div>
     </div>
+    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
 </div>
 
 <div class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Projects</div>
+      <div class="page-sub" id="pageSubCount">Loading…</div>
+    </div>
+    <button class="new-btn" onclick="openNewModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New project
+    </button>
+  </div>
+  <div class="loading" id="loadingState">Loading projects…</div>
 
-  <div class="hero">
-    <div class="hero-left">
-      <div class="pfp" id="pfpEl"><span id="pfpInitial">?</span></div>
-      <div class="info">
-        <div class="name-row">
-          <div class="prof-name" id="profName">Loading…</div>
-          <!-- FIX 4: "Free" badge removed -->
-        </div>
-        <div class="prof-handle" id="profHandle">@—</div>
-        <div class="prof-bio" id="profBio"></div>
-        <div class="stats-row">
-          <div class="stat" onclick="openFollowList('followers')">
-            <div class="stat-n" id="statFollowers">0</div>
-            <div class="stat-l">Followers</div>
+  <!-- Friends / People slider -->
+  <div class="friends-section" id="friendsSection" style="display:none">
+    <div class="friends-head">
+      <div class="friends-dd-wrap">
+        <button class="friends-dd-btn" id="friendsDdBtn" onclick="toggleFriendsDd(event)">
+          Friends <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="friends-dd-menu" id="friendsDdMenu">
+          <div class="friends-dd-opt active" data-mode="friends" onclick="setSliderMode('friends')">
+            <span>Friends</span><span class="friends-dd-count">0</span>
           </div>
-          <div class="stat" onclick="openFollowList('following')">
-            <div class="stat-n" id="statFollowing">0</div>
-            <div class="stat-l">Following</div>
+          <div class="friends-dd-opt" data-mode="following" onclick="setSliderMode('following')">
+            <span>Following</span><span class="friends-dd-count">0</span>
           </div>
-          <div class="stat" onclick="openFollowList('friends')">
-            <div class="stat-n" id="statFriends">0</div>
-            <div class="stat-l">Friends</div>
+          <div class="friends-dd-opt" data-mode="followers" onclick="setSliderMode('followers')">
+            <span>Followers</span><span class="friends-dd-count">0</span>
           </div>
         </div>
       </div>
+      <a href="profile.html" class="friends-see-all">View all →</a>
     </div>
-    <div class="hero-right" id="heroActions"></div>
-  </div>
-
-  <div id="privacyRow" style="display:none">
-    <div class="privacy-pill pub" id="privacyPill" onclick="togglePrivacy()">
-      <span id="privIco">🌐</span><span id="privLabel">Public profile</span>
+    <div class="friends-track-wrap" id="friendsTrackWrap">
+      <div class="friends-track" id="friendsTrack"></div>
     </div>
   </div>
-
-  <div class="tabs">
-    <div class="tab active" id="tabProjects" onclick="switchTab('projects')">Projects</div>
-    <div class="tab" id="tabShared" onclick="switchTab('shared')" style="display:none">Shared with me</div>
+  <div class="empty" id="emptyState">
+    <div class="empty-icon">💻</div>
+    <div class="empty-t">No projects yet</div>
+    <div class="empty-s">Create your first project and start building.</div>
+    <button class="new-btn" style="margin:0 auto" onclick="openNewModal()">+ New project</button>
   </div>
+  <div class="proj-grid" id="projectGrid"></div>
 
-  <div id="paneProjects">
-    <div class="empty" id="emptyProjects">
-      <div class="empty-ico">💻</div>
-      <div class="empty-t" id="emptyT">No public projects yet</div>
-      <div class="empty-s" id="emptyS">This user hasn't shared any projects.</div>
-    </div>
-    <div class="proj-grid" id="projectGrid"></div>
-  </div>
-
-  <div id="paneShared" style="display:none">
-    <div class="empty show" id="emptyShared">
-      <div class="empty-ico">🤝</div>
-      <div class="empty-t">No shared projects</div>
-      <div class="empty-s">When someone invites you to collaborate, projects appear here.</div>
+  <div id="sharedSection" style="display:none">
+    <div class="section-head">
+      <div class="section-title">Shared with me</div>
+      <div class="section-sub">Projects you've been invited to collaborate on</div>
     </div>
     <div class="proj-grid" id="sharedGrid"></div>
   </div>
-
 </div>
 
-<!-- CTX MENU -->
-<div class="ctx" id="ctxMenu">
-  <div class="ctx-item" onclick="ctxEdit()">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Open in editor
-  </div>
-  <div class="ctx-item" onclick="ctxView()">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View live
-  </div>
-  <div class="ctx-item" onclick="ctxTogglePublic()" id="ctxToggleItem">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span id="ctxPubLabel">Make public</span>
-  </div>
-  <div class="ctx-item" onclick="ctxCollaborators()">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Collaborators
-  </div>
-  <div class="ctx-item danger" onclick="ctxDelete()">
-    <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="overlay" id="settingsOverlay">
-  <div class="modal">
-    <div class="modal-t">Settings</div>
-    <div class="modal-sub">Your profile and account</div>
-    <div class="sec-lbl">Profile</div>
-    <div class="m-field"><label class="m-label">Display name</label><input class="m-input" id="fName" placeholder="Your name"/></div>
-    <div class="m-field"><label class="m-label">Username</label><input class="m-input" id="fUsername" placeholder="username" autocomplete="off"/></div>
-    <div class="m-field"><label class="m-label">Bio</label><textarea class="m-input" id="fBio" rows="3" placeholder="Tell the world what you're building…" style="resize:none"></textarea></div>
-    <button class="mbtn mbtn-ok" onclick="saveProfile()">Save profile</button>
-    <div class="msg" id="profileMsg"></div>
-    <div class="mdivider"></div>
-    <div class="sec-lbl">Password</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <div><label class="m-label">New password</label><input class="m-input" type="password" id="fPass" placeholder="New password"/></div>
-      <div><label class="m-label">Confirm</label><input class="m-input" type="password" id="fPassConfirm" placeholder="Confirm"/></div>
+<!-- ══ ACCEPT INVITE OVERLAY ══ -->
+<div id="acceptOverlay">
+  <div class="accept-modal">
+    <div class="accept-modal-emoji" id="acceptEmoji">💻</div>
+    <div class="accept-modal-title" id="acceptTitle">Join this project?</div>
+    <div class="accept-modal-sub" id="acceptSub">You've been invited to collaborate. Accept to open the project and join the team.</div>
+    <div class="accept-modal-btns">
+      <button style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)" onclick="respondInvite(false)">Decline</button>
+      <button style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)" onclick="respondInvite(true)">Accept & Open</button>
     </div>
-    <button class="mbtn mbtn-ok" onclick="changePassword()">Update password</button>
-    <div class="msg" id="passMsg"></div>
-    <div class="mdivider"></div>
-    <div class="sec-lbl">Preferences</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--b0);border:1px solid var(--b1);border-radius:10px;margin-bottom:4px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">Warn before large builds</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px">Show a confirmation before generating multi-page websites</div>
+  </div>
+</div>
+
+<!-- ══ PROJECT SETTINGS MODAL ══ -->
+<div class="overlay" id="psOverlay">
+  <div class="ps-modal">
+    <div class="ps-hero">
+      <div class="ps-hero-left">
+        <div class="ps-hero-emoji" id="psHeroEmoji">💻</div>
+        <div>
+          <div class="ps-hero-name" id="psHeroName">Project</div>
+          <div class="ps-hero-meta" id="psHeroMeta">—</div>
+        </div>
       </div>
-      <label style="position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;cursor:pointer">
-        <input type="checkbox" id="prefUsageWarn" style="opacity:0;width:0;height:0" onchange="savePrefUsageWarn(this.checked)"/>
-        <span id="prefUsageWarnTrack" style="position:absolute;inset:0;border-radius:20px;background:var(--b2);transition:background .2s;cursor:pointer"></span>
-        <span id="prefUsageWarnThumb" style="position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none"></span>
-      </label>
+      <button class="ps-close" onclick="closePsModal()">✕</button>
     </div>
-    <div class="mdivider"></div>
-    <div class="sec-lbl">Account</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="mbtn mbtn-danger" onclick="doSignOut()">Sign out</button>
-      <button class="mbtn mbtn-danger" onclick="deleteAccount()">Delete account</button>
+
+    <div class="ps-body">
+      <div class="ps-field">
+        <div class="ps-label">Icon</div>
+        <div class="emoji-strip" id="psEmojiStrip"></div>
+      </div>
+      <div class="ps-field">
+        <div class="ps-label">Name</div>
+        <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"
+          oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
+      </div>
+      <div class="ps-div"></div>
+      <div class="ps-vis-row">
+        <div class="ps-vis-info">
+          <div class="ps-vis-label" id="psVisLabel">Private</div>
+          <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
+        </div>
+        <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
+          <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span id="psLockTxt">Locked</span>
+        </button>
+      </div>
+      <div class="ps-div"></div>
+      <div class="ps-field">
+        <div class="ps-label">Collaborators</div>
+        <div class="collab-list" id="psCollabList"><div class="cl-none">Loading…</div></div>
+        <div style="height:6px"></div>
+        <div class="invite-search-wrap">
+          <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
+            oninput="onInviteInput()" onkeydown="onInviteKey(event)"/>
+          <div class="invite-drop" id="inviteDrop"></div>
+        </div>
+        <div class="invite-msg" id="psInviteMsg"></div>
+      </div>
+      <div class="ps-div"></div>
+      <button class="ps-delete-btn" onclick="psDelete()">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Delete project
+      </button>
+    </div>
+
+    <div class="ps-footer">
+      <button class="mbtn mbtn-cancel" onclick="closePsModal()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="psSave()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NEW PROJECT MODAL ══ -->
+<div class="overlay" id="newOverlay">
+  <div class="modal">
+    <div class="modal-t">New project</div>
+    <div class="m-field">
+      <label class="m-label">Icon</label>
+      <!-- FIX 3: 5x2 grid via CSS grid on .emoji-strip -->
+      <div class="emoji-strip" id="emojiRow"></div>
+    </div>
+    <div class="m-field">
+      <label class="m-label">Name</label>
+      <input class="m-input" id="projNameInput" placeholder="my-project" autocomplete="off"/>
     </div>
     <div class="modal-btns">
-      <button class="mbtn mbtn-cancel" onclick="closeOv('settingsOverlay')">Close</button>
+      <button class="mbtn mbtn-cancel" onclick="closeNewModal()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="confirmNew()">Create →</button>
     </div>
   </div>
 </div>
 
-<!-- FOLLOW LIST MODAL -->
-<div class="overlay" id="followOverlay">
-  <div class="modal" style="width:360px">
-    <div class="modal-t" id="followTitle">Followers</div>
-    <div class="modal-sub" id="followSub"></div>
-    <div class="follow-list" id="followList"></div>
-    <div class="modal-btns"><button class="mbtn mbtn-cancel" onclick="closeOv('followOverlay')">Close</button></div>
-  </div>
-</div>
-
-<!-- COLLABORATORS MODAL -->
-<div class="overlay" id="collabOverlay">
-  <div class="modal" style="width:400px">
-    <div class="modal-t">Collaborators</div>
-    <div class="modal-sub" id="collabSub">Manage who can edit this project</div>
-    <div class="cl-list" id="clList"></div>
-    <div class="sec-lbl">Invite by username</div>
-    <div class="invite-row">
-      <input class="m-input" id="inviteInput" placeholder="@username" style="flex:1"/>
-      <button class="mbtn mbtn-ok" onclick="doInvite()">Invite</button>
-    </div>
-    <div class="msg" id="inviteMsg"></div>
-    <div class="modal-btns"><button class="mbtn mbtn-cancel" onclick="closeOv('collabOverlay')">Done</button></div>
-  </div>
-</div>
-
-<div id="toast"><span id="toastIco"></span><span id="toastMsg" style="margin-left:4px"></span></div>
+<div id="toast"><span id="toastMsg"></span></div>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
-  let sb=null, session=null, myId=null, myProfile=null;
-  let viewProfile=null, viewId=null, isOwn=false;
-  let projects=[], sharedProjects=[];
-  let ctxId=null, ctxPub=false;
-  let acctPublic=true;
+  let sb=null, session=null, myProfile=null;
+  let projects=[], selectedEmoji='💻';
+  let psProjectId=null, psCurPublic=false, psEmojiCur='💻';
+  let myFollowing=[], myFollowers=[];
+  const EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
 
-  try {
-    if (!window._noConfig && typeof supabase!=='undefined' && typeof SUPABASE_URL!=='undefined')
-      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch(e){}
+  try{
+    if(!window._noConfig&&typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined')
+      sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  }catch(e){}
 
-  async function init() {
-    if (sb) {
-      try { const {data}=await sb.auth.getSession(); session=data?.session; myId=session?.user?.id||null; } catch(e){}
-    }
-    const params = new URLSearchParams(location.search);
-    const uParam = params.get('user');
-    if (uParam) {
-      await loadByUsername(uParam);
-    } else {
-      if (!session && !localStorage.getItem('vexium_guest')) { location.href='auth.html'; return; }
-      viewId = myId;
-      isOwn = true;
-      await loadOwnProfile();
-    }
-    const tname = myProfile?.display_name || myProfile?.username || localStorage.getItem('vexium_username') || '?';
-    document.getElementById('tbPfp').textContent = tname.charAt(0).toUpperCase();
-    await renderHero();
-    await loadProjects();
-    if (isOwn) {
-      document.getElementById('tabShared').style.display='';
-      await loadShared();
-    }
-    if (session && sb) loadNotifications();
-  }
-
-  async function loadOwnProfile() {
-    if (sb && myId) {
-      try {
-        const {data} = await sb.from('profiles').select('*').eq('id',myId).single();
-        if (data) {
-          viewProfile=data; myProfile=data; acctPublic=!!data.is_public;
-          // Load usage warning preference
-          var warnChecked = data.show_usage_warning !== false;
-          var cb = document.getElementById('prefUsageWarn');
-          if (cb) {
-            cb.checked = warnChecked;
-            var t = document.getElementById('prefUsageWarnTrack');
-            var th = document.getElementById('prefUsageWarnThumb');
-            if (t) t.style.background = warnChecked ? 'var(--a1)' : 'var(--b2)';
-            if (th) th.style.transform = warnChecked ? 'translateX(16px)' : 'none';
-          }
-          return;
-        }
-      } catch(e){}
-    }
-    const u = localStorage.getItem('vexium_username')||'guest';
-    viewProfile = {username:u,display_name:u,bio:'',is_public:true,follower_count:0,following_count:0};
-    myProfile = viewProfile;
-  }
-
-  async function loadByUsername(username) {
-    if (!sb) { location.href='home.html'; return; }
-    try {
-      const {data} = await sb.from('profiles').select('*').eq('username',username).single();
-      if (!data) { showToast('✗','User not found'); setTimeout(()=>history.back(),1500); return; }
-      viewProfile=data; viewId=data.id;
-      isOwn = myId===data.id;
-      if (isOwn) myProfile=data;
-    } catch(e){ location.href='home.html'; }
-  }
-
-  async function renderHero() {
-    const p = viewProfile; if (!p) return;
-    const name = p.display_name||p.username||'Unknown';
-    document.getElementById('pfpInitial').textContent = name.charAt(0).toUpperCase();
-    document.getElementById('profName').textContent = name;
-    document.getElementById('profHandle').textContent = '@'+(p.username||'unknown');
-    document.getElementById('profBio').textContent = p.bio||'';
-    document.getElementById('statFollowers').textContent = p.follower_count||0;
-    document.getElementById('statFollowing').textContent = p.following_count||0;
-    document.title = '@'+(p.username||'')+'  — Vexium';
-    if(sb&&viewId){
+  async function init(){
+    const uname=localStorage.getItem('vexium_username')||'Guest';
+    document.getElementById('tbPfp').textContent=uname.charAt(0).toUpperCase();
+    if(sb){
       try{
-        const[{data:fwing},{data:fwers}]=await Promise.all([
-          sb.from('follows').select('following_id').eq('follower_id',viewId),
-          sb.from('follows').select('follower_id').eq('following_id',viewId)
-        ]);
-        const fwingIds=new Set((fwing||[]).map(r=>r.following_id));
-        const friends=(fwers||[]).filter(r=>fwingIds.has(r.follower_id)).length;
-        document.getElementById('statFriends').textContent=friends;
+        const{data}=await sb.auth.getSession();
+        session=data?.session;
+        if(!session&&!localStorage.getItem('vexium_guest')){location.href='auth.html';return;}
       }catch(e){}
     }
-    if (isOwn) {
-      document.getElementById('heroActions').innerHTML = `
-        <button class="btn-icon" onclick="openSettings()" title="Settings">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>`;
-      document.getElementById('privacyRow').style.display='block';
-      updatePrivacyPill();
-      document.getElementById('fName').value = p.display_name||'';
-      document.getElementById('fUsername').value = p.username||'';
-      document.getElementById('fBio').value = p.bio||'';
-    } else {
-      const following = await checkFollowing();
-      renderFollowBtn(following);
+    buildNewEmojiRow();
+    await loadProjects();
+    await loadShared();
+    if(session&&sb){
+      loadNotifications();
+      loadSocialGraph();
+      loadMyProfile();
     }
   }
 
-  async function checkFollowing() {
-    if (!sb||!myId||!viewId) return false;
-    try { const {data}=await sb.from('follows').select('id').eq('follower_id',myId).eq('following_id',viewId).maybeSingle(); return !!data; } catch(e){ return false; }
+  async function loadMyProfile(){
+    if(!sb||!session)return;
+    try{
+      const{data}=await sb.from('profiles').select('id,username,display_name,is_public').eq('id',session.user.id).maybeSingle();
+      myProfile=data||null;
+    }catch(e){}
   }
 
-  function renderFollowBtn(isFollowing) {
-    document.getElementById('heroActions').innerHTML = `
-      <button class="btn-follow${isFollowing?' unfollow':''}" id="followBtn" onclick="toggleFollow()">
-        ${isFollowing?'Following':'Follow'}
-      </button>`;
+  async function loadSocialGraph(){
+    if(!sb||!session)return;
+    try{
+      const myId=session.user.id;
+      const[{data:fwing},{data:fwers}]=await Promise.all([
+        sb.from('follows').select('following_id').eq('follower_id',myId),
+        sb.from('follows').select('follower_id').eq('following_id',myId)
+      ]);
+      const followingIds=(fwing||[]).map(r=>r.following_id);
+      const followerIds=(fwers||[]).map(r=>r.follower_id);
+      const allIds=[...new Set([...followingIds,...followerIds])];
+      if(!allIds.length){renderFriendsSlider([],[],[]);return;}
+      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',allIds);
+      const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
+      myFollowing=followingIds.map(id=>pm[id]).filter(Boolean);
+      myFollowers=followerIds.map(id=>pm[id]).filter(Boolean);
+      const myFriends=myFollowing.filter(u=>followerIds.includes(u.id));
+      renderFriendsSlider(myFriends,myFollowing,myFollowers);
+    }catch(e){console.error('loadSocialGraph',e);}
   }
 
-  async function toggleFollow() {
-    if (!session) { location.href='auth.html'; return; }
-    const btn = document.getElementById('followBtn');
-    if (!btn) return;
-    const cur = btn.classList.contains('unfollow');
-    btn.disabled=true;
-    try {
-      if (cur) {
-        await sb.from('follows').delete().eq('follower_id',myId).eq('following_id',viewId);
-        document.getElementById('statFollowers').textContent = Math.max(0,parseInt(document.getElementById('statFollowers').textContent)-1);
-        renderFollowBtn(false);
-      } else {
-        await sb.from('follows').insert({follower_id:myId,following_id:viewId});
-        document.getElementById('statFollowers').textContent = parseInt(document.getElementById('statFollowers').textContent)+1;
-        renderFollowBtn(true);
-      }
-    } catch(e){ showToast('✗','Something went wrong'); }
-    if (document.getElementById('followBtn')) document.getElementById('followBtn').disabled=false;
-  }
-
-  function updatePrivacyPill() {
-    const pill = document.getElementById('privacyPill');
-    document.getElementById('privIco').textContent = acctPublic?'🌐':'🔒';
-    document.getElementById('privLabel').textContent = acctPublic?'Public profile':'Private profile';
-    pill.className = 'privacy-pill '+(acctPublic?'pub':'priv');
-  }
-  async function togglePrivacy() {
-    acctPublic = !acctPublic;
-    updatePrivacyPill();
-    if (sb&&myId) try { await sb.from('profiles').update({is_public:acctPublic}).eq('id',myId); } catch(e){}
-    showToast(acctPublic?'🌐':'🔒', acctPublic?'Profile is now public':'Profile is now private');
-  }
-
-  async function loadProjects() {
-    let data=[];
-    if (sb&&viewId) {
-      try {
-        let q = sb.from('projects').select('*').eq('user_id',viewId).order('updated_at',{ascending:false});
-        if (!isOwn) q = q.eq('is_public',true);
-        const {data:d}=await q; data=d||[];
-      } catch(e){}
-    } else if (isOwn) {
-      try { data=JSON.parse(localStorage.getItem('vexium_projects')||'[]'); } catch(e){}
+  async function loadProjects(){
+    document.getElementById('loadingState').style.display='block';
+    document.getElementById('emptyState').classList.remove('show');
+    document.getElementById('projectGrid').innerHTML='';
+    if(session&&sb){
+      try{const{data}=await sb.from('projects').select('*').eq('user_id',session.user.id).order('updated_at',{ascending:false});projects=data||[];}catch(e){projects=[];}
+    }else{
+      try{projects=JSON.parse(localStorage.getItem('vexium_projects')||'[]');}catch(e){projects=[];}
     }
-    projects=data;
-    const grid = document.getElementById('projectGrid');
-    const empty = document.getElementById('emptyProjects');
-    if (!projects.length) {
-      empty.classList.add('show');
-      if (isOwn) { document.getElementById('emptyT').textContent='No projects yet'; document.getElementById('emptyS').textContent='Head to the home page to create one.'; }
-      return;
-    }
-    empty.classList.remove('show');
-    let collabMap = {};
-    if (isOwn && sb) {
-      try {
-        const ids = projects.map(p=>p.id);
-        const {data:cm} = await sb.from('project_members').select('project_id,user_id,profiles(username,display_name)').in('project_id',ids);
-        (cm||[]).forEach(r=>{ if (!collabMap[r.project_id]) collabMap[r.project_id]=[]; collabMap[r.project_id].push(r.profiles); });
-      } catch(e){}
-    }
-    grid.innerHTML = projects.map(p=>{
-      const fc = Object.keys(p.files||{}).length;
-      const upd = relTime(new Date(p.updated_at||Date.now()));
-      const isPub = !!p.is_public;
-      const moreBtn = isOwn ? `<button class="pc-more" onclick="openCtx(event,'${p.id}',${isPub})">⋯</button>` : '';
-      const badge = isOwn ? `<div class="pc-badge ${isPub?'pub':'priv'}">${isPub?'🌐 Public':'🔒 Private'}</div>` : '';
-      const collabs = collabMap[p.id]||[];
-      const collabHtml = collabs.length ? `<div class="pc-collabs">${collabs.slice(0,4).map(c=>`<div class="pc-collab-av" title="${esc(c?.display_name||c?.username||'?')}">${(c?.display_name||c?.username||'?').charAt(0).toUpperCase()}</div>`).join('')}${collabs.length>4?`<div class="pc-collab-av">+${collabs.length-4}</div>`:''}</div>`:'';
-      return `<div class="proj-card" onclick="cardClick(event,'${p.id}')">
-        ${moreBtn}${badge}
+    document.getElementById('loadingState').style.display='none';
+    document.getElementById('pageSubCount').textContent=projects.length+' project'+(projects.length!==1?'s':'');
+    if(!projects.length){document.getElementById('emptyState').classList.add('show');return;}
+    renderGrid();
+  }
+
+  function renderGrid(){
+    document.getElementById('projectGrid').innerHTML=projects.map(p=>{
+      const fc=Object.keys(p.files||{}).length;
+      const upd=relTime(new Date(p.updated_at||Date.now()));
+      const isPub=!!p.is_public;
+      return `<div class="proj-card" onclick="openProject(event,'${p.id}')">
+        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub?'🌐 Public':'🔒 Private'}</div>
+        <button class="pc-more" onclick="openPsModal(event,'${p.id}')">···</button>
         <div class="pc-emoji">${p.emoji||'💻'}</div>
         <div class="pc-name">${esc(p.name||'Untitled')}</div>
         <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${upd}</span></div>
-        ${collabHtml}
       </div>`;
     }).join('');
   }
 
-  async function loadShared() {
-    if (!sb||!myId) return;
-    try {
-      const {data} = await sb.from('project_members').select('project_id,projects(*)').eq('user_id',myId);
-      sharedProjects = (data||[]).map(r=>r.projects).filter(Boolean);
-    } catch(e){ sharedProjects=[]; }
-    const grid = document.getElementById('sharedGrid');
-    const empty = document.getElementById('emptyShared');
-    if (!sharedProjects.length) { empty.classList.add('show'); return; }
-    empty.classList.remove('show');
-    grid.innerHTML = sharedProjects.map(p=>{
-      const fc = Object.keys(p.files||{}).length;
-      return `<div class="proj-card" onclick="openShared('${p.id}')">
-        <div class="pc-emoji">${p.emoji||'💻'}</div>
-        <div class="pc-name">${esc(p.name||'Untitled')}</div>
-        <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>Shared</span></div>
-      </div>`;
-    }).join('');
+  function openProject(e,id){
+    if(e.target.closest('.pc-more'))return;
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
   }
 
-  function cardClick(e,id) {
-    if (e.target.closest('.pc-more')) return;
-    if (isOwn) { localStorage.setItem('vexium_current_project',id); location.href='editor.html'; }
-    else { window.open('viewer.html?project='+id,'_blank'); }
-  }
-  function openShared(id) { localStorage.setItem('vexium_current_project',id); location.href='editor.html'; }
+  let pendingAcceptId = null; // project id awaiting accept/decline response
 
-  function openCtx(e,id,isPub) {
-    e.preventDefault(); e.stopPropagation();
-    ctxId=id; ctxPub=isPub;
-    document.getElementById('ctxPubLabel').textContent = isPub?'Make private':'Make public';
-    const m=document.getElementById('ctxMenu');
-    m.style.left=Math.min(e.clientX,innerWidth-180)+'px';
-    m.style.top=Math.min(e.clientY,innerHeight-180)+'px';
-    m.classList.add('show');
+  async function loadShared(){
+    if(!session||!sb)return;
+    try{
+      const{data}=await sb.from('project_members')
+        .select('project_id,status,projects(*)')
+        .eq('user_id',session.user.id)
+        .neq('status','declined');
+      const rows=(data||[]).filter(r=>r.projects);
+      if(!rows.length)return;
+      document.getElementById('sharedSection').style.display='';
+      document.getElementById('sharedGrid').innerHTML=rows.map(r=>{
+        const p=r.projects;
+        const isPending=r.status==='pending';
+        const fc=Object.keys(p.files||{}).length;
+        const badge=isPending
+          ?`<div class="pc-vis" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">⏳ Invited</div>`
+          :`<div class="pc-vis priv" style="background:rgba(155,121,252,.08);color:#a78bfa;border-color:rgba(155,121,252,.15)">🤝 Shared</div>`;
+        const inviteActions=isPending?`
+          <div class="pc-invite-actions">
+            <button class="pc-invite-btn decline" onclick="quickDecline(event,'${p.id}')">Decline</button>
+            <button class="pc-invite-btn accept" onclick="quickAccept(event,'${p.id}')">Accept</button>
+          </div>`:''
+        return `<div class="proj-card" onclick="openShared('${p.id}','${isPending}','${esc(p.emoji||'💻')}','${esc(p.name||'Untitled')}')">
+          ${badge}
+          <div class="pc-emoji">${p.emoji||'💻'}</div>
+          <div class="pc-name">${esc(p.name||'Untitled')}</div>
+          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Pending invite':'Collaborator'}</span></div>
+          ${inviteActions}
+        </div>`;
+      }).join('');
+    }catch(e){console.error('loadShared',e);}
   }
-  document.addEventListener('click',()=>document.getElementById('ctxMenu').classList.remove('show'));
-  function ctxEdit(){ if(!ctxId)return; localStorage.setItem('vexium_current_project',ctxId); location.href='editor.html'; }
-  function ctxView(){ if(!ctxId)return; window.open('viewer.html?project='+ctxId,'_blank'); }
-  async function ctxTogglePublic(){
-    if(!ctxId||!sb)return;
-    const nv=!ctxPub;
-    await sb.from('projects').update({is_public:nv}).eq('id',ctxId);
-    showToast(nv?'🌐':'🔒',nv?'Project is now public':'Project is now private');
+
+  function openShared(id, isPending, emoji, name){
+    if(isPending==='true'){
+      // Show accept popup instead of opening directly
+      pendingAcceptId=id;
+      document.getElementById('acceptEmoji').textContent=decodeURIComponent(emoji)||'💻';
+      document.getElementById('acceptTitle').textContent='Join "'+name+'"?';
+      document.getElementById('acceptSub').textContent='You\'ve been invited to collaborate on this project. Accept to open it and join the team, or decline to remove it from your list.';
+      document.getElementById('acceptOverlay').classList.add('show');
+    } else {
+      localStorage.setItem('vexium_current_project',id);
+      location.href='editor.html';
+    }
+  }
+
+  async function respondInvite(accept){
+    document.getElementById('acceptOverlay').classList.remove('show');
+    if(!pendingAcceptId||!sb||!session)return;
+    const id=pendingAcceptId;
+    pendingAcceptId=null;
+    if(accept){
+      await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
+      localStorage.setItem('vexium_current_project',id);
+      location.href='editor.html';
+    } else {
+      await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',session.user.id);
+      await loadShared();
+    }
+  }
+
+  async function quickAccept(e, id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
+  }
+
+  async function quickDecline(e, id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',session.user.id);
+    await loadShared();
+    showToast('Invite declined');
+  }
+
+  /* ── PS MODAL ── */
+  async function openPsModal(e,id){
+    e.preventDefault();e.stopPropagation();
+    psProjectId=id;
+    const p=projects.find(x=>x.id===id);
+    if(!p)return;
+    psCurPublic=!!p.is_public;
+    psEmojiCur=p.emoji||'💻';
+    document.getElementById('psHeroEmoji').textContent=psEmojiCur;
+    document.getElementById('psHeroName').textContent=p.name||'Untitled';
+    const fc=Object.keys(p.files||{}).length;
+    document.getElementById('psHeroMeta').textContent=fc+' file'+(fc!==1?'s':'')+' · Updated '+relTime(new Date(p.updated_at||Date.now()));
+    document.getElementById('psNameInput').value=p.name||'';
+    buildPsEmojiStrip();
+    updateVisToggle();
+    document.getElementById('psInviteMsg').textContent='';
+    document.getElementById('psInviteMsg').className='invite-msg';
+    document.getElementById('psInviteInput').value='';
+    hideInviteDrop();
+    await loadPsCollabs();
+    document.getElementById('psOverlay').classList.add('show');
+  }
+
+  function closePsModal(){document.getElementById('psOverlay').classList.remove('show');hideInviteDrop();}
+
+  function buildPsEmojiStrip(){
+    document.getElementById('psEmojiStrip').innerHTML=EMOJIS.map(em=>
+      `<div class="emoji-opt${em===psEmojiCur?' sel':''}" onclick="pickPsEmoji('${em}')">${em}</div>`
+    ).join('');
+  }
+
+  function pickPsEmoji(em){
+    psEmojiCur=em;
+    document.getElementById('psHeroEmoji').textContent=em;
+    document.querySelectorAll('#psEmojiStrip .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
+  }
+
+  function togglePsPublic(){psCurPublic=!psCurPublic;updateVisToggle();}
+
+  function updateVisToggle(){
+    const btn=document.getElementById('psLockBtn');
+    const ico=document.getElementById('psLockIco');
+    const txt=document.getElementById('psLockTxt');
+    document.getElementById('psVisLabel').textContent=psCurPublic?'Public':'Private';
+    document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
+    if(psCurPublic){
+      btn.className='lock-btn unlocked';
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
+      txt.textContent='Public';
+    }else{
+      btn.className='lock-btn';
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+      txt.textContent='Private';
+    }
+  }
+
+  async function psSave(){
+    if(!psProjectId)return;
+    const name=document.getElementById('psNameInput').value.trim();
+    if(!name){document.getElementById('psNameInput').focus();return;}
+    const updates={name,emoji:psEmojiCur,is_public:psCurPublic,updated_at:new Date().toISOString()};
+    if(session&&sb){
+      const{error}=await sb.from('projects').update(updates).eq('id',psProjectId);
+      if(error){showToast('Save failed — '+error.message);return;}
+    }else{
+      const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]');
+      const idx=list.findIndex(x=>x.id===psProjectId);
+      if(idx>=0)Object.assign(list[idx],updates);
+      localStorage.setItem('vexium_projects',JSON.stringify(list));
+    }
+    closePsModal();
+    showToast('Changes saved ✓');
     await loadProjects();
   }
-  async function ctxDelete(){
-    if(!ctxId)return;
-    if(!confirm('Delete this project? Cannot be undone.'))return;
-    if(sb){ await sb.from('projects').delete().eq('id',ctxId); }
-    else { const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==ctxId); localStorage.setItem('vexium_projects',JSON.stringify(list)); }
+
+  async function psDelete(){
+    if(!psProjectId)return;
+    if(!confirm('Delete this project? This cannot be undone.'))return;
+    if(session&&sb){await sb.from('projects').delete().eq('id',psProjectId);}
+    else{const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==psProjectId);localStorage.setItem('vexium_projects',JSON.stringify(list));}
+    closePsModal();
+    showToast('Project deleted');
     await loadProjects();
   }
-  function ctxCollaborators(){ if(!ctxId)return; openCollabModal(ctxId); }
 
-  async function openCollabModal(pid) {
-    document.getElementById('inviteMsg').textContent='';
-    document.getElementById('inviteInput').value='';
-    const pname = (projects.find(p=>p.id===pid)||{}).name||pid;
-    document.getElementById('collabSub').textContent='Project: '+pname;
-    openOv('collabOverlay');
-    await refreshCollabList(pid);
-  }
-
-  async function refreshCollabList(pid) {
-    const list=document.getElementById('clList');
-    list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:4px">Loading…</div>';
-    try {
-      const {data}=await sb.from('project_members')
-        .select('user_id,role,status').eq('project_id',pid).neq('status','declined');
-      if(!data||!data.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">No collaborators yet.</div>'; return; }
+  /* ── COLLABS ── */
+  async function loadPsCollabs(){
+    const list=document.getElementById('psCollabList');
+    if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
+    try{
+      const{data}=await sb.from('project_members')
+        .select('user_id,role,status')
+        .eq('project_id',psProjectId)
+        .neq('status','declined');
+      if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
       const uids=data.map(m=>m.user_id);
-      const {data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
-      const pm={}; (profiles||[]).forEach(p=>{pm[p.id]=p;});
-      const joined=data.filter(m=>m.status==='accepted'||!m.status);
+      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
+      const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
+
+      const joined=data.filter(m=>m.status==='accepted'||!m.status); // backwards compat: no status = old accepted
       const pending=data.filter(m=>m.status==='pending');
+
       let html='';
       if(joined.length){
-        html+='<div style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Active</div>';
+        html+='<div class="cl-section-label">Active</div>';
         html+=joined.map(m=>{
-          const p=pm[m.user_id]||{}; const n=p.display_name||p.username||'Unknown';
-          return `<div class="cl-item"><div class="cl-av">${n.charAt(0).toUpperCase()}</div><div class="cl-name">${esc(n)}<div style="font-size:10px;color:var(--sub)">@${esc(p.username||'')}</div></div><div class="cl-role" style="background:rgba(74,222,128,.1);color:#4ade80">Joined</div><button class="cl-rm" onclick="removeCollab('${pid}','${m.user_id}')">✕</button></div>`;
+          const p=pm[m.user_id]||{};
+          const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item">
+            <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
+            <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
+            <div class="cl-status joined">Joined</div>
+            <button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+          </div>`;
         }).join('');
       }
       if(pending.length){
-        if(joined.length)html+='<div style="height:6px"></div>';
-        html+='<div style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Invited</div>';
+        html+='<div class="cl-section-label" style="margin-top:${joined.length?\'8px\':\'0\'}">Invited</div>';
         html+=pending.map(m=>{
-          const p=pm[m.user_id]||{}; const n=p.display_name||p.username||'Unknown';
-          return `<div class="cl-item" style="opacity:.8"><div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div><div class="cl-name">${esc(n)}<div style="font-size:10px;color:var(--sub)">@${esc(p.username||'')}</div></div><div class="cl-role" style="background:rgba(251,191,36,.1);color:#fbbf24">Pending</div><button class="cl-rm" onclick="removeCollab('${pid}','${m.user_id}')" title="Cancel">✕</button></div>`;
+          const p=pm[m.user_id]||{};
+          const n=p.display_name||p.username||'Unknown';
+          return `<div class="cl-item">
+            <div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div>
+            <div class="cl-info"><div class="cl-name" style="opacity:.7">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
+            <div class="cl-status pending">Pending</div>
+            <button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+          </div>`;
         }).join('');
       }
-      if(!html)html='<div style="font-size:12px;color:var(--sub)">No collaborators yet.</div>';
+      if(!html)html='<div class="cl-none">No collaborators yet</div>';
       list.innerHTML=html;
-    } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
+    }catch(e){list.innerHTML='<div class="cl-none">No collaborators yet</div>';}
   }
 
-  async function doInvite(){
-    const uname=document.getElementById('inviteInput').value.trim().replace('@','');
-    const msg=document.getElementById('inviteMsg');
-    if(!uname){ msg.textContent='Enter a username.'; msg.className='msg err'; return; }
-    if(!sb||!ctxId)return;
-    try {
-      const {data:uid}=await sb.rpc('get_user_id_by_username',{uname});
-      if(!uid){ msg.textContent='User not found.'; msg.className='msg err'; return; }
-      if(uid===myId){ msg.textContent="That's you!"; msg.className='msg err'; return; }
-      await sb.from('project_members').insert({project_id:ctxId,user_id:uid,role:'editor',invited_by:myId,status:'pending'});
-      msg.textContent='@'+uname+' added!'; msg.className='msg ok';
-      document.getElementById('inviteInput').value='';
-      await refreshCollabList(ctxId);
-    } catch(e){ msg.textContent=e.message||'Could not invite.'; msg.className='msg err'; }
-  }
-
-  async function removeCollab(pid,uid){
+  async function psRemoveCollab(uid){
     if(!confirm('Remove this collaborator?'))return;
-    await sb.from('project_members').delete().eq('project_id',pid).eq('user_id',uid);
-    await refreshCollabList(pid);
+    await sb.from('project_members').delete().eq('project_id',psProjectId).eq('user_id',uid);
+    await loadPsCollabs();
   }
 
-  async function openFollowList(type){
-    const titles = {followers:'Followers', following:'Following', friends:'Friends'};
-    document.getElementById('followTitle').textContent = titles[type]||type;
-    document.getElementById('followSub').textContent='';
-    const list=document.getElementById('followList');
-    list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">Loading…</div>';
-    openOv('followOverlay');
-    if(!sb||!viewId){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Not available.</div>'; return; }
-    try {
-      // Simple flat queries — no FK alias (avoids silent failures)
-      const [{data:fwingData},{data:fwersData}] = await Promise.all([
-        sb.from('follows').select('following_id').eq('follower_id',viewId),
-        sb.from('follows').select('follower_id').eq('following_id',viewId)
-      ]);
-      const followingIds=(fwingData||[]).map(r=>r.following_id);
-      const followerIds=(fwersData||[]).map(r=>r.follower_id);
-
-      let ids=[];
-      if(type==='following') ids=followingIds;
-      else if(type==='followers') ids=followerIds;
-      else if(type==='friends') ids=followingIds.filter(id=>followerIds.includes(id));
-
-      if(!ids.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
-
-      // Now fetch profiles for those IDs
-      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',ids);
-      const rows=profiles||[];
-      if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px">None yet.</div>'; return; }
-      list.innerHTML=rows.map(p=>{
-        if(!p)return'';
-        const n=p.display_name||p.username||'?';
-        return `<div class="fi" onclick="goProfile('${esc(p.username||'')}')">
-          <div class="fi-av">${n.charAt(0).toUpperCase()}</div>
-          <div><div class="fi-name">${esc(n)}</div><div class="fi-handle">@${esc(p.username||'')}</div></div>
-        </div>`;
-      }).join('');
-    } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--sub)">Could not load.</div>'; }
+  let inviteTimer=null;
+  function onInviteInput(){
+    clearTimeout(inviteTimer);
+    const q=document.getElementById('psInviteInput').value.trim();
+    if(!q){showInviteSuggestions();return;}
+    inviteTimer=setTimeout(()=>searchInvite(q),240);
+  }
+  function onInviteKey(e){
+    if(e.key==='Escape'){hideInviteDrop();document.getElementById('psInviteInput').blur();}
+    if(e.key==='Enter'){const first=document.querySelector('#inviteDrop .invite-item');if(first)first.click();}
   }
 
-  function goProfile(u){ closeOv('followOverlay'); location.href='profile.html?user='+u; }
-
-  function switchTab(t){
-    document.getElementById('tabProjects').classList.toggle('active',t==='projects');
-    document.getElementById('tabShared').classList.toggle('active',t==='shared');
-    document.getElementById('paneProjects').style.display=t==='projects'?'':'none';
-    document.getElementById('paneShared').style.display=t==='shared'?'':'none';
+  function showInviteSuggestions(){
+    if(!myFollowing.length&&!myFollowers.length){hideInviteDrop();return;}
+    const mutual=myFollowing.filter(f=>myFollowers.find(r=>r.id===f.id));
+    const onlyFollowing=myFollowing.filter(f=>!myFollowers.find(r=>r.id===f.id));
+    const onlyFollowers=myFollowers.filter(r=>!myFollowing.find(f=>f.id===r.id));
+    let html='';
+    if(mutual.length){html+='<div class="sd-section-label">Friends</div>'+mutual.map(u=>inviteItemHTML(u,'friend')).join('');}
+    if(onlyFollowing.length){html+='<div class="sd-section-label">Following</div>'+onlyFollowing.map(u=>inviteItemHTML(u,'following')).join('');}
+    if(onlyFollowers.length){html+='<div class="sd-section-label">Followers</div>'+onlyFollowers.map(u=>inviteItemHTML(u,'follower')).join('');}
+    renderInviteDrop(html);
   }
 
-  function openSettings(){ openOv('settingsOverlay'); }
-  async function savePrefUsageWarn(checked) {
-    // Update visual
-    var track = document.getElementById('prefUsageWarnTrack');
-    var thumb = document.getElementById('prefUsageWarnThumb');
-    if (track) track.style.background = checked ? 'var(--a1)' : 'var(--b2)';
-    if (thumb) thumb.style.transform = checked ? 'translateX(16px)' : 'none';
-    if (sb && myId) {
-      try { await sb.from('profiles').update({ show_usage_warning: checked }).eq('id', myId); } catch(e) {}
+  async function searchInvite(q){
+    if(myProfile&&myProfile.is_public===false){
+      renderInviteDrop('<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t invite others. <a href="profile.html" style="color:#818cf8;text-decoration:none">Go public →</a></div>');
+      return;
     }
-    showToast(checked ? '🔔' : '🔕', checked ? 'Usage warnings on' : 'Usage warnings off');
+    let html='';
+    const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
+      .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
+    if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>inviteItemHTML(u,getRelLabel(u.id))).join('');
+    if(sb){
+      try{
+        const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(5);
+        const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
+        if(others.length){html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>inviteItemHTML(u,'')).join('');}
+      }catch(e){}
+    }
+    renderInviteDrop(html||'<div class="search-msg">No users found</div>');
   }
 
-  async function saveProfile(){
-    const name=document.getElementById('fName').value.trim();
-    const username=document.getElementById('fUsername').value.trim().toLowerCase();
-    const bio=document.getElementById('fBio').value.trim();
-    const msg=document.getElementById('profileMsg');
-    if(!name){ msg.textContent='Enter a display name.'; msg.className='msg err'; return; }
-    localStorage.setItem('vexium_username',name);
-    if(sb&&myId) try { await sb.from('profiles').update({display_name:name,username,bio}).eq('id',myId); await sb.auth.updateUser({data:{username,display_name:name,bio}}); } catch(e){}
-    document.getElementById('profName').textContent=name;
-    document.getElementById('profHandle').textContent='@'+username;
-    document.getElementById('profBio').textContent=bio;
-    document.getElementById('pfpInitial').textContent=name.charAt(0).toUpperCase();
-    document.getElementById('tbPfp').textContent=name.charAt(0).toUpperCase();
-    msg.textContent='Saved!'; msg.className='msg ok';
-    showToast('✓','Profile updated');
-    setTimeout(()=>{ msg.textContent=''; msg.className='msg'; },3000);
-  }
-  async function changePassword(){
-    const pass=document.getElementById('fPass').value;
-    const confirm=document.getElementById('fPassConfirm').value;
-    const msg=document.getElementById('passMsg');
-    if(pass.length<6){ msg.textContent='Password must be 6+ chars.'; msg.className='msg err'; return; }
-    if(pass!==confirm){ msg.textContent="Passwords don't match."; msg.className='msg err'; return; }
-    if(!session||!sb){ msg.textContent='Sign in first.'; msg.className='msg err'; return; }
-    try {
-      const {error}=await sb.auth.updateUser({password:pass});
-      if(error){ msg.textContent=error.message; msg.className='msg err'; return; }
-      msg.textContent='Password updated.'; msg.className='msg ok';
-      document.getElementById('fPass').value=''; document.getElementById('fPassConfirm').value='';
-      showToast('✓','Password updated');
-      setTimeout(()=>{ msg.textContent=''; msg.className='msg'; },3000);
-    } catch(e){ msg.textContent='Something went wrong.'; msg.className='msg err'; }
-  }
-  async function doSignOut(){
-    if(!confirm('Sign out?'))return;
-    if(sb) try { await sb.auth.signOut(); } catch(e){}
-    localStorage.removeItem('vexium_guest'); localStorage.removeItem('vexium_username');
-    location.href='auth.html';
-  }
-  async function deleteAccount(){
-    if(!confirm('Delete your account and all projects? Cannot be undone.'))return;
-    if(sb&&session) try { await sb.rpc('delete_own_account'); } catch(e){}
-    localStorage.clear(); location.href='index.html';
+  function getRelLabel(uid){
+    const isFollowing=myFollowing.find(f=>f.id===uid);
+    const isFollower=myFollowers.find(r=>r.id===uid);
+    if(isFollowing&&isFollower)return'friend';
+    if(isFollowing)return'following';
+    if(isFollower)return'follower';
+    return'';
   }
 
-  function openOv(id){ document.getElementById(id).classList.add('show'); }
-  function closeOv(id){ document.getElementById(id).classList.remove('show'); }
-  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
-  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function relTime(d){ const s=Math.floor((Date.now()-d)/1000); if(s<60)return'just now'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
-  let toastT;
-  function showToast(ico,msg){ clearTimeout(toastT); document.getElementById('toastIco').textContent=ico; document.getElementById('toastMsg').textContent=msg; document.getElementById('toast').classList.add('show'); toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400); }
+  function inviteItemHTML(u,rel){
+    const n=u.display_name||u.username||'?';
+    const relBadge=rel?`<div class="inv-rel">${rel}</div>`:'';
+    return `<div class="invite-item" onclick="doInvite('${esc(u.username||'')}')">
+      <div class="inv-av">${n.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="inv-name">${esc(n)}</div><div class="inv-handle">@${esc(u.username||'')}</div></div>
+      ${relBadge}
+    </div>`;
+  }
+
+  function renderInviteDrop(html){const drop=document.getElementById('inviteDrop');drop.innerHTML=html;drop.classList.add('show');}
+  function hideInviteDrop(){document.getElementById('inviteDrop').classList.remove('show');}
+
+  async function doInvite(uname){
+    const msg=document.getElementById('psInviteMsg');
+    hideInviteDrop();
+    document.getElementById('psInviteInput').value='';
+    if(!uname||!sb||!session)return;
+    try{
+      const{data:uid}=await sb.rpc('get_user_id_by_username',{uname});
+      if(!uid){msg.textContent='User not found.';msg.className='invite-msg err';return;}
+      if(uid===session.user.id){msg.textContent="That's you!";msg.className='invite-msg err';return;}
+      const{error}=await sb.from('project_members').insert({project_id:psProjectId,user_id:uid,role:'editor',invited_by:session.user.id,status:'pending'});
+      if(error&&error.code==='23505'){msg.textContent='@'+uname+' is already invited.';msg.className='invite-msg err';return;}
+      if(error){msg.textContent=error.message;msg.className='invite-msg err';return;}
+      msg.textContent='Invite sent to @'+uname+' ✓';msg.className='invite-msg ok';
+      await loadPsCollabs();
+      setTimeout(()=>{msg.textContent='';msg.className='invite-msg';},3000);
+    }catch(e){msg.textContent='Could not invite.';msg.className='invite-msg err';}
+  }
+
+  document.getElementById('psInviteInput').addEventListener('focus',()=>{
+    if(!document.getElementById('psInviteInput').value.trim())showInviteSuggestions();
+  });
 
   /* ── NOTIFICATIONS (FIX 1) ── */
   let notifLoaded=false;
+
   async function loadNotifications(){
     if(!sb||!session)return;
     const listEl=document.getElementById('notifList');
     try{
+      // Use simple select first, then fetch actor/project names separately to avoid FK alias issues
       const{data,error}=await sb
         .from('notifications')
         .select('id,user_id,actor_id,type,project_id,read,created_at')
         .eq('user_id',session.user.id)
         .order('created_at',{ascending:false})
         .limit(20);
+
       if(error){
+        console.warn('notif error:',error.message);
         listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
-        notifLoaded=true; return;
+        notifLoaded=true;
+        return;
       }
+
       const notifs=data||[];
       if(!notifs.length){
         listEl.innerHTML='<div class="notif-empty">All caught up ✓</div>';
-        notifLoaded=true; return;
+        notifLoaded=true;
+        return;
       }
-      // Fetch actors and projects separately
+
+      // Fetch actor profiles
       const actorIds=[...new Set(notifs.filter(n=>n.actor_id).map(n=>n.actor_id))];
       const projectIds=[...new Set(notifs.filter(n=>n.project_id).map(n=>n.project_id))];
       let actorMap={}, projectMap={};
       if(actorIds.length){
-        try{ const{data:actors}=await sb.from('profiles').select('id,username,display_name').in('id',actorIds); (actors||[]).forEach(a=>{actorMap[a.id]=a;}); }catch(e){}
+        try{
+          const{data:actors}=await sb.from('profiles').select('id,username,display_name').in('id',actorIds);
+          (actors||[]).forEach(a=>{actorMap[a.id]=a;});
+        }catch(e){}
       }
       if(projectIds.length){
-        try{ const{data:projs}=await sb.from('projects').select('id,name').in('id',projectIds); (projs||[]).forEach(p=>{projectMap[p.id]=p;}); }catch(e){}
+        try{
+          const{data:projs}=await sb.from('projects').select('id,name').in('id',projectIds);
+          (projs||[]).forEach(p=>{projectMap[p.id]=p;});
+        }catch(e){}
       }
-      const unreadCount=notifs.filter(n=>!n.read).length;
+
+      const unread=notifs.filter(n=>!n.read).length;
       const bellDot=document.getElementById('bellDot');
-      if(unreadCount>0){bellDot.textContent=unreadCount>9?'9+':unreadCount;bellDot.classList.add('show');}
+      if(unread>0){bellDot.textContent=unread>9?'9+':unread;bellDot.classList.add('show');}
       else{bellDot.textContent='';bellDot.classList.remove('show');}
+
       listEl.innerHTML=notifs.map(n=>{
         const actor=actorMap[n.actor_id];
         const actorName=actor?.display_name||actor?.username||'Someone';
         const project=projectMap[n.project_id];
         let text='';
         if(n.type==='follow')text=`<b>${esc(actorName)}</b> started following you`;
-        else if(n.type==='project_invite')text=`<b>${esc(actorName)}</b> invited you to <b>${esc(project?.name||'a project')}</b>`;
+        else if(n.type==='project_invite')text=`<b>${esc(actorName)}</b> invited you to collaborate on <b>${esc(project?.name||'a project')}</b>`;
         else text=`New notification from <b>${esc(actorName)}</b>`;
         return `<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.type}','${esc(actor?.username||'')}','${n.project_id||''}')">
           <div class="notif-av">${actorName.charAt(0).toUpperCase()}</div>
-          <div class="notif-body"><div class="notif-text">${text}</div><div class="notif-time">${relTime(new Date(n.created_at))}</div></div>
+          <div class="notif-body">
+            <div class="notif-text">${text}</div>
+            <div class="notif-time">${relTime(new Date(n.created_at))}</div>
+          </div>
           ${!n.read?'<div class="notif-unread-dot"></div>':''}
         </div>`;
       }).join('');
       notifLoaded=true;
     }catch(e){
+      console.error('notif exception:',e);
       listEl.innerHTML='<div class="notif-empty">Could not load notifications</div>';
       notifLoaded=true;
     }
   }
+
   async function handleNotifClick(id,type,actorUsername,projectId){
+    // Mark read immediately in UI
     const el=document.querySelector(`.notif-item[onclick*="'${id}'"]`);
+    const wasUnread=el&&el.classList.contains('unread');
     if(el){el.classList.remove('unread');const dot=el.querySelector('.notif-unread-dot');if(dot)dot.remove();}
-    if(sb)await sb.from('notifications').update({read:true}).eq('id',id).catch(()=>{});
+    // Mark read in DB — use try/await, not .catch (Supabase v2 query not a real Promise)
+    if(sb&&wasUnread){
+      try{await sb.from('notifications').update({read:true}).eq('id',id);}catch(e){}
+    }
+    // Update badge count
     const remaining=document.querySelectorAll('.notif-item.unread').length;
     const bellDot=document.getElementById('bellDot');
     if(remaining>0){bellDot.textContent=remaining>9?'9+':remaining;bellDot.classList.add('show');}
     else{bellDot.textContent='';bellDot.classList.remove('show');}
-    if(type==='follow'&&actorUsername)location.href='profile.html?user='+actorUsername;
-    else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
-    else toggleNotifDrop();
+    // Navigate — always navigate whether read or not
+    if(type==='follow'&&actorUsername){hideNotifDrop();location.href='profile.html?user='+actorUsername;}
+    else if(type==='project_invite'&&projectId){hideNotifDrop();location.href='viewer.html?project='+projectId;}
+    else hideNotifDrop();
   }
+
+  function hideNotifDrop(){
+    const drop=document.getElementById('notifDrop');
+    const bell=document.getElementById('bellBtn');
+    if(drop)drop.classList.remove('show');
+    if(bell)bell.classList.remove('active');
+  }
+
   async function markAllRead(){
     if(!sb||!session)return;
-    await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false).catch(()=>{});
+    try{await sb.from('notifications').update({read:true}).eq('user_id',session.user.id).eq('read',false);}catch(e){}
     const bellDot=document.getElementById('bellDot');
     bellDot.textContent='';bellDot.classList.remove('show');
     notifLoaded=false;
     loadNotifications();
   }
+
   function toggleNotifDrop(){
     const bell=document.getElementById('bellBtn');
     const drop=document.getElementById('notifDrop');
+    const opening=!drop.classList.contains('show');
     drop.classList.toggle('show');
     bell.classList.toggle('active',drop.classList.contains('show'));
-    if(drop.classList.contains('show')&&!notifLoaded)loadNotifications();
+    if(opening&&!notifLoaded)loadNotifications();
   }
 
+  /* ── USER SEARCH ── */
+  let searchTimer=null;
+  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q)doSearch(q);else showSearchSuggestions();}
+  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();if(!q){showSearchSuggestions();return;}searchTimer=setTimeout(()=>doSearch(q),260);}
+  function onSearchKey(e){if(e.key==='Escape'){hideSearchDrop();document.getElementById('tbSearchInput').blur();}}
+
+  function showSearchSuggestions(){
+    if(!myFollowing.length&&!myFollowers.length){hideSearchDrop();return;}
+    const mutual=myFollowing.filter(f=>myFollowers.find(r=>r.id===f.id));
+    const onlyFollowing=myFollowing.filter(f=>!myFollowers.find(r=>r.id===f.id));
+    let html='';
+    if(mutual.length)html+='<div class="sd-section-label">Friends</div>'+mutual.map(u=>searchItemHTML(u,'friend')).join('');
+    if(onlyFollowing.length)html+='<div class="sd-section-label">Following</div>'+onlyFollowing.map(u=>searchItemHTML(u,'following')).join('');
+    if(!html){hideSearchDrop();return;}
+    document.getElementById('searchDrop').innerHTML=html;showSearchDrop();
+  }
+
+  async function doSearch(q){
+    if(myProfile&&myProfile.is_public===false){
+      const drop=document.getElementById('searchDrop')||document.getElementById('tbSearchDrop');
+      if(drop){drop.innerHTML='<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t search users. <a href="profile.html" style="color:#818cf8;text-decoration:none">Make your profile public →</a></div>';drop.classList.add('show');}
+      return;
+    }
+    const drop=document.getElementById('searchDrop');
+    drop.innerHTML='<div class="search-msg">Searching…</div>';showSearchDrop();
+    if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}
+    let html='';
+    const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
+      .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
+    if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>searchItemHTML(u,getRelLabel(u.id))).join('');
+    try{
+      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(6);
+      const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
+      if(others.length)html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>searchItemHTML(u,'')).join('');
+    }catch(e){}
+    drop.innerHTML=html||'<div class="search-msg">No users found</div>';
+  }
+
+  function searchItemHTML(u,rel){
+    const n=u.display_name||u.username||'?';
+    const badge=rel?`<div class="si-badge">${rel}</div>`:'';
+    return `<div class="search-item" onclick="goProfile('${esc(u.username||'')}')">
+      <div class="si-av">${n.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="si-name">${esc(n)}</div><div class="si-handle">@${esc(u.username||'')}</div></div>
+      ${badge}
+    </div>`;
+  }
+
+  function showSearchDrop(){document.getElementById('searchDrop').classList.add('show');}
+  function hideSearchDrop(){document.getElementById('searchDrop').classList.remove('show');}
+  function goProfile(u){hideSearchDrop();document.getElementById('tbSearchInput').value='';location.href='profile.html?user='+u;}
+
+  /* ── NEW PROJECT MODAL ── */
+  function buildNewEmojiRow(){
+    // FIX 3: uses .emoji-strip which is grid 5-columns via CSS
+    document.getElementById('emojiRow').innerHTML=EMOJIS.map(e=>
+      `<div class="emoji-opt${e==='💻'?' sel':''}" onclick="pickNewEmoji('${e}')">${e}</div>`
+    ).join('');
+    selectedEmoji='💻';
+  }
+  function pickNewEmoji(e){selectedEmoji=e;document.querySelectorAll('#emojiRow .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===e));}
+  function openNewModal(){document.getElementById('projNameInput').value='';buildNewEmojiRow();document.getElementById('newOverlay').classList.add('show');setTimeout(()=>document.getElementById('projNameInput').focus(),40);}
+  function closeNewModal(){document.getElementById('newOverlay').classList.remove('show');}
+  document.getElementById('projNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmNew();if(e.key==='Escape')closeNewModal();});
+
+  async function confirmNew(){
+    const name=document.getElementById('projNameInput').value.trim();
+    if(!name){document.getElementById('projNameInput').focus();return;}
+    const id='proj_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    const proj={id,name,emoji:selectedEmoji,files:{'index.html':`<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`},main_file:'index.html',is_public:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+    if(session&&sb){
+      const{error}=await sb.from('projects').insert({...proj,user_id:session.user.id});
+      if(error){console.error('insert error:',error);alert('Could not save: '+error.message);return;}
+    }else{
+      projects.unshift(proj);
+      localStorage.setItem('vexium_projects',JSON.stringify(projects));
+    }
+    closeNewModal();
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
+  }
+
+  /* ── GLOBAL CLICK ── */
   document.addEventListener('click',e=>{
-    const bell=document.getElementById('bellBtn');
-    if(bell&&!bell.contains(e.target)){document.getElementById('notifDrop').classList.remove('show');bell.classList.remove('active');}
+    if(!document.getElementById('bellBtn').contains(e.target)){
+      document.getElementById('notifDrop').classList.remove('show');
+      document.getElementById('bellBtn').classList.remove('active');
+    }
+    if(!document.getElementById('tbSearchWrap').contains(e.target))hideSearchDrop();
+    if(!document.getElementById('psInviteInput').contains(e.target)&&!document.getElementById('inviteDrop').contains(e.target))hideInviteDrop();
+  });
+  document.getElementById('psOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('psOverlay'))closePsModal();});
+  document.getElementById('newOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('newOverlay'))closeNewModal();});
+
+  /* ── UTILS ── */
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function relTime(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+  let toastT;
+  function showToast(msg){clearTimeout(toastT);document.getElementById('toastMsg').textContent=msg;document.getElementById('toast').classList.add('show');toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2600);}
+
+
+  /* ── PROJ ICON MAP ── */
+  const PROJ_ICONS = {
+    '💻': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    '🤖': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/></svg>',
+    '⚡': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    '🌐': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    '📱': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    '🎨': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="9" r="1.5" fill="currentColor"/><circle cx="15" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="14" r="1.5" fill="currentColor"/><circle cx="15" cy="14" r="1.5" fill="currentColor"/></svg>',
+    '🛒': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+    '📊': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    '🔐': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    '🎯': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  };
+  function getProjIcon(emoji){
+    return PROJ_ICONS[emoji] || PROJ_ICONS['💻'];
+  }
+
+  /* ── FRIENDS SLIDER ── */
+  let _sliderData = {friends:[], following:[], followers:[]};
+  let _sliderMode = 'friends';
+  let _dragInit = false;
+
+  function renderFriendsSlider(friends, following, followers){
+    if(friends !== undefined) _sliderData = {friends, following, followers};
+    const section = document.getElementById('friendsSection');
+    const track = document.getElementById('friendsTrack');
+    if(!section || !track) return;
+
+    const list = _sliderData[_sliderMode] || [];
+
+    // Always show section; hide only if all three lists are empty
+    const total = _sliderData.friends.length + _sliderData.following.length + _sliderData.followers.length;
+    if(total === 0){ section.style.display='none'; return; }
+    section.style.display = '';
+
+    // Update dropdown counts
+    const countMap = {friends:_sliderData.friends.length, following:_sliderData.following.length, followers:_sliderData.followers.length};
+    document.querySelectorAll('.friends-dd-opt').forEach(el=>{
+      const mode = el.dataset.mode;
+      el.querySelector('.friends-dd-count').textContent = countMap[mode];
+      el.classList.toggle('active', mode === _sliderMode);
+    });
+    // Update button label
+    const labels = {friends:'Friends', following:'Following', followers:'Followers'};
+    const btn = document.getElementById('friendsDdBtn');
+    if(btn) btn.innerHTML = labels[_sliderMode] + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+    if(!list.length){
+      track.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:10px 4px">None yet.</div>';
+    } else {
+      track.innerHTML = list.map(u => {
+        const n = u.display_name || u.username || '?';
+        return `<a class="friend-card" href="profile.html?user=${encodeURIComponent(u.username||'')}">
+          <div class="friend-av">${esc(n.charAt(0).toUpperCase())}</div>
+          <div class="friend-name">${esc(n)}</div>
+          <div class="friend-handle">@${esc(u.username||'')}</div>
+        </a>`;
+      }).join('');
+    }
+
+    // Init drag-to-scroll once
+    if(!_dragInit){
+      _dragInit = true;
+      const wrap = document.getElementById('friendsTrackWrap');
+      let isDown=false, startX=0, scrollLeft=0;
+      wrap.addEventListener('mousedown', e=>{isDown=true;wrap.classList.add('grabbing');startX=e.pageX-wrap.offsetLeft;scrollLeft=wrap.scrollLeft;});
+      wrap.addEventListener('mouseleave', ()=>{isDown=false;wrap.classList.remove('grabbing');});
+      wrap.addEventListener('mouseup', ()=>{isDown=false;wrap.classList.remove('grabbing');});
+      wrap.addEventListener('mousemove', e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-wrap.offsetLeft;wrap.scrollLeft=scrollLeft-(x-startX);});
+    }
+  }
+
+  function setSliderMode(mode){
+    _sliderMode = mode;
+    document.getElementById('friendsDdMenu').classList.remove('show');
+    renderFriendsSlider();
+  }
+  function toggleFriendsDd(e){
+    e.stopPropagation();
+    document.getElementById('friendsDdMenu').classList.toggle('show');
+  }
+  document.addEventListener('click', ()=>{
+    const m = document.getElementById('friendsDdMenu');
+    if(m) m.classList.remove('show');
   });
 
   window.addEventListener('load',init);

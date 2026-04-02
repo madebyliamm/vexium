@@ -500,6 +500,7 @@
     buildNewEmojiRow();
     await loadProjects();
     await loadShared();
+    renderFriendsSlider(); // show loading skeleton immediately
     if(session&&sb){
       loadNotifications();
       loadSocialGraph();
@@ -1132,9 +1133,10 @@
 
     const list = _sliderData[_sliderMode] || [];
 
-    // Always show section; hide only if all three lists are empty
+    // Always show section; hide only if all three lists are confirmed empty after load
+    const isLoading = friends === undefined;
     const total = _sliderData.friends.length + _sliderData.following.length + _sliderData.followers.length;
-    if(total === 0){ section.style.display='none'; return; }
+    if(!isLoading && total === 0){ section.style.display='none'; return; }
     section.style.display = '';
 
     // Update dropdown counts
@@ -1149,7 +1151,13 @@
     const btn = document.getElementById('friendsDdBtn');
     if(btn) btn.innerHTML = labels[_sliderMode] + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>';
 
-    if(!list.length){
+    if(isLoading){
+      track.innerHTML = [1,2,3,4].map(()=>`<div class="friend-card" style="opacity:.35;pointer-events:none">
+        <div class="friend-av" style="background:var(--b2)"></div>
+        <div class="friend-name" style="width:48px;height:9px;background:var(--b2);border-radius:4px"></div>
+        <div class="friend-handle" style="width:36px;height:8px;background:var(--b1);border-radius:4px;margin-top:2px"></div>
+      </div>`).join('');
+    } else if(!list.length){
       track.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:10px 4px">None yet.</div>';
     } else {
       track.innerHTML = list.map(u => {
@@ -1166,46 +1174,49 @@
     if(!_dragInit){
       _dragInit = true;
       const wrap = document.getElementById('friendsTrackWrap');
-      let isDown=false, startX=0, startScroll=0, rafId=null;
+      // Use transform-based overscroll since scrollLeft can't go negative in browsers
+      let isDown=false, startX=0, startScroll=0, rafId=null, over=0;
 
-      // Rubber coefficient — lower = more resistance
-      const RUBBER = 0.35;
-
+      const RUBBER = 0.28, MAX_OVER = 64;
       function maxScroll(){ return Math.max(0, wrap.scrollWidth - wrap.clientWidth); }
 
-      function rubberScroll(raw){
+      function setPos(raw){
         const max = maxScroll();
-        if(raw < 0)       return raw * RUBBER;          // resist left overscroll
-        if(raw > max)     return max + (raw - max) * RUBBER; // resist right overscroll
-        return raw;
+        if(raw < 0){
+          wrap.scrollLeft = 0;
+          over = Math.max(-MAX_OVER, raw * RUBBER);
+        } else if(raw > max){
+          wrap.scrollLeft = max;
+          over = Math.min(MAX_OVER, (raw - max) * RUBBER);
+        } else {
+          wrap.scrollLeft = raw;
+          over = 0;
+        }
+        wrap.style.transform = over ? `translateX(${-over}px)` : '';
       }
 
       function springBack(){
-        const max = maxScroll();
-        const target = wrap.scrollLeft < 0 ? 0 : wrap.scrollLeft > max ? max : null;
-        if(target === null) return;
         cancelAnimationFrame(rafId);
         (function tick(){
-          const diff = target - wrap.scrollLeft;
-          if(Math.abs(diff) < 0.3){ wrap.scrollLeft = target; return; }
-          wrap.scrollLeft += diff * 0.22;
+          if(Math.abs(over) < 0.3){ over=0; wrap.style.transform=''; return; }
+          over *= 0.75;
+          wrap.style.transform = `translateX(${-over}px)`;
           rafId = requestAnimationFrame(tick);
         })();
       }
 
       wrap.addEventListener('mousedown', e=>{
-        isDown = true; wrap.classList.add('grabbing');
-        startX = e.pageX; startScroll = wrap.scrollLeft;
+        isDown=true; wrap.classList.add('grabbing');
+        startX=e.pageX; startScroll=wrap.scrollLeft+over;
         cancelAnimationFrame(rafId);
       });
-      const release = ()=>{ if(!isDown) return; isDown=false; wrap.classList.remove('grabbing'); springBack(); };
+      const release = ()=>{ if(!isDown)return; isDown=false; wrap.classList.remove('grabbing'); springBack(); };
       wrap.addEventListener('mouseup', release);
       wrap.addEventListener('mouseleave', release);
       wrap.addEventListener('mousemove', e=>{
-        if(!isDown) return;
+        if(!isDown)return;
         e.preventDefault();
-        const delta = startX - e.pageX;
-        wrap.scrollLeft = rubberScroll(startScroll + delta);
+        setPos(startScroll + (startX - e.pageX));
       });
     }
   }

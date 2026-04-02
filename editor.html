@@ -976,6 +976,17 @@
       text-align: center;
       transition: color .15s;
     }
+    .ai-edit-pill-lines {
+      font-size: 9px;
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: var(--mono);
+      min-width: 36px;
+      text-align: center;
+      transition: color .15s;
+    }
     .ai-edit-pill.streaming .ai-edit-pill-lines { color: var(--accent); }
     .ai-edit-pill-anim { display: flex; gap: 2px; align-items: center; margin-left: 1px; }
     .ai-edit-pill-anim span { width: 3px; height: 3px; border-radius: 50%; background: rgba(255, 255, 255, .3); animation: aiDot 1.1s infinite; }
@@ -1112,7 +1123,7 @@
       height: 38px;
       min-width: 38px;
       background: rgba(239, 68, 68, .12);
-      border: 1px solid rgba(239, 68, 68, .25);
+      border: none;
       border-radius: 50%;
       cursor: pointer;
       display: none;
@@ -1123,7 +1134,7 @@
       align-self: flex-end;
     }
     #aiStopBtn.show { display: flex; }
-    #aiStopBtn:hover { background: var(--err); border-color: var(--err); }
+    #aiStopBtn:hover { background: var(--err); }
 
     /* Attachment preview popup */
     #aiAttachPreview {
@@ -4058,25 +4069,21 @@ async function aiCallAPI() {
             saveNow();
 
             // Sequential page builds — detect missing pages
-            const isMultiPage = (_pendingSpec && _pendingSpec.is_multi_page) || (_pendingBrief && _pendingBrief.isMultiPage);
             const builtNames = new Set(collectedFiles.map(f => f.name));
 
-            // Build page list from spec/brief OR parse directly from the user's last message
-            let pageList = (_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [];
+            // 1. Get page list from spec/brief (only if they contain real .html filenames)
+            const specPages = ((_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [])
+              .filter(p => typeof p === 'string' && p.endsWith('.html'));
 
-            // Fallback: scan the conversation for explicitly named .html files
-            if (!pageList.length || !isMultiPage) {
-              const lastUserMsg = aiHistory.filter(m => m.role === 'user').slice(-3)
-                .map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join(' ');
-              const found = lastUserMsg.match(/[\w-]+\.html/g);
-              if (found && found.length > 1) pageList = [...new Set(found)];
-            }
+            // 2. Always scan last 3 user messages for explicit .html filenames
+            const lastUserMsgs = aiHistory.filter(m => m.role === 'user').slice(-3)
+              .map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join(' ');
+            const msgPages = (lastUserMsgs.match(/[\w-]+\.html/g) || []);
 
-            const missingPages = pageList
-              .map(p => {
-                if (!p.includes('.')) return p.toLowerCase().replace(/\s+/g, '-') + '.html';
-                return p;
-              })
+            // 3. Merge both sources, dedupe
+            const allPages = [...new Set([...specPages, ...msgPages])];
+
+            const missingPages = allPages
               .filter(p => p.endsWith('.html') && !builtNames.has(p) && p !== 'index.html');
 
             if (missingPages.length > 0) {

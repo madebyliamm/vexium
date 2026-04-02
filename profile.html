@@ -672,18 +672,11 @@
   }
 
   async function handlePfpUpload(e){
-    const file=e.target.files[0];if(!file||!sb||!myId)return;
-    try{
-      const ext=file.name.split('.').pop();
-      const path=`avatars/${myId}.${ext}`;
-      await sb.storage.from('avatars').upload(path,file,{upsert:true});
-      const{data:{publicUrl}}=sb.storage.from('avatars').getPublicUrl(path);
-      await sb.from('profiles').update({avatar_url:publicUrl}).eq('id',myId);
-      const img=document.getElementById('pfpImg');
-      img.src=publicUrl+'?t='+Date.now();img.style.display='';
-      document.getElementById('pfpInitial').style.display='none';
-      showToast('✓','Photo updated');
-    }catch(err){showToast('✗','Upload failed');}
+    const file=e.target.files[0];if(!file)return;
+    const url=URL.createObjectURL(file);
+    const img=document.getElementById('pfpImg');
+    img.src=url;img.style.display='';
+    document.getElementById('pfpInitial').style.display='none';
   }
 
   /* ── PRIVACY ── */

@@ -95,7 +95,7 @@
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 
     .proj-card{background:var(--s1);border:1px solid transparent;border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
-    .proj-card:hover{border-color:rgba(255,255,255,.07);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .proj-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
     .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
@@ -216,6 +216,36 @@
     .friends-section{margin-bottom:clamp(28px,3vw,44px)}
     .friends-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
     .friends-title{font-size:clamp(13px,1.1vw,16px);font-weight:700;letter-spacing:-.2px}
+
+    /* Dropdown */
+    .friends-dd-wrap{position:relative}
+    .friends-dd-btn{
+      display:flex;align-items:center;gap:5px;
+      background:none;border:none;cursor:pointer;
+      font-size:clamp(13px,1.1vw,16px);font-weight:700;
+      color:var(--text);font-family:var(--sans);
+      padding:0;transition:opacity .15s;
+    }
+    .friends-dd-btn:hover{opacity:.75}
+    .friends-dd-btn svg{opacity:.5}
+    .friends-dd-menu{
+      position:absolute;top:calc(100% + 6px);left:0;
+      background:var(--s2);border:1px solid var(--b2);
+      border-radius:10px;padding:4px;min-width:160px;
+      z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);
+      display:none;
+    }
+    .friends-dd-menu.show{display:block}
+    .friends-dd-opt{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 10px;border-radius:7px;cursor:pointer;
+      font-size:13px;font-weight:600;color:var(--sub);
+      transition:background .1s,color .1s;
+    }
+    .friends-dd-opt:hover{background:var(--b2);color:var(--text)}
+    .friends-dd-opt.active{color:var(--text);background:var(--b1)}
+    .friends-dd-count{font-size:11px;font-weight:700;color:var(--sub);background:var(--b2);padding:1px 6px;border-radius:20px}
+
     .friends-see-all{font-size:11px;font-weight:600;color:var(--sub);text-decoration:none;transition:color .15s}
     .friends-see-all:hover{color:var(--text)}
     .friends-track-wrap{overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none;margin:0 -4px;padding:4px}
@@ -310,8 +340,22 @@
   <!-- Friends / People slider -->
   <div class="friends-section" id="friendsSection" style="display:none">
     <div class="friends-head">
-      <div class="friends-title">People</div>
-      <a href="explore.html" class="friends-see-all">See all →</a>
+      <div class="friends-dd-wrap">
+        <button class="friends-dd-btn" id="friendsDdBtn" onclick="toggleFriendsDd(event)">
+          Friends <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="friends-dd-menu" id="friendsDdMenu">
+          <div class="friends-dd-opt active" data-mode="friends" onclick="setSliderMode('friends')">
+            <span>Friends</span><span class="friends-dd-count">0</span>
+          </div>
+          <div class="friends-dd-opt" data-mode="following" onclick="setSliderMode('following')">
+            <span>Following</span><span class="friends-dd-count">0</span>
+          </div>
+          <div class="friends-dd-opt" data-mode="followers" onclick="setSliderMode('followers')">
+            <span>Followers</span><span class="friends-dd-count">0</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="friends-track-wrap" id="friendsTrackWrap">
       <div class="friends-track" id="friendsTrack"></div>
@@ -474,14 +518,22 @@
   async function loadSocialGraph(){
     if(!sb||!session)return;
     try{
+      const myId=session.user.id;
       const[{data:fwing},{data:fwers}]=await Promise.all([
-        sb.from('follows').select('following_id,profiles!follows_following_id_fkey(username,display_name)').eq('follower_id',session.user.id),
-        sb.from('follows').select('follower_id,profiles!follows_follower_id_fkey(username,display_name)').eq('following_id',session.user.id)
+        sb.from('follows').select('following_id').eq('follower_id',myId),
+        sb.from('follows').select('follower_id').eq('following_id',myId)
       ]);
-      myFollowing=(fwing||[]).map(r=>({id:r.following_id,...r.profiles}));
-      myFollowers=(fwers||[]).map(r=>({id:r.follower_id,...r.profiles}));
-      renderFriendsSlider();
-    }catch(e){}
+      const followingIds=(fwing||[]).map(r=>r.following_id);
+      const followerIds=(fwers||[]).map(r=>r.follower_id);
+      const allIds=[...new Set([...followingIds,...followerIds])];
+      if(!allIds.length){renderFriendsSlider([],[],[]);return;}
+      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',allIds);
+      const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
+      myFollowing=followingIds.map(id=>pm[id]).filter(Boolean);
+      myFollowers=followerIds.map(id=>pm[id]).filter(Boolean);
+      const myFriends=myFollowing.filter(u=>followerIds.includes(u.id));
+      renderFriendsSlider(myFriends,myFollowing,myFollowers);
+    }catch(e){console.error('loadSocialGraph',e);}
   }
 
   async function loadProjects(){
@@ -998,6 +1050,7 @@
 
   function showSearchDrop(){document.getElementById('searchDrop').classList.add('show');}
   function hideSearchDrop(){document.getElementById('searchDrop').classList.remove('show');}
+  function goFriend(u){if(!u)return;location.href='profile.html?user='+encodeURIComponent(u);}
   function goProfile(u){hideSearchDrop();document.getElementById('tbSearchInput').value='';location.href='profile.html?user='+u;}
 
   /* ── NEW PROJECT MODAL ── */
@@ -1067,39 +1120,109 @@
   }
 
   /* ── FRIENDS SLIDER ── */
-  function renderFriendsSlider(){
+  let _sliderData = {friends:[], following:[], followers:[]};
+  let _sliderMode = 'friends';
+  let _dragInit = false;
+
+  function renderFriendsSlider(friends, following, followers){
+    if(friends !== undefined) _sliderData = {friends, following, followers};
     const section = document.getElementById('friendsSection');
     const track = document.getElementById('friendsTrack');
     if(!section || !track) return;
 
-    // Show people you follow as your friends list
-    const friends = myFollowing;
+    const list = _sliderData[_sliderMode] || [];
 
-    if(!friends.length) {
-      section.style.display = 'none';
-      return;
-    }
-
-    track.innerHTML = friends.map(u => {
-      const n = u.display_name || u.username || '?';
-      const initial = n.charAt(0).toUpperCase();
-      return `<a class="friend-card" href="profile.html?user=${encodeURIComponent(u.username||'')}">
-        <div class="friend-av">${initial}</div>
-        <div class="friend-name">${esc(n)}</div>
-        <div class="friend-handle">@${esc(u.username||'')}</div>
-      </a>`;
-    }).join('');
-
+    // Always show section; hide only if all three lists are empty
+    const total = _sliderData.friends.length + _sliderData.following.length + _sliderData.followers.length;
+    if(total === 0){ section.style.display='none'; return; }
     section.style.display = '';
 
-    // Drag-to-scroll
-    const wrap = document.getElementById('friendsTrackWrap');
-    let isDown=false, startX=0, scrollLeft=0;
-    wrap.addEventListener('mousedown', e=>{isDown=true;wrap.classList.add('grabbing');startX=e.pageX-wrap.offsetLeft;scrollLeft=wrap.scrollLeft;});
-    wrap.addEventListener('mouseleave', ()=>{isDown=false;wrap.classList.remove('grabbing');});
-    wrap.addEventListener('mouseup', ()=>{isDown=false;wrap.classList.remove('grabbing');});
-    wrap.addEventListener('mousemove', e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-wrap.offsetLeft;wrap.scrollLeft=scrollLeft-(x-startX);});
+    // Update dropdown counts
+    const countMap = {friends:_sliderData.friends.length, following:_sliderData.following.length, followers:_sliderData.followers.length};
+    document.querySelectorAll('.friends-dd-opt').forEach(el=>{
+      const mode = el.dataset.mode;
+      el.querySelector('.friends-dd-count').textContent = countMap[mode];
+      el.classList.toggle('active', mode === _sliderMode);
+    });
+    // Update button label
+    const labels = {friends:'Friends', following:'Following', followers:'Followers'};
+    const btn = document.getElementById('friendsDdBtn');
+    if(btn) btn.innerHTML = labels[_sliderMode] + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+    if(!list.length){
+      track.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:10px 4px">None yet.</div>';
+    } else {
+      track.innerHTML = list.map(u => {
+        const n = u.display_name || u.username || '?';
+        return `<div class="friend-card" onclick="goFriend('${esc(u.username||'')}')">
+          <div class="friend-av">${esc(n.charAt(0).toUpperCase())}</div>
+          <div class="friend-name">${esc(n)}</div>
+          <div class="friend-handle">@${esc(u.username||'')}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Init drag-to-scroll with rubber-band snap-back once
+    if(!_dragInit){
+      _dragInit = true;
+      const wrap = document.getElementById('friendsTrackWrap');
+      let isDown=false, startX=0, startScroll=0, rafId=null;
+
+      // Rubber coefficient — lower = more resistance
+      const RUBBER = 0.35;
+
+      function maxScroll(){ return Math.max(0, wrap.scrollWidth - wrap.clientWidth); }
+
+      function rubberScroll(raw){
+        const max = maxScroll();
+        if(raw < 0)       return raw * RUBBER;          // resist left overscroll
+        if(raw > max)     return max + (raw - max) * RUBBER; // resist right overscroll
+        return raw;
+      }
+
+      function springBack(){
+        const max = maxScroll();
+        const target = wrap.scrollLeft < 0 ? 0 : wrap.scrollLeft > max ? max : null;
+        if(target === null) return;
+        cancelAnimationFrame(rafId);
+        (function tick(){
+          const diff = target - wrap.scrollLeft;
+          if(Math.abs(diff) < 0.3){ wrap.scrollLeft = target; return; }
+          wrap.scrollLeft += diff * 0.22;
+          rafId = requestAnimationFrame(tick);
+        })();
+      }
+
+      wrap.addEventListener('mousedown', e=>{
+        isDown = true; wrap.classList.add('grabbing');
+        startX = e.pageX; startScroll = wrap.scrollLeft;
+        cancelAnimationFrame(rafId);
+      });
+      const release = ()=>{ if(!isDown) return; isDown=false; wrap.classList.remove('grabbing'); springBack(); };
+      wrap.addEventListener('mouseup', release);
+      wrap.addEventListener('mouseleave', release);
+      wrap.addEventListener('mousemove', e=>{
+        if(!isDown) return;
+        e.preventDefault();
+        const delta = startX - e.pageX;
+        wrap.scrollLeft = rubberScroll(startScroll + delta);
+      });
+    }
   }
+
+  function setSliderMode(mode){
+    _sliderMode = mode;
+    document.getElementById('friendsDdMenu').classList.remove('show');
+    renderFriendsSlider();
+  }
+  function toggleFriendsDd(e){
+    e.stopPropagation();
+    document.getElementById('friendsDdMenu').classList.toggle('show');
+  }
+  document.addEventListener('click', ()=>{
+    const m = document.getElementById('friendsDdMenu');
+    if(m) m.classList.remove('show');
+  });
 
   window.addEventListener('load',init);
 </script>

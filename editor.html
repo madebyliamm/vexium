@@ -3791,7 +3791,7 @@ async function aiSend(fromBottom) {
   // Build from scratch — run readiness check first
   if (intent === 'build') {
     const hasExistingFiles = !isDefaultCode(fileSystem);
-    if (!hasExistingFiles && aiSessionMessageCount <= 2) {
+    if (!hasExistingFiles && aiSessionMessageCount <= 3) {
       const readinessRes = await fetchJSON({
         readiness_mode: true,
         files: fileSystem,
@@ -4364,12 +4364,6 @@ async function aiCallAPI() {
             });
             const target = row._contentWrap || row;
             target.appendChild(cardsEl);
-
-            // Render next step card if in step mode
-            if (_stepPlan && _stepPlan.needs_steps) {
-              renderNextStepCard(target);
-              updateStepHeader();
-            }
           }
 
           if (textEl) { textEl.classList.remove('ai-stream-cursor'); textEl.innerHTML = formatChatText(fullMessage); }
@@ -4378,6 +4372,12 @@ async function aiCallAPI() {
           meta.className = 'ai-msg-meta';
           meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
           (row._contentWrap || row).appendChild(meta);
+
+          // Render next step card if in step mode (after meta, always at bottom)
+          if (_stepPlan && _stepPlan.needs_steps && collectedFiles.length > 0) {
+            renderNextStepCard(row._contentWrap || row);
+            updateStepHeader();
+          }
 
           const historyContent = JSON.stringify({ message: fullMessage, files: collectedFiles });
           aiHistory.push({ role: 'assistant', content: historyContent });

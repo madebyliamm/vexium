@@ -3774,10 +3774,14 @@ async function aiSend(fromBottom) {
   const intentRes = await fetchJSON({
     intent_mode: true,
     files: fileSystem,
-    messages: [{ role: 'user', content: text }]
+    messages: [...aiHistory.slice(-4), { role: 'user', content: text }]
   });
 
-  const intent = intentRes?.intent || 'chat';
+  let intent = intentRes?.intent || 'chat';
+
+  // Override: short affirmation with no files = build (user confirmed after planning chat)
+  const isAffirmation = /^(yes|yeah|yep|sure|ok|okay|go|start|build|do it|let's go|let's start|go ahead|sounds good|perfect|great)\b/i.test(text.trim()) && text.trim().length < 40;
+  if (isAffirmation && isDefaultCode(fileSystem)) intent = 'build';
 
   // Pure conversation — questions, advice, strategy, brainstorming
   if (intent === 'chat') {

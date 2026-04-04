@@ -36,7 +36,7 @@
     /* search */
     .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:320px;margin:0 auto}
     .tb-search-ico{position:absolute;left:10px;width:13px;height:13px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none}
-    .tb-search-input{width:100%;background:var(--s1);border:0px solid var(--b2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;transition:border-color .2s,background .2s}
+    .tb-search-input{width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;transition:border-color .2s,background .2s}
     .tb-search-input:focus{border-color:rgba(79,110,247,.4);background:var(--b1)}
     .tb-search-input::placeholder{color:var(--sub)}
     .search-drop{position:absolute;top:calc(100% + 6px);left:0;min-width:240px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:6px;z-index:400;box-shadow:0 12px 40px rgba(0,0,0,.7);display:none}
@@ -103,9 +103,9 @@
     .pc-invite-actions{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,var(--s1) 80%,transparent);gap:7px;z-index:3}
     .proj-card:hover .pc-invite-actions{display:flex}
     .pc-invite-btn{flex:1;padding:7px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
-    .pc-invite-btn.accept{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+    .pc-invite-btn.accept{background:rgba(34,197,94,.15);color:#4ade80}
     .pc-invite-btn.accept:hover{background:rgba(34,197,94,.25)}
-    .pc-invite-btn.decline{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+    .pc-invite-btn.decline{background:rgba(239,68,68,.1);color:#f87171}
     .pc-invite-btn.decline:hover{background:rgba(239,68,68,.2)}
     /* collab status badges */
     .cl-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
@@ -385,8 +385,8 @@
     <div class="accept-modal-title" id="acceptTitle">Join this project?</div>
     <div class="accept-modal-sub" id="acceptSub">You've been invited to collaborate. Accept to open the project and join the team.</div>
     <div class="accept-modal-btns">
-      <button style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)" onclick="respondInvite(false)">Decline</button>
-      <button style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)" onclick="respondInvite(true)">Accept & Open</button>
+      <button style="background:rgba(239,68,68,.1);color:#f87171;border:none" onclick="respondInvite(false)">Decline</button>
+      <button style="background:rgba(34,197,94,.15);color:#4ade80;border:none" onclick="respondInvite(true)">Accept & Open</button>
     </div>
   </div>
 </div>

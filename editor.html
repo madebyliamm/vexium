@@ -3815,27 +3815,27 @@ async function aiSend(fromBottom) {
   _pendingBrief = null;
   _pendingSpec  = null;
   if (intent === 'build' && isDefaultCode(fileSystem)) {
-    try {
-      // Plan mode — decide if steps needed (cheap Haiku call)
-      const planRes = await fetchJSON({ plan_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
-      if (planRes && planRes.needs_steps && planRes.steps?.length > 1) {
-        _stepPlan = planRes;
-        _currentStep = 0;
-        // Show plan card instead of building immediately
-        aiHideTyping();
-        aiTyping = false;
-        aiSetGenerating(false);
-        renderStepPlanCard(planRes);
-        return;
-      }
+    // Plan mode — decide if steps needed
+    const planRes = await fetchJSON({ plan_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
+    console.log('[plan_mode result]', planRes);
+    if (planRes && planRes.needs_steps && planRes.steps?.length >= 2) {
+      _stepPlan = planRes;
+      _currentStep = 0;
+      aiHideTyping();
+      aiTyping = false;
+      aiSetGenerating(false);
+      renderStepPlanCard(planRes);
+      return;
+    }
 
+    try {
       _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
       if (_pendingBrief) {
         await new Promise(r => setTimeout(r, 400));
         _pendingSpec = await fetchJSON({ spec_mode: true, messages: aiHistory.filter(m => m.role === 'user'), brief: _pendingBrief });
         await new Promise(r => setTimeout(r, 400));
       }
-    } catch(e) {}
+    } catch(e) { console.error('[brief/spec error]', e); }
   }
 
   await aiCallAPI();

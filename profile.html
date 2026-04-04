@@ -807,17 +807,45 @@
   async function loadShared(){
     if(!sb||!myId)return;
     try{
-      const{data}=await sb.from('project_members').select('project_id,projects(*)').eq('user_id',myId);
-      const shared=(data||[]).map(r=>r.projects).filter(Boolean);
-      if(!shared.length)return;
+      const{data}=await sb.from('project_members').select('project_id,status,projects(*)').eq('user_id',myId).neq('status','declined');
+      const rows=(data||[]).filter(r=>r.projects);
+      if(!rows.length)return;
       const grid=document.getElementById('sharedGrid');
       document.querySelector('#paneShared .empty').classList.remove('show');
-      grid.innerHTML=shared.map(p=>`<div class="proj-card" onclick="openShared('${p.id}')">
-        <div class="pc-emoji">${p.emoji||'💻'}</div>
-        <div class="pc-name">${esc(p.name||'Untitled')}</div>
-        <div class="pc-meta"><span>Shared</span></div>
-      </div>`).join('');
+      grid.innerHTML=rows.map(r=>{
+        const p=r.projects;
+        const isPending=r.status==='pending';
+        const fc=Object.keys(p.files||{}).length;
+        const clickHandler=isPending?'':`onclick="openShared('${p.id}')"`;  
+        const pendingBadge=isPending?'<div style="position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(251,191,36,.12);color:#fbbf24">Pending</div>':'';
+        const inviteActions=isPending?`
+          <div class="pc-invite-actions" style="display:flex">
+            <button class="pc-invite-btn decline" onclick="sharedDecline(event,'${p.id}')">Decline</button>
+            <button class="pc-invite-btn accept" onclick="sharedAccept(event,'${p.id}')">Accept</button>
+          </div>`:'';
+        return `<div class="proj-card" ${clickHandler} style="${isPending?'cursor:default':''}">
+          ${pendingBadge}
+          <div class="pc-emoji">${p.emoji||'💻'}</div>
+          <div class="pc-name">${esc(p.name||'Untitled')}</div>
+          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Invited':'Collaborator'}</span></div>
+          ${inviteActions}
+        </div>`;
+      }).join('');
     }catch(e){}
+  }
+
+  async function sharedAccept(e,id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',myId);
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
+  }
+  async function sharedDecline(e,id){
+    e.stopPropagation();
+    if(!sb||!session)return;
+    await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',myId);
+    loadShared();
   }
 
   function cardClick(e,id){

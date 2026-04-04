@@ -997,8 +997,136 @@
     .ai-edit-pill.done .ai-edit-pill-dot { box-shadow: 0 0 5px currentColor; }
     .ai-edit-pill.done .ai-edit-pill-lines { color: #4ade80; }
 
-    /* Typing indicator */
-    @keyframes aiDot { 0%, 80%, 100% { transform: scale(.8); opacity: .3; } 40% { transform: scale(1.2); opacity: 1; } }
+    /* ── STEP UI ─────────────────────────────────────────────────────────── */
+    #aiStepHeader {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 2px;
+      flex-shrink: 0;
+    }
+    #aiStepHeader.show { display: flex; }
+    .ai-step-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: .04em;
+      padding: 3px 10px;
+      border-radius: var(--r-sm);
+      transition: background .12s, color .12s;
+      user-select: none;
+    }
+    .ai-step-label:hover { background: var(--surface2); color: var(--text); }
+    .ai-step-dropdown {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 8px 10px;
+      margin-top: 4px;
+      width: calc(100% - 32px);
+      max-width: 360px;
+    }
+    .ai-step-dropdown.show { display: block; }
+    .ai-step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .ai-step-row:last-child { border-bottom: none; }
+    .ai-step-row-num {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      min-width: 16px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+    .ai-step-row-num.active { color: var(--accent); }
+    .ai-step-row-title { font-weight: 700; color: var(--text); line-height: 1.4; }
+    .ai-step-row-title.done { color: var(--muted); text-decoration: line-through; }
+    .ai-step-row-desc { font-size: 10px; color: var(--muted); margin-top: 1px; line-height: 1.4; }
+
+    /* Next step card */
+    .ai-next-step-card {
+      margin: 8px 0 4px;
+      padding: 12px 14px;
+      background: rgba(79,110,247,.05);
+      border: 1px solid rgba(79,110,247,.12);
+      border-radius: var(--r-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .ai-next-step-info { display: flex; flex-direction: column; gap: 2px; }
+    .ai-next-step-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .ai-next-step-title { font-size: 12px; font-weight: 700; color: var(--text); }
+    .ai-next-step-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--sans);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity .12s;
+    }
+    .ai-next-step-btn:hover { opacity: .88; }
+
+    /* Confirm popup */
+    #aiStepConfirm {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+    #aiStepConfirm.show { display: flex; }
+    .ai-step-confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 24px 28px;
+      width: 320px;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.7);
+    }
+    .ai-step-confirm-title { font-size: 15px; font-weight: 800; margin-bottom: 6px; letter-spacing: -.3px; }
+    .ai-step-confirm-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .ai-step-confirm-btns { display: flex; gap: 8px; justify-content: center; }
+    .ai-step-confirm-go { padding: 9px 22px; border-radius: 999px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; }
+    .ai-step-confirm-go:hover { opacity: .88; }
+    .ai-step-confirm-cancel { padding: 9px 18px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all .12s; }
+    .ai-step-confirm-cancel:hover { color: var(--text); }
+
+    /* Step plan card (shown before first step starts) */
+    .ai-step-plan-card {
+      margin: 8px 0 4px;
+      padding: 14px 16px;
+      background: rgba(79,110,247,.04);
+      border: 1px solid rgba(79,110,247,.1);
+      border-radius: var(--r-lg);
+    }
+    .ai-step-plan-head { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+    .ai-step-plan-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .ai-step-plan-item:last-of-type { border-bottom: none; margin-bottom: 10px; }
+    .ai-step-plan-num { font-size: 10px; font-weight: 800; color: var(--muted); min-width: 16px; flex-shrink: 0; }
+    .ai-step-plan-title { font-weight: 700; color: var(--text); }
+    .ai-step-plan-btn { width: 100%; padding: 8px; border-radius: 999px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border: none; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; margin-top: 4px; }
+    .ai-step-plan-btn:hover { opacity: .88; }
     .ai-typing { display: flex; align-items: center; gap: 5px; padding: 16px 0; width: var(--chat-w); margin: 0 auto; }
     .ai-typing-avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 12px rgba(79, 110, 247, .4); }
     .ai-typing-avatar svg { width: 12px; height: 12px; fill: #fff; }
@@ -1777,7 +1905,13 @@
 
         <!-- Chat area -->
         <div id="aiChatWrap" style="position:relative">
-          <div id="aiMessages"></div>
+          <!-- Step header -->
+        <div id="aiStepHeader">
+          <div class="ai-step-label" id="aiStepLabel" onclick="toggleStepDropdown()">Step 1</div>
+          <div class="ai-step-dropdown" id="aiStepDropdown"></div>
+        </div>
+
+        <div id="aiMessages"></div>
           <button id="aiScrollBtn" onclick="aiScrollToBottom()" title="Scroll to bottom">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
@@ -3594,6 +3728,8 @@ function aiClosePreview() { document.getElementById('aiAttachPreview').classList
 // ── SEND — with readiness check ───────────────────────────────────────────────
 let _pendingBrief = null;
 let _pendingSpec  = null;
+let _stepPlan     = null;  // { needs_steps, steps: [{title, description, pages}] }
+let _currentStep  = 0;     // 0-indexed
 
 async function aiSend(fromBottom) {
   const input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
@@ -3677,6 +3813,19 @@ async function aiSend(fromBottom) {
   _pendingSpec  = null;
   if (intent === 'build' && isDefaultCode(fileSystem)) {
     try {
+      // Plan mode — decide if steps needed (cheap Haiku call)
+      const planRes = await fetchJSON({ plan_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
+      if (planRes && planRes.needs_steps && planRes.steps?.length > 1) {
+        _stepPlan = planRes;
+        _currentStep = 0;
+        // Show plan card instead of building immediately
+        aiHideTyping();
+        aiTyping = false;
+        aiSetGenerating(false);
+        renderStepPlanCard(planRes);
+        return;
+      }
+
       _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
       if (_pendingBrief) {
         await new Promise(r => setTimeout(r, 400));
@@ -3908,6 +4057,116 @@ function usageWarnCancel() {
 }
 
 // ── MAIN API CALL ─────────────────────────────────────────────────────────────
+// ── STEP SYSTEM ───────────────────────────────────────────────────────────────
+
+function renderStepPlanCard(plan) {
+  const row = aiAddAI('', []);
+  const target = row._contentWrap || row;
+  const card = document.createElement('div');
+  card.className = 'ai-step-plan-card';
+  const stepsHtml = plan.steps.map((s, i) =>
+    `<div class="ai-step-plan-item">
+      <div class="ai-step-plan-num">${i + 1}</div>
+      <div class="ai-step-plan-title">${escHtml(s.title)}</div>
+    </div>`
+  ).join('');
+  card.innerHTML =
+    '<div class="ai-step-plan-head">Here\'s how I\'ll build this</div>' +
+    stepsHtml +
+    '<button class="ai-step-plan-btn" onclick="startStep(0)">Start building →</button>';
+  target.appendChild(card);
+  scrollIfSticky();
+}
+
+async function startStep(stepIndex) {
+  if (!_stepPlan) return;
+  _currentStep = stepIndex;
+  const step = _stepPlan.steps[stepIndex];
+  if (!step) return;
+
+  // Update step header
+  updateStepHeader();
+
+  // Remove plan card / next-step card if present
+  document.querySelectorAll('.ai-step-plan-card, .ai-next-step-card').forEach(el => el.remove());
+
+  // Inject step context into the build
+  const stepCtx = `[STEP ${stepIndex + 1} of ${_stepPlan.steps.length}: ${step.title}]\n${step.description || ''}\nPages to build this step: ${(step.pages || []).join(', ') || 'index.html'}`;
+
+  // Run brief + spec + build with step context appended
+  _pendingBrief = null; _pendingSpec = null;
+  try {
+    const msgs = [...aiHistory.filter(m => m.role === 'user'), { role: 'user', content: stepCtx }];
+    _pendingBrief = await fetchJSON({ brief_mode: true, messages: msgs });
+    if (_pendingBrief) {
+      await new Promise(r => setTimeout(r, 300));
+      _pendingSpec = await fetchJSON({ spec_mode: true, messages: msgs, brief: _pendingBrief });
+      await new Promise(r => setTimeout(r, 300));
+    }
+  } catch(e) {}
+
+  aiTyping = true;
+  aiSetGenerating(true);
+  await aiCallAPI();
+}
+
+function updateStepHeader() {
+  if (!_stepPlan || !_stepPlan.needs_steps) return;
+  const header = document.getElementById('aiStepHeader');
+  const label  = document.getElementById('aiStepLabel');
+  const dropdown = document.getElementById('aiStepDropdown');
+  header.classList.add('show');
+  label.textContent = 'Step ' + (_currentStep + 1) + ' of ' + _stepPlan.steps.length;
+  dropdown.innerHTML = _stepPlan.steps.map((s, i) => `
+    <div class="ai-step-row">
+      <div class="ai-step-row-num ${i === _currentStep ? 'active' : ''}">${i + 1}</div>
+      <div>
+        <div class="ai-step-row-title ${i < _currentStep ? 'done' : ''}">${escHtml(s.title)}</div>
+        <div class="ai-step-row-desc">${escHtml(s.description || '')}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleStepDropdown() {
+  document.getElementById('aiStepDropdown').classList.toggle('show');
+}
+
+function renderNextStepCard(targetEl) {
+  if (!_stepPlan) return;
+  const nextStep = _stepPlan.steps[_currentStep + 1];
+  if (!nextStep) return; // no more steps
+  const card = document.createElement('div');
+  card.className = 'ai-next-step-card';
+  card.innerHTML =
+    '<div class="ai-next-step-info">' +
+      '<div class="ai-next-step-label">Next step</div>' +
+      '<div class="ai-next-step-title">' + escHtml(nextStep.title) + '</div>' +
+    '</div>' +
+    '<button class="ai-next-step-btn" onclick="openStepConfirm()">Next step →</button>';
+  targetEl.appendChild(card);
+  scrollIfSticky();
+}
+
+function openStepConfirm() {
+  if (!_stepPlan) return;
+  const next = _stepPlan.steps[_currentStep + 1];
+  if (!next) return;
+  document.getElementById('aiStepConfirmTitle').textContent = 'Continue to: ' + next.title + '?';
+  document.getElementById('aiStepConfirmSub').textContent = next.description || 'The AI will start building the next part.';
+  document.getElementById('aiStepConfirm').classList.add('show');
+}
+
+function closeStepConfirm() {
+  document.getElementById('aiStepConfirm').classList.remove('show');
+}
+
+async function confirmNextStep() {
+  closeStepConfirm();
+  await startStep(_currentStep + 1);
+}
+
+// ── STEP SYSTEM END ───────────────────────────────────────────────────────────
+
 async function aiCallAPI() {
   let textEl       = null;
   let fullMessage  = '';
@@ -4105,6 +4364,12 @@ async function aiCallAPI() {
             });
             const target = row._contentWrap || row;
             target.appendChild(cardsEl);
+
+            // Render next step card if in step mode
+            if (_stepPlan && _stepPlan.needs_steps) {
+              renderNextStepCard(target);
+              updateStepHeader();
+            }
           }
 
           if (textEl) { textEl.classList.remove('ai-stream-cursor'); textEl.innerHTML = formatChatText(fullMessage); }
@@ -4288,5 +4553,17 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
 window.addEventListener('load', init);
 </script>
+
+<!-- Step confirm popup -->
+<div id="aiStepConfirm">
+  <div class="ai-step-confirm-box">
+    <div class="ai-step-confirm-title" id="aiStepConfirmTitle">Continue to next step?</div>
+    <div class="ai-step-confirm-sub" id="aiStepConfirmSub">The AI will start building the next part of your project.</div>
+    <div class="ai-step-confirm-btns">
+      <button class="ai-step-confirm-cancel" onclick="closeStepConfirm()">Not yet</button>
+      <button class="ai-step-confirm-go" onclick="confirmNextStep()">Next step →</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

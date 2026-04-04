@@ -891,7 +891,7 @@
     .ai-text h1 { font-size: 20px; font-weight: 800; margin: 16px 0 8px; letter-spacing: -.3px; }
     .ai-text h2 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; letter-spacing: -.2px; }
     .ai-text h3 { font-size: 14px; font-weight: 700; margin: 12px 0 4px; }
-    .ai-text strong { font-weight: 700; color: #c4b5fd; }
+    .ai-text strong { font-weight: 700; color: var(--text); }
     .ai-text em { font-style: italic; color: rgba(255, 255, 255, .8); }
     .ai-text code { font-family: var(--mono); font-size: 12px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .1); border-radius: 5px; padding: 1px 6px; color: #a5b4fc; }
     .ai-text pre { background: rgba(0, 0, 0, .35); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 14px 16px; overflow-x: auto; margin: 10px 0; }
@@ -3929,11 +3929,15 @@ async function aiConvoMode() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 async function aiChatMode(suggestedQuestions) {
-  // Build a message that asks the questions naturally
-  const questionText = suggestedQuestions.join('\n\n');
+  // Ask questions naturally using convo_mode so the AI has full context
+  const questionText = suggestedQuestions.length === 1
+    ? suggestedQuestions[0]
+    : suggestedQuestions.join(' Also, ');
+
+  // Inject the questions as context for convo_mode to ask naturally
   const chatMessages = [
-    ...aiHistory,
-    { role: 'user', content: 'Ask these questions in a single natural message (combine them smoothly if there are two): ' + questionText }
+    ...aiHistory.filter(m => m.role === 'user'),
+    { role: 'user', content: '__CLARIFY__: ' + questionText }
   ];
 
   aiSetGenerating(true);

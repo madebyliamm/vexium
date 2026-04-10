@@ -3761,6 +3761,9 @@ async function aiSend(fromBottom) {
   // If no files exist and AI couldn't determine intent, default to build
   if (intent === 'chat' && isDefaultCode(fileSystem) && aiHistory.length >= 4) intent = 'build';
 
+  // If files exist and intent is chat, force edit — never route code requests to convo mode
+  if (intent === 'chat' && !isDefaultCode(fileSystem)) intent = 'edit';
+
   // Pure conversation — questions, advice, strategy, brainstorming
   if (intent === 'chat') {
     aiHideTyping();

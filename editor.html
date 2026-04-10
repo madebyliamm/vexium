@@ -4182,6 +4182,7 @@ async function aiCallAPI() {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     if (!response.body) throw new Error('No response body');
 
+    console.log('[FETCH] status:', response.status, 'type:', response.headers.get('content-type'));
     aiHideTyping();
 
     // Create the AI response row

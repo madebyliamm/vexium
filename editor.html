@@ -20,48 +20,35 @@
        DESIGN TOKENS
     ───────────────────────────────────────────── */
     :root {
-      /* Surfaces */
-      --bg:       #020209;
-      --surface:  #04040e;
-      --surface2: #07071a;
-      --border:   #0e0e22;
-      --border2:  #16162a;
-      --border3:  #20203a;
-
-      /* Accent */
-      --accent:   #4f6ef7;
-      --accent2:  #9b79fc;
-
-      /* Text */
-      --text:     #f0f0ff;
-      --muted:    #5555a0;
-
-      /* Status */
-      --err:      #ef4444;
-      --warn:     #f59e0b;
-      --ok:       #22c55e;
-
-      /* Type */
+      --bg:       #0a0a0a;
+      --surface:  #141414;
+      --surface2: #1c1c1c;
+      --border:   #262626;
+      --border2:  #333333;
+      --border3:  #444444;
+      --accent:   #ffffff;
+      --accent2:  #888888;
+      --text:     #ffffff;
+      --muted:    #666666;
+      --err:      #f87171;
+      --warn:     #fbbf24;
+      --ok:       #4ade80;
       --sans:  'Plus Jakarta Sans', sans-serif;
       --mono:  'JetBrains Mono', 'Fira Code', monospace;
-
-      /* Radii */
       --r-sm:  6px;
       --r-md:  10px;
       --r-lg:  14px;
       --r-xl:  20px;
       --r-full: 999px;
-
-      /* Transitions */
       --t-fast:   100ms ease;
       --t-normal: 200ms ease;
-
-      /* Z layers */
       --z-topbar:  50;
       --z-overlay: 500;
       --z-modal:   2000;
       --z-toast:   9999;
     }
+
+
 
     html, body {
       height: 100%;
@@ -69,6 +56,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
     }
 
     /* Scrollbar */
@@ -81,13 +69,13 @@
        TOPBAR
     ───────────────────────────────────────────── */
     #topbar {
-      height: 44px;
+      height: 48px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 clamp(8px, 1.5vw, 14px);
-      gap: clamp(6px, 1vw, 10px);
+      padding: 0 clamp(12px, 2vw, 24px);
+      gap: clamp(6px, 1vw, 12px);
       flex-shrink: 0;
       z-index: var(--z-topbar);
       position: relative;
@@ -101,20 +89,18 @@
       flex-shrink: 0;
     }
     .tb-logo img {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 4px;
     }
     .tb-logo-name {
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text);
+      letter-spacing: -.01em;
     }
     .tb-logo-name span {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--muted);
     }
 
     /* Separator */
@@ -239,7 +225,7 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -669,7 +655,7 @@
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -716,7 +702,7 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -875,7 +861,7 @@
       height: 22px;
       border-radius: 50%;
       flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -951,8 +937,8 @@
       gap: 6px;
       padding: 5px 12px 5px 9px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid rgba(255, 255, 255, .07);
+      background: rgba(255, 255, 255, .06);
+      border: none;
       font-size: 11px;
       font-weight: 600;
       font-family: var(--mono);
@@ -960,8 +946,8 @@
       transition: all var(--t-fast);
       user-select: none;
     }
-    .ai-edit-pill:hover { background: rgba(255, 255, 255, .07); border-color: rgba(255, 255, 255, .13); transform: translateY(-1px); }
-    .ai-edit-pill.active { background: rgba(79, 110, 247, .1); border-color: rgba(79, 110, 247, .3); }
+    .ai-edit-pill:hover { background: rgba(255, 255, 255, .1); transform: translateY(-1px); }
+    .ai-edit-pill.active { background: rgba(79, 110, 247, .1); }
     .ai-edit-pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; transition: box-shadow .3s; }
     /* Live line count inside pill */
     .ai-edit-pill-name { color: rgba(255,255,255,.75); }
@@ -993,7 +979,7 @@
     .ai-edit-pill-anim span:nth-child(2) { animation-delay: .18s; }
     .ai-edit-pill-anim span:nth-child(3) { animation-delay: .36s; }
     .ai-edit-pill.done .ai-edit-pill-anim { display: none; }
-    .ai-edit-pill.done { border-color: rgba(74, 222, 128, .25); background: rgba(74, 222, 128, .05); }
+    .ai-edit-pill.done { background: rgba(74, 222, 128, .08); }
     .ai-edit-pill.done .ai-edit-pill-dot { box-shadow: 0 0 5px currentColor; }
     .ai-edit-pill.done .ai-edit-pill-lines { color: #4ade80; }
 
@@ -1069,7 +1055,7 @@
     .ai-next-step-btn {
       padding: 6px 14px;
       border-radius: 999px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       border: none;
       color: #fff;
       font-size: 11px;
@@ -1231,7 +1217,7 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: var(--accent);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -2271,14 +2257,14 @@ function loadMonaco() {
         { token: 'number',          foreground: 'fbbf24' },
       ],
       colors: {
-        'editor.background':              '#020209',
+        'editor.background':              '#0a0a0a',
         'editor.foreground':              '#e0e0f8',
         'editorLineNumber.foreground':    '#14142a',
         'editorLineNumber.activeForeground': '#2a2a50',
         'editor.lineHighlightBackground': '#08081880',
-        'editor.selectionBackground':     '#4f6ef755',
-        'editorCursor.foreground':        '#9b79fc',
-        'editorGutter.background':        '#020209',
+        'editor.selectionBackground':     '#ffffff22',
+        'editorCursor.foreground':        '#ffffff',
+        'editorGutter.background':        '#0a0a0a',
         'editorIndentGuide.background':   '#0a0a20',
         'editorWidget.background':        '#06060f',
         'editorSuggestWidget.background': '#06060f',

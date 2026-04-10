@@ -3756,7 +3756,7 @@ async function aiSend(fromBottom) {
     messages: [...aiHistory.slice(-4), { role: 'user', content: text }]
   });
 
-  let intent = intentRes?.intent || 'chat';
+  let intent = intentRes?.intent || (isDefaultCode(fileSystem) ? 'build' : 'edit');
 
   // If no files exist and AI couldn't determine intent, default to build
   if (intent === 'chat' && isDefaultCode(fileSystem) && aiHistory.length >= 4) intent = 'build';

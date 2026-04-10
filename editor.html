@@ -4220,6 +4220,8 @@ async function aiCallAPI() {
         let data;
         try { data = JSON.parse(dataStr); } catch(e) { continue; }
 
+        console.log('[SSE]', eventType, JSON.stringify(data).slice(0,80));
+
         if (eventType === 'start') aiHideTyping();
 
         if (eventType === 'delta' && data.text) {
@@ -4386,8 +4388,10 @@ async function aiCallAPI() {
 
     while (true) {
       const chunk = await reader.read();
-      if (chunk.done) break;
-      buf += decoder.decode(chunk.value, { stream: true });
+      if (chunk.done) { console.log('[STREAM] done'); break; }
+      const text = decoder.decode(chunk.value, { stream: true });
+      console.log('[CHUNK]', JSON.stringify(text.slice(0, 200)));
+      buf += text;
       processBuffer();
     }
     buf += '\n\n';

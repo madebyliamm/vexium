@@ -1270,21 +1270,13 @@
     #aiAttachPreviewBody pre { font-family: var(--mono); font-size: 12px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin: 0; }
 
     /* Critique card */
-    .ai-critique { margin: 10px 0 4px; padding: 14px 16px; background: rgba(79, 110, 247, .05); border: 1px solid rgba(79, 110, 247, .12); border-radius: var(--r-lg); }
-    .ai-critique-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .ai-critique-score { font-size: 11px; font-weight: 800; letter-spacing: .3px; padding: 3px 9px; border-radius: var(--r-sm); }
-    .ai-critique-score.high { background: rgba(34, 197, 94, .1); color: #4ade80; }
-    .ai-critique-score.mid { background: rgba(251, 191, 36, .1); color: #fbbf24; }
-    .ai-critique-score.low { background: rgba(244, 63, 94, .1); color: #f43f5e; }
-    .ai-critique-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .3px; text-transform: uppercase; }
-    .ai-critique-section { margin-bottom: 8px; }
-    .ai-critique-section:last-child { margin-bottom: 0; }
-    .ai-critique-section-title { font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-    .ai-critique-item { font-size: 12px; color: var(--text); line-height: 1.5; padding: 3px 0; display: flex; gap: 6px; }
-    .ai-critique-item::before { content: '·'; color: var(--accent); font-weight: 900; flex-shrink: 0; }
-    .ai-critique-improve .ai-critique-item::before { color: #fbbf24; }
-    .ai-critique-fix-btn { margin-top: 10px; padding: 7px 14px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--sans); box-shadow: 0 0 14px rgba(79, 110, 247, .25); transition: opacity .12s; }
-    .ai-critique-fix-btn:hover { opacity: .88; }
+    .ai-critique { margin: 10px 0 4px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); }
+    .ai-critique-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 12px; }
+    .ai-critique-item { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.55; padding: 6px 0; display: flex; gap: 8px; align-items: flex-start; border-bottom: 1px solid var(--border); }
+    .ai-critique-item:last-of-type { border-bottom: none; }
+    .ai-critique-item::before { content: '·'; color: var(--muted); font-weight: 900; font-size: 18px; line-height: 1.1; flex-shrink: 0; }
+    .ai-critique-fix-btn { margin-top: 14px; padding: 6px 16px; border-radius: var(--r-full); background: var(--border2); border: none; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: background var(--t-fast); }
+    .ai-critique-fix-btn:hover { background: var(--border3); }
 
     /* ─────────────────────────────────────────────
        RIGHT PANEL (Preview + Console)
@@ -3612,22 +3604,19 @@ function aiMarkPillDone(name) {
 // ── CRITIQUE ──────────────────────────────────────────────────────────────────
 function renderCritique(critique, targetEl) {
   if (!critique || !targetEl) return;
-  const score      = critique.score || 0;
-  const scoreClass = score >= 8 ? 'high' : score >= 6 ? 'mid' : 'low';
-  const strengths    = (critique.strengths || []).map(s => '<div class="ai-critique-item">' + escHtml(s) + '</div>').join('');
   const improvements = (critique.improvements || []).map(s => '<div class="ai-critique-item">' + escHtml(s) + '</div>').join('');
-  const fixBtn       = improvements ? '<button class="ai-critique-fix-btn" onclick="aiApplyImprovements(this)">Apply more improvements</button>' : '';
+  if (!improvements) return;
   const card = document.createElement('div');
   card.className = 'ai-critique';
   card.innerHTML =
-    '<div class="ai-critique-head"><span class="ai-critique-score ' + scoreClass + '">' + score + '/10</span><span class="ai-critique-label">Design critique</span></div>' +
-    (strengths    ? '<div class="ai-critique-section"><div class="ai-critique-section-title">What worked</div>' + strengths + '</div>' : '') +
-    (improvements ? '<div class="ai-critique-section ai-critique-improve"><div class="ai-critique-section-title">I\'d improve</div>' + improvements + fixBtn + '</div>' : '');
+    '<div class="ai-critique-head">Improvements</div>' +
+    improvements +
+    '<button class="ai-critique-fix-btn" onclick="aiApplyImprovements(this)">Apply</button>';
   targetEl.appendChild(card);
 }
 
 function aiApplyImprovements(btn) {
-  const items = btn.closest('.ai-critique-improve').querySelectorAll('.ai-critique-item');
+  const items = btn.closest('.ai-critique').querySelectorAll('.ai-critique-item');
   const list  = Array.from(items).map(el => el.textContent.trim()).join('; ');
   const inp   = document.getElementById('aiBottomInput');
   if (inp) { inp.value = 'Apply these improvements: ' + list; aiAutoResize(inp); inp.focus(); }

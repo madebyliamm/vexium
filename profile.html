@@ -37,6 +37,22 @@
     .tb-logo-t{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em;white-space:nowrap}
     .tb-logo-t span{color:var(--sub)}
     .tb-r{display:flex;align-items:center;gap:clamp(4px,0.8vw,10px);margin-left:auto;flex-shrink:0}
+    /* search */
+    .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:260px;margin:0 16px}
+    .tb-search-ico{position:absolute;left:10px;width:13px;height:13px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none}
+    .tb-search-input{width:100%;background:var(--s1);border:none;border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;transition:background .2s}
+    .tb-search-input:focus{background:var(--b1)}
+    .tb-search-input::placeholder{color:var(--sub)}
+    .search-drop{position:absolute;top:calc(100% + 6px);left:0;min-width:240px;background:var(--bg);border:1px solid var(--b1);border-radius:10px;padding:4px;z-index:400;box-shadow:0 6px 20px rgba(0,0,0,.08);display:none}
+    .search-drop.show{display:block}
+    .sd-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:4px 8px 2px;margin-top:2px}
+    .search-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
+    .search-item:hover{background:var(--b2)}
+    .si-av{width:28px;height:28px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000 !important;flex-shrink:0}
+    .si-name{font-size:12px;font-weight:700;line-height:1.3}
+    .si-handle{font-size:10px;color:var(--sub)}
+    .si-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(79,110,247,.12);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .search-msg{font-size:12px;color:var(--sub);padding:12px;text-align:center}
     .tb-link{font-size:clamp(11px,0.9vw,13px);color:var(--sub);padding:6px 12px;border-radius:7px;font-weight:600;transition:all .15s}
     .tb-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
     .tb-pfp{width:28px;height:28px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:clamp(11px,1vw,14px);font-weight:800;color:#000 !important;flex-shrink:0;cursor:pointer}
@@ -296,6 +312,12 @@
     <img src="vexium_logo.png" alt="V"/>
     <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
   </a>
+  <div class="tb-search" id="tbSearchWrap">
+    <svg class="tb-search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="tb-search-input" id="tbSearchInput" placeholder="Find users…" autocomplete="off"
+      oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)"/>
+    <div class="search-drop" id="searchDrop"></div>
+  </div>
   <div class="tb-r">
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1024,6 +1046,33 @@
   function relTime(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
   let toastT;
   function showToast(ico,msg){clearTimeout(toastT);document.getElementById('toastIco').textContent=ico;document.getElementById('toastMsg').textContent=msg;document.getElementById('toast').classList.add('show');toastT=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400);}
+
+  /* ── SEARCH ── */
+  let searchTimer;
+  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q)doSearch(q);}
+  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();if(!q){hideSearchDrop();return;}searchTimer=setTimeout(()=>doSearch(q),260);}
+  function onSearchKey(e){if(e.key==='Escape'){hideSearchDrop();document.getElementById('tbSearchInput').blur();}}
+  async function doSearch(q){
+    const drop=document.getElementById('searchDrop');
+    drop.innerHTML='<div class="search-msg">Searching…</div>';showSearchDrop();
+    if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}
+    let html='';
+    try{
+      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(8);
+      if(data&&data.length)html=data.filter(p=>p.id!==myId).map(u=>searchItemHTML(u)).join('');
+    }catch(e){}
+    drop.innerHTML=html||'<div class="search-msg">No users found</div>';
+  }
+  function searchItemHTML(u){
+    const n=u.display_name||u.username||'?';
+    return`<div class="search-item" onclick="goProfile('${esc(u.username||'')}')">
+      <div class="si-av">${n.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="si-name">${esc(n)}</div><div class="si-handle">@${esc(u.username||'')}</div></div>
+    </div>`;
+  }
+  function showSearchDrop(){document.getElementById('searchDrop').classList.add('show');}
+  function hideSearchDrop(){document.getElementById('searchDrop').classList.remove('show');}
+  document.addEventListener('click',e=>{if(!e.target.closest('#tbSearchWrap'))hideSearchDrop();});
 
   window.addEventListener('load',init);
 </script>

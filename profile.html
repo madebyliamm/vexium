@@ -29,8 +29,8 @@
       height:48px;
       padding:0 clamp(12px,2vw,24px);
       display:flex;align-items:center;gap:clamp(6px,1vw,12px);
-      background:rgba(255,255,255,.92);backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(255,255,255,.04);
+      background:var(--s1);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--b1);
     }
     .tb-logo{display:flex;align-items:center;gap:7px;flex-shrink:0}
     .tb-logo img{width:20px;height:20px;border-radius:4px}
@@ -39,7 +39,7 @@
     .tb-r{display:flex;align-items:center;gap:clamp(4px,0.8vw,10px);margin-left:auto;flex-shrink:0}
     .tb-link{font-size:clamp(11px,0.9vw,13px);color:var(--sub);padding:6px 12px;border-radius:7px;font-weight:600;transition:all .15s}
     .tb-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
-    .tb-pfp{width:28px;height:28px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:clamp(11px,1vw,14px);font-weight:800;color:#fff;flex-shrink:0;cursor:pointer}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:clamp(11px,1vw,14px);font-weight:800;color:#000;flex-shrink:0;cursor:pointer}
 
     /* Bell */
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;transition:background .15s;flex-shrink:0}
@@ -58,7 +58,7 @@
     .notif-item:last-child{border-bottom:none}
     .notif-item:hover{background:var(--b1)}
     .notif-item.unread{background:rgba(79,110,247,.04)}
-    .notif-av{width:28px;height:28px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+    .notif-av{width:28px;height:28px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;flex-shrink:0;margin-top:1px}
     .notif-body{flex:1;min-width:0}
     .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
     .notif-text b{font-weight:700;color:#fff}
@@ -77,9 +77,9 @@
     .pfp{
       width:clamp(72px,8vw,100px);height:clamp(72px,8vw,100px);
       border-radius:50%;
-      background:var(--text);
+      background:#ffffff;
       display:flex;align-items:center;justify-content:center;
-      font-size:clamp(24px,3vw,38px);font-weight:800;color:#fff;
+      font-size:clamp(24px,3vw,38px);font-weight:800;color:#000;
       position:relative;overflow:hidden;flex-shrink:0;
       transition:opacity .2s;
     }
@@ -284,7 +284,7 @@
     .follow-list{overflow-y:auto;padding:6px;flex:1}
     .fi{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
     .fi:hover{background:var(--b1)}
-    .fi-av{width:34px;height:34px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+    .fi-av{width:34px;height:34px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000;flex-shrink:0}
     .fi-name{font-size:13px;font-weight:700;line-height:1.3}
     .fi-handle{font-size:11px;color:var(--sub)}
 

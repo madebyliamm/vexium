@@ -2209,8 +2209,17 @@ async function saveNow() {
   if (sb) {
     try {
       const { data: { session } } = await sb.auth.getSession();
-      if (session) await sb.from('projects').update({ files: fileSystem, main_file: mainFile, updated_at: new Date().toISOString() }).eq('id', project.id);
-    } catch(e) {}
+      if (session) {
+        const { error } = await sb.from('projects').update({ files: fileSystem, main_file: mainFile, updated_at: new Date().toISOString() }).eq('id', project.id);
+        if (error) {
+          // RLS likely blocking collaborator — try via project_members-gated RPC if available
+          console.error('[saveNow] update blocked:', error.message);
+          showToast('!', 'Save failed — check project permissions');
+          setTimeout(() => document.getElementById('tbSaving').classList.remove('show'), 700);
+          return;
+        }
+      }
+    } catch(e) { console.error('[saveNow] exception:', e); }
   } else {
     try {
       const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');

@@ -35,15 +35,15 @@
     }
     #notFound.show{display:flex;}
     #notFound img{
-      width:48px;height:48px;
+      width:clamp(80px,10vw,140px);height:clamp(80px,10vw,140px);
       opacity:0;
       animation:nfFade .5s ease .1s forwards;
     }
     #notFound p{
       font-family:system-ui,sans-serif;
-      font-size:13px;
+      font-size:clamp(14px,1.8vw,22px);
       color:#bbb;
-      margin-top:16px;
+      margin-top:clamp(16px,2.5vw,32px);
       letter-spacing:.01em;
       opacity:0;
       animation:nfFade .5s ease .4s forwards;

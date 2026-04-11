@@ -1144,7 +1144,7 @@
        BOTTOM INPUT BAR
     ───────────────────────────────────────────── */
     #aiBottom {
-      padding: 24px 0 24px;
+      padding: 8px 0 18px;
       flex-shrink: 0;
       background: transparent;
       display: none;
@@ -1152,7 +1152,7 @@
     }
     #aiBottom.show { display: flex; }
     #aiBottomWrap { width: var(--chat-w, min(680px, 90%)); }
-    #aiBottomBar { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
+    #aiBottomBar { display: flex; align-items: center; gap: 8px; width: 100%; }
     #aiBottomInputArea {
       flex: 1;
       min-width: 0;
@@ -1220,7 +1220,7 @@
       justify-content: center;
       flex-shrink: 0;
       transition: opacity var(--t-fast), transform var(--t-fast);
-      align-self: flex-end;
+      align-self: center;
     }
     #aiBottomSend:hover { opacity: .82; transform: scale(1.08); }
     #aiBottomSend:disabled { opacity: .25; cursor: default; transform: none; }
@@ -1238,7 +1238,7 @@
       justify-content: center;
       flex-shrink: 0;
       transition: all var(--t-fast);
-      align-self: flex-end;
+      align-self: center;
     }
     #aiStopBtn.show { display: flex; }
     #aiStopBtn:hover { background: var(--err); }

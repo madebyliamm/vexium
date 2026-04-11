@@ -760,6 +760,8 @@
       flex-shrink: 0;
       padding: 0;
       transition: color var(--t-fast), background var(--t-fast);
+      align-self: flex-end;
+      margin-bottom: 4px;
     }
     .ai-attach-btn:hover { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .9); }
     .ai-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
@@ -1221,6 +1223,7 @@
       flex-shrink: 0;
       transition: opacity var(--t-fast), transform var(--t-fast);
       align-self: flex-end;
+      margin-bottom: 4px;
     }
     #aiBottomSend:hover { opacity: .82; transform: scale(1.08); }
     #aiBottomSend:disabled { opacity: .25; cursor: default; transform: none; }
@@ -1239,6 +1242,7 @@
       flex-shrink: 0;
       transition: all var(--t-fast);
       align-self: flex-end;
+      margin-bottom: 4px;
     }
     #aiStopBtn.show { display: flex; }
     #aiStopBtn:hover { background: var(--err); }
@@ -2211,13 +2215,7 @@ async function saveNow() {
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
         const { error } = await sb.from('projects').update({ files: fileSystem, main_file: mainFile, updated_at: new Date().toISOString() }).eq('id', project.id);
-        if (error) {
-          // RLS likely blocking collaborator — try via project_members-gated RPC if available
-          console.error('[saveNow] update blocked:', error.message);
-          showToast('!', 'Save failed — check project permissions');
-          setTimeout(() => document.getElementById('tbSaving').classList.remove('show'), 700);
-          return;
-        }
+        if (error) console.warn('[saveNow]', error.message);
       }
     } catch(e) { console.error('[saveNow] exception:', e); }
   } else {
@@ -3949,7 +3947,9 @@ async function aiChatMode(suggestedQuestions) {
 
 let aiAbortController = null;
 
-function aiStop() { if (aiAbortController) aiAbortController.abort(); }
+function aiStop() {
+  if (aiAbortController) aiAbortController.abort();
+}
 
 function aiSetGenerating(on, keepPills) {
   const stopBtn   = document.getElementById('aiStopBtn');
@@ -4380,6 +4380,7 @@ async function aiCallAPI() {
     }
 
     while (true) {
+      if (aiAbortController?.signal.aborted) { reader.cancel(); break; }
       const chunk = await reader.read();
       if (chunk.done) { console.log('[STREAM] done'); break; }
       const text = decoder.decode(chunk.value, { stream: true });

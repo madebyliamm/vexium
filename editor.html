@@ -3129,7 +3129,7 @@ function aiAddAI(text, files) {
       const name = f.name || f;
       const card = document.createElement('div');
       card.className = 'ai-file-card';
-      card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(name) + '</span>';
+      card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(pillFriendlyName(name)) + '</span>';
       card.title = 'Open ' + name;
       card.onclick = () => { setMode('editor'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); };
       cardsEl.appendChild(card);
@@ -4337,7 +4337,7 @@ async function aiCallAPI() {
               const col  = aiFileColor(f.name);
               const card = document.createElement('div');
               card.className = 'ai-file-card';
-              card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(f.name) + '</span>';
+              card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(pillFriendlyName(f.name)) + '</span>';
               card.title = 'Open ' + f.name;
               const fname = f.name;
               card.onclick = () => { setMode('editor'); if (!openTabs.includes(fname)) openTabs.push(fname); renderTabs(); openFile(fname); };

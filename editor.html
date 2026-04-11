@@ -1152,7 +1152,7 @@
     }
     #aiBottom.show { display: flex; }
     #aiBottomWrap { width: var(--chat-w, min(680px, 90%)); }
-    #aiBottomBar { display: flex; align-items: center; gap: 8px; width: 100%; }
+    #aiBottomBar { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
     #aiBottomInputArea {
       flex: 1;
       min-width: 0;
@@ -1204,7 +1204,7 @@
       min-height: 22px;
       max-height: 25vh;
       padding: 12px 0;
-      align-self: center;
+      align-self: flex-end;
     }
     #aiBottomInput::placeholder { color: var(--border3); }
     #aiBottomSend {
@@ -1220,7 +1220,7 @@
       justify-content: center;
       flex-shrink: 0;
       transition: opacity var(--t-fast), transform var(--t-fast);
-      align-self: center;
+      align-self: flex-end;
     }
     #aiBottomSend:hover { opacity: .82; transform: scale(1.08); }
     #aiBottomSend:disabled { opacity: .25; cursor: default; transform: none; }
@@ -1238,7 +1238,7 @@
       justify-content: center;
       flex-shrink: 0;
       transition: all var(--t-fast);
-      align-self: center;
+      align-self: flex-end;
     }
     #aiStopBtn.show { display: flex; }
     #aiStopBtn:hover { background: var(--err); }

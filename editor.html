@@ -3188,6 +3188,15 @@ function aiEditMsg(btn) {
   const row = btn.closest('.ai-row.user');
   const text = row && row._msgText;
   if (!text) return;
+  // Remove this message and everything after it from DOM
+  const msgs = document.getElementById('aiMessages');
+  const rows = Array.from(msgs.querySelectorAll('.ai-row'));
+  const idx = rows.indexOf(row);
+  rows.slice(idx).forEach(r => r.remove());
+  // Trim history back to before this message
+  const histIdx = aiHistory.findLastIndex(m => m.role === 'user' && (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).includes(text));
+  if (histIdx >= 0) aiHistory.splice(histIdx);
+  // Load into input for editing
   const inp = document.getElementById('aiBottomInput');
   if (inp) { inp.value = text; aiAutoResize(inp); inp.focus(); }
 }

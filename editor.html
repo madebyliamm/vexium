@@ -4078,16 +4078,20 @@ async function startStep(stepIndex) {
   const stepCtx = `[STEP ${stepIndex + 1} of ${_stepPlan.steps.length}: ${step.title}]\n${step.description || ''}\nPages to build this step: ${(step.pages || []).join(', ') || 'index.html'}`;
 
   // Run brief + spec + build with step context appended
+  // Skip brief/spec if files already exist — design decisions are already made
   _pendingBrief = null; _pendingSpec = null;
-  try {
-    const msgs = [...aiHistory.filter(m => m.role === 'user'), { role: 'user', content: stepCtx }];
-    _pendingBrief = await fetchJSON({ brief_mode: true, messages: msgs });
-    if (_pendingBrief) {
-      await new Promise(r => setTimeout(r, 300));
-      _pendingSpec = await fetchJSON({ spec_mode: true, messages: msgs, brief: _pendingBrief });
-      await new Promise(r => setTimeout(r, 300));
-    }
-  } catch(e) {}
+  const hasExistingFiles = Object.keys(fileSystem).filter(f => !isDefaultCode({[f]: fileSystem[f]})).length > 0;
+  if (!hasExistingFiles) {
+    try {
+      const msgs = [...aiHistory.filter(m => m.role === 'user'), { role: 'user', content: stepCtx }];
+      _pendingBrief = await fetchJSON({ brief_mode: true, messages: msgs });
+      if (_pendingBrief) {
+        await new Promise(r => setTimeout(r, 300));
+        _pendingSpec = await fetchJSON({ spec_mode: true, messages: msgs, brief: _pendingBrief });
+        await new Promise(r => setTimeout(r, 300));
+      }
+    } catch(e) {}
+  }
 
   aiTyping = true;
   aiSetGenerating(true);

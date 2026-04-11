@@ -1004,8 +1004,8 @@
     .ai-step-label:hover { background: var(--surface2); color: var(--text); }
     .ai-step-dropdown {
       display: none;
-      background: var(--text);
-      border: 1px solid var(--border);
+      background: var(--surface);
+      border: 1px solid var(--border2);
       border-radius: var(--r-sm);
       padding: 8px 10px;
       margin-top: 4px;
@@ -1030,7 +1030,7 @@
       flex-shrink: 0;
       padding-top: 1px;
     }
-    .ai-step-row-num.active { color: var(--accent); }
+    .ai-step-row-num.active { color: var(--text); }
     .ai-step-row-title { font-weight: 700; color: var(--text); line-height: 1.4; }
     .ai-step-row-title.done { color: var(--muted); text-decoration: line-through; }
     .ai-step-row-desc { font-size: 10px; color: var(--muted); margin-top: 1px; line-height: 1.4; }
@@ -1039,8 +1039,7 @@
     .ai-next-step-card {
       margin: 8px 0 4px;
       padding: 12px 14px;
-      background: rgba(79,110,247,.05);
-      border: 1px solid rgba(79,110,247,.12);
+      background: var(--surface);
       border-radius: var(--r-lg);
       display: flex;
       align-items: center;
@@ -1053,9 +1052,9 @@
     .ai-next-step-btn {
       padding: 6px 14px;
       border-radius: 999px;
-      background: var(--accent);
+      background: var(--text);
       border: none;
-      color: #fff;
+      color: var(--bg);
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -1064,53 +1063,23 @@
       flex-shrink: 0;
       transition: opacity .12s;
     }
-    .ai-next-step-btn:hover { opacity: .88; }
+    .ai-next-step-btn:hover { opacity: .82; }
 
-    /* Confirm popup */
-    #aiStepConfirm {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 600;
-      background: rgba(0,0,0,.6);
-      backdrop-filter: blur(6px);
-      align-items: center;
-      justify-content: center;
-    }
-    #aiStepConfirm.show { display: flex; }
-    .ai-step-confirm-box {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      padding: 24px 28px;
-      width: 320px;
-      max-width: 90vw;
-      text-align: center;
-      box-shadow: 0 24px 60px rgba(0,0,0,.7);
-    }
-    .ai-step-confirm-title { font-size: 15px; font-weight: 800; margin-bottom: 6px; letter-spacing: -.3px; }
-    .ai-step-confirm-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
-    .ai-step-confirm-btns { display: flex; gap: 8px; justify-content: center; }
-    .ai-step-confirm-go { padding: 9px 22px; border-radius: 999px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; }
-    .ai-step-confirm-go:hover { opacity: .88; }
-    .ai-step-confirm-cancel { padding: 9px 18px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all .12s; }
-    .ai-step-confirm-cancel:hover { color: var(--text); }
-
-    /* Step plan card (shown before first step starts) */
+    /* Step plan card */
     .ai-step-plan-card {
       margin: 8px 0 4px;
       padding: 14px 16px;
-      background: rgba(79,110,247,.04);
-      border: 1px solid rgba(79,110,247,.1);
+      background: var(--surface);
       border-radius: var(--r-lg);
     }
-    .ai-step-plan-head { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
-    .ai-step-plan-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .ai-step-plan-head { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+    .ai-step-plan-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
     .ai-step-plan-item:last-of-type { border-bottom: none; margin-bottom: 10px; }
     .ai-step-plan-num { font-size: 10px; font-weight: 800; color: var(--muted); min-width: 16px; flex-shrink: 0; }
     .ai-step-plan-title { font-weight: 700; color: var(--text); }
-    .ai-step-plan-btn { width: 100%; padding: 8px; border-radius: 999px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border: none; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; margin-top: 4px; }
-    .ai-step-plan-btn:hover { opacity: .88; }
+    .ai-step-plan-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .ai-step-plan-btn { width: 100%; padding: 8px; border-radius: var(--r-full); background: var(--text); border: none; color: var(--bg); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; margin-top: 4px; }
+    .ai-step-plan-btn:hover { opacity: .82; }
     .ai-typing { display: flex; align-items: center; gap: 5px; padding: 16px 0; width: var(--chat-w); margin: 0 auto; }
     .ai-typing-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .ai-typing-avatar svg { width: 12px; height: 12px; fill: #fff; }
@@ -3809,9 +3778,20 @@ async function aiSend(fromBottom) {
   aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), []);
   aiShowTyping();
 
-  // Always build/edit — no intent detection, no readiness gating, no plan mode
+  // If we're mid-steps, inject step context so edits target the right step
   _pendingBrief = null;
   _pendingSpec  = null;
+  if (_stepPlan && _stepPlan.needs_steps) {
+    const step = _stepPlan.steps[_currentStep];
+    if (step) {
+      const ctx = `[Editing step ${_currentStep + 1}: ${step.title}. Pages: ${(step.pages || []).join(', ') || 'index.html'}]`;
+      // Inject as a system note appended to the last user message in history
+      const last = aiHistory[aiHistory.length - 1];
+      if (typeof last.content === 'string') {
+        aiHistory[aiHistory.length - 1] = { role: 'user', content: last.content + '\n\n' + ctx };
+      }
+    }
+  }
 
   await aiCallAPI();
 }
@@ -3827,161 +3807,6 @@ async function fetchJSON(body) {
     if (!res.ok) return null;
     return await res.json();
   } catch(e) { return null; }
-}
-
-// ── CONVERSATION MODE — general chat, questions, advice ───────────────────────
-async function aiConvoMode() {
-  const msgs = document.getElementById('aiMessages');
-  aiSetGenerating(true);
-
-  const convoRes = await fetch(AI_EDGE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-    body: JSON.stringify({
-      convo_mode: true,
-      messages: aiHistory,
-      files: fileSystem,
-      stream: true
-    })
-  });
-
-  if (!convoRes.ok || !convoRes.body) {
-    aiHideTyping();
-    aiSetGenerating(false);
-    aiAddAI('Something went wrong. Try again.', []);
-    return;
-  }
-
-  aiHideTyping();
-
-  const row = document.createElement('div');
-  row.className = 'ai-row ai';
-  const contentWrap = document.createElement('div');
-  contentWrap.style.cssText = 'flex:1;min-width:0';
-  const textEl = document.createElement('div');
-  textEl.className = 'ai-text';
-  contentWrap.appendChild(textEl);
-  row.appendChild(contentWrap);
-  msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
-
-  const reader = convoRes.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '', fullText = '';
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(5).trim();
-        if (raw === '[DONE]') continue;
-        let parsed;
-        try { parsed = JSON.parse(raw); } catch { continue; }
-        if (parsed.text) {
-          fullText += parsed.text;
-          textEl.innerHTML = formatChatText(fullText);
-          msgs.scrollTop = msgs.scrollHeight;
-        }
-      }
-    }
-  } catch(e) {}
-
-  textEl.innerHTML = formatChatText(fullText);
-
-  // Add meta row with copy button
-  const meta = document.createElement('div');
-  meta.className = 'ai-msg-meta';
-  meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
-  contentWrap.appendChild(meta);
-
-  aiHistory.push({ role: 'assistant', content: fullText });
-  aiAllMessages.push({ role: 'assistant', text: fullText, files: [], time: aiNow() });
-  aiSaveMsg('assistant', fullText, []);
-
-  aiSetGenerating(false);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-async function aiChatMode(suggestedQuestions) {
-  // Ask questions naturally using convo_mode so the AI has full context
-  const questionText = suggestedQuestions.length === 1
-    ? suggestedQuestions[0]
-    : suggestedQuestions.join(' Also, ');
-
-  // Inject the questions as context for convo_mode to ask naturally
-  const chatMessages = [
-    ...aiHistory.filter(m => m.role === 'user'),
-    { role: 'user', content: '__CLARIFY__: ' + questionText }
-  ];
-
-  aiSetGenerating(true);
-  aiShowTyping();
-
-  const chatRes = await fetch(AI_EDGE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-    body: JSON.stringify({ chat_mode: true, messages: chatMessages, stream: true })
-  });
-
-  if (!chatRes.ok || !chatRes.body) {
-    aiHideTyping();
-    aiSetGenerating(false);
-    return;
-  }
-
-  const msgs   = document.getElementById('aiMessages');
-  aiHideTyping();
-
-  // Stream the chat response
-  const row = document.createElement('div');
-  row.className = 'ai-row ai';
-  const contentWrap = document.createElement('div');
-  contentWrap.style.cssText = 'flex:1;min-width:0';
-  const textEl = document.createElement('div');
-  textEl.className = 'ai-text ai-stream-cursor';
-  contentWrap.appendChild(textEl);
-  row.appendChild(contentWrap);
-  msgs.appendChild(row);
-
-  const reader = chatRes.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '', fullText = '';
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(5).trim();
-        if (raw === '[DONE]') continue;
-        let parsed;
-        try { parsed = JSON.parse(raw); } catch { continue; }
-        if (parsed.text) {
-          fullText += parsed.text;
-          textEl.innerHTML = formatChatText(fullText);
-          msgs.scrollTop = msgs.scrollHeight;
-        }
-      }
-    }
-  } catch(e) {}
-
-  textEl.classList.remove('ai-stream-cursor');
-  textEl.innerHTML = formatChatText(fullText);
-
-  // Save the AI's question to history so context is maintained
-  aiHistory.push({ role: 'assistant', content: fullText });
-  aiAllMessages.push({ role: 'assistant', text: fullText, files: [], time: aiNow() });
-
-  aiSetGenerating(false);
-  msgs.scrollTop = msgs.scrollHeight;
 }
 
 let aiAbortController = null;
@@ -4044,6 +3869,8 @@ function usageWarnCancel() {
 // ── STEP SYSTEM ───────────────────────────────────────────────────────────────
 
 function renderStepPlanCard(plan) {
+  // Not used in auto-build flow — plan arrives while step 1 is already streaming.
+  // Only called if we need to display the plan explicitly (e.g. for debugging).
   const row = aiAddAI('', []);
   const target = row._contentWrap || row;
   const card = document.createElement('div');
@@ -4051,13 +3878,13 @@ function renderStepPlanCard(plan) {
   const stepsHtml = plan.steps.map((s, i) =>
     `<div class="ai-step-plan-item">
       <div class="ai-step-plan-num">${i + 1}</div>
-      <div class="ai-step-plan-title">${escHtml(s.title)}</div>
+      <div>
+        <div class="ai-step-plan-title">${escHtml(s.title)}</div>
+        ${s.description ? `<div class="ai-step-plan-desc">${escHtml(s.description)}</div>` : ''}
+      </div>
     </div>`
   ).join('');
-  card.innerHTML =
-    '<div class="ai-step-plan-head">Here\'s how I\'ll build this</div>' +
-    stepsHtml +
-    '<button class="ai-step-plan-btn" onclick="startStep(0)">Start building →</button>';
+  card.innerHTML = '<div class="ai-step-plan-head">Build plan</div>' + stepsHtml;
   target.appendChild(card);
   scrollIfSticky();
 }
@@ -4121,8 +3948,9 @@ function toggleStepDropdown() {
 
 function renderNextStepCard(targetEl) {
   if (!_stepPlan) return;
-  const nextStep = _stepPlan.steps[_currentStep + 1];
-  if (!nextStep) return; // no more steps
+  const nextIdx = _currentStep + 1;
+  const nextStep = _stepPlan.steps[nextIdx];
+  if (!nextStep) return; // no more steps — project is done
   const card = document.createElement('div');
   card.className = 'ai-next-step-card';
   card.innerHTML =
@@ -4130,27 +3958,9 @@ function renderNextStepCard(targetEl) {
       '<div class="ai-next-step-label">Next step</div>' +
       '<div class="ai-next-step-title">' + escHtml(nextStep.title) + '</div>' +
     '</div>' +
-    '<button class="ai-next-step-btn" onclick="openStepConfirm()">Next step →</button>';
+    '<button class="ai-next-step-btn" onclick="startStep(' + nextIdx + ')">Continue →</button>';
   targetEl.appendChild(card);
   scrollIfSticky();
-}
-
-function openStepConfirm() {
-  if (!_stepPlan) return;
-  const next = _stepPlan.steps[_currentStep + 1];
-  if (!next) return;
-  document.getElementById('aiStepConfirmTitle').textContent = 'Continue to: ' + next.title + '?';
-  document.getElementById('aiStepConfirmSub').textContent = next.description || 'The AI will start building the next part.';
-  document.getElementById('aiStepConfirm').classList.add('show');
-}
-
-function closeStepConfirm() {
-  document.getElementById('aiStepConfirm').classList.remove('show');
-}
-
-async function confirmNextStep() {
-  closeStepConfirm();
-  await startStep(_currentStep + 1);
 }
 
 // ── STEP SYSTEM END ───────────────────────────────────────────────────────────
@@ -4416,6 +4226,13 @@ async function aiCallAPI() {
           scrollIfSticky();
         }
 
+        if (eventType === 'plan' && data && data.needs_steps && data.steps && data.steps.length > 1) {
+          // Store the plan — step 1 is already building in this same stream
+          _stepPlan = data;
+          _currentStep = 0;
+          updateStepHeader();
+        }
+
         if (eventType === 'error') throw new Error(data.error || 'Stream error');
       }
     }
@@ -4579,16 +4396,5 @@ window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow
 window.addEventListener('load', init);
 </script>
 
-<!-- Step confirm popup -->
-<div id="aiStepConfirm">
-  <div class="ai-step-confirm-box">
-    <div class="ai-step-confirm-title" id="aiStepConfirmTitle">Continue to next step?</div>
-    <div class="ai-step-confirm-sub" id="aiStepConfirmSub">The AI will start building the next part of your project.</div>
-    <div class="ai-step-confirm-btns">
-      <button class="ai-step-confirm-cancel" onclick="closeStepConfirm()">Not yet</button>
-      <button class="ai-step-confirm-go" onclick="confirmNextStep()">Next step →</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>

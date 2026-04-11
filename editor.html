@@ -4292,6 +4292,39 @@ async function aiCallAPI() {
         }
 
         if (eventType === 'done') {
+          // ── FALLBACK: if the model streamed code as chat text instead of files,
+          // extract it client-side and inject into the editor anyway ──────────
+          if (collectedFiles.length === 0 && fullMessage) {
+            const fenceMap = { html: 'index.html', css: 'style.css', javascript: 'main.js', js: 'main.js' };
+            const fenceRe = /```(\w+)\s*\n([\s\S]*?)```/g;
+            let m;
+            const extracted = {};
+            // Track how many html files we've seen so multi-page builds name correctly
+            const htmlCount = { n: 0 };
+            while ((m = fenceRe.exec(fullMessage)) !== null) {
+              const lang = m[1].toLowerCase();
+              let fname = fenceMap[lang];
+              if (!fname) continue;
+              // If we already have index.html, try to find a filename hint in preceding text
+              if (fname === 'index.html' && extracted['index.html']) {
+                htmlCount.n++;
+                // Look for a filename mentioned just before this fence
+                const before = fullMessage.slice(Math.max(0, m.index - 200), m.index);
+                const fnMatch = before.match(/(\w[\w.-]*\.html)\s*[:`]?\s*$/i);
+                fname = fnMatch ? fnMatch[1] : `page${htmlCount.n}.html`;
+              }
+              extracted[fname] = m[2];
+            }
+            if (Object.keys(extracted).length > 0) {
+              for (const [name, content] of Object.entries(extracted)) {
+                fileSystem[name] = content;
+                dirtyFiles.add(name);
+                collectedFiles.push({ name });
+                if (!openTabs.includes(name)) openTabs.push(name);
+              }
+            }
+          }
+
           if (collectedFiles.length) {
             // Add all built files to openTabs
             collectedFiles.forEach(f => {

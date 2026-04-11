@@ -10,10 +10,13 @@
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;background:#fff;overflow:hidden}
     #frame{width:100%;height:100%;border:none;display:none}
+
+    /* ── LOADING ── */
     #loading{
       position:fixed;inset:0;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:12px;
       background:#fff;font-family:system-ui,sans-serif;font-size:14px;color:#888;
+      transition:opacity .3s ease;
     }
     #loading .ld-dots span{
       display:inline-block;width:6px;height:6px;border-radius:50%;
@@ -23,13 +26,46 @@
     #loading .ld-dots span:nth-child(2){animation-delay:.15s}
     #loading .ld-dots span:nth-child(3){animation-delay:.3s}
     @keyframes ldot{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+    /* ── NOT FOUND ── */
+    #notFound{
+      position:fixed;inset:0;display:none;flex-direction:column;
+      align-items:center;justify-content:center;gap:0;
+      background:#fff;
+    }
+    #notFound.show{display:flex;}
+    #notFound img{
+      width:48px;height:48px;
+      opacity:0;
+      animation:nfFade .5s ease .1s forwards;
+    }
+    #notFound p{
+      font-family:system-ui,sans-serif;
+      font-size:13px;
+      color:#bbb;
+      margin-top:16px;
+      letter-spacing:.01em;
+      opacity:0;
+      animation:nfFade .5s ease .4s forwards;
+    }
+    @keyframes nfFade{
+      from{opacity:0;transform:translateY(6px)}
+      to{opacity:1;transform:translateY(0)}
+    }
   </style>
 </head>
 <body>
+
 <div id="loading">
   <div class="ld-dots"><span></span><span></span><span></span></div>
   <span>Loading project…</span>
 </div>
+
+<div id="notFound">
+  <img src="vexium_logo_black.png" alt="Vexium"/>
+  <p>No project found.</p>
+</div>
+
 <iframe id="frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups"></iframe>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
@@ -45,10 +81,14 @@
 
   function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
 
+  function showNotFound() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('notFound').classList.add('show');
+  }
+
   function buildPageHtml(pageName) {
     let html = fileSystem[pageName] || '';
 
-    // Inline all CSS and JS referenced by this page
     Object.entries(fileSystem).forEach(([fn, fc]) => {
       if (!fc || fn === pageName) return;
       const safe = escRe(fn);
@@ -67,7 +107,6 @@
       }
     });
 
-    // Inject multi-page nav interceptor
     const interceptor = `(function(){
       document.addEventListener('click', function(e) {
         var a = e.target.closest('a');
@@ -93,34 +132,26 @@
   function renderPage(pageName) {
     const frame = document.getElementById('frame');
     const html = buildPageHtml(pageName);
-    // Use blob URL for clean sandbox
     const prev = frame._blob;
     if (prev) URL.revokeObjectURL(prev);
     const blob = new Blob([html], { type: 'text/html' });
     const burl = URL.createObjectURL(blob);
     frame._blob = burl;
     frame.src = burl;
-    // Update page title from the HTML if possible
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     if (titleMatch) document.title = titleMatch[1] || document.title;
   }
 
-  // Handle multi-page navigation messages from iframe
   window.addEventListener('message', function(e) {
     if (e.data?.type !== 'vexium_navigate') return;
     const page = e.data.page;
-    if (page && fileSystem[page]) {
-      renderPage(page);
-    }
+    if (page && fileSystem[page]) renderPage(page);
   });
 
   async function init() {
     const params = new URLSearchParams(location.search);
     const projectId = params.get('project');
-    if (!projectId) {
-      document.getElementById('loading').querySelector('span').textContent = 'No project specified.';
-      return;
-    }
+    if (!projectId) { showNotFound(); return; }
 
     let project = null;
 
@@ -136,10 +167,7 @@
         project = list.find(p => p.id === projectId) || null;
       } catch(e) {}
     }
-    if (!project) {
-      document.getElementById('loading').querySelector('span').textContent = 'Project not found.';
-      return;
-    }
+    if (!project) { showNotFound(); return; }
 
     document.title = project.name || 'Vexium';
     fileSystem = project.files || {};

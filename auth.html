@@ -31,7 +31,6 @@
     .card{
       width:100%;max-width:360px;
       background:var(--surface);
-      border:1px solid var(--border);
       border-radius:var(--r-lg);
       padding:32px 28px;
       position:relative;z-index:1;
@@ -45,7 +44,7 @@
     .card-logo-t span{color:var(--muted)}
 
     /* TABS */
-    .tabs{display:flex;background:var(--border);border-radius:var(--r-sm);padding:3px;margin-bottom:24px}
+    .tabs{display:flex;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:24px}
     .tab{flex:1;padding:7px;border-radius:5px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;color:var(--muted);transition:all .15s;user-select:none}
     .tab.on{background:var(--border2);color:var(--text)}
 
@@ -53,11 +52,11 @@
     .field{margin-bottom:12px}
     label{display:block;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
     input{
-      width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);
+      width:100%;background:var(--surface2);border:none;border-radius:var(--r-sm);
       padding:10px 13px;color:var(--text);font-size:13px;outline:none;
-      font-family:var(--sans);transition:border-color .15s;
+      font-family:var(--sans);transition:background .15s;
     }
-    input:focus{border-color:rgba(255,255,255,.15)}
+    input:focus{background:var(--border)}
     input::placeholder{color:var(--muted)}
 
     /* SUBMIT */
@@ -74,17 +73,17 @@
 
     /* DIVIDER */
     .div{display:flex;align-items:center;gap:12px;margin:18px 0}
-    .div-line{flex:1;height:1px;background:var(--border)}
+    .div-line{flex:1;height:1px;background:var(--surface2)}
     .div-txt{font-size:10px;color:var(--muted);font-weight:600}
 
     /* GUEST */
     .guest{
       width:100%;padding:10px;border-radius:var(--r-sm);
-      background:transparent;border:1px solid var(--border);
+      background:var(--surface2);border:none;
       color:var(--muted);font-size:12px;font-weight:600;
       cursor:pointer;font-family:var(--sans);transition:all .15s;
     }
-    .guest:hover{background:rgba(255,255,255,.03);color:var(--text);border-color:var(--border2)}
+    .guest:hover{background:var(--border);color:var(--text)}
 
     /* MSG */
     .msg{font-size:11px;text-align:center;margin-top:12px;min-height:16px;line-height:1.5}

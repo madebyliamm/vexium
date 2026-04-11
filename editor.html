@@ -3749,76 +3749,9 @@ async function aiSend(fromBottom) {
   aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), []);
   aiShowTyping();
 
-  // ── INTENT DETECTION — route to conversation, build, or edit ─────────────
-  const intentRes = await fetchJSON({
-    intent_mode: true,
-    files: fileSystem,
-    messages: [...aiHistory.slice(-4), { role: 'user', content: text }]
-  });
-
-  let intent = intentRes?.intent || (isDefaultCode(fileSystem) ? 'build' : 'edit');
-
-  // If no files exist and AI couldn't determine intent, default to build
-  if (intent === 'chat' && isDefaultCode(fileSystem) && aiHistory.length >= 4) intent = 'build';
-
-  // If files exist and intent is chat, force edit — never route code requests to convo mode
-  if (intent === 'chat' && !isDefaultCode(fileSystem)) intent = 'edit';
-
-  // Pure conversation — questions, advice, strategy, brainstorming
-  if (intent === 'chat') {
-    aiHideTyping();
-    aiTyping = false;
-    aiSetGenerating(false);
-    await aiConvoMode();
-    return;
-  }
-
-  // Build from scratch — run readiness check first
-  if (intent === 'build') {
-    const hasExistingFiles = !isDefaultCode(fileSystem);
-    if (!hasExistingFiles && aiSessionMessageCount <= 3) {
-      const readinessRes = await fetchJSON({
-        readiness_mode: true,
-        files: fileSystem,
-        messages: aiHistory.filter(m => m.role === 'user').map(m => ({ role: 'user', content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) })),
-        message_count: aiSessionMessageCount
-      });
-      if (readinessRes && readinessRes.ready === false && readinessRes.questions?.length > 0) {
-        aiHideTyping();
-        aiTyping = false;
-        aiSetGenerating(false);
-        await aiChatMode(readinessRes.questions);
-        return;
-      }
-    }
-  }
-
-  // Build or edit — run brief + spec pipeline then build
+  // Always build/edit — no intent detection, no readiness gating, no plan mode
   _pendingBrief = null;
   _pendingSpec  = null;
-  if (intent === 'build' && isDefaultCode(fileSystem)) {
-    // Plan mode — decide if steps needed
-    const planRes = await fetchJSON({ plan_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
-    console.log('[plan_mode result]', planRes);
-    if (planRes && planRes.needs_steps && planRes.steps?.length >= 2) {
-      _stepPlan = planRes;
-      _currentStep = 0;
-      aiHideTyping();
-      aiTyping = false;
-      aiSetGenerating(false);
-      renderStepPlanCard(planRes);
-      return;
-    }
-
-    try {
-      _pendingBrief = await fetchJSON({ brief_mode: true, messages: aiHistory.filter(m => m.role === 'user') });
-      if (_pendingBrief) {
-        await new Promise(r => setTimeout(r, 400));
-        _pendingSpec = await fetchJSON({ spec_mode: true, messages: aiHistory.filter(m => m.role === 'user'), brief: _pendingBrief });
-        await new Promise(r => setTimeout(r, 400));
-      }
-    } catch(e) { console.error('[brief/spec error]', e); }
-  }
 
   await aiCallAPI();
 }

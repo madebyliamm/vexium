@@ -3492,6 +3492,20 @@ let aiPillLines = {};    // name -> current line count being streamed
 
 function aiFileColor2(name) { return aiFileColor(name); }
 
+function pillFriendlyName(name) {
+  const base = name.split('/').pop();
+  if (base.endsWith('.css')) return 'Styling';
+  if (base.endsWith('.js') || base.endsWith('.ts')) return 'Scripts';
+  if (base.endsWith('.json')) return 'Config';
+  if (base.endsWith('.md')) return 'Docs';
+  if (base.endsWith('.html')) {
+    const stem = base.replace('.html', '');
+    if (stem === 'index') return 'Home page';
+    return stem.charAt(0).toUpperCase() + stem.slice(1).replace(/[-_]/g, ' ') + ' page';
+  }
+  return base;
+}
+
 function aiAddEditingPill(name) {
   const pillsEl = document.getElementById('aiEditingPills');
   pillsEl.classList.add('show');
@@ -3509,7 +3523,7 @@ function aiAddEditingPill(name) {
   pill.dataset.file = name;
   pill.innerHTML =
     '<div class="ai-edit-pill-dot" style="background:' + col + ';box-shadow:0 0 6px ' + col + '55"></div>' +
-    '<span class="ai-edit-pill-name" style="color:rgba(255,255,255,.75)">' + escHtml(name) + '</span>' +
+    '<span class="ai-edit-pill-name" style="color:rgba(255,255,255,.75)">' + escHtml(pillFriendlyName(name)) + '</span>' +
     '<span class="ai-edit-pill-lines">0 lines</span>' +
     '<div class="ai-edit-pill-anim"><span></span><span></span><span></span></div>';
   pill.onclick = () => { setMode('editor'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); };

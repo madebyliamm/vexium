@@ -84,15 +84,6 @@
       transition:opacity .2s;
     }
     .pfp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
-    .pfp-edit-overlay{
-      position:absolute;inset:0;border-radius:50%;
-      background:rgba(0,0,0,.55);
-      display:flex;align-items:center;justify-content:center;
-      opacity:0;transition:opacity .2s;cursor:pointer;
-    }
-    .pfp-edit-overlay svg{width:18px;height:18px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-    body.edit-mode .pfp-wrap:hover .pfp-edit-overlay{opacity:1}
-    #pfpFileInput{display:none}
 
     /* Info */
     .prof-info{flex:1;min-width:0}
@@ -330,12 +321,7 @@
     <div class="pfp-wrap">
       <div class="pfp" id="pfpEl">
         <span id="pfpInitial">?</span>
-        <img id="pfpImg" src="" alt="" style="display:none"/>
       </div>
-      <div class="pfp-edit-overlay" onclick="document.getElementById('pfpFileInput').click()">
-        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      </div>
-      <input type="file" id="pfpFileInput" accept="image/*" onchange="handlePfpUpload(event)"/>
     </div>
 
     <!-- Info -->
@@ -594,12 +580,6 @@
     const p=viewProfile;if(!p)return;
     const name=p.display_name||p.username||'Unknown';
     document.getElementById('pfpInitial').textContent=name.charAt(0).toUpperCase();
-    // Avatar image
-    if(p.avatar_url){
-      const img=document.getElementById('pfpImg');
-      img.src=p.avatar_url;img.style.display='';
-      document.getElementById('pfpInitial').style.display='none';
-    }
     document.getElementById('profName').textContent=name;
     document.getElementById('profHandle').textContent='@'+(p.username||'unknown');
     document.getElementById('profBio').textContent=p.bio||'';
@@ -678,14 +658,6 @@
     msg.textContent='Saved!';msg.className='edit-msg ok';
     setTimeout(()=>{msg.textContent='';msg.className='edit-msg';},2500);
     showToast('✓','Profile updated');
-  }
-
-  async function handlePfpUpload(e){
-    const file=e.target.files[0];if(!file)return;
-    const url=URL.createObjectURL(file);
-    const img=document.getElementById('pfpImg');
-    img.src=url;img.style.display='';
-    document.getElementById('pfpInitial').style.display='none';
   }
 
   /* ── PRIVACY ── */

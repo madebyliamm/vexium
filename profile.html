@@ -451,7 +451,7 @@
           <div class="usage-bar-pct" id="usageBarPct"></div>
         </div>
         <div class="usage-bar-track">
-          <div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div>
+          <div class="usage-bar-fill" id="usageBarFill" style="width:100%;background:#4ade80"></div>
         </div>
         <div class="usage-bar-sub" id="usageBarSub"></div>
       </div>
@@ -744,13 +744,13 @@
     const sub = document.getElementById('usageBarSub');
     if(!fill||!label||!pctEl||!sub) return;
 
-    // Color: green → yellow → red
+    // Color based on how much is LEFT: green = plenty, yellow = getting low, red = almost gone
     let color;
-    if(pct < 60) color = '#4ade80';
-    else if(pct < 85) color = '#facc15';
+    if(remaining > 40) color = '#4ade80';
+    else if(remaining > 15) color = '#facc15';
     else color = '#f87171';
 
-    fill.style.width = pct + '%';
+    fill.style.width = remaining + '%';  // bar shrinks as usage grows
     fill.style.background = color;
     pctEl.textContent = remaining + '% left';
     pctEl.style.color = color;

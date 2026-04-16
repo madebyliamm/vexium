@@ -3799,9 +3799,10 @@ async function aiSend(fromBottom) {
 // Fetch a JSON endpoint (non-streaming)
 async function fetchJSON(body) {
   try {
+    const edgeHeaders = await getEdgeHeaders();
     const res = await fetch(AI_EDGE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      headers: edgeHeaders,
       body: JSON.stringify(body)
     });
     if (!res.ok) return null;
@@ -3810,6 +3811,22 @@ async function fetchJSON(body) {
 }
 
 let aiAbortController = null;
+
+async function getEdgeHeaders() {
+  // Use the signed-in user's access token so edge-side usage accounting can
+  // attribute spend to the correct profile; fall back to anon when needed.
+  let token = SUPABASE_ANON_KEY;
+  if (sb) {
+    try {
+      const s = await sb.auth.getSession();
+      if (s?.data?.session?.access_token) token = s.data.session.access_token;
+    } catch(e) {}
+  }
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + token
+  };
+}
 
 function aiStop() {
   if (aiAbortController) aiAbortController.abort();
@@ -3979,9 +3996,10 @@ async function aiCallAPI() {
   aiAbortController = new AbortController();
 
   try {
+    const edgeHeaders = await getEdgeHeaders();
     const response = await fetch(AI_EDGE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      headers: edgeHeaders,
       body: JSON.stringify({
         messages: aiHistory,
         files: fileSystem,
@@ -4294,9 +4312,10 @@ async function aiCallPageBuilds(pageNames) {
     aiAddEditingPill(pageName);
 
     try {
+      const edgeHeaders = await getEdgeHeaders();
       const res = await fetch(AI_EDGE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        headers: edgeHeaders,
         body: JSON.stringify({
           page_mode: true,
           page_name: pageName,

@@ -39,7 +39,10 @@
       width:clamp(80px,10vw,140px);height:clamp(80px,10vw,140px);
       opacity:0;
       animation:nfFade .5s ease .1s forwards;
+      transform-origin:center center;
+      transition:transform .15s cubic-bezier(0.16,1,0.3,1);
     }
+    #notFound img:hover{transform:scale(1.08) translateY(0)}
     #notFound p{
       font-family:system-ui,sans-serif;
       font-size:clamp(14px,1.8vw,22px);

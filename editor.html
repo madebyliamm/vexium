@@ -85,22 +85,20 @@
     .tb-logo {
       display: flex;
       align-items: center;
-      gap: 7px;
       flex-shrink: 0;
     }
     .tb-logo img {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: block;
+      transform: scale(1);
+      transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .tb-logo-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -.01em;
-    }
-    .tb-logo-name span {
-      color: var(--muted);
+    .tb-logo:hover img,
+    .tb-logo:focus-visible img {
+      transform: scale(1.08);
     }
 
     /* Separator */
@@ -207,15 +205,15 @@
       align-items: center;
       justify-content: center;
       background: transparent;
-      border: 1px solid transparent;
+      border: none;
       border-radius: var(--r-sm);
       color: var(--muted);
       cursor: pointer;
       transition: all var(--t-fast);
+      outline: none;
     }
     .tb-icon-btn:hover {
       background: var(--border2);
-      border-color: var(--border2);
       color: var(--text);
     }
     .tb-icon-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -253,7 +251,7 @@
 
     .settings-modal {
       background: var(--surface);
-      border: 1px solid var(--border2);
+      border: none;
       border-radius: var(--r-xl);
       width: 420px;
       max-width: 100%;
@@ -283,6 +281,7 @@
       align-items: center;
       justify-content: center;
       transition: all var(--t-fast);
+      outline: none;
     }
     .settings-close:hover { background: var(--border3); color: var(--text); }
     .settings-close svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
@@ -305,7 +304,7 @@
       height: 48px;
       border-radius: var(--r-md);
       background: var(--border);
-      border: 1px solid var(--border2);
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -313,12 +312,13 @@
       flex-shrink: 0;
       cursor: pointer;
       transition: all var(--t-fast);
+      outline: none;
     }
-    .ep-emoji-btn:hover { border-color: rgba(79, 110, 247, .4); background: rgba(79, 110, 247, .06); }
+    .ep-emoji-btn:hover { background: rgba(79, 110, 247, .06); }
     .ep-name-input {
       flex: 1;
       background: var(--border);
-      border: 1px solid var(--border2);
+      border: none;
       border-radius: var(--r-md);
       padding: 11px 14px;
       color: var(--text);
@@ -326,9 +326,9 @@
       font-weight: 700;
       outline: none;
       font-family: var(--sans);
-      transition: border-color var(--t-fast);
+      transition: background var(--t-fast);
     }
-    .ep-name-input:focus { border-color: rgba(79, 110, 247, .5); }
+    .ep-name-input:focus { background: var(--border2); }
     .ep-name-input::placeholder { color: var(--muted); }
 
     /* Emoji picker */
@@ -342,12 +342,12 @@
       justify-content: center;
       border-radius: var(--r-sm);
       cursor: pointer;
-      border: 2px solid transparent;
+      border: none;
       transition: all 120ms ease;
       user-select: none;
     }
     .ep-emoji-opt:hover { background: var(--border2); }
-    .ep-emoji-opt.sel { background: rgba(79, 110, 247, .12); border-color: rgba(79, 110, 247, .4); }
+    .ep-emoji-opt.sel { background: rgba(79, 110, 247, .12); }
 
     /* Visibility toggle */
     .ep-vis-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -368,31 +368,32 @@
       color: var(--muted);
       transition: all var(--t-fast);
       flex-shrink: 0;
+      outline: none;
     }
     .ep-lock-btn:hover { background: var(--border3); color: var(--text); }
-    .ep-lock-btn.unlocked { background: rgba(34, 197, 94, .08); border: 1px solid rgba(34, 197, 94, .15); color: #4ade80; }
+    .ep-lock-btn.unlocked { background: rgba(34, 197, 94, .12); border: none; color: #4ade80; }
     .ep-lock-btn svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 
     /* Collaborators */
     .ep-collab-list { display: flex; flex-direction: column; gap: 6px; }
-    .ep-collab-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--border); border: 1px solid var(--border2); border-radius: var(--r-md); }
+    .ep-collab-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--border); border: none; border-radius: var(--r-md); }
     .ep-collab-av { width: 26px; height: 26px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #000 !important; flex-shrink: 0; }
     .ep-collab-info { flex: 1; min-width: 0; }
     .ep-collab-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ep-collab-handle { font-size: 10px; color: var(--muted); }
     .ep-collab-role { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(79, 110, 247, .1); color: #818cf8; flex-shrink: 0; }
-    .ep-collab-rm { width: 22px; height: 22px; border-radius: 5px; background: transparent; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); flex-shrink: 0; }
+    .ep-collab-rm { width: 22px; height: 22px; border-radius: 5px; background: transparent; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); flex-shrink: 0; outline: none; }
     .ep-collab-rm:hover { background: rgba(239, 68, 68, .1); color: var(--err); }
     .ep-collab-rm svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
     .ep-collab-none { font-size: 11px; color: var(--muted); }
 
     /* Settings footer */
     .settings-footer { padding: 0 22px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
-    .settings-btn { padding: 8px 18px; border: none; border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 700; font-family: var(--sans); transition: all var(--t-fast); }
+    .settings-btn { padding: 8px 18px; border: none; border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 700; font-family: var(--sans); transition: all var(--t-fast); outline: none; }
     .settings-btn.cancel { background: var(--border2); color: var(--muted); }
     .settings-btn.cancel:hover { background: var(--border3); color: var(--text); }
-    .settings-btn.save { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .settings-btn.save:hover { opacity: .9; }
+    .settings-btn.save { background: #fff; color: #000; }
+    .settings-btn.save:hover { background: #e8e8e8; }
 
     /* ─────────────────────────────────────────────
        LAYOUT
@@ -1122,7 +1123,83 @@
       justify-content: center;
     }
     #aiBottom.show { display: flex; }
-    #aiBottomWrap { width: var(--chat-w, min(680px, 90%)); }
+    #aiBottomWrap {
+      width: var(--chat-w, min(680px, 90%));
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    /* Rate limit cooldown — above prompt (monotone pill + ring timer) */
+    .ai-rl-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border-radius: var(--r-full);
+      background: #1c1c1c;
+      border: none;
+      font-family: var(--sans);
+      animation: aiRlIn .22s ease;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .35);
+    }
+    .ai-rl-banner.show { display: flex; }
+    @keyframes aiRlIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .ai-rl-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+    }
+    .ai-rl-ring-wrap {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    .ai-rl-ring-wrap svg { display: block; transform: rotate(-90deg); }
+    .ai-rl-track { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 2.5; }
+    .ai-rl-progress {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.82);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ai-rl-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
+      color: rgba(255, 255, 255, 0.92);
+      pointer-events: none;
+    }
+    .ai-rl-copy { flex: 1; min-width: 0; }
+    .ai-rl-title { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.92); letter-spacing: -0.2px; }
+    .ai-rl-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+    .ai-rl-x {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: var(--r-full);
+      background: transparent;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .12s, color .12s;
+    }
+    .ai-rl-x:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); }
     #aiBottomBar { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
     #aiBottomInputArea {
       flex: 1;
@@ -1239,45 +1316,73 @@
     #aiAttachPreviewBody pre { font-family: var(--mono); font-size: 12px; color: var(--text); white-space: pre-wrap; word-break: break-all; margin: 0; }
 
     /* Critique card */
-    .ai-critique { margin: 10px 0 4px; padding: 14px 16px; background: rgba(79, 110, 247, .05); border: 1px solid rgba(79, 110, 247, .12); border-radius: var(--r-lg); }
-    .ai-critique-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .ai-critique-score { font-size: 11px; font-weight: 800; letter-spacing: .3px; padding: 3px 9px; border-radius: var(--r-sm); }
-    .ai-critique-score.high { background: rgba(34, 197, 94, .1); color: #4ade80; }
-    .ai-critique-score.mid { background: rgba(251, 191, 36, .1); color: #fbbf24; }
-    .ai-critique-score.low { background: rgba(244, 63, 94, .1); color: #f43f5e; }
-    .ai-critique-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .3px; text-transform: uppercase; }
-    .ai-critique-section { margin-bottom: 8px; }
-    .ai-critique-section:last-child { margin-bottom: 0; }
-    .ai-critique-section-title { font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-    .ai-critique-item { font-size: 12px; color: var(--text); line-height: 1.5; padding: 3px 0; display: flex; gap: 6px; }
-    .ai-critique-item::before { content: '·'; color: var(--accent); font-weight: 900; flex-shrink: 0; }
-    .ai-critique-improve .ai-critique-item::before { color: #fbbf24; }
-    .ai-critique-fix-btn { margin-top: 10px; padding: 7px 14px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--sans); box-shadow: 0 0 14px rgba(79, 110, 247, .25); transition: opacity .12s; }
-    .ai-critique-fix-btn:hover { opacity: .88; }
+    .ai-suggestions { margin: 12px 0 4px; padding: 12px 14px; background: rgba(255, 255, 255, .04); border: none; border-radius: 14px; }
+    .ai-suggestions-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .ai-suggestions-list { display: flex; flex-direction: column; gap: 6px; }
+    .ai-suggestions-item { font-size: 12px; line-height: 1.45; color: var(--text); padding: 0; }
+    .ai-suggestions-apply { margin-top: 12px; padding: 7px 14px; background: rgba(116, 143, 255, .18); border: none; border-radius: 999px; color: #dbe4ff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); align-self: flex-start; line-height: 1; }
+    .ai-suggestions-apply:hover { background: rgba(116, 143, 255, .28); color: #f1f5ff; }
+    .ai-suggestions-apply:disabled { opacity: .4; cursor: not-allowed; }
 
     /* ─────────────────────────────────────────────
        RIGHT PANEL (Preview + Console)
     ───────────────────────────────────────────── */
-    #rightResizer { width: 4px; background: transparent; cursor: col-resize; flex-shrink: 0; transition: background var(--t-fast); }
+    #rightResizer { width: 4px; background: transparent; cursor: col-resize; flex-shrink: 0; transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, background var(--t-fast); }
     #rightResizer:hover, #rightResizer.dragging { background: var(--accent); }
-    #rightPanel { width: 46%; min-width: 180px; max-width: 75%; display: flex; flex-direction: column; border-left: 1px solid var(--border); overflow: hidden; transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
-    #rightPanel.hidden { width: 0; min-width: 0; opacity: 0; border-left: none; pointer-events: none; }
+    #rightResizer.hidden { width: 0 !important; min-width: 0; opacity: 0; pointer-events: none; }
+
+    #rightPanel {
+      position: relative;
+      flex: 0 0 auto;
+      width: 46%;
+      max-width: 75%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      overflow: hidden;
+      box-sizing: border-box;
+      transition:
+        width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+        max-width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.22s ease,
+        border-color 0.2s ease;
+    }
+    #rightPanel:not(.hidden) { min-width: 180px; }
+    #rightPanel.hidden {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      opacity: 0;
+      border-left-color: transparent;
+      pointer-events: none;
+    }
+    .right-panel-slide {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #rightPanel.hidden > .right-panel-slide { transform: translateX(100%); }
 
     /* Preview toolbar */
     #previewToolbar { height: 38px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 5px; padding: 0 8px; flex-shrink: 0; }
-    .prev-btn { width: 26px; height: 26px; background: transparent; border: 1px solid var(--border2); border-radius: 5px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); flex-shrink: 0; }
-    .prev-btn:hover:not(:disabled) { background: var(--border2); color: var(--text); }
+    .prev-btn { width: 26px; height: 26px; background: rgba(255, 255, 255, .07); border: none; border-radius: 5px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--t-fast), color var(--t-fast), opacity var(--t-fast); flex-shrink: 0; }
+    .prev-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .12); color: var(--text); }
     .prev-btn:disabled { opacity: .25; cursor: default; }
     .prev-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    .prev-url { flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 4px 10px; font-size: 10px; color: var(--muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .prev-text-btn { padding: 4px 10px; background: transparent; border: 1px solid var(--border2); border-radius: 5px; font-size: 10px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); white-space: nowrap; flex-shrink: 0; }
-    .prev-text-btn:hover { background: var(--border2); color: var(--text); }
+    .prev-url { flex: 1; text-align: center; background: transparent; border: none; border-radius: 0; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prev-text-btn { padding: 4px 10px; background: rgba(255, 255, 255, .07); border: none; border-radius: 5px; font-size: 10px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: var(--sans); transition: background var(--t-fast), color var(--t-fast); white-space: nowrap; flex-shrink: 0; }
+    .prev-text-btn:hover { background: rgba(255, 255, 255, .12); color: var(--text); }
 
     /* Device picker */
     .prev-device-wrap { position: relative; }
-    .prev-device-btn { display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: transparent; border: 1px solid var(--border2); border-radius: 5px; font-size: 10px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); white-space: nowrap; }
-    .prev-device-btn:hover { background: var(--border2); color: var(--text); }
-    .prev-device-btn.active { background: rgba(79, 110, 247, .1); border-color: rgba(79, 110, 247, .2); color: #93c5fd; }
+    .prev-device-btn { display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(255, 255, 255, .07); border: none; border-radius: 5px; font-size: 10px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: var(--sans); transition: background var(--t-fast), color var(--t-fast); white-space: nowrap; }
+    .prev-device-btn:hover { background: rgba(255, 255, 255, .12); color: var(--text); }
+    .prev-device-btn.active { background: rgba(79, 110, 247, .22); color: #93c5fd; }
     .prev-device-drop { position: absolute; top: calc(100% + 4px); right: 0; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-md); overflow: hidden; z-index: 200; display: none; box-shadow: 0 8px 32px rgba(0, 0, 0, .5); min-width: 130px; }
     .prev-device-drop.show { display: block; }
     .prev-device-opt { padding: 9px 14px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .12s; color: var(--muted); }
@@ -1655,9 +1760,8 @@
      TOPBAR
 ═══════════════════════════════════════════ -->
 <div id="topbar">
-  <a href="home.html" class="tb-logo">
-    <img src="vexium_logo.png" alt="V"/>
-    <span class="tb-logo-name">VEXIUM<span>.AI</span></span>
+  <a href="home.html" class="tb-logo" title="Vexium — Home">
+    <img src="vexium_logo.png" alt="Vexium"/>
   </a>
   <div class="tb-sep"></div>
   <span class="tb-proj" id="tbProj">Loading…</span>
@@ -1875,6 +1979,22 @@
         <!-- Bottom input bar -->
         <div id="aiBottom">
           <div id="aiBottomWrap">
+            <div id="aiRateLimitBanner" class="ai-rl-banner" role="status" aria-live="polite">
+              <div class="ai-rl-row">
+                <div class="ai-rl-ring-wrap">
+                  <svg viewBox="0 0 36 36" width="36" height="36" aria-hidden="true">
+                    <circle class="ai-rl-track" cx="18" cy="18" r="14" />
+                    <circle id="aiRateLimitRing" class="ai-rl-progress" cx="18" cy="18" r="14" />
+                  </svg>
+                  <span id="aiRateLimitNum" class="ai-rl-num">60</span>
+                </div>
+                <div class="ai-rl-copy">
+                  <div class="ai-rl-title">Rate limit</div>
+                  <div id="aiRateLimitSub" class="ai-rl-sub">Usage is limited per minute. Wait a moment, then try again.</div>
+                </div>
+                <button type="button" class="ai-rl-x" onclick="hideAiRateLimitCooldown()" title="Dismiss">×</button>
+              </div>
+            </div>
             <div id="aiBottomBar">
               <button class="ai-attach-btn" onclick="aiAttachClick()" title="Attach file">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1899,10 +2019,11 @@
       </div><!-- end #aiPanel -->
 
       <!-- RESIZER -->
-      <div id="rightResizer"></div>
+      <div id="rightResizer" class="hidden"></div>
 
       <!-- PREVIEW + CONSOLE -->
       <div id="rightPanel" class="hidden">
+        <div class="right-panel-slide">
         <div id="previewToolbar">
           <button class="prev-btn" id="btnBack" onclick="prevBack()" disabled title="Back">
             <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1913,7 +2034,7 @@
           <button class="prev-btn" onclick="refreshPreview()" title="Refresh">
             <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
-          <div class="prev-url" id="prevUrl">index.html</div>
+          <div class="prev-url" id="prevUrl">Home page</div>
           <div class="prev-device-wrap">
             <button class="prev-device-btn" id="prevDeviceBtn" onclick="toggleDeviceDrop(event)" title="Device view">
               <svg id="prevDeviceIco" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
@@ -1950,8 +2071,9 @@
               <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div id="consoleBody"><div class="con-empty" id="conEmpty">No output yet.</div></div>
+          <div id="consoleBody">          <div class="con-empty" id="conEmpty">No output yet.</div></div>
         </div>
+        </div><!-- .right-panel-slide -->
       </div>
 
     </div><!-- end #editorArea -->
@@ -2089,6 +2211,23 @@ function isDefaultCode(fs) {
   return false;
 }
 
+function getPreferredHtmlMain(fs) {
+  const files = Object.keys(fs || {});
+  const htmlFiles = files.filter(f => f.endsWith('.html'));
+  if (!htmlFiles.length) return null;
+  const priority = ['index.html', 'home.html', 'landing.html', 'main.html', 'app.html'];
+  for (const p of priority) {
+    if (htmlFiles.includes(p)) return p;
+  }
+  const rootHtml = htmlFiles.find(f => !f.includes('/'));
+  return rootHtml || htmlFiles[0];
+}
+
+function normalizeMainFile(preferred, fs) {
+  if (preferred && preferred.endsWith('.html') && fs && fs[preferred] !== undefined) return preferred;
+  return getPreferredHtmlMain(fs);
+}
+
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2124,6 +2263,7 @@ async function loadProject() {
           project = data;
           fileSystem = data.files || {};
           mainFile = data.main_file || 'index.html';
+          _aiProjectContext = data.ai_context || {};
         }
       }
     } catch(e) {}
@@ -2141,6 +2281,8 @@ async function loadProject() {
     mainFile = 'index.html';
   }
 
+  mainFile = normalizeMainFile(mainFile, fileSystem) || 'index.html';
+
   document.getElementById('tbProj').textContent = project.name || 'Untitled';
   document.title = (project.name || 'Untitled') + ' — Vexium';
   document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
@@ -2149,9 +2291,7 @@ async function loadProject() {
   if (avatarEl) avatarEl.textContent = uname.charAt(0).toUpperCase();
 
   if (!isDefaultCode(fileSystem)) {
-    previewVisible = true;
-    document.getElementById('rightPanel').classList.remove('hidden');
-    document.getElementById('btnPreview').classList.add('active');
+    showPreviewDock(true);
   }
 
   renderFileTree();
@@ -2198,12 +2338,7 @@ async function saveNow() {
   }
   dirtyFiles.clear();
   renderTabs();
-  if (!previewVisible) {
-    previewVisible = true;
-    document.getElementById('rightPanel').classList.remove('hidden');
-    document.getElementById('btnPreview').classList.add('active');
-  }
-  refreshPreview();
+  if (previewVisible) refreshPreview();
   showToast('✓', 'Saved');
   setTimeout(() => document.getElementById('tbSaving').classList.remove('show'), 700);
 }
@@ -2400,6 +2535,14 @@ function openFile(f) {
   });
   document.getElementById('stLang').textContent = lang.toUpperCase();
   renderTabs(); renderFileTree();
+}
+
+/** When AI writes to fileSystem, mirror into Monaco if that file is the active tab (same as autofix path). */
+function syncEditorModelIfViewing(fileName, content) {
+  if (!fileName || activeFile !== fileName || !editor || !monacoReady) return;
+  const model = editor.getModel();
+  if (!model) return;
+  model.setValue(content);
 }
 
 function getLang(f) {
@@ -2600,6 +2743,12 @@ function buildPageHtml(pageName) {
 function refreshPreview() { refreshPreviewPage(mainFile); }
 
 function refreshPreviewPage(pageName) {
+  if (!pageName || !pageName.endsWith('.html') || !fileSystem[pageName]) {
+    const fallback = normalizeMainFile(mainFile, fileSystem);
+    if (!fallback) return;
+    pageName = fallback;
+    mainFile = fallback;
+  }
   const frame = document.getElementById('previewFrame');
   const html = buildPageHtml(pageName);
   const prev = frame._previewBlob;
@@ -2612,7 +2761,21 @@ function refreshPreviewPage(pageName) {
   pushHist(pageName);
 }
 
-function setUrl(u) { document.getElementById('prevUrl').textContent = u || mainFile; }
+function previewPageLabel(filename) {
+  if (!filename) return 'Page';
+  const base = (filename.split('/').pop() || filename).trim();
+  if (!base.toLowerCase().endsWith('.html')) return base;
+  const stem = base.replace(/\.html$/i, '');
+  if (stem.toLowerCase() === 'index') return 'Home page';
+  const parts = stem.split(/[-_\s]+/).filter(Boolean);
+  const pretty = parts.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  return pretty + ' page';
+}
+
+function setUrl(u) {
+  const el = document.getElementById('prevUrl');
+  if (el) el.textContent = previewPageLabel(u || mainFile);
+}
 function pushHist(u) {
   if (prevHistory[prevHistIdx] === u) return;
   prevHistory = prevHistory.slice(0, prevHistIdx + 1);
@@ -2642,7 +2805,7 @@ function openInViewer() {
 window.addEventListener('message', e => {
   if (e.data?.type === 'vexium_navigate') {
     const page = e.data.page;
-    if (page && fileSystem[page]) { mainFile = page; refreshPreviewPage(page); }
+    if (page && page.endsWith('.html') && fileSystem[page]) { mainFile = page; refreshPreviewPage(page); }
     return;
   }
   if (e.data?.type !== 'console') return;
@@ -2668,8 +2831,7 @@ window.addEventListener('message', e => {
   if (!consoleVisible) {
     consoleVisible = true;
     document.getElementById('consolePanel').classList.remove('hidden');
-    document.getElementById('rightPanel').classList.remove('hidden');
-    if (editor) editor.layout();
+    showPreviewDock(true);
   }
 });
 
@@ -2702,18 +2864,23 @@ function clearConsole() {
 function disableFrame()  { document.getElementById('previewFrame').style.pointerEvents = 'none'; }
 function enableFrame()   { document.getElementById('previewFrame').style.pointerEvents = ''; }
 
-function togglePreview() {
-  previewVisible = !previewVisible;
-  document.getElementById('btnPreview').classList.toggle('active', previewVisible);
+function showPreviewDock(show) {
+  previewVisible = !!show;
   const panel = document.getElementById('rightPanel');
-  if (previewVisible) {
-    panel.classList.remove('hidden');
-    if (editor) editor.layout();
-    refreshPreview();
-  } else {
-    panel.classList.add('hidden');
-    if (editor) setTimeout(() => editor.layout(), 320);
+  const rz = document.getElementById('rightResizer');
+  const btn = document.getElementById('btnPreview');
+  if (panel) panel.classList.toggle('hidden', !show);
+  if (rz) rz.classList.toggle('hidden', !show);
+  if (btn) btn.classList.toggle('active', show);
+  if (editor) {
+    if (show) editor.layout();
+    else setTimeout(() => editor.layout(), 380);
   }
+}
+
+function togglePreview() {
+  showPreviewDock(!previewVisible);
+  if (previewVisible) refreshPreview();
 }
 
 // ── DEVICE MODE ───────────────────────────────────────────────────────────────
@@ -2916,7 +3083,10 @@ function ctxRename() {
     if (fileSystem[newName]) { showToast('!', 'File exists'); return; }
     fileSystem[newName] = fileSystem[ctxTarget];
     delete fileSystem[ctxTarget];
-    if (mainFile === ctxTarget) mainFile = newName;
+    if (mainFile === ctxTarget) {
+      const normalized = normalizeMainFile(newName, fileSystem);
+      if (normalized) mainFile = normalized;
+    }
     openTabs = openTabs.map(f => f === ctxTarget ? newName : f);
     if (activeFile === ctxTarget) { activeFile = newName; openFile(newName); }
     renderFileTree(); renderTabs(); saveNow(); showToast('✓', 'Renamed');
@@ -2970,13 +3140,20 @@ document.addEventListener('keydown', e => {
 let aiHistory     = [];
 let aiAllMessages = [];
 let aiAttachments = [];
-const AI_VIRTUAL_WINDOW = 40;
+/** Max chat turns sent to the edge (full history explodes input tokens / cost). */
+const AI_MAX_MESSAGES = 28;
+/** Full file content budget for main / active / recently mentioned paths. */
+const AI_MAX_FILE_CHARS_PRIORITY = 120000;
+/** Smaller slice for other project files so multi-file projects don’t send megabytes per request. */
+const AI_MAX_FILE_CHARS_OTHER = 16000;
 let aiTyping  = false;
 let aiStarted = false;
 // Only counts messages sent THIS session (not loaded from history) — used for readiness gate
 let aiSessionMessageCount = 0;
 
-const AI_EDGE_URL = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/ai-chat';
+const AI_EDGE_URL = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
+  ? SUPABASE_URL.trim().replace(/\/+$/, '')
+  : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1/ai-chat';
 
 function aiFileColor(name) {
   if (!name) return '#6366f1';
@@ -3256,6 +3433,31 @@ async function aiLoadHistory() {
 
   if (!rows.length) return;
 
+  function parseUserHistoryContent(rawContent) {
+    // Newer messages may store structured content arrays.
+    if (typeof rawContent !== 'string') return { text: '', files: [] };
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (!Array.isArray(parsed)) return { text: rawContent, files: [] };
+      const textParts = [];
+      const fileNames = [];
+      parsed.forEach(part => {
+        if (!part || typeof part !== 'object') return;
+        if (part.type === 'text' && typeof part.text === 'string') {
+          // Hide file payload text blocks; keep the actual prompt text only.
+          if (!part.text.startsWith('[File: ')) textParts.push(part.text);
+          const m = part.text.match(/^\[File:\s*([^\]]+)\]/);
+          if (m && m[1]) fileNames.push(m[1]);
+        } else if (part.type === 'image') {
+          fileNames.push('image');
+        }
+      });
+      return { text: textParts.join('\n').trim(), files: fileNames };
+    } catch (e) {
+      return { text: rawContent, files: [] };
+    }
+  }
+
   rows.forEach(row => {
     aiHistory.push({ role: row.role, content: row.content });
     const d = new Date(row.created_at);
@@ -3263,17 +3465,38 @@ async function aiLoadHistory() {
     h = h % 12 || 12;
     const time = h + ':' + mn.toString().padStart(2,'0') + ' ' + ampm;
     let displayText = row.content;
+    let displayFiles = row.file_names || [];
     if (row.role === 'assistant') {
-      try { const parsed = JSON.parse(row.content); displayText = parsed.message || row.content; } catch(e) {}
+      try {
+        const parsed = JSON.parse(row.content);
+        let msg = typeof parsed.message === 'string' ? parsed.message : '';
+        const parsedFiles = Array.isArray(parsed.files)
+          ? parsed.files.map(f => (f && typeof f === 'object' && f.name ? f.name : String(f))).filter(Boolean)
+          : [];
+        if (!displayFiles.length && parsedFiles.length) displayFiles = parsedFiles;
+        // Empty string is valid — don't fall back to raw JSON (parsed.message || row.content was wrong here).
+        if (!msg.trim()) {
+          if (displayFiles.length) {
+            msg = 'Updated ' + displayFiles.map(n => pillFriendlyName(n)).join(', ');
+          } else {
+            msg = 'Done.';
+          }
+        }
+        displayText = msg;
+      } catch (e) {}
+    } else if (row.role === 'user') {
+      const parsedUser = parseUserHistoryContent(row.content);
+      displayText = parsedUser.text || '';
+      if ((!displayFiles || !displayFiles.length) && parsedUser.files.length) displayFiles = parsedUser.files;
     }
-    aiAllMessages.push({ role: row.role, text: displayText, files: row.file_names || [], time });
+    aiAllMessages.push({ role: row.role, text: displayText, files: displayFiles, time });
   });
 
   aiTransitionToChat();
   const msgs = document.getElementById('aiMessages');
   msgs.innerHTML = '';
   aiAllMessages.forEach(m => {
-    if (m.role === 'user') aiAddUserRow(m.text, []);
+    if (m.role === 'user') aiAddUserRow(m.text, m.files || []);
     else aiAddAI(m.text, m.files || []);
   });
   msgs.scrollTop = msgs.scrollHeight;
@@ -3572,28 +3795,40 @@ function aiMarkPillDone(name) {
   }
 }
 
-// ── CRITIQUE ──────────────────────────────────────────────────────────────────
-function renderCritique(critique, targetEl) {
-  if (!critique || !targetEl) return;
-  const score      = critique.score || 0;
-  const scoreClass = score >= 8 ? 'high' : score >= 6 ? 'mid' : 'low';
-  const strengths    = (critique.strengths || []).map(s => '<div class="ai-critique-item">' + escHtml(s) + '</div>').join('');
-  const improvements = (critique.improvements || []).map(s => '<div class="ai-critique-item">' + escHtml(s) + '</div>').join('');
-  const fixBtn       = improvements ? '<button class="ai-critique-fix-btn" onclick="aiApplyImprovements(this)">Apply more improvements</button>' : '';
-  const card = document.createElement('div');
-  card.className = 'ai-critique';
-  card.innerHTML =
-    '<div class="ai-critique-head"><span class="ai-critique-score ' + scoreClass + '">' + score + '/10</span><span class="ai-critique-label">Design critique</span></div>' +
-    (strengths    ? '<div class="ai-critique-section"><div class="ai-critique-section-title">What worked</div>' + strengths + '</div>' : '') +
-    (improvements ? '<div class="ai-critique-section ai-critique-improve"><div class="ai-critique-section-title">I\'d improve</div>' + improvements + fixBtn + '</div>' : '');
-  targetEl.appendChild(card);
+// ── CRITIQUE (suggestions only) ───────────────────────────────────────────────
+async function aiSendWithBottomText(text) {
+  const t = String(text || '').trim();
+  if (!t || aiTyping) return;
+  setMode('ai');
+  const input = document.getElementById('aiBottomInput');
+  if (!input) return;
+  input.value = t;
+  aiAutoResize(input);
+  await aiSend(true);
 }
 
-function aiApplyImprovements(btn) {
-  const items = btn.closest('.ai-critique-improve').querySelectorAll('.ai-critique-item');
-  const list  = Array.from(items).map(el => el.textContent.trim()).join('; ');
-  const inp   = document.getElementById('aiBottomInput');
-  if (inp) { inp.value = 'Apply these improvements: ' + list; aiAutoResize(inp); inp.focus(); }
+async function aiApplySuggestionImprovements(btn) {
+  const wrap = btn && btn.closest('.ai-suggestions');
+  if (!wrap) return;
+  const items = wrap.querySelectorAll('.ai-suggestions-item');
+  const list  = Array.from(items).map(el => el.textContent.trim()).filter(Boolean);
+  if (!list.length) return;
+  const msg = 'Apply these improvements:\n\n• ' + list.join('\n• ');
+  await aiSendWithBottomText(msg);
+}
+
+function renderCritique(critique, targetEl) {
+  if (!critique || !targetEl) return;
+  const improvements = (critique.improvements || []).filter(s => String(s || '').trim());
+  if (!improvements.length) return;
+  const itemsHtml = improvements.map(s => '<div class="ai-suggestions-item">' + escHtml(s) + '</div>').join('');
+  const card = document.createElement('div');
+  card.className = 'ai-suggestions';
+  card.innerHTML =
+    '<div class="ai-suggestions-label">Suggestions</div>' +
+    '<div class="ai-suggestions-list">' + itemsHtml + '</div>' +
+    '<button type="button" class="ai-suggestions-apply" onclick="aiApplySuggestionImprovements(this)">Apply</button>';
+  targetEl.appendChild(card);
 }
 
 // ── LIVE PREVIEW ──────────────────────────────────────────────────────────────
@@ -3604,9 +3839,7 @@ function livePreviewUpdate(isHtml) {
   _livePreviewDebounce = setTimeout(() => {
     if (!previewVisible) {
       if (!isHtml) return; // don't auto-open for CSS/JS — wait for HTML
-      previewVisible = true;
-      document.getElementById('rightPanel').classList.remove('hidden');
-      document.getElementById('btnPreview').classList.add('active');
+      showPreviewDock(true);
     }
     const frame = document.getElementById('previewFrame');
     frame.classList.remove('preview-refreshing');
@@ -3738,6 +3971,7 @@ let _pendingBrief = null;
 let _pendingSpec  = null;
 let _stepPlan     = null;  // { needs_steps, steps: [{title, description, pages}] }
 let _currentStep  = 0;     // 0-indexed
+let _aiProjectContext = {};  // cached memory blob — loaded on init, updated after builds
 
 async function aiSend(fromBottom) {
   const input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
@@ -3775,7 +4009,7 @@ async function aiSend(fromBottom) {
   }
   aiHistory.push({ role: 'user', content: apiContent });
   // Save user message immediately so DB order is guaranteed before assistant response arrives
-  aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), []);
+  aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), attachSnapshot.map(a => a.name));
   aiShowTyping();
 
   // If we're mid-steps, inject step context so edits target the right step
@@ -3813,13 +4047,19 @@ let aiAbortController = null;
 async function getEdgeHeaders(forceRefresh) {
   // Use the signed-in user's access token so edge-side usage accounting can
   // attribute spend to the correct profile; fall back to anon when needed.
-  let token = SUPABASE_ANON_KEY;
+  let token = null;
   if (sb) {
     try {
       if (forceRefresh) await sb.auth.refreshSession();
       const s = await sb.auth.getSession();
       if (s?.data?.session?.access_token) token = s.data.session.access_token;
     } catch(e) {}
+  }
+  if (!token) {
+    if (localStorage.getItem('vexium_guest') === 'true') {
+      throw new Error('Please sign in to use AI.');
+    }
+    throw new Error('Session expired. Please sign in again.');
   }
   return {
     'Content-Type': 'application/json',
@@ -3844,7 +4084,144 @@ async function edgeFetchWithAuth(url, init) {
     });
   }
 
+  // Some Supabase setups issue ES256 access tokens that certain edge auth
+  // gateways reject for function calls. Fall back to anon bearer in that case.
+  if (res.status === 401) {
+    let bodyText = '';
+    try { bodyText = await res.clone().text(); } catch (e) {}
+    if (/Unsupported JWT algorithm ES256|UNAUTHORIZEDUNSUPPORTEDTOKEN_ALGORITHM/i.test(bodyText || '')) {
+      res = await fetch(url, {
+        ...init,
+        headers: {
+          ...(init?.headers || {}),
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      });
+    }
+  }
+
   return res;
+}
+
+function parseNestedErrorBody(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  try {
+    const outer = JSON.parse(raw);
+    if (outer.error != null) {
+      if (typeof outer.error === 'string') {
+        try {
+          const inner = JSON.parse(outer.error);
+          return inner?.error?.message || inner?.message || inner?.error?.error?.message || outer.error;
+        } catch (e2) {
+          return outer.error;
+        }
+      }
+      return outer.error?.message || outer.error?.error?.message || String(outer.error);
+    }
+    return outer.message || '';
+  } catch (e) {
+    return raw;
+  }
+}
+
+function parseInputTokensPerMinuteFromText(text) {
+  if (!text) return null;
+  const s = String(text);
+  const m = s.match(/([\d,]+)\s+input tokens per minute/i);
+  if (m) return m[1].replace(/,/g, '');
+  const m2 = s.match(/(\d+)\s+input tokens per minute/i);
+  if (m2) return m2[1];
+  return null;
+}
+
+async function buildHttpError(res) {
+  const status = res.status;
+  let raw = '';
+  try {
+    raw = ((await res.text()) || '').trim();
+  } catch (e) {}
+
+  if (status === 429) {
+    let cooldownSec = 60;
+    const ra = res.headers.get('retry-after');
+    if (ra != null && ra !== '') {
+      const n = parseFloat(ra);
+      if (!isNaN(n)) cooldownSec = Math.min(600, Math.max(5, Math.ceil(n)));
+    }
+    const extracted = parseNestedErrorBody(raw);
+    const combined = (extracted || '') + '\n' + raw;
+    const tokensRaw = parseInputTokensPerMinuteFromText(combined);
+    const err = new Error('Rate limited — try again when the cooldown ends.');
+    err.aiRateLimit = true;
+    err.cooldownSeconds = cooldownSec;
+    err.aiRateLimitTokens = tokensRaw;
+    return err;
+  }
+
+  let detail = parseNestedErrorBody(raw) || raw;
+  if (typeof detail !== 'string') detail = String(detail);
+  if (detail.length > 300) detail = detail.slice(0, 297) + '…';
+  return new Error('HTTP ' + status + (detail ? ' — ' + detail : ''));
+}
+
+let _aiRlInterval = null;
+const AI_RL_CIRC = 2 * Math.PI * 14;
+
+function rateLimitFriendlySub(tokensRaw) {
+  if (tokensRaw != null && tokensRaw !== '') {
+    const n = parseInt(String(tokensRaw).replace(/,/g, ''), 10);
+    if (!isNaN(n) && n > 0) {
+      return 'The AI allows about ' + n.toLocaleString() + ' input tokens per minute. Wait a moment, then try again.';
+    }
+  }
+  return 'Usage is limited each minute. Wait a moment, then try again.';
+}
+
+function hideAiRateLimitCooldown() {
+  if (_aiRlInterval) {
+    clearInterval(_aiRlInterval);
+    _aiRlInterval = null;
+  }
+  const banner = document.getElementById('aiRateLimitBanner');
+  if (banner) banner.classList.remove('show');
+}
+
+function showAiRateLimitCooldown(totalSec, tokensRaw) {
+  const banner = document.getElementById('aiRateLimitBanner');
+  const ring = document.getElementById('aiRateLimitRing');
+  const numEl = document.getElementById('aiRateLimitNum');
+  const subEl = document.getElementById('aiRateLimitSub');
+  if (!banner || !ring || !numEl) return;
+
+  hideAiRateLimitCooldown();
+
+  const total = Math.max(5, Math.min(600, Math.floor(totalSec || 60)));
+  let remaining = total;
+
+  ring.setAttribute('stroke-dasharray', String(AI_RL_CIRC));
+
+  const subStatic = rateLimitFriendlySub(tokensRaw);
+  if (subEl) subEl.textContent = subStatic;
+
+  function paint() {
+    const r = Math.max(0, remaining);
+    numEl.textContent = String(r);
+    ring.setAttribute('stroke-dashoffset', String(AI_RL_CIRC * (1 - (total > 0 ? r / total : 0))));
+  }
+
+  paint();
+  banner.classList.add('show');
+
+  _aiRlInterval = setInterval(() => {
+    remaining--;
+    if (remaining < 0) {
+      hideAiRateLimitCooldown();
+      return;
+    }
+    paint();
+  }, 1000);
 }
 
 function aiStop() {
@@ -4001,12 +4378,148 @@ function renderNextStepCard(targetEl) {
 
 // ── STEP SYSTEM END ───────────────────────────────────────────────────────────
 
+/** Opt-in second pass on the server (roughly doubles cost). Default off to protect usage. */
+function aiAutofixEnabled() {
+  try {
+    return localStorage.getItem('vexium_ai_autofix') === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+function gatherMentionedFilenames() {
+  const set = new Set();
+  const recent = aiHistory.slice(-5);
+  for (const m of recent) {
+    const t = typeof m.content === 'string' ? m.content : JSON.stringify(m.content || '');
+    const matches = t.match(/[\w./-]+\.(?:html|htm|css|scss|sass|less|js|jsx|mjs|cjs|ts|tsx|json|vue|md)/gi);
+    if (matches) matches.forEach(x => set.add(x.replace(/^.*\//, '')));
+  }
+  return set;
+}
+
+function buildAiFilesPayload() {
+  const fs = fileSystem || {};
+  const keys = Object.keys(fs);
+  const priority = new Set();
+  if (mainFile) priority.add(mainFile);
+  if (activeFile) priority.add(activeFile);
+  gatherMentionedFilenames().forEach(f => priority.add(f));
+
+  const out = {};
+
+  function put(name, maxLen) {
+    if (!fs.hasOwnProperty(name)) return;
+    const content = fs[name];
+    if (isImageFile(name)) {
+      out[name] = '[Image — omitted from AI request to save tokens. Reference by filename.]';
+      return;
+    }
+    let s = typeof content === 'string' ? content : String(content ?? '');
+    if (s.startsWith('data:image') || (s.startsWith('data:') && s.length > 8000)) {
+      out[name] = '[Large data URL omitted — attach or describe instead.]';
+      return;
+    }
+    if (s.length > maxLen) {
+      s = s.slice(0, maxLen) + '\n\n/* … truncated for AI context (' + s.length + ' chars total) … */';
+    }
+    out[name] = s;
+  }
+
+  priority.forEach(p => put(p, AI_MAX_FILE_CHARS_PRIORITY));
+  for (const k of keys) {
+    if (Object.prototype.hasOwnProperty.call(out, k)) continue;
+    put(k, AI_MAX_FILE_CHARS_OTHER);
+  }
+  return out;
+}
+
+function sliceAiHistoryForApi(messages) {
+  if (!messages || !messages.length) return messages;
+  return messages.length <= AI_MAX_MESSAGES ? messages : messages.slice(-AI_MAX_MESSAGES);
+}
+
+/** Split SSE frames on blank line (LF or CRLF). Using only \\n\\n misses \\r\\n\\r\\n, so file events never parse. */
+function splitSSEFrames(buffer) {
+  return buffer.split(/\r\n\r\n|\n\n/);
+}
+
+/**
+ * Final `message` events often carry a short “Done / saved” summary. Replacing the full
+ * streamed body with that text deletes all ``` fences and breaks client-side apply.
+ */
+function mergeStreamedAssistantText(prev, incoming) {
+  if (incoming == null) return prev;
+  const inc = String(incoming);
+  if (!inc.trim()) return prev;
+  if (!prev || !String(prev).trim()) return inc;
+  const p = String(prev);
+  const fmHas = p.includes('```');
+  const inHas = inc.includes('```');
+  if (fmHas && !inHas) return p + '\n\n' + inc;
+  if (!fmHas && inHas) return inc;
+  if (fmHas && inHas) return inc.length >= p.length ? inc : p;
+  return inc.length >= p.length * 0.92 ? inc : p + '\n\n' + inc;
+}
+
+// ── PATCH RETRY — full rewrite fallback when patch matching fails ─────────────
+async function aiRetryAsFullRewrite(fileName, originalInstruction) {
+  if (!fileName || !fileSystem[fileName]) return;
+  aiAddEditingPill(fileName);
+  try {
+    const headers = await getEdgeHeaders(false);
+    const res = await fetch(AI_EDGE_URL, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: (originalInstruction || 'Apply the requested changes') + '\n\n[IMPORTANT: Output the complete updated ' + fileName + ' as a full <file name="' + fileName + '"> block. Do not use patch format.]' }],
+        files: buildAiFilesPayload(),
+        auto_fix: false,
+        stream: true,
+        main_file: mainFile,
+        active_file: activeFile || mainFile,
+        project_has_real_files: !isDefaultCode(fileSystem),
+        project_id: projectId || undefined,
+        ai_context: Object.keys(_aiProjectContext).length ? _aiProjectContext : undefined
+      })
+    });
+    if (!res.ok || !res.body) { aiMarkPillDone(fileName); return; }
+    const reader = res.body.getReader(), decoder = new TextDecoder();
+    let buf = '';
+    const go = () => {
+      const blocks = splitSSEFrames(buf); buf = blocks.pop() || '';
+      for (const block of blocks) {
+        const trimmed = block.trim(); if (!trimmed) continue;
+        let evType = null; const dParts = [];
+        for (const line of trimmed.split(/\r?\n/)) {
+          if (line.startsWith('event:')) evType = line.slice(6).trim();
+          else if (line.startsWith('data:')) dParts.push(line.slice(5));
+        }
+        if (!evType || !dParts.length) continue;
+        let data; try { data = JSON.parse(dParts.join('\n').trim()); } catch { continue; }
+        const fileKey = data.name || data.path || data.filename;
+        if (evType === 'file_delta' && data.text) aiUpdatePillLines(fileName, data.text);
+        if ((evType === 'file' || evType === 'output_file' || evType === 'write_file') && fileKey === fileName) {
+          let content = data.content ?? data.code;
+          if (data.encoding === 'base64') { try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); } }
+          fileSystem[fileName] = content; dirtyFiles.add(fileName);
+          syncEditorModelIfViewing(fileName, content);
+          aiMarkPillDone(fileName); livePreviewUpdate(fileName.endsWith('.html')); saveNow();
+        }
+      }
+    };
+    while (true) { const chunk = await reader.read(); if (chunk.done) break; buf += decoder.decode(chunk.value, { stream: true }); go(); }
+    buf += '\n\n'; go();
+  } catch(e) { console.error('[PATCH RETRY]', e); aiMarkPillDone(fileName); }
+}
+
 async function aiCallAPI() {
   let textEl       = null;
   let fullMessage  = '';
   let userScrolled = false;
   const msgs       = document.getElementById('aiMessages');
   let row          = null;
+  let streamFinalized = false;
+  let finalizeAssistantStream = function() {};
 
   function onUserScroll()   { userScrolled = true; }
   function scrollIfSticky() { if (!userScrolled) msgs.scrollTop = msgs.scrollHeight; }
@@ -4015,18 +4528,25 @@ async function aiCallAPI() {
   aiAbortController = new AbortController();
 
   try {
+    streamFinalized = false;
     const response = await edgeFetchWithAuth(AI_EDGE_URL, {
       method: 'POST',
       body: JSON.stringify({
-        messages: aiHistory,
-        files: fileSystem,
+        messages: sliceAiHistoryForApi(aiHistory),
+        files: buildAiFilesPayload(),
         brief: _pendingBrief || undefined,
         spec: _pendingSpec || undefined,
-        auto_fix: true
+        auto_fix: aiAutofixEnabled(),
+        stream: true,
+        main_file: mainFile,
+        active_file: activeFile || mainFile,
+        project_has_real_files: !isDefaultCode(fileSystem),
+        project_id: projectId || undefined,
+        ai_context: Object.keys(_aiProjectContext).length ? _aiProjectContext : undefined
       }),
       signal: aiAbortController.signal
     });
-    if (!response.ok) throw new Error('HTTP ' + response.status);
+    if (!response.ok) throw await buildHttpError(response);
     if (!response.body) throw new Error('No response body');
 
     console.log('[FETCH] status:', response.status, 'type:', response.headers.get('content-type'));
@@ -4053,18 +4573,150 @@ async function aiCallAPI() {
     // Track which file is currently streaming for pill line count updates
     let currentStreamingFile = null;
 
+    /** When the edge drops the SSE (Deno: connection closed before message completed), `event: done` never fires — still apply fences + history. */
+    finalizeAssistantStream = function(fromEarlyClose) {
+      if (streamFinalized) return;
+      streamFinalized = true;
+
+      if (collectedFiles.length === 0 && fullMessage) {
+        const extracted = {};
+        const namedFenceRe = /```(\w+)\s+([\w./-]+\.(?:html|htm|css|scss|sass|less|js|jsx|mjs|cjs|ts|tsx|json|vue|svg|md))\s*\r?\n([\s\S]*?)```/gi;
+        let nm;
+        while ((nm = namedFenceRe.exec(fullMessage)) !== null) {
+          extracted[nm[2]] = nm[3].replace(/\r\n/g, '\n');
+        }
+
+        const fenceMap = {
+          html: 'index.html', htm: 'index.html',
+          css: 'style.css', scss: 'style.scss', sass: 'style.sass', less: 'style.less',
+          javascript: 'main.js', js: 'main.js', jsx: 'main.jsx', mjs: 'main.mjs', cjs: 'main.cjs',
+          ts: 'main.ts', tsx: 'main.tsx', json: 'data.json', vue: 'App.vue'
+        };
+        const fenceRe = /```(\w+)\s*\r?\n([\s\S]*?)```/g;
+        let m;
+        const htmlCount = { n: 0 };
+        while ((m = fenceRe.exec(fullMessage)) !== null) {
+          const lang = m[1].toLowerCase();
+          let fname = fenceMap[lang];
+          if (!fname) continue;
+          if (fname === 'index.html' && extracted['index.html']) {
+            htmlCount.n++;
+            const before = fullMessage.slice(Math.max(0, m.index - 200), m.index);
+            const fnMatch = before.match(/(\w[\w.-]*\.html)\s*[:`]?\s*$/i);
+            fname = fnMatch ? fnMatch[1] : `page${htmlCount.n}.html`;
+          }
+          if (extracted[fname]) continue;
+          extracted[fname] = m[2].replace(/\r\n/g, '\n');
+        }
+        if (Object.keys(extracted).length === 0 && mainFile && /\.html?$/i.test(mainFile)) {
+          const hm = /```(?:html|htm)\s*\r?\n([\s\S]*?)```/i.exec(fullMessage);
+          if (hm) extracted[mainFile] = hm[1].replace(/\r\n/g, '\n');
+        }
+        if (Object.keys(extracted).length > 0) {
+          for (const [name, content] of Object.entries(extracted)) {
+            fileSystem[name] = content;
+            dirtyFiles.add(name);
+            syncEditorModelIfViewing(name, content);
+            collectedFiles.push({ name });
+            if (!openTabs.includes(name)) openTabs.push(name);
+          }
+        }
+      }
+
+      if (collectedFiles.length) {
+        collectedFiles.forEach(f => {
+          if (!openTabs.includes(f.name)) openTabs.push(f.name);
+        });
+
+        const builtHtmlNames = collectedFiles.map(f => f.name).filter(name => name.endsWith('.html'));
+        const preferredBuiltMain = normalizeMainFile('index.html', Object.fromEntries(builtHtmlNames.map(n => [n, true])))
+          || (builtHtmlNames.includes('home.html') ? 'home.html' : builtHtmlNames[0] || null);
+        const htmlFile = preferredBuiltMain ? { name: preferredBuiltMain } : null;
+        if (htmlFile) mainFile = htmlFile.name;
+
+        renderFileTree();
+        renderTabs();
+
+        if (htmlFile && monacoReady) openFile(htmlFile.name);
+
+        showPreviewDock(true);
+        setTimeout(refreshPreview, 120);
+        saveNow();
+
+        const builtNames = new Set(collectedFiles.map(f => f.name));
+
+        const specPages = ((_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [])
+          .filter(p => typeof p === 'string' && p.endsWith('.html'));
+
+        const lastUserMsgs = aiHistory.filter(m => m.role === 'user').slice(-3)
+          .map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join(' ');
+        const msgPages = (lastUserMsgs.match(/[\w-]+\.html/g) || []);
+
+        const allPages = [...new Set([...specPages, ...msgPages])];
+
+        const missingPages = allPages
+          .filter(p => p.endsWith('.html') && !builtNames.has(p) && p !== 'index.html');
+
+        if (missingPages.length > 0) {
+          setTimeout(() => aiCallPageBuilds(missingPages), 600);
+        }
+
+        const cardsEl = document.createElement('div');
+        cardsEl.className = 'ai-file-cards';
+        collectedFiles.forEach(f => {
+          const col  = aiFileColor(f.name);
+          const card = document.createElement('div');
+          card.className = 'ai-file-card';
+          card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(pillFriendlyName(f.name)) + '</span>';
+          card.title = 'Open ' + f.name;
+          const fname = f.name;
+          card.onclick = () => { setMode('editor'); if (!openTabs.includes(fname)) openTabs.push(fname); renderTabs(); openFile(fname); };
+          cardsEl.appendChild(card);
+        });
+        const target = row._contentWrap || row;
+        target.appendChild(cardsEl);
+      }
+
+      if (textEl) { textEl.classList.remove('ai-stream-cursor'); textEl.innerHTML = formatChatText(fullMessage); }
+
+      if (fromEarlyClose && fullMessage && fullMessage.trim()) {
+        const note = document.createElement('p');
+        note.style.cssText = 'font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45';
+        note.textContent = 'The connection closed before the server finished. If you see code above, it was applied to your files when possible.';
+        (row._contentWrap || row).appendChild(note);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'ai-msg-meta';
+      meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
+      (row._contentWrap || row).appendChild(meta);
+
+      if (_stepPlan && _stepPlan.needs_steps && collectedFiles.length > 0) {
+        renderNextStepCard(row._contentWrap || row);
+        updateStepHeader();
+      }
+
+      const historyContent = JSON.stringify({ message: fullMessage, files: collectedFiles });
+      aiHistory.push({ role: 'assistant', content: historyContent });
+      aiAllMessages.push({ role: 'assistant', text: fullMessage, files: collectedFiles.map(f => f.name), time: aiNow() });
+      aiSaveMsg('assistant', historyContent, collectedFiles.map(f => f.name));
+      scrollIfSticky();
+    };
+
     function processBuffer() {
-      const blocks = buf.split(/\n\n/);
+      const blocks = splitSSEFrames(buf);
       buf = blocks.pop() || '';
       for (const block of blocks) {
         const trimmed = block.trim();
         if (!trimmed) continue;
-        let eventType = null, dataStr = null;
-        for (const line of trimmed.split('\n')) {
+        let eventType = null;
+        const dataParts = [];
+        for (const line of trimmed.split(/\r?\n/)) {
           if (line.startsWith('event:')) eventType = line.slice(6).trim();
-          if (line.startsWith('data:'))  dataStr   = line.slice(5).trim();
+          else if (line.startsWith('data:')) dataParts.push(line.slice(5));
         }
-        if (!eventType || !dataStr) continue;
+        if (!eventType || !dataParts.length) continue;
+        const dataStr = dataParts.join('\n').trim();
         let data;
         try { data = JSON.parse(dataStr); } catch(e) { continue; }
 
@@ -4078,37 +4730,44 @@ async function aiCallAPI() {
         }
 
         if (eventType === 'message') {
-          fullMessage = data.message || fullMessage;
-          if (textEl) { textEl.className = 'ai-text'; textEl.innerHTML = formatChatText(fullMessage); }
-          scrollIfSticky();
+          const piece = data.message !== undefined && data.message !== null
+            ? data.message
+            : (data.text !== undefined && data.text !== null ? data.text : null);
+          if (piece !== null) {
+            fullMessage = mergeStreamedAssistantText(fullMessage, piece);
+            if (textEl) { textEl.className = 'ai-text'; textEl.innerHTML = formatChatText(fullMessage); }
+            scrollIfSticky();
+          }
         }
 
         // ── FILE STREAMING — update pill line count live ──────────────────
-        if (eventType === 'file_start' && data.name) {
-          currentStreamingFile = data.name;
-          aiAddEditingPill(data.name);
+        const fileKey = data.name || data.path || data.filename;
+        if ((eventType === 'file_start' || eventType === 'output_file_start') && fileKey) {
+          currentStreamingFile = fileKey;
+          aiAddEditingPill(fileKey);
         }
 
         if (eventType === 'file_delta' && data.text && currentStreamingFile) {
           aiUpdatePillLines(currentStreamingFile, data.text);
         }
 
-        if (eventType === 'file' && data.name) {
-          let content = data.content;
-          if (data.encoding === 'base64') {
-            try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); }
+        if ((eventType === 'file' || eventType === 'output_file' || eventType === 'write_file') && fileKey) {
+          let content = data.content ?? data.code;
+          if (content !== undefined && content !== null) {
+            if (data.encoding === 'base64') {
+              try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); }
+            }
+            fileSystem[fileKey] = content;
+            dirtyFiles.add(fileKey);
+            syncEditorModelIfViewing(fileKey, content);
+            if (!collectedNames.has(fileKey)) {
+              collectedFiles.push({ name: fileKey });
+              collectedNames.add(fileKey);
+            }
+            aiMarkPillDone(fileKey);
+            currentStreamingFile = null;
+            livePreviewUpdate(fileKey.endsWith('.html'));
           }
-          // Save to fileSystem — this is the critical step
-          fileSystem[data.name] = content;
-          dirtyFiles.add(data.name);
-          // Only add to collectedFiles once — auto-fix may re-emit the same filename
-          if (!collectedNames.has(data.name)) {
-            collectedFiles.push({ name: data.name });
-            collectedNames.add(data.name);
-          }
-          aiMarkPillDone(data.name);
-          currentStreamingFile = null;
-          livePreviewUpdate(data.name.endsWith('.html'));
         }
 
         // ── AUTO-FIX EVENTS — update fileSystem silently ──────────────────
@@ -4127,135 +4786,36 @@ async function aiCallAPI() {
           dirtyFiles.add(data.name);
           aiMarkPillDone(data.name);
           currentStreamingFile = null;
-          // Update editor if this file is open
-          if (activeFile === data.name && editor && monacoReady) {
-            const model = editor.getModel();
-            if (model) model.setValue(content);
-          }
+          syncEditorModelIfViewing(data.name, content);
           livePreviewUpdate(data.name.endsWith('.html'));
         }
 
+        // ── PATCH FAILED — retry that file as a full rewrite ─────────────
+        if (eventType === 'patch_failed' && data.name) {
+          console.warn('[PATCH] failed for', data.name, '— retrying as full rewrite');
+          aiMarkPillDone(data.name);
+          aiRetryAsFullRewrite(data.name, fullMessage);
+        }
+
         if (eventType === 'done') {
-          // ── FALLBACK: if the model streamed code as chat text instead of files,
-          // extract it client-side and inject into the editor anyway ──────────
-          if (collectedFiles.length === 0 && fullMessage) {
-            const fenceMap = { html: 'index.html', css: 'style.css', javascript: 'main.js', js: 'main.js' };
-            const fenceRe = /```(\w+)\s*\n([\s\S]*?)```/g;
-            let m;
-            const extracted = {};
-            // Track how many html files we've seen so multi-page builds name correctly
-            const htmlCount = { n: 0 };
-            while ((m = fenceRe.exec(fullMessage)) !== null) {
-              const lang = m[1].toLowerCase();
-              let fname = fenceMap[lang];
-              if (!fname) continue;
-              // If we already have index.html, try to find a filename hint in preceding text
-              if (fname === 'index.html' && extracted['index.html']) {
-                htmlCount.n++;
-                // Look for a filename mentioned just before this fence
-                const before = fullMessage.slice(Math.max(0, m.index - 200), m.index);
-                const fnMatch = before.match(/(\w[\w.-]*\.html)\s*[:`]?\s*$/i);
-                fname = fnMatch ? fnMatch[1] : `page${htmlCount.n}.html`;
-              }
-              extracted[fname] = m[2];
-            }
-            if (Object.keys(extracted).length > 0) {
-              for (const [name, content] of Object.entries(extracted)) {
-                fileSystem[name] = content;
-                dirtyFiles.add(name);
-                collectedFiles.push({ name });
-                if (!openTabs.includes(name)) openTabs.push(name);
-              }
-            }
+          finalizeAssistantStream(false);
+          // Refresh local context cache after build — extraction runs server-side so
+          // give it a moment then pull the updated blob for the next message
+          if (projectId && sb) {
+            setTimeout(async () => {
+              try {
+                const { data } = await sb.from('projects').select('ai_context').eq('id', projectId).single();
+                if (data?.ai_context && Object.keys(data.ai_context).length) {
+                  _aiProjectContext = data.ai_context;
+                }
+              } catch(e) {}
+            }, 3000);
           }
-
-          if (collectedFiles.length) {
-            // Add all built files to openTabs
-            collectedFiles.forEach(f => {
-              if (!openTabs.includes(f.name)) openTabs.push(f.name);
-            });
-
-            // Determine main file
-            const htmlFile = collectedFiles.find(f => f.name === 'index.html')
-              || collectedFiles.find(f => f.name.endsWith('.html'))
-              || collectedFiles[0];
-            if (htmlFile) mainFile = htmlFile.name;
-
-            renderFileTree();
-            renderTabs();
-
-            // Open the main file in the editor (even if user is in AI mode — it loads silently)
-            if (htmlFile && monacoReady) openFile(htmlFile.name);
-
-            // Show preview
-            previewVisible = true;
-            document.getElementById('rightPanel').classList.remove('hidden');
-            document.getElementById('btnPreview').classList.add('active');
-            setTimeout(refreshPreview, 120);
-            saveNow();
-
-            // Sequential page builds — detect missing pages
-            const builtNames = new Set(collectedFiles.map(f => f.name));
-
-            // 1. Get page list from spec/brief (only if they contain real .html filenames)
-            const specPages = ((_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [])
-              .filter(p => typeof p === 'string' && p.endsWith('.html'));
-
-            // 2. Always scan last 3 user messages for explicit .html filenames
-            const lastUserMsgs = aiHistory.filter(m => m.role === 'user').slice(-3)
-              .map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join(' ');
-            const msgPages = (lastUserMsgs.match(/[\w-]+\.html/g) || []);
-
-            // 3. Merge both sources, dedupe
-            const allPages = [...new Set([...specPages, ...msgPages])];
-
-            const missingPages = allPages
-              .filter(p => p.endsWith('.html') && !builtNames.has(p) && p !== 'index.html');
-
-            if (missingPages.length > 0) {
-              setTimeout(() => aiCallPageBuilds(missingPages), 600);
-            }
-
-            // Add file cards to the AI message
-            const cardsEl = document.createElement('div');
-            cardsEl.className = 'ai-file-cards';
-            collectedFiles.forEach(f => {
-              const col  = aiFileColor(f.name);
-              const card = document.createElement('div');
-              card.className = 'ai-file-card';
-              card.innerHTML = '<div class="ai-file-card-dot" style="background:' + col + '"></div><span style="color:' + col + '">' + escHtml(pillFriendlyName(f.name)) + '</span>';
-              card.title = 'Open ' + f.name;
-              const fname = f.name;
-              card.onclick = () => { setMode('editor'); if (!openTabs.includes(fname)) openTabs.push(fname); renderTabs(); openFile(fname); };
-              cardsEl.appendChild(card);
-            });
-            const target = row._contentWrap || row;
-            target.appendChild(cardsEl);
-          }
-
-          if (textEl) { textEl.classList.remove('ai-stream-cursor'); textEl.innerHTML = formatChatText(fullMessage); }
-
-          const meta = document.createElement('div');
-          meta.className = 'ai-msg-meta';
-          meta.innerHTML = '<div class="ai-msg-actions"><button class="ai-act-btn" title="Copy" onclick="aiCopyEl(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div><div class="ai-msg-time">' + aiNow() + '</div>';
-          (row._contentWrap || row).appendChild(meta);
-
-          // Render next step card if in step mode (after meta, always at bottom)
-          if (_stepPlan && _stepPlan.needs_steps && collectedFiles.length > 0) {
-            renderNextStepCard(row._contentWrap || row);
-            updateStepHeader();
-          }
-
-          const historyContent = JSON.stringify({ message: fullMessage, files: collectedFiles });
-          aiHistory.push({ role: 'assistant', content: historyContent });
-          aiAllMessages.push({ role: 'assistant', text: fullMessage, files: collectedFiles.map(f => f.name), time: aiNow() });
-          aiSaveMsg('assistant', historyContent, collectedFiles.map(f => f.name));
-          scrollIfSticky();
         }
 
         if (eventType === 'critique') {
           // Replace existing critique card if there is one (auto-fix updates it)
-          const existingCritique = (row._contentWrap || row).querySelector('.ai-critique');
+          const existingCritique = (row._contentWrap || row).querySelector('.ai-suggestions');
           if (existingCritique) existingCritique.remove();
           renderCritique(data, row._contentWrap || row);
           scrollIfSticky();
@@ -4283,6 +4843,7 @@ async function aiCallAPI() {
     }
     buf += '\n\n';
     processBuffer();
+    if (!streamFinalized && row) finalizeAssistantStream(true);
 
   } catch(err) {
     if (err.name === 'AbortError') {
@@ -4296,11 +4857,22 @@ async function aiCallAPI() {
         }
       }
     } else {
+      if (row && !streamFinalized && finalizeAssistantStream.length > 0 && String(fullMessage || '').trim()) {
+        try { finalizeAssistantStream(true); } catch (e2) {}
+      }
       aiHideTyping();
-      if (textEl) {
-        textEl.innerHTML = '<p style="color:var(--err)">Something went wrong: ' + escHtml(err.message) + '</p>';
+      if (err.aiRateLimit) {
+        showAiRateLimitCooldown(err.cooldownSeconds != null ? err.cooldownSeconds : 60, err.aiRateLimitTokens);
+      }
+      if (textEl && streamFinalized) {
+        const errP = document.createElement('p');
+        errP.style.cssText = 'color:var(--err);margin-top:10px;font-size:12px';
+        errP.textContent = escHtml(err.message);
+        (textEl.parentNode || textEl).appendChild(errP);
+      } else if (textEl) {
+        textEl.innerHTML = '<p style="color:var(--err)">' + escHtml(err.message) + '</p>';
       } else {
-        aiAddAI('Something went wrong: ' + err.message, []);
+        aiAddAI(err.message, []);
       }
       console.error('AI error:', err);
     }
@@ -4334,15 +4906,26 @@ async function aiCallPageBuilds(pageNames) {
         body: JSON.stringify({
           page_mode: true,
           page_name: pageName,
-          messages: aiHistory.filter(m => m.role === 'user'),
-          files: fileSystem,
+          messages: sliceAiHistoryForApi(aiHistory.filter(m => m.role === 'user')),
+          files: buildAiFilesPayload(),
           brief: _pendingBrief || undefined,
           spec: _pendingSpec || undefined,
-          stream: true
+          stream: true,
+          main_file: mainFile,
+          active_file: activeFile || mainFile,
+          project_has_real_files: !isDefaultCode(fileSystem),
+          project_id: projectId || undefined,
+          ai_context: Object.keys(_aiProjectContext).length ? _aiProjectContext : undefined
         })
       });
 
       if (!res.ok || !res.body) {
+        if (res.status === 429) {
+          try {
+            const rlErr = await buildHttpError(res);
+            if (rlErr.aiRateLimit) showAiRateLimitCooldown(rlErr.cooldownSeconds != null ? rlErr.cooldownSeconds : 60, rlErr.aiRateLimitTokens);
+          } catch (e) {}
+        }
         aiMarkPillDone(pageName);
         continue;
       }
@@ -4352,17 +4935,19 @@ async function aiCallPageBuilds(pageNames) {
       let buf = '';
 
       const processPageBuffer = () => {
-        const blocks = buf.split(/\n\n/);
+        const blocks = splitSSEFrames(buf);
         buf = blocks.pop() || '';
         for (const block of blocks) {
           const trimmed = block.trim();
           if (!trimmed) continue;
-          let eventType = null, dataStr = null;
-          for (const line of trimmed.split('\n')) {
+          let eventType = null;
+          const dataParts = [];
+          for (const line of trimmed.split(/\r?\n/)) {
             if (line.startsWith('event:')) eventType = line.slice(6).trim();
-            if (line.startsWith('data:'))  dataStr   = line.slice(5).trim();
+            else if (line.startsWith('data:')) dataParts.push(line.slice(5));
           }
-          if (!eventType || !dataStr) continue;
+          if (!eventType || !dataParts.length) continue;
+          const dataStr = dataParts.join('\n').trim();
           let data;
           try { data = JSON.parse(dataStr); } catch { continue; }
 
@@ -4377,6 +4962,7 @@ async function aiCallPageBuilds(pageNames) {
             }
             fileSystem[data.name] = content;
             dirtyFiles.add(data.name);
+            syncEditorModelIfViewing(data.name, content);
             if (!openTabs.includes(data.name)) openTabs.push(data.name);
             aiMarkPillDone(data.name);
             renderFileTree();

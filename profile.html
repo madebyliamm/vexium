@@ -31,10 +31,9 @@
       background:rgba(10,10,10,.92);backdrop-filter:blur(20px);
       border-bottom:1px solid var(--b1);
     }
-    .tb-logo{display:flex;align-items:center;gap:7px;flex-shrink:0}
-    .tb-logo img{width:20px;height:20px;border-radius:4px}
-    .tb-logo-t{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em;white-space:nowrap}
-    .tb-logo-t span{color:var(--sub)}
+    .tb-logo{display:flex;align-items:center;flex-shrink:0}
+    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
+    .tb-logo:hover img,.tb-logo:focus-visible img{transform:scale(1.08)}
     .tb-r{display:flex;align-items:center;gap:clamp(4px,0.8vw,10px);flex-shrink:0}
     /* search */
     .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:320px;margin:0 auto}
@@ -323,9 +322,8 @@
 <body>
 
 <div id="topbar">
-  <a href="home.html" class="tb-logo">
-    <img src="vexium_logo.png" alt="V"/>
-    <span class="tb-logo-t">VEXIUM<span>.AI</span></span>
+  <a href="home.html" class="tb-logo" title="Vexium — Home">
+    <img src="vexium_logo.png" alt="Vexium"/>
   </a>
   <div class="tb-search" id="tbSearchWrap">
     <svg class="tb-search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -732,9 +730,15 @@
 
   /* ── USAGE BAR ── */
   const USAGE_BUDGET_CENTS = 2000; // $20.00 = 2000 cents
-  function renderUsageBar(creditsCents, month){
+  const ESTIMATED_CENTS_PER_RESPONSE = 25;
+  function renderUsageBar(creditsCents, month, opts){
+    const options = opts || {};
     const currentMonth = new Date().toISOString().slice(0,7);
-    const used = (month === currentMonth) ? (creditsCents || 0) : 0;
+    const normalizedMonth = String(month || '').slice(0,7);
+    const usedCents = Number(creditsCents);
+    const used = (normalizedMonth === currentMonth && Number.isFinite(usedCents))
+      ? Math.max(0, usedCents)
+      : 0;
     const pct = Math.min(100, Math.round((used / USAGE_BUDGET_CENTS) * 100));
     const remaining = Math.max(0, 100 - pct);
 
@@ -763,7 +767,8 @@
       sub.textContent = 'You\'ve used your full $20 allowance. Limit resets on the 1st.';
     } else {
       label.textContent = pct + '% used';
-      sub.textContent = remaining + '% of your monthly allowance remaining. Resets on the 1st.';
+      sub.textContent = remaining + '% of your monthly allowance remaining. Resets on the 1st.'
+        + (options.estimated ? ' (Estimated from AI runs while usage sync catches up.)' : '');
     }
   }
 
@@ -771,7 +776,26 @@
     if(!sb||!myId) return;
     try{
       const{data}=await sb.from('profiles').select('credits_used_cents,usage_month').eq('id',myId).single();
-      renderUsageBar(data?.credits_used_cents||0, data?.usage_month||'');
+      const rawCents = Number(data?.credits_used_cents || 0);
+      const usageMonth = data?.usage_month || '';
+      renderUsageBar(rawCents, usageMonth);
+
+      // Fallback: if spend sync has not updated yet, estimate usage from this month's
+      // assistant replies so the progress bar still reflects recent activity.
+      const currentMonth = new Date().toISOString().slice(0,7);
+      if (rawCents <= 0 && String(usageMonth || '').slice(0,7) === currentMonth) {
+        const monthStart = currentMonth + '-01T00:00:00.000Z';
+        const { count } = await sb
+          .from('ai_messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', myId)
+          .eq('role', 'assistant')
+          .gte('created_at', monthStart);
+        const estimatedCents = Math.max(0, Number(count || 0)) * ESTIMATED_CENTS_PER_RESPONSE;
+        if (estimatedCents > 0) {
+          renderUsageBar(estimatedCents, currentMonth, { estimated: true });
+        }
+      }
     }catch(e){
       const label=document.getElementById('usageBarLabel');
       if(label) label.textContent='Could not load usage';

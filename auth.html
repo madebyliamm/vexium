@@ -39,10 +39,9 @@
     }
 
     /* LOGO */
-    .card-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px;justify-content:center}
-    .card-logo img{width:28px;height:28px;border-radius:5px}
-    .card-logo-t{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.02em}
-    .card-logo-t span{color:var(--muted)}
+    .card-logo{display:flex;align-items:center;margin-bottom:26px;justify-content:center;text-decoration:none}
+    .card-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
+    .card-logo:hover img,.card-logo:focus-visible img{transform:scale(1.08)}
 
     /* TABS */
     .tabs{display:flex;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:24px}
@@ -107,10 +106,9 @@
 </a>
 
 <div class="card">
-  <div class="card-logo">
-    <img src="vexium_logo.png" alt="V"/>
-    <span class="card-logo-t">VEXIUM<span>.AI</span></span>
-  </div>
+  <a href="index.html" class="card-logo" title="Vexium — Home">
+    <img src="vexium_logo.png" alt="Vexium"/>
+  </a>
 
   <div class="tabs">
     <div class="tab on" id="tabSignup" onclick="switchTab('signup')">Sign up</div>
@@ -237,6 +235,7 @@
         if (error.message.toLowerCase().includes('database')) {
           const { data: si } = await sb.auth.signInWithPassword({ email, password: pass });
           if (si?.session) {
+            localStorage.removeItem('vexium_guest');
             localStorage.setItem('vexium_username', user);
             window.location.href = 'home.html';
             return;
@@ -248,6 +247,7 @@
       }
       // Got a session immediately (email confirm disabled)
       if (data.session) {
+        localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';
         return;
@@ -255,6 +255,7 @@
       // No session yet — try signing in directly
       const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pass });
       if (si?.session) {
+        localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';
         return;
@@ -272,6 +273,7 @@
 
     if (!sb) {
       localStorage.setItem('vexium_guest', 'true');
+      localStorage.removeItem('vexium_guest');
       localStorage.setItem('vexium_username', user);
       window.location.href = 'home.html';
       return;

@@ -1081,13 +1081,15 @@
     .ai-step-plan-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
     .ai-step-plan-btn { width: 100%; padding: 8px; border-radius: var(--r-full); background: var(--text); border: none; color: var(--bg); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; margin-top: 4px; }
     .ai-step-plan-btn:hover { opacity: .82; }
-    .ai-typing { display: flex; align-items: center; gap: 5px; padding: 16px 0; width: var(--chat-w); margin: 0 auto; }
+    .ai-typing { display: flex; align-items: center; gap: 10px; padding: 16px 0; width: var(--chat-w); margin: 0 auto; }
     .ai-typing-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .ai-typing-avatar svg { width: 12px; height: 12px; fill: #fff; }
-    .ai-typing-dots { display: flex; gap: 4px; align-items: center; padding: 0 2px; }
-    .ai-typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: aiDot 1.3s infinite; }
-    .ai-typing-dots span:nth-child(2) { animation-delay: .18s; }
-    .ai-typing-dots span:nth-child(3) { animation-delay: .36s; }
+    .ai-typing-status { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: -0.01em; transition: opacity 0.2s ease; }
+
+    /* Suggestion pills */
+    .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .ai-suggestion-pill { padding: 7px 14px; border-radius: var(--r-full); background: transparent; border: 1px solid var(--border2); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); text-align: left; line-height: 1; white-space: nowrap; }
+    .ai-suggestion-pill:hover { background: var(--surface2); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
 
     /* Scroll to bottom button */
     #aiScrollBtn {
@@ -2821,6 +2823,8 @@ window.addEventListener('message', e => {
     const el = document.getElementById('errCount');
     el.textContent = errCnt + ' err'; el.className = 'con-badge con-err-bg show';
     document.getElementById('consoleReport').style.display = 'flex';
+    _previewErrors.push(e.data.msg);
+    if (_previewErrors.length > 5) _previewErrors.shift();
   }
   if (e.data.kind === 'warn') {
     warnCnt++;
@@ -3140,6 +3144,9 @@ document.addEventListener('keydown', e => {
 let aiHistory     = [];
 let aiAllMessages = [];
 let aiAttachments = [];
+let _aiTypingStatusInterval = null;
+let _previewErrors = [];
+const _aiTypingPhases = ['Thinking…', 'Planning your build…', 'Writing your files…', 'Almost done…'];
 /** Max chat turns sent to the edge (full history explodes input tokens / cost). */
 const AI_MAX_MESSAGES = 28;
 /** Full file content budget for main / active / recently mentioned paths. */
@@ -3293,12 +3300,24 @@ function aiShowTyping() {
   const el = document.createElement('div');
   el.className = 'ai-typing';
   el.id = 'aiTypingIndicator';
-  el.innerHTML = '<div class="ai-typing-avatar"><svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z" fill="#fff"/></svg></div><div class="ai-typing-dots"><span></span><span></span><span></span></div>';
+  el.innerHTML = '<div class="ai-typing-status" id="aiTypingStatus">' + _aiTypingPhases[0] + '</div>';
   msgs.appendChild(el);
   msgs.scrollTop = msgs.scrollHeight;
+  let phase = 0;
+  _aiTypingStatusInterval = setInterval(() => {
+    const statusEl = document.getElementById('aiTypingStatus');
+    if (!statusEl) { clearInterval(_aiTypingStatusInterval); _aiTypingStatusInterval = null; return; }
+    phase = (phase + 1) % _aiTypingPhases.length;
+    statusEl.style.opacity = '0';
+    setTimeout(() => {
+      const s = document.getElementById('aiTypingStatus');
+      if (s) { s.textContent = _aiTypingPhases[phase]; s.style.opacity = '1'; }
+    }, 200);
+  }, 2200);
 }
 
 function aiHideTyping() {
+  if (_aiTypingStatusInterval) { clearInterval(_aiTypingStatusInterval); _aiTypingStatusInterval = null; }
   const el = document.getElementById('aiTypingIndicator');
   if (el) el.remove();
 }
@@ -3321,6 +3340,27 @@ function aiCopyUserMsg(btn) {
     btn.classList.add('copied');
     setTimeout(() => btn.classList.remove('copied'), 1800);
   });
+}
+
+function renderAiSuggestions(items, targetEl) {
+  if (!items || !items.length || !targetEl) return;
+  const existing = targetEl.querySelector('.ai-suggestions');
+  if (existing) existing.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-suggestions';
+  items.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-suggestion-pill';
+    btn.textContent = text;
+    btn.onclick = () => {
+      document.querySelectorAll('.ai-suggestions').forEach(el => el.remove());
+      const inp = document.getElementById('aiBottomInput');
+      if (inp) { inp.value = String(text); aiAutoResize(inp); inp.focus(); }
+      aiSend(true);
+    };
+    wrap.appendChild(btn);
+  });
+  targetEl.appendChild(wrap);
 }
 
 function aiEditMsg(btn) {
@@ -4527,12 +4567,24 @@ async function aiCallAPI() {
 
   aiAbortController = new AbortController();
 
+  // Inject any preview JS errors as silent context so AI can fix them without being asked
+  let _apiMessages = sliceAiHistoryForApi(aiHistory);
+  if (_previewErrors.length > 0) {
+    const errNote = '\n\n[The preview has these JavaScript errors — fix them silently if they relate to your changes: ' + _previewErrors.join(' | ') + ']';
+    const lastMsg = _apiMessages[_apiMessages.length - 1];
+    if (lastMsg && lastMsg.role === 'user') {
+      _apiMessages = [..._apiMessages];
+      _apiMessages[_apiMessages.length - 1] = { ...lastMsg, content: (typeof lastMsg.content === 'string' ? lastMsg.content : JSON.stringify(lastMsg.content)) + errNote };
+    }
+    _previewErrors = [];
+  }
+
   try {
     streamFinalized = false;
     const response = await edgeFetchWithAuth(AI_EDGE_URL, {
       method: 'POST',
       body: JSON.stringify({
-        messages: sliceAiHistoryForApi(aiHistory),
+        messages: _apiMessages,
         files: buildAiFilesPayload(),
         brief: _pendingBrief || undefined,
         spec: _pendingSpec || undefined,
@@ -4814,10 +4866,12 @@ async function aiCallAPI() {
         }
 
         if (eventType === 'critique') {
-          // Replace existing critique card if there is one (auto-fix updates it)
-          const existingCritique = (row._contentWrap || row).querySelector('.ai-suggestions');
-          if (existingCritique) existingCritique.remove();
           renderCritique(data, row._contentWrap || row);
+          scrollIfSticky();
+        }
+
+        if (eventType === 'suggestions' && data && Array.isArray(data.items) && data.items.length) {
+          renderAiSuggestions(data.items, row._contentWrap || row);
           scrollIfSticky();
         }
 

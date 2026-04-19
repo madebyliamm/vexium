@@ -214,6 +214,33 @@
     #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--text);color:var(--bg);border-radius:99px;padding:10px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
     #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
+    /* ══ ANALYTICS STRIP ══ */
+    .analytics-strip{margin-bottom:clamp(28px,3vw,44px)}
+    .analytics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+    @media(max-width:700px){.analytics-row{grid-template-columns:repeat(2,1fr)}}
+    .analytics-card{border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+    .analytics-card:nth-child(1){background:rgba(96,165,250,.08)}
+    .analytics-card:nth-child(2){background:rgba(167,139,250,.08)}
+    .analytics-card:nth-child(3){background:rgba(74,222,128,.08)}
+    .analytics-card:nth-child(4){background:rgba(251,191,36,.08)}
+    .analytics-card-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+    .analytics-card:nth-child(1) .analytics-card-label{color:rgba(96,165,250,.7)}
+    .analytics-card:nth-child(2) .analytics-card-label{color:rgba(167,139,250,.7)}
+    .analytics-card:nth-child(3) .analytics-card-label{color:rgba(74,222,128,.7)}
+    .analytics-card:nth-child(4) .analytics-card-label{color:rgba(251,191,36,.7)}
+    .analytics-card-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .analytics-card-value{font-size:clamp(22px,2vw,28px);font-weight:800;letter-spacing:-.5px;line-height:1}
+    .analytics-card-change{font-size:11px;font-weight:600;color:var(--sub)}
+    .analytics-card-change.up{color:var(--ok)}
+    .analytics-card-change.neutral{color:var(--sub)}
+    .analytics-card-placeholder{color:var(--b3)}
+    .analytics-footer{display:flex;align-items:center;justify-content:space-between}
+    .analytics-note{font-size:11px;color:var(--sub)}
+    .analytics-link{font-size:12px;font-weight:700;color:var(--sub);display:flex;align-items:center;gap:5px;transition:color .15s;cursor:pointer;background:none;border:none;font-family:var(--sans);padding:0}
+    .analytics-link svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+    .analytics-link:hover{color:var(--text)}
+    .analytics-link:hover svg{transform:translateX(2px)}
+
     /* ══ FRIENDS SLIDER ══ */
     .friends-section{margin-bottom:clamp(28px,3vw,44px)}
     .friends-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -337,6 +364,51 @@
     </button>
   </div>
   <div class="loading" id="loadingState">Loading projects…</div>
+
+  <!-- Analytics strip -->
+  <div class="analytics-strip" id="analyticsStrip" style="display:none">
+    <div class="analytics-row">
+      <div class="analytics-card">
+        <div class="analytics-card-label">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Visitors
+        </div>
+        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-change neutral">Last 30 days</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Page Views
+        </div>
+        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-change neutral">Last 30 days</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Live Sites
+        </div>
+        <div class="analytics-card-value analytics-card-placeholder" id="analyticsLiveSites">—</div>
+        <div class="analytics-card-change neutral">Published</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue
+        </div>
+        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-change neutral">Coming soon</div>
+      </div>
+    </div>
+    <div class="analytics-footer">
+      <span class="analytics-note">Visitor tracking activates when you publish your first site.</span>
+      <button class="analytics-link" onclick="window.location.href='analytics.html'">
+        View analytics
+        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
 
   <!-- Friends / People slider -->
   <div class="friends-section" id="friendsSection" style="display:none">
@@ -549,6 +621,10 @@
     }
     document.getElementById('loadingState').style.display='none';
     document.getElementById('pageSubCount').textContent=projects.length+' project'+(projects.length!==1?'s':'');
+    const liveSitesEl=document.getElementById('analyticsLiveSites');
+    if(liveSitesEl){liveSitesEl.textContent=projects.length;liveSitesEl.classList.remove('analytics-card-placeholder');}
+    const strip=document.getElementById('analyticsStrip');
+    if(strip)strip.style.display='';
     if(!projects.length){document.getElementById('emptyState').classList.add('show');return;}
     renderGrid();
   }

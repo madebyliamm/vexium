@@ -927,6 +927,11 @@
     .ai-file-card:hover { background: #2a2a2a; transform: translateY(-1px); color: var(--text); }
     .ai-file-card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
+    /* ── NEXT STEP BAR ── */
+    #aiNextStepBar { width: var(--chat-w, min(680px, 90%)); margin: 0 auto; padding: 0 0 6px; }
+    #aiNextStepBar:empty { display: none; }
+    #aiNextStepBar .ai-next-step-card { margin: 0; }
+
     /* ── LIVE FILE PILLS ── */
     #aiEditingPills { display: none; flex-wrap: wrap; gap: 6px; padding: 8px 0 4px; width: var(--chat-w, min(680px, 90%)); margin: 0 auto; }
     #aiEditingPills.show { display: flex; }
@@ -1086,10 +1091,11 @@
     .ai-typing-avatar svg { width: 12px; height: 12px; fill: #fff; }
     .ai-typing-status { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: -0.01em; transition: opacity 0.2s ease; }
 
-    /* Suggestion pills */
-    .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-    .ai-suggestion-pill { padding: 7px 14px; border-radius: var(--r-full); background: transparent; border: 1px solid var(--border2); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); text-align: left; line-height: 1; white-space: nowrap; }
-    .ai-suggestion-pill:hover { background: var(--surface2); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
+    /* Follow-up suggestion pills */
+    .ai-followup-pills { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+    .ai-followup-pill { display: flex; align-items: flex-start; gap: 8px; padding: 7px 12px; border-radius: var(--r-md); background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); text-align: left; line-height: 1.45; }
+    .ai-followup-pill::before { content: '•'; color: var(--border3); flex-shrink: 0; margin-top: 1px; }
+    .ai-followup-pill:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
 
     /* Scroll to bottom button */
     #aiScrollBtn {
@@ -1977,6 +1983,9 @@
 
         <!-- Live editing pills -->
         <div id="aiEditingPills"></div>
+
+        <!-- Next step bar (renders above the input) -->
+        <div id="aiNextStepBar"></div>
 
         <!-- Bottom input bar -->
         <div id="aiBottom">
@@ -3296,6 +3305,8 @@ function aiAddAI(text, files) {
 }
 
 function aiShowTyping() {
+  const nextStepBar = document.getElementById('aiNextStepBar');
+  if (nextStepBar) nextStepBar.innerHTML = '';
   const msgs = document.getElementById('aiMessages');
   const el = document.createElement('div');
   el.className = 'ai-typing';
@@ -3344,16 +3355,16 @@ function aiCopyUserMsg(btn) {
 
 function renderAiSuggestions(items, targetEl) {
   if (!items || !items.length || !targetEl) return;
-  const existing = targetEl.querySelector('.ai-suggestions');
+  const existing = targetEl.querySelector('.ai-followup-pills');
   if (existing) existing.remove();
   const wrap = document.createElement('div');
-  wrap.className = 'ai-suggestions';
+  wrap.className = 'ai-followup-pills';
   items.forEach(text => {
     const btn = document.createElement('button');
-    btn.className = 'ai-suggestion-pill';
+    btn.className = 'ai-followup-pill';
     btn.textContent = text;
     btn.onclick = () => {
-      document.querySelectorAll('.ai-suggestions').forEach(el => el.remove());
+      document.querySelectorAll('.ai-followup-pills').forEach(el => el.remove());
       const inp = document.getElementById('aiBottomInput');
       if (inp) { inp.value = String(text); aiAutoResize(inp); inp.focus(); }
       aiSend(true);
@@ -3584,12 +3595,14 @@ function formatChatText(raw) {
 
 // ── TEMPLATE SYSTEM ───────────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES = [
-  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build me a complete SaaS website with these pages: index.html (hero, features, testimonials, pricing, footer), pricing.html (detailed plans with comparison table), about.html (team, mission, story), and login.html (sign in + sign up tabs). Dark theme, modern design. Every nav link must work. All CTAs link to the right pages.' },
-  { id: 'tpl_port',   emoji: '🎨', name: 'Portfolio',    prompt: 'Build me a complete portfolio website with these pages: index.html (animated hero, about preview, featured work, contact CTA), work.html (project grid with filter chips), and contact.html (form, social links, availability status). Clean, editorial aesthetic. All navigation links work.' },
-  { id: 'tpl_store',  emoji: '🛍️', name: 'Online Store', prompt: 'Build me a complete e-commerce website with these pages: index.html (hero banner, featured products, categories, newsletter), shop.html (product grid with filter sidebar and sort), product.html (product detail with images, size selector, add to cart, reviews), and cart.html (cart items, order summary, checkout button). Minimal, premium aesthetic. All links work.' },
-  { id: 'tpl_agency', emoji: '⚡', name: 'Agency',       prompt: 'Build me a complete creative agency website with these pages: index.html (bold hero, services overview, case study previews, client logos, CTA), services.html (detailed service cards with process), work.html (project showcase with tags and filters), and contact.html (project inquiry form, team intro). Bold, high-impact design. All navigation works.' },
-  { id: 'tpl_rest',   emoji: '🍽️', name: 'Restaurant',   prompt: 'Build me a complete restaurant website with these pages: index.html (hero with reservation CTA, about section, featured dishes, hours/location), menu.html (full menu organized by category with prices and descriptions), and reservations.html (booking form with date/time/party picker). Warm, upscale aesthetic. All links work.' },
-  { id: 'tpl_blog',   emoji: '✍️', name: 'Blog',         prompt: 'Build me a complete blog website with these pages: index.html (featured post hero, recent posts grid, categories sidebar, newsletter signup), post.html (full article layout with cover image, author bio, related posts), and about.html (author profile, social links). Editorial, readable design. All navigation works.' },
+  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build me a complete SaaS website. A home page with hero, features, testimonials, pricing overview, and footer. A pricing page with detailed plans and a comparison table. An about page with team, mission, and story. A sign in page with sign in and sign up tabs. Light theme, ultra-minimal design — almost no visible borders, use whitespace and subtle background shifts instead of lines or dividers. Modern, polished aesthetic.' },
+  { id: 'tpl_port',   emoji: '🎨', name: 'Portfolio',    prompt: 'Build me a complete portfolio website. A home page with an animated hero, about preview, featured work, and contact CTA. A work page with a project grid and filter chips. A contact page with form, social links, and availability status. Clean, editorial design — minimal borders, whitespace-driven layout. All navigation links work.' },
+  { id: 'tpl_store',  emoji: '🛍️', name: 'Online Store', prompt: 'Build me a complete e-commerce website. A home page with hero banner, featured products, categories, and newsletter signup. A shop page with product grid, filter sidebar, and sort options. A product detail page with images, size selector, add to cart, and reviews. A cart page with order summary and checkout button. Minimal, premium aesthetic. All links work.' },
+  { id: 'tpl_agency', emoji: '⚡', name: 'Agency',       prompt: 'Build me a complete creative agency website. A home page with bold hero, services overview, case study previews, client logos, and CTA. A services page with detailed cards and process breakdown. A work page with project showcase, tags, and filters. A contact page with project inquiry form and team intro. Bold, high-impact design — barely any borders, clean whitespace layout. All navigation works.' },
+  { id: 'tpl_rest',   emoji: '🍽️', name: 'Restaurant',   prompt: 'Build me a complete restaurant website. A home page with a cinematic hero and reservation CTA, about section, featured dishes, and hours plus location. A menu page with all items organized by category with prices and descriptions. A reservations page with a booking form including date, time, and party size. Warm, upscale aesthetic. All links work.' },
+  { id: 'tpl_blog',   emoji: '✍️', name: 'Blog',         prompt: 'Build me a complete blog website. A home page with featured post hero, recent posts grid, categories, and newsletter signup. A post page with full article layout, cover image, author bio, and related posts. An about page with author profile and social links. Editorial, readable design — minimal borders, generous whitespace. All navigation works.' },
+  { id: 'tpl_app',    emoji: '📱', name: 'App',          prompt: 'Build me a complete mobile app landing page. A home page with a bold hero showcasing app screens or a product visual, key features with icons, social proof, and app store download buttons. A features page with detailed capabilities and benefit-focused copy. A pricing page for subscription tiers. Ultra-clean design — no borders, heavy whitespace, strong typography hierarchy. All links work.' },
+  { id: 'tpl_creator',emoji: '⭐', name: 'Creator',      prompt: 'Build me a complete creator or personal brand website. A home page with a bold personal hero, what I do, featured content or work, and a CTA to follow or work together. A content page showcasing videos, posts, or products in a clean grid. A work with me page with service offerings and a contact or booking form. Warm, personality-driven design — minimal borders, expressive typography, feels like a real person built it. All navigation works.' },
 ];
 const MAX_CUSTOM_TEMPLATES = 10;
 let tplEditIndex = -1;
@@ -4403,7 +4416,10 @@ function renderNextStepCard(targetEl) {
   if (!_stepPlan) return;
   const nextIdx = _currentStep + 1;
   const nextStep = _stepPlan.steps[nextIdx];
-  if (!nextStep) return; // no more steps — project is done
+  if (!nextStep) return;
+  const bar = document.getElementById('aiNextStepBar');
+  const container = bar || targetEl;
+  if (bar) bar.innerHTML = '';
   const card = document.createElement('div');
   card.className = 'ai-next-step-card';
   card.innerHTML =
@@ -4412,8 +4428,7 @@ function renderNextStepCard(targetEl) {
       '<div class="ai-next-step-title">' + escHtml(nextStep.title) + '</div>' +
     '</div>' +
     '<button class="ai-next-step-btn" onclick="startStep(' + nextIdx + ')">Continue →</button>';
-  targetEl.appendChild(card);
-  scrollIfSticky();
+  container.appendChild(card);
 }
 
 // ── STEP SYSTEM END ───────────────────────────────────────────────────────────

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Analytics — Vexium</title>
+  <link rel="icon" type="image/png" href="logo_background.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    a{color:inherit;text-decoration:none} a:visited{color:inherit}
+    :root{
+      --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;
+      --b1:#262626;--b2:#333333;--b3:#444444;
+      --a1:#ffffff;--a2:#888888;
+      --text:#ffffff;--sub:#666666;
+      --ok:#4ade80;--err:#f87171;--warn:#fbbf24;
+      --sans:'Plus Jakarta Sans',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:99px}
+
+    /* TOPBAR */
+    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+    .tb-logo{display:flex;align-items:center;flex-shrink:0}
+    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
+    .tb-logo:hover img{transform:scale(1.08)}
+    .tb-back{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--sub);transition:color .15s;cursor:pointer;background:none;border:none;font-family:var(--sans);padding:0}
+    .tb-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .tb-back:hover{color:var(--text)}
+    .tb-sep{width:1px;height:16px;background:var(--b2)}
+    .tb-title{font-size:13px;font-weight:700}
+    .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000 !important;cursor:pointer;flex-shrink:0;text-decoration:none}
+
+    /* PAGE */
+    .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,56px)}
+    .page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;gap:16px;flex-wrap:wrap}
+    .page-title{font-size:clamp(20px,2.2vw,32px);font-weight:800;letter-spacing:-.5px}
+    .page-sub{font-size:13px;color:var(--sub);margin-top:4px}
+    .range-pills{display:flex;gap:4px}
+    .range-pill{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;background:transparent;border:none;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .range-pill.active,.range-pill:hover{background:var(--s2);color:var(--text)}
+
+    /* STAT GRID */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+    @media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+    .stat-card{border-radius:14px;padding:20px 22px}
+    .stat-card:nth-child(1){background:rgba(96,165,250,.08)}
+    .stat-card:nth-child(2){background:rgba(167,139,250,.08)}
+    .stat-card:nth-child(3){background:rgba(74,222,128,.08)}
+    .stat-card:nth-child(4){background:rgba(251,191,36,.08)}
+    .stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .stat-card:nth-child(1) .stat-label{color:rgba(96,165,250,.7)}
+    .stat-card:nth-child(2) .stat-label{color:rgba(167,139,250,.7)}
+    .stat-card:nth-child(3) .stat-label{color:rgba(74,222,128,.7)}
+    .stat-card:nth-child(4) .stat-label{color:rgba(251,191,36,.7)}
+    .stat-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .stat-value{font-size:clamp(26px,2.4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:6px}
+    .stat-value.empty{color:var(--b3)}
+    .stat-change{font-size:11px;font-weight:600;color:var(--sub);display:flex;align-items:center;gap:4px}
+    .stat-change svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .stat-change.up{color:var(--ok)}
+
+    /* CHART AREA */
+    .section{margin-bottom:32px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .section-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+    .chart-card{background:var(--s1);border-radius:14px;padding:24px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+    .chart-empty-icon{width:36px;height:36px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center}
+    .chart-empty-icon svg{width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .chart-empty-t{font-size:13px;font-weight:700;color:var(--sub)}
+    .chart-empty-s{font-size:11px;color:var(--b3);text-align:center;max-width:260px;line-height:1.5}
+
+    /* SITES TABLE */
+    .sites-table{width:100%;border-collapse:collapse}
+    .sites-table th{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);padding:0 16px 10px;text-align:left;border-bottom:1px solid var(--b1)}
+    .sites-table th:not(:first-child){text-align:right}
+    .sites-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+    .sites-table td:not(:first-child){text-align:right;color:var(--sub);font-size:12px;font-weight:600}
+    .sites-table tr:last-child td{border-bottom:none}
+    .site-row-name{font-weight:700;display:flex;align-items:center;gap:8px}
+    .site-row-dot{width:7px;height:7px;border-radius:50%;background:var(--b2);flex-shrink:0}
+    .sites-empty{text-align:center;padding:40px;font-size:12px;color:var(--sub)}
+
+    /* COMING SOON PILL */
+    .coming-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:rgba(251,191,36,.12);font-size:10px;font-weight:700;color:rgba(251,191,36,.7);letter-spacing:.02em}
+    .coming-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--warn);flex-shrink:0}
+
+    /* TWO-COL */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:760px){.two-col{grid-template-columns:1fr}}
+    .mini-card{background:var(--s1);border-radius:14px;padding:20px 22px}
+    .mini-card-head{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+    .mini-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:12px}
+    .mini-list-item:last-child{border-bottom:none}
+    .mini-list-label{color:var(--sub);font-weight:600}
+    .mini-list-val{font-weight:700}
+    .mini-empty{font-size:11px;color:var(--b3);padding:16px 0;text-align:center}
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <a href="home.html" class="tb-logo"><img src="logo_background.png" alt="Vexium"/></a>
+  <div class="tb-sep"></div>
+  <button class="tb-back" onclick="history.back()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </button>
+  <div class="tb-sep"></div>
+  <span class="tb-title">Analytics</span>
+  <div class="tb-right">
+    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Analytics</div>
+      <div class="page-sub">Visitor tracking activates when you publish your first site.</div>
+    </div>
+    <div class="range-pills">
+      <button class="range-pill active">7d</button>
+      <button class="range-pill">30d</button>
+      <button class="range-pill">All time</button>
+    </div>
+  </div>
+
+  <!-- Key stats -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Unique Visitors
+      </div>
+      <div class="stat-value empty">—</div>
+      <div class="stat-change">No data yet</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Page Views
+      </div>
+      <div class="stat-value empty">—</div>
+      <div class="stat-change">No data yet</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Avg. Session
+      </div>
+      <div class="stat-value empty">—</div>
+      <div class="stat-change">No data yet</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Revenue
+        <span class="coming-pill">Soon</span>
+      </div>
+      <div class="stat-value empty">—</div>
+      <div class="stat-change">Coming soon</div>
+    </div>
+  </div>
+
+  <!-- Traffic chart -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Traffic over time</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-empty-icon">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="chart-empty-t">No traffic data yet</div>
+      <div class="chart-empty-s">Publish your first site and share it — visitors will appear here.</div>
+    </div>
+  </div>
+
+  <!-- Per-site breakdown + top sources -->
+  <div class="two-col" style="margin-bottom:32px">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Sites</div>
+      </div>
+      <div class="mini-card">
+        <table class="sites-table">
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Visitors</th>
+              <th>Views</th>
+            </tr>
+          </thead>
+          <tbody id="sitesTableBody">
+            <tr><td colspan="3" class="sites-empty">No sites published yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Top sources</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-empty">No referrer data yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Devices + locations -->
+  <div class="two-col">
+    <div class="section">
+      <div class="section-head"><div class="section-title">Devices</div></div>
+      <div class="mini-card">
+        <div class="mini-empty">No data yet</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><div class="section-title">Top locations</div></div>
+      <div class="mini-card">
+        <div class="mini-empty">No data yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MDkxOTUsImV4cCI6MjA2MDA4NTE5NX0.ZKHdTLSEsQYKmVnM3T9gJ59l8U6V6DYxHFrcrOmXMM4';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    const u = session.user;
+    const initials = (u.user_metadata?.display_name || u.email || '?').trim().slice(0, 2).toUpperCase();
+    const pfp = document.getElementById('tbPfp');
+    if (pfp) pfp.textContent = initials;
+
+    // Load projects to populate sites table with placeholder rows
+    try {
+      const { data: projects } = await sb.from('projects').select('id,name,updated_at').eq('user_id', u.id).order('updated_at', { ascending: false });
+      const tbody = document.getElementById('sitesTableBody');
+      if (projects && projects.length) {
+        tbody.innerHTML = projects.map(p =>
+          `<tr>
+            <td><div class="site-row-name"><div class="site-row-dot"></div>${escHtml(p.name || 'Untitled')}</div></td>
+            <td>—</td>
+            <td>—</td>
+          </tr>`
+        ).join('');
+      }
+    } catch (e) {}
+  })();
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Range pill toggle (UI only for now)
+  document.querySelectorAll('.range-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.range-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

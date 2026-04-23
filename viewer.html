@@ -184,6 +184,19 @@
     }, { once: false });
 
     renderPage(mainFile);
+
+    // Track this page view
+    (function(){
+      try {
+        var sid = sessionStorage.getItem('_vsid') || Math.random().toString(36).slice(2);
+        sessionStorage.setItem('_vsid', sid);
+        fetch('https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_id: projectId, page: '/', referrer: document.referrer, session_id: sid })
+        }).catch(function(){});
+      } catch(e) {}
+    })();
   }
 
   window.addEventListener('load', init);

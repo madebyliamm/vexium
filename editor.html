@@ -2721,8 +2721,18 @@ document.getElementById('epOverlay').addEventListener('click', e => {
 // ── PREVIEW ───────────────────────────────────────────────────────────────────
 function buildPageHtml(pageName) {
   let html = fileSystem[pageName] || '';
+
+  // Substitute project ID placeholder so AI-generated backend calls work in preview
+  if (projectId) {
+    html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
+  }
+
   Object.entries(fileSystem).forEach(([fn, fc]) => {
     if (!fc || fn === pageName) return;
+    // Also substitute placeholder inside inlined files
+    if (projectId && typeof fc === 'string') {
+      fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
+    }
     const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (fn.endsWith('.css')) {
       const safe = fc.replace(/<\/style>/gi, '<\\/style>');
@@ -2735,11 +2745,14 @@ function buildPageHtml(pageName) {
       html = html.replace(new RegExp('url\\(["\']?' + safeFn + '["\']?\\)','gi'), 'url(' + fc + ')');
     }
   });
+  const _trackPid = projectId || '';
   const navInterceptor = [
     '(function(){',
     'var m=["log","warn","error","info"];m.forEach(function(k){var o=console[k];console[k]=function(){try{window.parent.postMessage({type:"console",kind:k,msg:Array.from(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}o.apply(console,arguments);};});',
     'window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});',
     'document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var href=a.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("http")||href.startsWith("mailto")||href.startsWith("tel"))return;var page=href.split("?")[0].split("#")[0];if(!page)return;e.preventDefault();window.parent.postMessage({type:"vexium_navigate",page:page},"*");});',
+    // Tracking: skip blob: URLs (editor preview) — only fires on real published deployments
+    '(function(){var pid="' + _trackPid.replace(/"/g, '') + '";if(!pid||location.href.startsWith("blob:"))return;var sid=sessionStorage.getItem("_vsid")||Math.random().toString(36).slice(2);sessionStorage.setItem("_vsid",sid);fetch("https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:pid,page:location.pathname||"/",referrer:document.referrer,session_id:sid})}).catch(function(){});})();',
     '})();'
   ].join('');
   const bridge = '<script>' + navInterceptor + '<\/script>';
@@ -3595,7 +3608,7 @@ function formatChatText(raw) {
 
 // ── TEMPLATE SYSTEM ───────────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES = [
-  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build me a complete SaaS website. A home page with hero, features, testimonials, pricing overview, and footer. A pricing page with detailed plans and a comparison table. An about page with team, mission, and story. A sign in page with sign in and sign up tabs. Light theme, ultra-minimal design — almost no visible borders, use whitespace and subtle background shifts instead of lines or dividers. Modern, polished aesthetic.' },
+  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build me a complete SaaS website. A home page with a hero that has a visual, features, testimonials, pricing overview, and footer. A pricing page with detailed plans and a comparison table. An about page with team, mission, and story. A sign in page with sign in and sign up tabs. Light theme, ultra-minimal design — almost no visible borders, use whitespace and subtle background shifts instead of lines or dividers. Modern, polished aesthetic.' },
   { id: 'tpl_port',   emoji: '🎨', name: 'Portfolio',    prompt: 'Build me a complete portfolio website. A home page with an animated hero, about preview, featured work, and contact CTA. A work page with a project grid and filter chips. A contact page with form, social links, and availability status. Clean, editorial design — minimal borders, whitespace-driven layout. All navigation links work.' },
   { id: 'tpl_store',  emoji: '🛍️', name: 'Online Store', prompt: 'Build me a complete e-commerce website. A home page with hero banner, featured products, categories, and newsletter signup. A shop page with product grid, filter sidebar, and sort options. A product detail page with images, size selector, add to cart, and reviews. A cart page with order summary and checkout button. Minimal, premium aesthetic. All links work.' },
   { id: 'tpl_agency', emoji: '⚡', name: 'Agency',       prompt: 'Build me a complete creative agency website. A home page with bold hero, services overview, case study previews, client logos, and CTA. A services page with detailed cards and process breakdown. A work page with project showcase, tags, and filters. A contact page with project inquiry form and team intro. Bold, high-impact design — barely any borders, clean whitespace layout. All navigation works.' },

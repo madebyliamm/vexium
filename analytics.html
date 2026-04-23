@@ -14,7 +14,6 @@
     :root{
       --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;
       --b1:#262626;--b2:#333333;--b3:#444444;
-      --a1:#ffffff;--a2:#888888;
       --text:#ffffff;--sub:#666666;
       --ok:#4ade80;--err:#f87171;--warn:#fbbf24;
       --sans:'Plus Jakarta Sans',sans-serif;
@@ -24,7 +23,6 @@
 
     /* TOPBAR */
     #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
-    .tb-logo{display:flex;align-items:center;flex-shrink:0}
     .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
     .tb-logo:hover img{transform:scale(1.08)}
     .tb-back{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--sub);transition:color .15s;cursor:pointer;background:none;border:none;font-family:var(--sans);padding:0}
@@ -36,69 +34,108 @@
     .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000 !important;cursor:pointer;flex-shrink:0;text-decoration:none}
 
     /* PAGE */
-    .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,56px)}
-    .page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;gap:16px;flex-wrap:wrap}
+    .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(28px,4vw,56px) clamp(16px,4vw,56px)}
+    .page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap}
     .page-title{font-size:clamp(20px,2.2vw,32px);font-weight:800;letter-spacing:-.5px}
     .page-sub{font-size:13px;color:var(--sub);margin-top:4px}
+    .head-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+
+    /* RANGE PILLS */
     .range-pills{display:flex;gap:4px}
     .range-pill{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;background:transparent;border:none;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s}
     .range-pill.active,.range-pill:hover{background:var(--s2);color:var(--text)}
 
-    /* STAT GRID */
-    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+    /* PROJECT DROPDOWN */
+    .proj-dd-wrap{position:relative}
+    .proj-dd-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;background:var(--s1);border:none;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:background .15s;white-space:nowrap;max-width:200px}
+    .proj-dd-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;flex-shrink:0;transition:transform .15s}
+    .proj-dd-btn.open svg{transform:rotate(180deg)}
+    .proj-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .proj-dd-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:var(--s1);border-radius:12px;padding:4px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
+    .proj-dd-menu.open{display:block}
+    .proj-dd-opt{padding:9px 12px;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px;color:var(--sub)}
+    .proj-dd-opt:hover{background:var(--s2);color:var(--text)}
+    .proj-dd-opt.active{color:var(--text);font-weight:700}
+    .proj-dd-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+    /* STAT CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
     @media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
-    .stat-card{border-radius:14px;padding:20px 22px}
+    .stat-card{border-radius:14px;padding:20px 22px;cursor:pointer;transition:opacity .15s,box-shadow .2s;user-select:none}
     .stat-card:nth-child(1){background:rgba(96,165,250,.08)}
     .stat-card:nth-child(2){background:rgba(167,139,250,.08)}
     .stat-card:nth-child(3){background:rgba(74,222,128,.08)}
     .stat-card:nth-child(4){background:rgba(251,191,36,.08)}
+    .stat-card.active:nth-child(1){box-shadow:0 0 0 2px rgba(96,165,250,.5)}
+    .stat-card.active:nth-child(2){box-shadow:0 0 0 2px rgba(167,139,250,.5)}
+    .stat-card.active:nth-child(3){box-shadow:0 0 0 2px rgba(74,222,128,.5)}
+    .stat-card.active:nth-child(4){box-shadow:0 0 0 2px rgba(251,191,36,.5)}
+    .stat-card:not(.active){opacity:.5}
     .stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-    .stat-card:nth-child(1) .stat-label{color:rgba(96,165,250,.7)}
-    .stat-card:nth-child(2) .stat-label{color:rgba(167,139,250,.7)}
-    .stat-card:nth-child(3) .stat-label{color:rgba(74,222,128,.7)}
-    .stat-card:nth-child(4) .stat-label{color:rgba(251,191,36,.7)}
+    .stat-card:nth-child(1) .stat-label{color:rgba(96,165,250,.9)}
+    .stat-card:nth-child(2) .stat-label{color:rgba(167,139,250,.9)}
+    .stat-card:nth-child(3) .stat-label{color:rgba(74,222,128,.9)}
+    .stat-card:nth-child(4) .stat-label{color:rgba(251,191,36,.9)}
     .stat-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .stat-value{font-size:clamp(26px,2.4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:6px}
     .stat-value.empty{color:var(--b3)}
-    .stat-change{font-size:11px;font-weight:600;color:var(--sub);display:flex;align-items:center;gap:4px}
-    .stat-change svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-    .stat-change.up{color:var(--ok)}
+    .stat-meta{font-size:11px;font-weight:600;color:var(--sub)}
 
-    /* CHART AREA */
-    .section{margin-bottom:32px}
-    .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .section-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
-    .chart-card{background:var(--s1);border-radius:14px;padding:24px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+    /* CHART */
+    .chart-section{background:var(--s1);border-radius:16px;padding:24px 28px;margin-bottom:10px}
+    .chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px}
+    .chart-title{font-size:13px;font-weight:700;letter-spacing:-.1px}
+    .chart-meta{font-size:11px;font-weight:700;color:var(--sub)}
+    .chart-area{display:flex;flex-direction:column;gap:8px}
+    .bar-chart{display:flex;align-items:flex-end;gap:3px;height:140px;width:100%}
+    .bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:opacity .12s;cursor:default;position:relative}
+    .bar:hover{opacity:.75}
+    .bar-labels{display:flex;gap:3px}
+    .bar-label{flex:1;font-size:9px;color:var(--sub);text-align:center;overflow:hidden;white-space:nowrap}
+
+    /* stacked bar segments */
+    .bar-stack{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:1px;min-height:2px}
+    .bar-seg{border-radius:2px;min-height:2px;transition:opacity .12s}
+    .bar-seg:hover{opacity:.75}
+    .bar-seg:first-child{border-radius:3px 3px 0 0}
+
+    /* color key */
+    .color-key{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04)}
+    .color-key-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--sub)}
+    .color-key-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+    /* empty state */
+    .chart-empty{height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
     .chart-empty-icon{width:36px;height:36px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center}
     .chart-empty-icon svg{width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .chart-empty-t{font-size:13px;font-weight:700;color:var(--sub)}
     .chart-empty-s{font-size:11px;color:var(--b3);text-align:center;max-width:260px;line-height:1.5}
 
-    /* SITES TABLE */
-    .sites-table{width:100%;border-collapse:collapse}
-    .sites-table th{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);padding:0 16px 10px;text-align:left;border-bottom:1px solid var(--b1)}
-    .sites-table th:not(:first-child){text-align:right}
-    .sites-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
-    .sites-table td:not(:first-child){text-align:right;color:var(--sub);font-size:12px;font-weight:600}
-    .sites-table tr:last-child td{border-bottom:none}
-    .site-row-name{font-weight:700;display:flex;align-items:center;gap:8px}
-    .site-row-dot{width:7px;height:7px;border-radius:50%;background:var(--b2);flex-shrink:0}
-    .sites-empty{text-align:center;padding:40px;font-size:12px;color:var(--sub)}
+    /* DETAIL */
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+    @media(max-width:760px){.detail-grid{grid-template-columns:1fr}}
+    .detail-card{background:var(--s1);border-radius:16px;padding:22px 24px}
+    .detail-card-title{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sub);margin-bottom:16px}
+    .detail-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.035);gap:12px}
+    .detail-row:last-child{border-bottom:none}
+    .detail-row-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;min-width:0}
+    .detail-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .detail-row-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .detail-row-val{font-size:12px;font-weight:700;color:var(--sub);flex-shrink:0}
+    .detail-bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.035)}
+    .detail-bar-row:last-child{border-bottom:none}
+    .detail-bar-label{font-size:12px;font-weight:600;color:var(--sub);width:72px;flex-shrink:0;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .detail-bar-track{flex:1;height:6px;background:var(--s2);border-radius:99px;overflow:hidden}
+    .detail-bar-fill{height:100%;border-radius:99px;transition:width .4s ease}
+    .detail-bar-pct{font-size:11px;font-weight:700;width:32px;text-align:right;flex-shrink:0;color:var(--sub)}
+    .detail-empty{font-size:11px;color:var(--b3);padding:12px 0;text-align:center}
 
-    /* COMING SOON PILL */
-    .coming-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:rgba(251,191,36,.12);font-size:10px;font-weight:700;color:rgba(251,191,36,.7);letter-spacing:.02em}
+    /* coming soon */
+    .coming-card{background:rgba(251,191,36,.06);border-radius:16px;padding:48px 24px;text-align:center;margin-bottom:10px}
+    .coming-card .cs-t{font-size:15px;font-weight:800;letter-spacing:-.2px;margin-bottom:6px;color:rgba(251,191,36,.9)}
+    .coming-card .cs-s{font-size:12px;color:var(--sub);line-height:1.6;max-width:320px;margin:0 auto}
+    .coming-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:rgba(251,191,36,.12);font-size:10px;font-weight:700;color:rgba(251,191,36,.8)}
     .coming-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--warn);flex-shrink:0}
-
-    /* TWO-COL */
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:760px){.two-col{grid-template-columns:1fr}}
-    .mini-card{background:var(--s1);border-radius:14px;padding:20px 22px}
-    .mini-card-head{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-    .mini-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:12px}
-    .mini-list-item:last-child{border-bottom:none}
-    .mini-list-label{color:var(--sub);font-weight:600}
-    .mini-list-val{font-weight:700}
-    .mini-empty{font-size:11px;color:var(--b3);padding:16px 0;text-align:center}
   </style>
 </head>
 <body>
@@ -121,153 +158,453 @@
   <div class="page-head">
     <div>
       <div class="page-title">Analytics</div>
-      <div class="page-sub">Visitor tracking activates when you publish your first site.</div>
+      <div class="page-sub" id="pageSub">Loading…</div>
     </div>
-    <div class="range-pills">
-      <button class="range-pill active">7d</button>
-      <button class="range-pill">30d</button>
-      <button class="range-pill">All time</button>
+    <div class="head-controls">
+      <!-- Project picker -->
+      <div class="proj-dd-wrap" id="projDdWrap">
+        <button class="proj-dd-btn" id="projDdBtn" onclick="toggleDd()">
+          <span id="projDdLabel">All projects</span>
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="proj-dd-menu" id="projDdMenu">
+          <div class="proj-dd-opt active" data-id="all" onclick="selectProject('all')">
+            <div class="proj-dd-dot" style="background:var(--b3)"></div>
+            All projects
+          </div>
+        </div>
+      </div>
+      <!-- Range pills -->
+      <div class="range-pills">
+        <button class="range-pill active" data-days="7">7d</button>
+        <button class="range-pill" data-days="30">30d</button>
+        <button class="range-pill" data-days="365">All time</button>
+      </div>
     </div>
   </div>
 
-  <!-- Key stats -->
+  <!-- Stat cards -->
   <div class="stat-grid">
-    <div class="stat-card">
+    <div class="stat-card active" data-metric="visitors" onclick="selectMetric('visitors')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Unique Visitors
       </div>
-      <div class="stat-value empty">—</div>
-      <div class="stat-change">No data yet</div>
+      <div class="stat-value empty" id="statVisitors">—</div>
+      <div class="stat-meta" id="statVisitorsMeta">—</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-metric="views" onclick="selectMetric('views')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Page Views
       </div>
-      <div class="stat-value empty">—</div>
-      <div class="stat-change">No data yet</div>
+      <div class="stat-value empty" id="statViews">—</div>
+      <div class="stat-meta" id="statViewsMeta">—</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-metric="sites" onclick="selectMetric('sites')">
       <div class="stat-label">
-        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        Avg. Session
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Live Sites
       </div>
-      <div class="stat-value empty">—</div>
-      <div class="stat-change">No data yet</div>
+      <div class="stat-value empty" id="statSites">—</div>
+      <div class="stat-meta" id="statSitesMeta">—</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-metric="revenue" onclick="selectMetric('revenue')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Revenue
         <span class="coming-pill">Soon</span>
       </div>
       <div class="stat-value empty">—</div>
-      <div class="stat-change">Coming soon</div>
+      <div class="stat-meta">Coming soon</div>
     </div>
   </div>
 
-  <!-- Traffic chart -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Traffic over time</div>
+  <!-- Chart -->
+  <div class="chart-section">
+    <div class="chart-head">
+      <div class="chart-title" id="chartTitle">Visitors over time</div>
+      <div class="chart-meta" id="chartMeta"></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-empty-icon">
-        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      </div>
-      <div class="chart-empty-t">No traffic data yet</div>
-      <div class="chart-empty-s">Publish your first site and share it — visitors will appear here.</div>
-    </div>
-  </div>
-
-  <!-- Per-site breakdown + top sources -->
-  <div class="two-col" style="margin-bottom:32px">
-    <div class="section">
-      <div class="section-head">
-        <div class="section-title">Sites</div>
-      </div>
-      <div class="mini-card">
-        <table class="sites-table">
-          <thead>
-            <tr>
-              <th>Site</th>
-              <th>Visitors</th>
-              <th>Views</th>
-            </tr>
-          </thead>
-          <tbody id="sitesTableBody">
-            <tr><td colspan="3" class="sites-empty">No sites published yet</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-head">
-        <div class="section-title">Top sources</div>
-      </div>
-      <div class="mini-card">
-        <div class="mini-empty">No referrer data yet</div>
+    <div id="chartInner">
+      <div class="chart-empty">
+        <div class="chart-empty-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="chart-empty-t">Loading…</div>
       </div>
     </div>
   </div>
 
-  <!-- Devices + locations -->
-  <div class="two-col">
-    <div class="section">
-      <div class="section-head"><div class="section-title">Devices</div></div>
-      <div class="mini-card">
-        <div class="mini-empty">No data yet</div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-head"><div class="section-title">Top locations</div></div>
-      <div class="mini-card">
-        <div class="mini-empty">No data yet</div>
-      </div>
-    </div>
-  </div>
+  <!-- Detail -->
+  <div id="detailSection"></div>
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
+  const SUPABASE_URL  = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MDkxOTUsImV4cCI6MjA2MDA4NTE5NX0.ZKHdTLSEsQYKmVnM3T9gJ59l8U6V6DYxHFrcrOmXMM4';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  (async () => {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href = 'index.html'; return; }
-    const u = session.user;
-    const initials = (u.user_metadata?.display_name || u.email || '?').trim().slice(0, 2).toUpperCase();
-    const pfp = document.getElementById('tbPfp');
-    if (pfp) pfp.textContent = initials;
+  // Per-metric accent colors
+  const METRIC_COLOR = { visitors:'#60a5fa', views:'#a78bfa', sites:'#4ade80', revenue:'#fbbf24' };
 
-    // Load projects to populate sites table with placeholder rows
-    try {
-      const { data: projects } = await sb.from('projects').select('id,name,updated_at').eq('user_id', u.id).order('updated_at', { ascending: false });
-      const tbody = document.getElementById('sitesTableBody');
-      if (projects && projects.length) {
-        tbody.innerHTML = projects.map(p =>
-          `<tr>
-            <td><div class="site-row-name"><div class="site-row-dot"></div>${escHtml(p.name || 'Untitled')}</div></td>
-            <td>—</td>
-            <td>—</td>
-          </tr>`
-        ).join('');
-      }
-    } catch (e) {}
-  })();
+  // Project palette — assigned in order
+  const PALETTE = ['#60a5fa','#a78bfa','#4ade80','#fbbf24','#f87171','#34d399','#f472b6','#38bdf8','#fb923c','#e879f9'];
 
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let _projects    = [];   // all user projects
+  let _views       = [];   // raw page_view rows for current range
+  let _days        = 7;
+  let _metric      = 'visitors';
+  let _selectedPid = 'all'; // 'all' or a project id
+
+  // ── utils ──────────────────────────────────────────────────────────────────
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt(n){
+    if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+    if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'k';
+    return String(n);
+  }
+  function setVal(id, val, empty){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = val;
+    el.classList.toggle('empty', !!empty);
+  }
+  function projectColor(pid){
+    const idx = _projects.findIndex(p=>p.id===pid);
+    return PALETTE[idx % PALETTE.length] || '#888';
   }
 
-  // Range pill toggle (UI only for now)
-  document.querySelectorAll('.range-pill').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.range-pill').forEach(b => b.classList.remove('active'));
+  // ── dropdown ───────────────────────────────────────────────────────────────
+  function toggleDd(){
+    const btn  = document.getElementById('projDdBtn');
+    const menu = document.getElementById('projDdMenu');
+    btn.classList.toggle('open');
+    menu.classList.toggle('open');
+  }
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#projDdWrap')){
+      document.getElementById('projDdBtn').classList.remove('open');
+      document.getElementById('projDdMenu').classList.remove('open');
+    }
+  });
+  function selectProject(pid){
+    _selectedPid = pid;
+    document.getElementById('projDdLabel').textContent = pid==='all' ? 'All projects' : (_projects.find(p=>p.id===pid)?.name||'Project');
+    document.querySelectorAll('.proj-dd-opt').forEach(o=>o.classList.toggle('active', o.dataset.id===pid));
+    toggleDd();
+    render();
+  }
+
+  // ── metric selection ───────────────────────────────────────────────────────
+  function selectMetric(m){
+    _metric = m;
+    document.querySelectorAll('.stat-card').forEach(c=>c.classList.toggle('active', c.dataset.metric===m));
+    render();
+  }
+
+  // ── filtered views for current project selection ───────────────────────────
+  function activeViews(){
+    if(_selectedPid==='all') return _views;
+    return _views.filter(v=>v.project_id===_selectedPid);
+  }
+
+  // ── bucket helpers ─────────────────────────────────────────────────────────
+  function makeDayKeys(days){
+    const useWeeks = days > 60;
+    const keys=[], labels=[];
+    const seen = new Set();
+    for(let i=days-1;i>=0;i--){
+      const d = new Date(Date.now()-i*86400000);
+      const key = useWeeks ? `W${Math.ceil(d.getDate()/7)}-${d.getMonth()}` : d.toISOString().slice(0,10);
+      if(seen.has(key)) continue;
+      seen.add(key);
+      keys.push(key);
+      const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+      labels.push(useWeeks ? mo : (_days<=7 ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] : `${mo} ${d.getDate()}`));
+    }
+    return {keys,labels,useWeeks};
+  }
+  function viewsToKey(v, useWeeks){
+    const d = new Date(v.ts);
+    return useWeeks ? `W${Math.ceil(d.getDate()/7)}-${d.getMonth()}` : v.ts.slice(0,10);
+  }
+
+  // ── render ─────────────────────────────────────────────────────────────────
+  function render(){
+    updateStats();
+    renderChart();
+    renderDetail();
+  }
+
+  function updateStats(){
+    const av = activeViews();
+    const totalViews     = av.length;
+    const uniqueVisitors = new Set(av.map(v=>v.session_id).filter(Boolean)).size;
+    const rangeLabel     = _days===365 ? '12 months' : `${_days}d`;
+
+    setVal('statVisitors', uniqueVisitors ? fmt(uniqueVisitors) : '—', !uniqueVisitors);
+    document.getElementById('statVisitorsMeta').textContent = uniqueVisitors ? `Last ${rangeLabel}` : 'No data yet';
+
+    setVal('statViews', totalViews ? fmt(totalViews) : '—', !totalViews);
+    document.getElementById('statViewsMeta').textContent = totalViews ? `Last ${rangeLabel}` : 'No data yet';
+
+    const projectsWithData = new Set(av.map(v=>v.project_id)).size;
+    const publicCount = _projects.filter(p=>p.is_public).length;
+    setVal('statSites', publicCount ? fmt(publicCount) : '—', !publicCount);
+    document.getElementById('statSitesMeta').textContent = _projects.length
+      ? `${projectsWithData} with traffic`
+      : 'No projects yet';
+  }
+
+  function renderChart(){
+    const inner   = document.getElementById('chartInner');
+    const titleEl = document.getElementById('chartTitle');
+    const metaEl  = document.getElementById('chartMeta');
+    const isAll   = _selectedPid === 'all';
+    const av      = activeViews();
+
+    if(_metric === 'revenue'){
+      titleEl.textContent = 'Revenue over time';
+      metaEl.textContent  = '';
+      inner.innerHTML = `<div class="chart-empty">
+        <div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.6)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="chart-empty-t" style="color:rgba(251,191,36,.7)">Revenue tracking coming soon</div>
+        <div class="chart-empty-s">Connect your payment provider and revenue data will appear here automatically.</div>
+      </div>`;
+      return;
+    }
+
+    if(_metric === 'sites'){
+      titleEl.textContent = 'Views by site';
+      metaEl.textContent  = av.length ? fmt(av.length)+' total views' : '';
+      if(!av.length){
+        inner.innerHTML = `<div class="chart-empty"><div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="chart-empty-t">No site data yet</div><div class="chart-empty-s">Views will appear here once your sites get traffic.</div></div>`;
+        return;
+      }
+      const byProject = {};
+      av.forEach(v=>{ byProject[v.project_id]=(byProject[v.project_id]||0)+1; });
+      const entries = _projects.map(p=>({ id:p.id, name:p.name||'Untitled', count:byProject[p.id]||0 }))
+        .sort((a,b)=>b.count-a.count).slice(0,8);
+      const max = Math.max(...entries.map(e=>e.count),1);
+      inner.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">${
+        entries.map(e=>`<div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:12px;font-weight:600;color:var(--sub);width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</div>
+          <div style="flex:1;height:8px;background:var(--s2);border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.max(2,Math.round(e.count/max*100))}%;background:${projectColor(e.id)};border-radius:99px"></div></div>
+          <div style="font-size:11px;font-weight:700;color:var(--sub);width:36px;text-align:right;flex-shrink:0">${e.count?fmt(e.count):'—'}</div>
+        </div>`).join('')
+      }</div>`;
+      return;
+    }
+
+    // Time series: visitors or views
+    const isVisitors = _metric === 'visitors';
+    titleEl.textContent = isVisitors ? 'Unique visitors over time' : 'Page views over time';
+    const {keys,labels,useWeeks} = makeDayKeys(_days);
+
+    if(!av.length){
+      metaEl.textContent = '';
+      inner.innerHTML = `<div class="chart-empty"><div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="chart-empty-t">No data yet</div><div class="chart-empty-s">Open your projects in the viewer and traffic will appear here.</div></div>`;
+      return;
+    }
+
+    if(isAll && _projects.length > 1){
+      // Multi-project stacked bars
+      // buckets[dayKey][projectId] = count
+      const buckets = {};
+      keys.forEach(k=>{ buckets[k]={}; _projects.forEach(p=>{ buckets[k][p.id]=0; }); });
+
+      _views.forEach(v=>{
+        const k = viewsToKey(v, useWeeks);
+        if(!(k in buckets)) return;
+        if(isVisitors){
+          // count unique sessions per project per bucket — simpler: just use session_id presence
+          if(v.session_id && !buckets[k][v.project_id+'_s'+v.session_id]){
+            buckets[k][v.project_id+'_s'+v.session_id] = true;
+            buckets[k][v.project_id] = (buckets[k][v.project_id]||0)+1;
+          }
+        } else {
+          buckets[k][v.project_id] = (buckets[k][v.project_id]||0)+1;
+        }
+      });
+
+      const stackedTotals = keys.map(k=>_projects.reduce((s,p)=>s+(buckets[k][p.id]||0),0));
+      const max = Math.max(...stackedTotals, 1);
+      const grandTotal = stackedTotals.reduce((a,b)=>a+b,0);
+      metaEl.textContent = grandTotal ? fmt(grandTotal)+' total' : '';
+
+      const showEvery = keys.length<=7?1:keys.length<=14?2:5;
+      const bars = keys.map((k,i)=>{
+        const total = stackedTotals[i];
+        const segs  = _projects.filter(p=>(buckets[k][p.id]||0)>0).map(p=>{
+          const h = Math.round((buckets[k][p.id]||0)/max*100);
+          return `<div class="bar-seg" style="height:${h}%;background:${projectColor(p.id)}" title="${p.name||'Untitled'}: ${buckets[k][p.id]}"></div>`;
+        }).join('');
+        return `<div class="bar-stack" style="height:${total?Math.max(2,Math.round(total/max*100))+'%':'4px'}">${segs||`<div style="height:4px;background:var(--s2);border-radius:3px;opacity:.3"></div>`}</div>`;
+      });
+
+      const keyHtml = _projects.map(p=>`<div class="color-key-item"><div class="color-key-dot" style="background:${projectColor(p.id)}"></div>${esc(p.name||'Untitled')}</div>`).join('');
+
+      inner.innerHTML = `<div class="chart-area">
+        <div class="bar-chart">${bars.join('')}</div>
+        <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
+        <div class="color-key">${keyHtml}</div>
+      </div>`;
+
+    } else {
+      // Single-color time series
+      const color = METRIC_COLOR[_metric];
+      const buckets = {};
+      const sessionSeen = {};
+      keys.forEach(k=>{ buckets[k]=0; sessionSeen[k]=new Set(); });
+
+      av.forEach(v=>{
+        const k = viewsToKey(v, useWeeks);
+        if(!(k in buckets)) return;
+        if(isVisitors){
+          if(v.session_id && !sessionSeen[k].has(v.session_id)){ sessionSeen[k].add(v.session_id); buckets[k]++; }
+        } else {
+          buckets[k]++;
+        }
+      });
+
+      const counts  = keys.map(k=>buckets[k]);
+      const max     = Math.max(...counts, 1);
+      const total   = counts.reduce((a,b)=>a+b,0);
+      metaEl.textContent = total ? fmt(total)+' total' : '';
+
+      const showEvery = keys.length<=7?1:keys.length<=14?2:5;
+      inner.innerHTML = `<div class="chart-area">
+        <div class="bar-chart">${counts.map((c,i)=>`<div class="bar" style="height:${Math.max(c?2:0,Math.round(c/max*100))}%;background:${color};opacity:${c?1:0.12}" title="${labels[i]}: ${c}"></div>`).join('')}</div>
+        <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
+      </div>`;
+    }
+  }
+
+  function renderDetail(){
+    const el = document.getElementById('detailSection');
+    if(_metric==='revenue'){ el.innerHTML=''; return; }
+
+    const av = activeViews();
+    const isVisitors = _metric==='visitors';
+    const color = METRIC_COLOR[_metric];
+
+    // Per-site breakdown
+    const byProjViews   = {};
+    const byProjSession = {};
+    av.forEach(v=>{
+      byProjViews[v.project_id]=(byProjViews[v.project_id]||0)+1;
+      if(!byProjSession[v.project_id]) byProjSession[v.project_id]=new Set();
+      if(v.session_id) byProjSession[v.project_id].add(v.session_id);
+    });
+
+    const siteRows = _projects.map(p=>({
+      id:p.id, name:p.name||'Untitled',
+      views:byProjViews[p.id]||0,
+      visitors:byProjSession[p.id]?.size||0,
+    })).sort((a,b)=>b.views-a.views).slice(0,6);
+
+    const leftTitle  = _metric==='sites'?'Sites by views':isVisitors?'Sites by visitors':'Sites by views';
+    const leftValFn  = r => isVisitors ? (r.visitors?fmt(r.visitors):'—') : (r.views?fmt(r.views):'—');
+
+    const siteHtml = siteRows.length
+      ? siteRows.map(r=>`<div class="detail-row">
+          <div class="detail-row-name"><div class="detail-dot" style="background:${r.views?projectColor(r.id):'var(--b2)'}"></div><span>${esc(r.name)}</span></div>
+          <div class="detail-row-val">${leftValFn(r)}</div>
+        </div>`).join('')
+      : '<div class="detail-empty">No projects yet</div>';
+
+    // Right: devices (visitors) or referrers (views/sites)
+    let rightTitle, rightHtml;
+    if(!isVisitors){
+      rightTitle = 'Top referrers';
+      const refCounts={};
+      av.forEach(v=>{
+        if(!v.referrer) return;
+        let host=v.referrer;
+        try{ host=new URL(v.referrer).hostname.replace(/^www\./,''); }catch{}
+        refCounts[host]=(refCounts[host]||0)+1;
+      });
+      const refs=Object.entries(refCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const refMax=refs[0]?.[1]||1;
+      rightHtml = refs.length
+        ? refs.map(([h,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(h)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/refMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${fmt(c)}</div></div>`).join('')
+        : '<div class="detail-empty">No referrer data yet</div>';
+    } else {
+      rightTitle = 'Devices';
+      const dc={};
+      av.forEach(v=>{ const d=v.device||'unknown'; dc[d]=(dc[d]||0)+1; });
+      const tot=Object.values(dc).reduce((a,b)=>a+b,0);
+      const dcMax=Object.values(dc).reduce((a,b)=>Math.max(a,b),1);
+      rightHtml = tot
+        ? Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(d)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/dcMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${Math.round(c/tot*100)}%</div></div>`).join('')
+        : '<div class="detail-empty">No device data yet</div>';
+    }
+
+    el.innerHTML=`<div class="detail-grid">
+      <div class="detail-card"><div class="detail-card-title">${leftTitle}</div>${siteHtml}</div>
+      <div class="detail-card"><div class="detail-card-title">${rightTitle}</div>${rightHtml}</div>
+    </div>`;
+  }
+
+  // ── load from supabase ─────────────────────────────────────────────────────
+  async function loadData(){
+    const since = new Date(Date.now()-_days*86400000).toISOString();
+    const ids   = _projects.map(p=>p.id);
+    if(!ids.length){ _views=[]; render(); document.getElementById('pageSub').textContent='No projects yet.'; return; }
+    try{
+      const {data, error} = await sb.rpc('get_my_page_views', { since_ts: since });
+      if(error) console.error('page_views rpc error:', error);
+      _views = data||[];
+    }catch(e){ console.error('page_views fetch failed:', e); _views=[]; }
+    render();
+    const total   = _views.length;
+    const unique  = new Set(_views.map(v=>v.session_id).filter(Boolean)).size;
+    document.getElementById('pageSub').textContent = total
+      ? `${fmt(total)} page views · ${fmt(unique)} unique visitors`
+      : 'No traffic yet — open your projects in the viewer to see data here.';
+  }
+
+  // ── init ───────────────────────────────────────────────────────────────────
+  (async()=>{
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session){ window.location.href='index.html'; return; }
+    const u=session.user;
+    const initials=(u.user_metadata?.display_name||u.email||'?').trim().slice(0,2).toUpperCase();
+    const pfp=document.getElementById('tbPfp');
+    if(pfp) pfp.textContent=initials;
+
+    const {data:projects, error:projErr} = await sb.rpc('get_my_projects');
+    if(projErr) console.error('projects rpc error:', projErr);
+    _projects = projects||[];
+
+    // Populate dropdown with project options
+    const menu=document.getElementById('projDdMenu');
+    _projects.forEach((p,i)=>{
+      const opt=document.createElement('div');
+      opt.className='proj-dd-opt';
+      opt.dataset.id=p.id;
+      opt.onclick=()=>selectProject(p.id);
+      opt.innerHTML=`<div class="proj-dd-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>${esc(p.name||'Untitled')}`;
+      menu.appendChild(opt);
+    });
+
+    // Read metric + project from URL params
+    const params=new URLSearchParams(location.search);
+    const urlMetric=params.get('metric');
+    if(urlMetric && ['visitors','views','sites','revenue'].includes(urlMetric)){
+      _metric=urlMetric;
+      document.querySelectorAll('.stat-card').forEach(c=>c.classList.toggle('active',c.dataset.metric===_metric));
+    }
+
+    await loadData();
+  })();
+
+  // ── range pills ────────────────────────────────────────────────────────────
+  document.querySelectorAll('.range-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.range-pill').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
+      _days=parseInt(btn.dataset.days);
+      loadData();
     });
   });
 </script>

@@ -218,7 +218,8 @@
     .analytics-strip{margin-bottom:clamp(28px,3vw,44px)}
     .analytics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
     @media(max-width:700px){.analytics-row{grid-template-columns:repeat(2,1fr)}}
-    .analytics-card{border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+    .analytics-card{border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:opacity .15s}
+    .analytics-card:hover{opacity:.8}
     .analytics-card:nth-child(1){background:rgba(96,165,250,.08)}
     .analytics-card:nth-child(2){background:rgba(167,139,250,.08)}
     .analytics-card:nth-child(3){background:rgba(74,222,128,.08)}
@@ -368,7 +369,7 @@
   <!-- Analytics strip -->
   <div class="analytics-strip" id="analyticsStrip" style="display:none">
     <div class="analytics-row">
-      <div class="analytics-card">
+      <div class="analytics-card" onclick="location.href='analytics.html?metric=visitors'">
         <div class="analytics-card-label">
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Visitors
@@ -376,7 +377,7 @@
         <div class="analytics-card-value analytics-card-placeholder">—</div>
         <div class="analytics-card-change neutral">Last 30 days</div>
       </div>
-      <div class="analytics-card">
+      <div class="analytics-card" onclick="location.href='analytics.html?metric=views'">
         <div class="analytics-card-label">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Page Views
@@ -384,7 +385,7 @@
         <div class="analytics-card-value analytics-card-placeholder">—</div>
         <div class="analytics-card-change neutral">Last 30 days</div>
       </div>
-      <div class="analytics-card">
+      <div class="analytics-card" onclick="location.href='analytics.html?metric=sites'">
         <div class="analytics-card-label">
           <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Live Sites
@@ -392,7 +393,7 @@
         <div class="analytics-card-value analytics-card-placeholder" id="analyticsLiveSites">—</div>
         <div class="analytics-card-change neutral">Published</div>
       </div>
-      <div class="analytics-card">
+      <div class="analytics-card" onclick="location.href='analytics.html?metric=revenue'">
         <div class="analytics-card-label">
           <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Revenue
@@ -622,7 +623,7 @@
     document.getElementById('loadingState').style.display='none';
     document.getElementById('pageSubCount').textContent=projects.length+' project'+(projects.length!==1?'s':'');
     const liveSitesEl=document.getElementById('analyticsLiveSites');
-    if(liveSitesEl){liveSitesEl.textContent=projects.length;liveSitesEl.classList.remove('analytics-card-placeholder');}
+    if(liveSitesEl){const pub=projects.filter(p=>p.is_public).length;liveSitesEl.textContent=pub||'—';if(pub)liveSitesEl.classList.remove('analytics-card-placeholder');}
     const strip=document.getElementById('analyticsStrip');
     if(strip)strip.style.display='';
     if(!projects.length){document.getElementById('emptyState').classList.add('show');return;}

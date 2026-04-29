@@ -94,7 +94,7 @@
       display: block;
       transform: scale(1);
       transform-origin: center center;
-      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 60ms ease-out;
     }
     .tb-logo:hover img,
     .tb-logo:focus-visible img {
@@ -137,7 +137,9 @@
       background: var(--border);
       border-radius: var(--r-sm);
       padding: 3px;
-      margin: 0 auto;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       flex-shrink: 0;
     }
     .tb-mode {
@@ -166,6 +168,7 @@
       display: flex;
       align-items: center;
       gap: 5px;
+      margin-left: auto;
     }
     .tb-btn {
       background: transparent;
@@ -400,7 +403,7 @@
     ───────────────────────────────────────────── */
     #workspace {
       display: flex;
-      height: calc(100vh - 44px - 22px);
+      height: calc(100vh - 44px);
     }
 
     /* ─────────────────────────────────────────────
@@ -566,6 +569,8 @@
     ───────────────────────────────────────────── */
     #mainPanel { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
     #editorArea { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+    #editorLeft { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+    #editorInner { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
     /* ─────────────────────────────────────────────
        EDITOR PANE
@@ -578,10 +583,10 @@
       overflow: hidden;
     }
     .pane-tabs {
+      display: none !important;
       height: 34px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      display: flex;
       align-items: flex-end;
       overflow-x: auto;
       flex-shrink: 0;
@@ -613,6 +618,205 @@
     .pane-tab:hover .tab-close { opacity: .6; }
     .pane-tab .tab-close:hover { opacity: 1; color: var(--err); }
     .monaco-wrap { flex: 1; overflow: hidden; }
+
+    /* ─────────────────────────────────────────────
+       BACKEND PANE
+    ───────────────────────────────────────────── */
+    .pane-mode-switch { height:36px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .pane-mode-pills { display:flex; gap:2px; background:var(--border); border-radius:var(--r-sm); padding:3px; }
+    .pane-mode-btn { padding:3px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--muted); font-family:var(--sans); transition:all var(--t-fast); display:flex; align-items:center; gap:5px; }
+    .pane-mode-btn svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+    .pane-mode-btn:hover { color:var(--text); }
+    .pane-mode-btn.active { background:var(--border2); color:var(--text); }
+    #sidebar { transition: width 200ms ease, min-width 200ms ease, border-right-width 200ms ease; overflow:hidden; }
+    #sidebar.backend-hidden { width:0 !important; min-width:0 !important; border-right-width:0 !important; }
+
+    /* ── BACKEND PANE ── */
+    #backendPane { flex:1; display:none; flex-direction:row; min-height:0; overflow:hidden; }
+    #backendPane.show { display:flex; }
+
+    /* Nav sidebar — no borders, color contrast only */
+    #bkNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; }
+    .bk-nav-section { padding:14px 8px 4px; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--border3); }
+    .bk-nav-item { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; color:var(--muted); transition:background var(--t-fast),color var(--t-fast); user-select:none; }
+    .bk-nav-item svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; opacity:.7; }
+    .bk-nav-item:hover { background:var(--surface2); color:var(--text); }
+    .bk-nav-item:hover svg { opacity:1; }
+    .bk-nav-item.active { background:rgba(255,255,255,.07); color:var(--text); }
+    .bk-nav-item.active svg { opacity:1; }
+
+    /* Main */
+    #bkMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
+    .bk-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
+    .bk-panel.active { display:flex; }
+
+    /* Shared toolbar row */
+    .bk-toolbar { padding:12px 20px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .bk-toolbar-title { font-size:15px; font-weight:800; letter-spacing:-.3px; }
+    .bk-toolbar-sub { font-size:11px; color:var(--muted); }
+    .bk-input { background:rgba(255,255,255,.05); border:none; border-radius:8px; padding:6px 12px; color:var(--text); font-size:12px; font-family:var(--sans); outline:none; }
+    .bk-input::placeholder { color:var(--muted); }
+    .bk-input:focus { background:rgba(255,255,255,.08); }
+    .bk-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; border:none; font-family:var(--sans); transition:all var(--t-fast); }
+    .bk-btn-ghost { background:transparent; color:var(--muted); }
+    .bk-btn-ghost:hover { background:rgba(255,255,255,.06); color:var(--text); }
+    .bk-btn-ghost svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+    .bk-btn-primary { background:var(--accent); color:var(--bg); }
+    .bk-btn-primary:hover { opacity:.82; }
+    .bk-btn-back { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; font-weight:600; font-family:var(--sans); display:flex; align-items:center; gap:5px; padding:4px 0; transition:color var(--t-fast); }
+    .bk-btn-back:hover { color:var(--text); }
+    .bk-btn-back svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* Table */
+    .bk-table-wrap { flex:1; overflow:auto; }
+    .bk-table { width:100%; border-collapse:collapse; }
+    .bk-table th { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:10px 20px; text-align:left; position:sticky; top:0; background:var(--bg); white-space:nowrap; }
+    .bk-table th:first-child { padding-left:20px; }
+    .bk-table td { padding:11px 20px; border-top:1px solid rgba(255,255,255,.03); color:var(--text); max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; font-size:12px; }
+    .bk-table td.mono { font-family:var(--mono); font-size:11px; color:var(--muted); }
+    .bk-table tr:hover td { background:rgba(255,255,255,.02); }
+    .bk-del-btn { background:none; border:none; color:transparent; cursor:pointer; padding:3px 7px; border-radius:4px; transition:all var(--t-fast); font-size:14px; line-height:1; }
+    .bk-table tr:hover .bk-del-btn { color:var(--muted); }
+    .bk-del-btn:hover { color:var(--err) !important; }
+
+    /* Empty states */
+    .bk-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:8px; padding:48px; }
+    .bk-empty-icon { width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+    .bk-empty-icon svg { width:20px; height:20px; stroke:var(--muted); fill:none; stroke-width:1.5; stroke-linecap:round; }
+    .bk-empty-t { font-weight:700; font-size:14px; color:var(--text); }
+    .bk-empty-s { color:var(--muted); text-align:center; max-width:260px; line-height:1.6; font-size:12px; }
+
+    /* ── DATA TAB: Picker (no collection selected) ── */
+    #bkPicker { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+    #bkPickerBar { padding:20px 20px 0; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    #bkPickerTitle { font-size:15px; font-weight:800; letter-spacing:-.3px; flex:1; }
+    #bkPickerSearch { width:200px; }
+    #bkPickerGrid { flex:1; overflow-y:auto; padding:16px 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; align-content:start; }
+    .bk-coll-card { background:rgba(255,255,255,.04); border-radius:12px; padding:18px 18px 16px; cursor:pointer; transition:background var(--t-fast); position:relative; }
+    .bk-coll-card:hover { background:rgba(255,255,255,.07); }
+    .bk-coll-card-icon { width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+    .bk-coll-card-icon svg { width:15px; height:15px; stroke:var(--text); fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .bk-coll-card-name { font-size:13px; font-weight:700; margin-bottom:3px; }
+    .bk-coll-card-meta { font-size:11px; color:var(--muted); }
+    .bk-coll-card-del { position:absolute; top:10px; right:10px; background:none; border:none; color:transparent; cursor:pointer; font-size:14px; padding:4px; border-radius:4px; transition:all var(--t-fast); }
+    .bk-coll-card:hover .bk-coll-card-del { color:var(--muted); }
+    .bk-coll-card-del:hover { color:var(--err) !important; }
+    #bkPickerNewCard { background:rgba(255,255,255,.02); border-radius:12px; padding:18px; cursor:pointer; transition:background var(--t-fast); display:flex; align-items:center; justify-content:center; gap:8px; color:var(--muted); font-size:12px; font-weight:600; min-height:96px; }
+    #bkPickerNewCard:hover { background:rgba(255,255,255,.05); color:var(--text); }
+
+    /* DATA TAB: Table view (collection selected) */
+    #bkTableView { display:none; flex:1; flex-direction:column; overflow:hidden; }
+    #bkTableView.show { display:flex; }
+    #bkTableBar { padding:10px 20px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    #bkDataName { font-size:14px; font-weight:800; letter-spacing:-.3px; }
+    #bkDataRowCount { font-size:11px; color:var(--muted); }
+    #bkDataSearch { width:200px; margin-left:auto; }
+
+    /* ── AUTH TAB ── */
+    #bkAuthBar { padding:12px 20px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    #bkAuthTitle { font-size:15px; font-weight:800; letter-spacing:-.3px; flex:1; }
+    #bkAuthSearch { width:200px; }
+
+    /* ── SQL TAB ── */
+    #bkSqlPane { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+    #bkSqlTop { flex:0 0 220px; background:rgba(255,255,255,.02); display:flex; flex-direction:column; }
+    #bkSqlTopBar { padding:10px 16px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    #bkSqlLabel { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:1; }
+    #bkSqlHint { font-size:10px; color:var(--border3); }
+    #bkSqlTextarea { flex:1; background:transparent; border:none; outline:none; padding:4px 16px 12px; color:var(--text); font-size:12px; font-family:var(--mono); line-height:1.65; resize:none; }
+    #bkSqlTextarea::placeholder { color:var(--border3); }
+    #bkSqlBottom { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    #bkSqlResultsBar { padding:8px 20px; display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(255,255,255,.02); }
+    #bkSqlResultCount { font-size:11px; color:var(--muted); font-weight:600; flex:1; }
+    #bkSqlResultsBody { flex:1; overflow:auto; }
+    .bk-sql-error { padding:20px; font-size:12px; color:var(--err); font-family:var(--mono); line-height:1.6; }
+    #bkRunBtn { padding:6px 16px; background:var(--accent); color:var(--bg); border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:var(--sans); display:flex; align-items:center; gap:6px; }
+    #bkRunBtn svg { width:10px; height:10px; fill:var(--bg); }
+    #bkRunBtn:disabled { opacity:.4; cursor:default; }
+
+    /* ── SCHEMA TAB ── */
+    #bkSchemaScroll { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:6px; }
+    .bk-schema-card { background:rgba(255,255,255,.04); border-radius:12px; overflow:hidden; }
+    .bk-schema-card-head { padding:13px 16px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+    .bk-schema-card-head:hover { background:rgba(255,255,255,.03); }
+    .bk-schema-card-name { font-size:13px; font-weight:700; flex:1; }
+    .bk-schema-card-meta { font-size:11px; color:var(--muted); }
+    .bk-schema-card-del { background:none; border:none; color:transparent; cursor:pointer; font-size:14px; padding:4px; border-radius:4px; }
+    .bk-schema-card-head:hover .bk-schema-card-del { color:var(--muted); }
+    .bk-schema-card-del:hover { color:var(--err) !important; }
+    .bk-schema-card-body { display:none; }
+    .bk-schema-card-body.open { display:block; }
+    .bk-schema-field { display:flex; align-items:center; gap:8px; padding:8px 16px; }
+    .bk-schema-field + .bk-schema-field { border-top:1px solid rgba(255,255,255,.03); }
+    .bk-schema-field-key { font-size:11px; font-family:var(--mono); color:var(--muted); flex:1; }
+    .bk-schema-field-lbl { flex:1.5; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.06); padding:2px 4px; color:var(--text); font-size:11px; font-family:var(--sans); outline:none; }
+    .bk-schema-field-lbl:focus { border-bottom-color:rgba(255,255,255,.2); }
+    .bk-schema-field-type { font-size:10px; color:var(--border3); width:44px; text-align:right; flex-shrink:0; }
+    .bk-schema-field-del { background:none; border:none; color:transparent; cursor:pointer; font-size:13px; padding:0; flex-shrink:0; }
+    .bk-schema-field:hover .bk-schema-field-del { color:var(--muted); }
+    .bk-schema-field-del:hover { color:var(--err) !important; }
+    .bk-schema-add-field { padding:8px 16px; font-size:11px; font-weight:600; color:var(--muted); background:none; border:none; cursor:pointer; font-family:var(--sans); text-align:left; width:100%; transition:color var(--t-fast); }
+    .bk-schema-add-field:hover { color:var(--text); }
+    #bkSchemaAuthCard { background:rgba(255,255,255,.04); border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:12px; }
+    .bk-auth-toggle-label { flex:1; }
+    .bk-auth-toggle-title { font-size:13px; font-weight:700; }
+    .bk-auth-toggle-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+    .bk-toggle { position:relative; width:36px; height:20px; flex-shrink:0; cursor:pointer; }
+    .bk-toggle input { opacity:0; width:0; height:0; position:absolute; }
+    .bk-toggle-track { display:block; width:36px; height:20px; background:var(--border2); border-radius:99px; transition:background .2s; }
+    .bk-toggle input:checked ~ .bk-toggle-track { background:var(--accent); }
+    .bk-toggle-thumb { position:absolute; top:3px; left:3px; width:14px; height:14px; background:var(--muted); border-radius:50%; transition:transform .2s; pointer-events:none; }
+    .bk-toggle input:checked ~ .bk-toggle-track ~ .bk-toggle-thumb { transform:translateX(16px); background:var(--bg); }
+    #bkCollAddForm { padding:12px 20px; display:none; gap:8px; flex-shrink:0; }
+    #bkCollAddForm.show { display:flex; }
+    #bkSchemaAddForm { padding:12px 20px; display:none; gap:8px; flex-shrink:0; }
+    #bkSchemaAddForm.show { display:flex; }
+    #bkSchemaAddInput { flex:1; }
+
+
+    /* ── BACKEND MODAL ── */
+    #bkModal { position:fixed; inset:0; z-index:9998; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); }
+    #bkModal.show { display:flex; }
+    #bkModalCard { background:var(--surface2); border-radius:16px; padding:24px; width:340px; max-width:90vw; box-shadow:0 32px 80px rgba(0,0,0,.8); }
+    #bkModalTitle { font-size:15px; font-weight:800; letter-spacing:-.3px; margin-bottom:6px; }
+    #bkModalMsg { font-size:13px; color:var(--muted); line-height:1.55; margin-bottom:20px; }
+    #bkModalInputWrap { display:none; margin-bottom:16px; }
+    #bkModalInputWrap.show { display:block; }
+    #bkModalInput { width:100%; background:rgba(255,255,255,.07); border:none; border-radius:8px; padding:9px 13px; color:var(--text); font-size:13px; font-family:var(--sans); outline:none; }
+    #bkModalInput::placeholder { color:var(--muted); }
+    #bkModalBtns { display:flex; gap:8px; justify-content:flex-end; }
+    #bkModalCancel { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; font-family:var(--sans); background:rgba(255,255,255,.06); color:var(--muted); transition:all var(--t-fast); }
+    #bkModalCancel:hover { background:rgba(255,255,255,.1); color:var(--text); }
+    #bkModalConfirm { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; font-family:var(--sans); transition:opacity var(--t-fast); }
+    #bkModalConfirm.danger { background:var(--err); color:#fff; }
+    #bkModalConfirm.primary { background:var(--accent); color:var(--bg); }
+    #bkModalConfirm:hover { opacity:.82; }
+    /* ── API TAB ── */
+    #bkApiScroll { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:8px; }
+    .bk-api-block { background:rgba(255,255,255,.04); border-radius:12px; overflow:hidden; }
+    .bk-api-block-head { padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .bk-api-block-title { font-size:13px; font-weight:700; }
+    .bk-api-block-tag { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:4px; background:rgba(96,165,250,.12); color:#60a5fa; }
+    .bk-api-code { padding:12px 16px; font-size:11px; font-family:var(--mono); color:rgba(160,196,255,.8); background:rgba(0,0,0,.2); line-height:1.75; white-space:pre; overflow-x:auto; }
+    .bk-copy-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:10px; font-weight:700; font-family:var(--sans); padding:3px 8px; border-radius:4px; transition:all var(--t-fast); }
+    .bk-copy-btn:hover { color:var(--text); background:rgba(255,255,255,.06); }
+    .bk-copy-btn.copied { color:var(--ok); }
+    .bk-toggle input:checked ~ .bk-toggle-track ~ .bk-toggle-thumb { transform:translateX(16px); background:var(--bg); }
+    #bkSchemaAddForm { padding:12px; border-top:1px solid var(--border); display:none; gap:6px; flex-shrink:0; }
+    #bkSchemaAddForm.show { display:flex; }
+    #bkSchemaAddInput { flex:1; background:var(--bg); border:1px solid var(--border2); border-radius:var(--r-sm); padding:6px 10px; color:var(--text); font-size:12px; font-family:var(--sans); outline:none; }
+    #bkSchemaAddInput:focus { border-color:var(--border3); }
+
+    /* ── API TAB ── */
+    #bkApiContent { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+    .bk-api-block { background:var(--surface); border-radius:var(--r-md); overflow:hidden; }
+    .bk-api-block-head { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; }
+    .bk-api-block-title { font-size:12px; font-weight:700; }
+    .bk-api-block-tag { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:rgba(96,165,250,.12); color:#60a5fa; }
+    .bk-api-code { padding:12px 14px; font-size:11px; font-family:var(--mono); color:#a0c4ff; background:var(--bg); line-height:1.7; white-space:pre; overflow-x:auto; border-top:1px solid var(--border); }
+    .bk-copy-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:10px; font-weight:700; font-family:var(--sans); padding:3px 8px; border-radius:3px; transition:all var(--t-fast); }
+    .bk-copy-btn:hover { color:var(--text); background:var(--surface2); }
+    .bk-copy-btn.copied { color:var(--ok); }
 
     /* ─────────────────────────────────────────────
        AI PANEL
@@ -1011,7 +1215,6 @@
     .ai-step-dropdown {
       display: none;
       background: var(--surface);
-      border: 1px solid var(--border2);
       border-radius: var(--r-sm);
       padding: 8px 10px;
       margin-top: 4px;
@@ -1092,10 +1295,6 @@
     .ai-typing-status { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: -0.01em; transition: opacity 0.2s ease; }
 
     /* Follow-up suggestion pills */
-    .ai-followup-pills { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
-    .ai-followup-pill { display: flex; align-items: flex-start; gap: 8px; padding: 7px 12px; border-radius: var(--r-md); background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); text-align: left; line-height: 1.45; }
-    .ai-followup-pill::before { content: '•'; color: var(--border3); flex-shrink: 0; margin-top: 1px; }
-    .ai-followup-pill:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
 
     /* Scroll to bottom button */
     #aiScrollBtn {
@@ -1559,34 +1758,22 @@
 
     .preview-refreshing { animation: previewFlash .3s ease; }
 
-    /* Console */
-    #consoleResizer { height: 4px; background: transparent; cursor: row-resize; transition: background var(--t-fast); }
-    #consoleResizer:hover { background: var(--accent); }
-    #consolePanel { height: 170px; min-height: 50px; max-height: 50%; background: var(--bg); border-top: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-    #consolePanel.hidden { display: none; }
-    #consoleHeader { height: 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 10px; flex-shrink: 0; }
-    .con-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-    .con-badge { font-size: 9px; border-radius: 3px; padding: 1px 5px; display: none; }
-    .con-badge.show { display: block; }
-    .con-err-bg { background: rgba(239,68,68,.15); color: var(--err); }
-    .con-warn-bg { background: rgba(245,158,11,.15); color: var(--warn); }
-    #consoleClear { margin-left: auto; width: 20px; height: 20px; background: transparent; border: none; color: var(--muted); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); }
-    #consoleClear:hover { background: var(--border2); color: var(--text); }
-    #consoleClear svg { width: 9px; height: 9px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    #consoleBody { flex: 1; overflow-y: auto; padding: 2px 0; font-family: var(--mono); font-size: 11px; }
-    .con-line { padding: 3px 14px; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.015); }
-    .con-line.log { color: var(--text); }
-    .con-line.warn { color: var(--warn); background: rgba(245,158,11,.04); border-left: 2px solid var(--warn); }
-    .con-line.error { color: var(--err); background: rgba(239,68,68,.04); border-left: 2px solid var(--err); }
-    .con-line.info { color: #93c5fd; }
-    .con-badge-inline { font-size: 9px; opacity: .4; flex-shrink: 0; white-space: nowrap; }
-    .con-msg { flex: 1; word-break: break-all; white-space: pre-wrap; }
-    .con-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 10px; }
+    /* Error popup */
+    #errPopup { position: absolute; bottom: 14px; right: 14px; z-index: 50; display: none; align-items: center; gap: 10px; padding: 9px 12px 9px 14px; background: #1e1010; border: 1px solid rgba(239,68,68,.35); border-radius: 9px; box-shadow: 0 4px 24px rgba(0,0,0,.5); font-family: var(--sans); animation: errPop .18s ease; }
+    @keyframes errPop { from { opacity:0; transform:translateY(6px) scale(.97); } to { opacity:1; transform:none; } }
+    #errPopup.show { display: flex; }
+    #errPopup .ep-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--err); flex-shrink: 0; }
+    #errPopup .ep-label { font-size: 12px; font-weight: 600; color: #fca5a5; }
+    #errPopup .ep-fix { padding: 4px 10px; background: rgba(239,68,68,.18); border: 1px solid rgba(239,68,68,.3); border-radius: 5px; color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); white-space: nowrap; }
+    #errPopup .ep-fix:hover { background: rgba(239,68,68,.3); border-color: rgba(239,68,68,.5); color: #fff; }
+    #errPopup .ep-close { width: 18px; height: 18px; background: transparent; border: none; color: rgba(255,255,255,.3); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 3px; padding: 0; transition: color var(--t-fast); }
+    #errPopup .ep-close:hover { color: rgba(255,255,255,.7); }
+    #errPopup .ep-close svg { width: 9px; height: 9px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
 
     /* ─────────────────────────────────────────────
        STATUS BAR
     ───────────────────────────────────────────── */
-    #statusbar { height: 22px; background: #01010a; border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 14px; gap: 18px; flex-shrink: 0; }
+    #statusbar { display: none !important; }
     #statusbar.hidden { display: none; }
     .st { font-family: var(--mono); font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
     .st .acc { color: var(--accent); }
@@ -1705,7 +1892,6 @@
       left: 18px;
       z-index: var(--z-toast);
       background: var(--surface);
-      border: 1px solid var(--border2);
       border-radius: var(--r-sm);
       padding: 9px 14px;
       font-size: 11px;
@@ -1775,7 +1961,7 @@
   <span class="tb-proj" id="tbProj">Loading…</span>
   <span class="tb-saving" id="tbSaving">saving…</span>
 
-  <div class="tb-modes">
+  <div class="tb-modes" id="tbModes">
     <button class="tb-mode on" id="modeAI" onclick="handleModeClick('ai')">
       <svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z" fill="currentColor" stroke="none"/></svg>
       AI
@@ -1851,42 +2037,215 @@
 ═══════════════════════════════════════════ -->
 <div id="workspace">
 
-  <!-- SIDEBAR -->
-  <div id="sidebar">
-    <div class="sb-head">
-      <span class="sb-title">Files</span>
-      <div class="sb-add-wrap">
-        <button class="sb-add" id="sbAddBtn" onclick="toggleAddDD(event)" title="New file">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="add-dd" id="addDD">
-          <div class="ctx-item" onclick="closeAddDD();promptNewFile()">
-            <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            New file
-          </div>
-          <div class="ctx-item" onclick="closeAddDD();document.getElementById('uploadFileInput').click()">
-            <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-            Upload file
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="fileTree"></div>
-    <input type="file" id="uploadFileInput" accept="image/*,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico" style="display:none" onchange="handleFileUpload(event)"/>
-  </div>
-
   <!-- MAIN PANEL -->
   <div id="mainPanel">
     <div id="editorArea">
 
+      <!-- LEFT COLUMN: mode switch + sidebar + editor/ai panes -->
+      <div id="editorLeft">
+
+        <!-- Code / Backend mode switch — only spans left column, not preview -->
+        <div class="pane-mode-switch" id="paneModeSwitch" style="display:none">
+          <div class="pane-mode-pills">
+            <button class="pane-mode-btn active" id="modeBtnCode" onclick="setPaneMode('code')">
+              <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              Code
+            </button>
+            <button class="pane-mode-btn" id="modeBtnBackend" onclick="setPaneMode('backend')">
+              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              Backend
+            </button>
+          </div>
+        </div>
+
+        <!-- Inner row: sidebar + editor pane + AI panel -->
+        <div id="editorInner">
+
+      <!-- SIDEBAR -->
+      <div id="sidebar">
+        <div class="sb-head">
+          <span class="sb-title">Files</span>
+          <div class="sb-add-wrap">
+            <button class="sb-add" id="sbAddBtn" onclick="toggleAddDD(event)" title="New file">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <div class="add-dd" id="addDD">
+              <div class="ctx-item" onclick="closeAddDD();promptNewFile()">
+                <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                New file
+              </div>
+              <div class="ctx-item" onclick="closeAddDD();document.getElementById('uploadFileInput').click()">
+                <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                Upload file
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="fileTree"></div>
+        <input type="file" id="uploadFileInput" accept="image/*,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico" style="display:none" onchange="handleFileUpload(event)"/>
+      </div>
+
       <!-- EDITOR PANE -->
       <div class="editor-pane" id="editorPane">
+
+        <!-- Code view -->
         <div class="pane-tabs" id="paneTabs"></div>
         <div class="monaco-wrap" id="monacoWrap"></div>
         <div id="imgPreviewPane">
           <img id="imgPreviewImg" src="" alt=""/>
           <div class="img-name" id="imgPreviewName"></div>
         </div>
+
+        <!-- Backend view -->
+        <div id="backendPane">
+
+          <!-- Left nav sidebar -->
+          <div id="bkNav">
+            <div class="bk-nav-section">Tables</div>
+            <div class="bk-nav-item active" data-bk="data" onclick="bkSetTab('data')">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+              Data
+            </div>
+            <div class="bk-nav-item" data-bk="auth" onclick="bkSetTab('auth')">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Auth
+            </div>
+            <div class="bk-nav-section">Developer</div>
+            <div class="bk-nav-item" data-bk="sql" onclick="bkSetTab('sql')">
+              <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              SQL Editor
+            </div>
+            <div class="bk-nav-section">Project</div>
+            <div class="bk-nav-item" data-bk="schema" onclick="bkSetTab('schema')">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              Schema
+            </div>
+            <div class="bk-nav-item" data-bk="api" onclick="bkSetTab('api')">
+              <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              API
+            </div>
+          </div>
+
+          <!-- Main content -->
+          <div id="bkMain">
+
+            <!-- DATA tab -->
+            <div class="bk-panel active" id="bkPanelData">
+              <!-- Picker: shown when no collection selected -->
+              <div id="bkPicker">
+                <div id="bkPickerBar">
+                  <div id="bkPickerTitle">Data</div>
+                  <input class="bk-input" id="bkPickerSearch" placeholder="Search collections…" oninput="bkFilterPicker(this.value)"/>
+                  <button class="bk-btn bk-btn-primary" onclick="bkShowAddColl()">+ New</button>
+                </div>
+                <div id="bkPickerGrid"></div>
+              </div>
+              <!-- Table: shown when collection is selected -->
+              <div id="bkTableView">
+                <div id="bkTableBar">
+                  <button class="bk-btn-back" onclick="bkBack()">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Collections
+                  </button>
+                  <div id="bkDataName"></div>
+                  <div id="bkDataRowCount"></div>
+                  <input class="bk-input" id="bkDataSearch" placeholder="Search rows…" oninput="bkFilterRows(this.value)" style="margin-left:auto;width:200px"/>
+                  <button class="bk-btn bk-btn-ghost" onclick="bkExportCSV()" title="Export CSV">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export
+                  </button>
+                  <button class="bk-btn bk-btn-ghost" onclick="bkLoadCurrentData()" title="Refresh">
+                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                </div>
+                <div id="bkDataTableWrap" class="bk-table-wrap"></div>
+              </div>
+
+            </div>
+
+            <!-- AUTH tab -->
+            <div class="bk-panel" id="bkPanelAuth">
+              <div id="bkAuthBar">
+                <div id="bkAuthTitle">Auth</div>
+                <div id="bkAuthSubtitle" style="font-size:11px;color:var(--muted)"></div>
+                <input class="bk-input" id="bkAuthSearch" placeholder="Search by email…" oninput="bkAuthFilter(this.value)" style="margin-left:auto;width:200px"/>
+                <button class="bk-btn bk-btn-ghost" onclick="bkLoadAuth()">
+                  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+              </div>
+              <div id="bkAuthTableWrap" class="bk-table-wrap">
+                <div class="bk-empty">
+                  <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                  <div class="bk-empty-t">No users yet</div>
+                  <div class="bk-empty-s">Users who sign up on your site will appear here.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SQL tab -->
+            <div class="bk-panel" id="bkPanelSql">
+              <div id="bkSqlPane">
+                <div id="bkSqlTop">
+                  <div id="bkSqlTopBar">
+                    <span id="bkSqlLabel">SQL Editor</span>
+                    <span id="bkSqlHint">site_data · site_users · your collection names</span>
+                    <button id="bkRunBtn" onclick="bkRunSQL()">
+                      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      Run
+                    </button>
+                  </div>
+                  <textarea id="bkSqlTextarea" placeholder="SELECT data->>'email' as email, created_at FROM site_data WHERE collection = 'waitlist' ORDER BY created_at DESC" spellcheck="false"></textarea>
+                </div>
+                <div id="bkSqlBottom">
+                  <div id="bkSqlResultsBar" style="display:none">
+                    <span id="bkSqlResultCount"></span>
+                    <button class="bk-copy-btn" onclick="bkExportSQLCSV()">Export CSV</button>
+                  </div>
+                  <div id="bkSqlResultsBody">
+                    <div class="bk-empty">
+                      <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+                      <div class="bk-empty-t">Run a query</div>
+                      <div class="bk-empty-s">Press Cmd+Enter or click Run</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCHEMA tab -->
+            <div class="bk-panel" id="bkPanelSchema">
+              <div class="bk-toolbar">
+                <div class="bk-toolbar-title">Schema</div>
+                <button class="bk-btn bk-btn-primary" style="margin-left:auto" onclick="bkSchemaShowAdd()">+ New collection</button>
+              </div>
+              <div id="bkSchemaScroll">
+                <div id="bkSchemaList" style="display:contents"></div>
+                <div id="bkSchemaAuthCard">
+                  <div class="bk-auth-toggle-label">
+                    <div class="bk-auth-toggle-title">User Auth</div>
+                    <div class="bk-auth-toggle-sub">Allow users to create accounts on your site</div>
+                  </div>
+                  <label class="bk-toggle">
+                    <input type="checkbox" id="bkAuthToggle" onchange="bkToggleAuth(this.checked)"/>
+                    <span class="bk-toggle-track"></span>
+                    <span class="bk-toggle-thumb"></span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- API tab -->
+            <div class="bk-panel" id="bkPanelApi">
+              <div class="bk-toolbar">
+                <div class="bk-toolbar-title">API Reference</div>
+                <div class="bk-toolbar-sub" style="margin-left:8px">Copy-paste ready snippets</div>
+              </div>
+              <div id="bkApiScroll"><div id="bkApiContent" style="display:contents"></div></div>
+            </div>
+
+          </div><!-- end #bkMain -->
+        </div><!-- end #backendPane -->
       </div>
 
       <!-- AI PANEL -->
@@ -2029,6 +2388,9 @@
 
       </div><!-- end #aiPanel -->
 
+        </div><!-- end #editorInner -->
+      </div><!-- end #editorLeft -->
+
       <!-- RESIZER -->
       <div id="rightResizer" class="hidden"></div>
 
@@ -2067,22 +2429,12 @@
         </div>
         <div id="previewInner">
           <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>
-        </div>
-        <div id="consoleResizer"></div>
-        <div id="consolePanel" class="hidden">
-          <div id="consoleHeader">
-            <span class="con-title">Console</span>
-            <span class="con-badge con-err-bg" id="errCount"></span>
-            <span class="con-badge con-warn-bg" id="warnCount"></span>
-            <button id="consoleReport" onclick="reportConsoleToChat()" title="Send errors to AI" style="margin-left:auto;display:none;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.2);border-radius:4px;color:#93c5fd;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all var(--t-fast)">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Ask AI
-            </button>
-            <button id="consoleClear" onclick="clearConsole()" title="Clear">
-              <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+          <div id="errPopup">
+            <span class="ep-dot"></span>
+            <span class="ep-label" id="errPopupLabel">1 error</span>
+            <button class="ep-fix" onclick="reportConsoleToChat()">Fix</button>
+            <button class="ep-close" onclick="clearConsole()" title="Dismiss"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
-          <div id="consoleBody">          <div class="con-empty" id="conEmpty">No output yet.</div></div>
         </div>
         </div><!-- .right-panel-slide -->
       </div>
@@ -2191,7 +2543,7 @@ try {
 let project = null, projectId = null;
 let fileSystem = {}, mainFile = 'index.html';
 let openTabs = [], activeFile = null;
-let previewVisible = false, consoleVisible = false;
+let previewVisible = false;
 let editor = null, monacoReady = false;
 let dirtyFiles = new Set();
 let ctxTarget = null, fileModalCb = null;
@@ -2210,7 +2562,7 @@ const DEFAULT_HTML = `<!DOCTYPE html>
 </html>`;
 
 function isDefaultCode(fs) {
-  const files = Object.keys(fs || {});
+  const files = Object.keys(fs || {}).filter(f => f !== '_backend');
   if (files.length === 0) return true;
   if (files.length === 1) {
     const content = (fs[files[0]] || '').trim();
@@ -2275,6 +2627,13 @@ async function loadProject() {
           fileSystem = data.files || {};
           mainFile = data.main_file || 'index.html';
           _aiProjectContext = data.ai_context || {};
+          // Restore step plan
+          if (data.project_phases) {
+            try {
+              _stepPlan = JSON.parse(data.project_phases);
+              _currentStep = typeof data.current_phase === 'number' ? data.current_phase : 0;
+            } catch(e) { _stepPlan = null; _currentStep = 0; }
+          }
         }
       }
     } catch(e) {}
@@ -2305,6 +2664,11 @@ async function loadProject() {
     showPreviewDock(true);
   }
 
+  // Restore step header if a plan was saved
+  if (_stepPlan && _stepPlan.needs_steps) {
+    updateStepHeader();
+  }
+
   renderFileTree();
   setUrl(mainFile);
 
@@ -2317,8 +2681,14 @@ async function loadProject() {
   }
   renderTabs();
 
+  const _advancedMode = (() => { try { return localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) { return false; } })();
+  const _tbModes = document.getElementById('tbModes');
+  if (_tbModes) _tbModes.style.display = _advancedMode ? '' : 'none';
+
   let lastMode = 'ai';
-  try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
+  if (_advancedMode) {
+    try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
+  }
   setMode(lastMode);
   await aiLoadHistory();
   renderTemplates();
@@ -2371,19 +2741,22 @@ function loadMonaco() {
       ],
       colors: {
         'editor.background':              '#0a0a0a',
-        'editor.foreground':              '#e0e0f8',
-        'editorLineNumber.foreground':    '#14142a',
-        'editorLineNumber.activeForeground': '#2a2a50',
-        'editor.lineHighlightBackground': '#08081880',
-        'editor.selectionBackground':     '#ffffff22',
+        'editor.foreground':              '#d4d4d4',
+        'editorLineNumber.foreground':    '#2a2a2a',
+        'editorLineNumber.activeForeground': '#555555',
+        'editor.lineHighlightBackground': '#ffffff09',
+        'editor.lineHighlightBorder':     '#00000000',
+        'editor.selectionBackground':     '#ffffff18',
         'editorCursor.foreground':        '#ffffff',
         'editorGutter.background':        '#0a0a0a',
-        'editorIndentGuide.background':   '#0a0a20',
-        'editorWidget.background':        '#06060f',
-        'editorSuggestWidget.background': '#06060f',
-        'editorSuggestWidget.border':     '#16162a',
-        'editorHoverWidget.background':   '#06060f',
-        'editorHoverWidget.border':       '#16162a',
+        'editorIndentGuide.background1':  '#1e1e1e',
+        'editorWidget.background':        '#141414',
+        'editorWidget.border':            '#262626',
+        'editorSuggestWidget.background': '#141414',
+        'editorSuggestWidget.border':     '#262626',
+        'editorSuggestWidget.selectedBackground': '#1c1c1c',
+        'editorHoverWidget.background':   '#141414',
+        'editorHoverWidget.border':       '#262626',
       }
     });
     editor = monaco.editor.create(document.getElementById('monacoWrap'), {
@@ -2395,7 +2768,7 @@ function loadMonaco() {
       scrollBeyondLastLine: false,
       wordWrap: 'on', tabSize: 2, insertSpaces: true,
       renderWhitespace: 'none', smoothScrolling: true,
-      cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'on',
+      cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'off',
       bracketPairColorization: { enabled: true },
       padding: { top: 12, bottom: 12 },
       automaticLayout: true,
@@ -2444,6 +2817,8 @@ function setMode(m) {
   document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
   document.getElementById('sidebar').style.display     = m === 'ai'     ? 'none' : '';
   document.getElementById('statusbar').classList.toggle('hidden', m === 'ai');
+  const pmSwitch = document.getElementById('paneModeSwitch');
+  if (pmSwitch) pmSwitch.style.display = m === 'editor' ? '' : 'none';
 
   if (m !== 'editor') {
     const imgPane = document.getElementById('imgPreviewPane');
@@ -2452,6 +2827,15 @@ function setMode(m) {
     if (monacoWrap) monacoWrap.style.display = '';
   }
   if (m === 'editor') {
+    // Sync UI to current _paneMode (don't re-read localStorage — _paneMode is maintained by setPaneMode)
+    const _codeEls = ['paneTabs', 'monacoWrap', 'imgPreviewPane'];
+    _codeEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _paneMode === 'code' ? '' : 'none'; });
+    document.getElementById('backendPane')?.classList.toggle('show', _paneMode === 'backend');
+    document.getElementById('modeBtnCode')?.classList.toggle('active', _paneMode === 'code');
+    document.getElementById('modeBtnBackend')?.classList.toggle('active', _paneMode === 'backend');
+    document.getElementById('sidebar')?.classList.toggle('backend-hidden', _paneMode === 'backend');
+    if (_paneMode === 'backend') requestAnimationFrame(() => bkSetTab(_bkTab));
+
     if (!activeFile || !fileSystem[activeFile]) {
       const fallback = mainFile || Object.keys(fileSystem).find(f => !isImageFile(f));
       if (fallback) openFile(fallback);
@@ -2471,7 +2855,7 @@ function setMode(m) {
 // ── FILE TREE ─────────────────────────────────────────────────────────────────
 function renderFileTree() {
   const el = document.getElementById('fileTree');
-  const files = Object.keys(fileSystem).sort((a, b) => {
+  const files = Object.keys(fileSystem).filter(f => f !== '_backend').sort((a, b) => {
     const o = f => f.endsWith('.html') ? 0 : f.endsWith('.css') ? 1 : f.endsWith('.js') ? 2 : 3;
     return o(a) - o(b) || a.localeCompare(b);
   });
@@ -2526,8 +2910,7 @@ function openFile(f) {
   }
 
   if (imgPane) imgPane.classList.remove('show');
-  if (monacoWrap) monacoWrap.style.display = '';
-  // Only show editor pane if we're actually in editor mode
+  if (monacoWrap) monacoWrap.style.display = _paneMode === 'backend' ? 'none' : '';
   if (currentMode === 'editor' && edPane) edPane.style.display = 'flex';
 
   const lang = getLang(f);
@@ -2568,7 +2951,7 @@ function getLang(f) {
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function renderTabs() {
-  document.getElementById('paneTabs').innerHTML = openTabs.map(f => {
+  document.getElementById('paneTabs').innerHTML = openTabs.filter(f => f !== '_backend').map(f => {
     const n = f.includes('/') ? f.split('/').pop() : f;
     return `<div class="pane-tab${f === activeFile ? ' active' : ''}${dirtyFiles.has(f) ? ' dirty' : ''}" onclick="openFile('${esc(f)}')">
       <span>${esc(n)}</span>
@@ -2752,7 +3135,7 @@ function buildPageHtml(pageName) {
     'window.addEventListener("error",function(e){window.parent.postMessage({type:"console",kind:"error",msg:(e.message||"Unknown error")+" (line "+e.lineno+")"},"*");});',
     'document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var href=a.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("http")||href.startsWith("mailto")||href.startsWith("tel"))return;var page=href.split("?")[0].split("#")[0];if(!page)return;e.preventDefault();window.parent.postMessage({type:"vexium_navigate",page:page},"*");});',
     // Tracking: skip blob: URLs (editor preview) — only fires on real published deployments
-    '(function(){var pid="' + _trackPid.replace(/"/g, '') + '";if(!pid||location.href.startsWith("blob:"))return;var sid=sessionStorage.getItem("_vsid")||Math.random().toString(36).slice(2);sessionStorage.setItem("_vsid",sid);fetch("https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:pid,page:location.pathname||"/",referrer:document.referrer,session_id:sid})}).catch(function(){});})();',
+    '(function(){var pid="' + _trackPid.replace(/"/g, '') + '";if(!pid||location.href.startsWith("blob:"))return;var sid=sessionStorage.getItem("_vsid")||Math.random().toString(36).slice(2);sessionStorage.setItem("_vsid",sid);var vid=localStorage.getItem("_vvid")||Math.random().toString(36).slice(2);localStorage.setItem("_vvid",vid);fetch("https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:pid,page:location.pathname||"/",referrer:document.referrer,session_id:sid,visitor_id:vid})}).catch(function(){});})();',
     '})();'
   ].join('');
   const bridge = '<script>' + navInterceptor + '<\/script>';
@@ -2833,57 +3216,42 @@ window.addEventListener('message', e => {
     return;
   }
   if (e.data?.type !== 'console') return;
-  const body = document.getElementById('consoleBody');
-  document.getElementById('conEmpty')?.remove();
-  const line = document.createElement('div');
-  line.className = 'con-line ' + e.data.kind;
-  line.innerHTML = `<span class="con-badge-inline">${e.data.kind.toUpperCase()}</span><span class="con-msg">${escHtml(e.data.msg)}</span>`;
-  body.appendChild(line);
-  body.scrollTop = body.scrollHeight;
   if (e.data.kind === 'error') {
     errCnt++;
-    const el = document.getElementById('errCount');
-    el.textContent = errCnt + ' err'; el.className = 'con-badge con-err-bg show';
-    document.getElementById('consoleReport').style.display = 'flex';
     _previewErrors.push(e.data.msg);
     if (_previewErrors.length > 5) _previewErrors.shift();
-  }
-  if (e.data.kind === 'warn') {
-    warnCnt++;
-    const el = document.getElementById('warnCount');
-    el.textContent = warnCnt + ' warn'; el.className = 'con-badge con-warn-bg show';
-    document.getElementById('consoleReport').style.display = 'flex';
-  }
-  if (!consoleVisible) {
-    consoleVisible = true;
-    document.getElementById('consolePanel').classList.remove('hidden');
-    showPreviewDock(true);
+    _showErrPopup();
   }
 });
 
+function _showErrPopup() {
+  const popup = document.getElementById('errPopup');
+  const label = document.getElementById('errPopupLabel');
+  if (!popup || !label) return;
+  label.textContent = errCnt + (errCnt === 1 ? ' error' : ' errors');
+  popup.classList.add('show');
+  showPreviewDock(true);
+}
+
 function reportConsoleToChat() {
-  const lines = document.querySelectorAll('#consoleBody .con-line');
-  if (!lines.length) return;
-  const text = Array.from(lines).map(el => {
-    const kind = el.classList.contains('error') ? 'ERROR' : el.classList.contains('warn') ? 'WARN' : 'LOG';
-    const msg = el.querySelector('.con-msg')?.textContent?.trim() || '';
-    return '[' + kind + '] ' + msg;
-  }).join('\n');
-  const inp = document.getElementById('aiBottomInput');
-  if (inp) {
-    inp.value = 'Fix these console errors:\n\n' + text;
-    aiAutoResize(inp);
-    inp.focus();
-    setMode('ai');
-  }
+  if (aiTyping) return;
+  const errors = _previewErrors.slice();
+  clearConsole();
+  const errDetail = errors.length ? '\n\nErrors:\n' + errors.map(e => '• ' + e).join('\n') : '';
+  const msg = 'Fix the JavaScript errors in my site' + errDetail;
+  setMode('ai');
+  aiTransitionToChat();
+  aiHistory.push({ role: 'user', content: msg });
+  aiAddUserRow(msg, []);
+  aiSaveMsg('user', msg, []);
+  aiTyping = true; aiSetGenerating(true); aiShowTyping();
+  aiCallAPI();
 }
 
 function clearConsole() {
-  errCnt = 0; warnCnt = 0;
-  document.getElementById('consoleBody').innerHTML = '<div class="con-empty" id="conEmpty">No output yet.</div>';
-  document.getElementById('errCount').className = 'con-badge';
-  document.getElementById('warnCount').className = 'con-badge';
-  document.getElementById('consoleReport').style.display = 'none';
+  errCnt = 0; warnCnt = 0; _previewErrors = [];
+  const popup = document.getElementById('errPopup');
+  if (popup) popup.classList.remove('show');
 }
 
 // ── TOGGLE PREVIEW ────────────────────────────────────────────────────────────
@@ -3023,13 +3391,6 @@ function applyDeviceMode() {
 }
 
 // ── RESIZE ────────────────────────────────────────────────────────────────────
-(function() {
-  const h = document.getElementById('consoleResizer');
-  let drag = false, startY, startH;
-  h.addEventListener('mousedown', e => { drag = true; startY = e.clientY; startH = document.getElementById('consolePanel').offsetHeight; disableFrame(); e.preventDefault(); });
-  document.addEventListener('mousemove', e => { if (!drag) return; document.getElementById('consolePanel').style.height = Math.max(50, Math.min(startH + (startY - e.clientY), 500)) + 'px'; });
-  document.addEventListener('mouseup', () => { if (drag) { drag = false; enableFrame(); } });
-})();
 
 (function() {
   const h = document.getElementById('rightResizer');
@@ -3366,26 +3727,6 @@ function aiCopyUserMsg(btn) {
   });
 }
 
-function renderAiSuggestions(items, targetEl) {
-  if (!items || !items.length || !targetEl) return;
-  const existing = targetEl.querySelector('.ai-followup-pills');
-  if (existing) existing.remove();
-  const wrap = document.createElement('div');
-  wrap.className = 'ai-followup-pills';
-  items.forEach(text => {
-    const btn = document.createElement('button');
-    btn.className = 'ai-followup-pill';
-    btn.textContent = text;
-    btn.onclick = () => {
-      document.querySelectorAll('.ai-followup-pills').forEach(el => el.remove());
-      const inp = document.getElementById('aiBottomInput');
-      if (inp) { inp.value = String(text); aiAutoResize(inp); inp.focus(); }
-      aiSend(true);
-    };
-    wrap.appendChild(btn);
-  });
-  targetEl.appendChild(wrap);
-}
 
 function aiEditMsg(btn) {
   if (aiTyping) return;
@@ -3646,7 +3987,7 @@ function renderTemplates() {
     html += `<button class="ai-tpl" onclick="aiTemplateByKey('${key}')"><span class="ai-tpl-ico">${t.emoji}</span>${escHtml(t.name)}</button>`;
   });
   html += '<button class="ai-tpl ai-tpl-add" onclick="openTplModal()" title="Edit templates"><span class="ai-tpl-ico">✎</span> Templates</button>';
-  el.innerHTML = html;
+  if (el) el.innerHTML = html;
 }
 
 function aiTemplateByKey(key) { const text = tplPromptMap[key]; if (text) aiTemplate(text); }
@@ -3800,6 +4141,7 @@ function aiFileColor2(name) { return aiFileColor(name); }
 
 function pillFriendlyName(name) {
   const base = name.split('/').pop();
+  if (base === '_backend') return 'Backend';
   if (base.endsWith('.css')) return 'Styling';
   if (base.endsWith('.js') || base.endsWith('.ts')) return 'Scripts';
   if (base.endsWith('.json')) return 'Config';
@@ -3904,7 +4246,8 @@ function livePreviewUpdate(isHtml) {
   clearTimeout(_livePreviewDebounce);
   _livePreviewDebounce = setTimeout(() => {
     if (!previewVisible) {
-      if (!isHtml) return; // don't auto-open for CSS/JS — wait for HTML
+      if (!isHtml) return;
+      if (isDefaultCode(fileSystem)) return; // don't auto-open preview for default placeholder code
       showPreviewDock(true);
     }
     const frame = document.getElementById('previewFrame');
@@ -4347,6 +4690,16 @@ function usageWarnCancel() {
 // ── MAIN API CALL ─────────────────────────────────────────────────────────────
 // ── STEP SYSTEM ───────────────────────────────────────────────────────────────
 
+async function saveStepPlan() {
+  if (!sb || !projectId) return;
+  try {
+    await sb.from('projects').update({
+      project_phases: _stepPlan ? JSON.stringify(_stepPlan) : null,
+      current_phase: _currentStep
+    }).eq('id', projectId);
+  } catch(e) {}
+}
+
 function renderStepPlanCard(plan) {
   // Not used in auto-build flow — plan arrives while step 1 is already streaming.
   // Only called if we need to display the plan explicitly (e.g. for debugging).
@@ -4374,33 +4727,28 @@ async function startStep(stepIndex) {
   const step = _stepPlan.steps[stepIndex];
   if (!step) return;
 
+  // Persist current step immediately
+  saveStepPlan();
+
   // Update step header
   updateStepHeader();
 
   // Remove plan card / next-step card if present
   document.querySelectorAll('.ai-step-plan-card, .ai-next-step-card').forEach(el => el.remove());
+  const bar = document.getElementById('aiNextStepBar');
+  if (bar) bar.innerHTML = '';
 
-  // Inject step context into the build
-  const stepCtx = `[STEP ${stepIndex + 1} of ${_stepPlan.steps.length}: ${step.title}]\n${step.description || ''}\nPages to build this step: ${(step.pages || []).join(', ') || 'index.html'}`;
+  // Add a user message so the AI has a clear instruction to build this step
+  const userMsg = `Continue to step ${stepIndex + 1}: ${step.title}`;
+  aiHistory.push({ role: 'user', content: userMsg });
+  aiAddUserRow(userMsg, []);
+  aiSaveMsg('user', userMsg, []);
 
-  // Run brief + spec + build with step context appended
-  // Skip brief/spec if files already exist — design decisions are already made
-  _pendingBrief = null; _pendingSpec = null;
-  const hasExistingFiles = Object.keys(fileSystem).filter(f => !isDefaultCode({[f]: fileSystem[f]})).length > 0;
-  if (!hasExistingFiles) {
-    try {
-      const msgs = [...aiHistory.filter(m => m.role === 'user'), { role: 'user', content: stepCtx }];
-      _pendingBrief = await fetchJSON({ brief_mode: true, messages: msgs });
-      if (_pendingBrief) {
-        await new Promise(r => setTimeout(r, 300));
-        _pendingSpec = await fetchJSON({ spec_mode: true, messages: msgs, brief: _pendingBrief });
-        await new Promise(r => setTimeout(r, 300));
-      }
-    } catch(e) {}
-  }
-
+  _pendingBrief = null;
+  _pendingSpec = null;
   aiTyping = true;
   aiSetGenerating(true);
+  aiShowTyping();
   await aiCallAPI();
 }
 
@@ -4411,6 +4759,8 @@ function updateStepHeader() {
   const dropdown = document.getElementById('aiStepDropdown');
   header.classList.add('show');
   label.textContent = 'Step ' + (_currentStep + 1) + ' of ' + _stepPlan.steps.length;
+  const nextIdx = _currentStep + 1;
+  const hasNext = nextIdx < _stepPlan.steps.length;
   dropdown.innerHTML = _stepPlan.steps.map((s, i) => `
     <div class="ai-step-row">
       <div class="ai-step-row-num ${i === _currentStep ? 'active' : ''}">${i + 1}</div>
@@ -4418,7 +4768,8 @@ function updateStepHeader() {
         <div class="ai-step-row-title ${i < _currentStep ? 'done' : ''}">${escHtml(s.title)}</div>
         <div class="ai-step-row-desc">${escHtml(s.description || '')}</div>
       </div>
-    </div>`).join('');
+    </div>`).join('') +
+    (hasNext ? `<button class="ai-step-plan-btn" onclick="toggleStepDropdown();startStep(${nextIdx})">Build step ${nextIdx + 1}: ${escHtml(_stepPlan.steps[nextIdx].title)} →</button>` : `<div style="font-size:11px;color:var(--muted);text-align:center;padding:6px 0;margin-top:4px">All steps complete</div>`);
 }
 
 function toggleStepDropdown() {
@@ -4429,7 +4780,13 @@ function renderNextStepCard(targetEl) {
   if (!_stepPlan) return;
   const nextIdx = _currentStep + 1;
   const nextStep = _stepPlan.steps[nextIdx];
-  if (!nextStep) return;
+  if (!nextStep) {
+    // All steps done — clear saved plan
+    _stepPlan = null;
+    _currentStep = 0;
+    saveStepPlan();
+    return;
+  }
   const bar = document.getElementById('aiNextStepBar');
   const container = bar || targetEl;
   if (bar) bar.innerHTML = '';
@@ -4504,7 +4861,28 @@ function buildAiFilesPayload() {
 
 function sliceAiHistoryForApi(messages) {
   if (!messages || !messages.length) return messages;
-  return messages.length <= AI_MAX_MESSAGES ? messages : messages.slice(-AI_MAX_MESSAGES);
+  const KEEP_RECENT = 12;
+  if (messages.length <= KEEP_RECENT) return messages;
+  // Keep last KEEP_RECENT verbatim; compress older assistant messages
+  // (they contain large JSON code dumps that waste tokens)
+  const recent = messages.slice(-KEEP_RECENT);
+  const old = messages.slice(0, -KEEP_RECENT);
+  const compressed = old.map(m => {
+    if (m.role !== 'assistant') {
+      const s = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+      return { role: m.role, content: s.slice(0, 400) };
+    }
+    try {
+      const p = JSON.parse(typeof m.content === 'string' ? m.content : JSON.stringify(m.content));
+      const msg = String(p.message || '').slice(0, 120);
+      const files = (p.files || []).map(f => f.name).join(', ');
+      return { role: 'assistant', content: msg + (files ? ` [Built: ${files}]` : '') };
+    } catch {
+      const s = String(m.content);
+      return { role: 'assistant', content: s.slice(0, 120) };
+    }
+  });
+  return [...compressed, ...recent];
 }
 
 /** Split SSE frames on blank line (LF or CRLF). Using only \\n\\n misses \\r\\n\\r\\n, so file events never parse. */
@@ -4598,7 +4976,7 @@ async function aiCallAPI() {
   // Inject any preview JS errors as silent context so AI can fix them without being asked
   let _apiMessages = sliceAiHistoryForApi(aiHistory);
   if (_previewErrors.length > 0) {
-    const errNote = '\n\n[The preview has these JavaScript errors — fix them silently if they relate to your changes: ' + _previewErrors.join(' | ') + ']';
+    const errNote = '\n\n[Preview JavaScript errors to fix: ' + _previewErrors.join(' | ') + ']';
     const lastMsg = _apiMessages[_apiMessages.length - 1];
     if (lastMsg && lastMsg.role === 'user') {
       _apiMessages = [..._apiMessages];
@@ -4712,7 +5090,8 @@ async function aiCallAPI() {
         const preferredBuiltMain = normalizeMainFile('index.html', Object.fromEntries(builtHtmlNames.map(n => [n, true])))
           || (builtHtmlNames.includes('home.html') ? 'home.html' : builtHtmlNames[0] || null);
         const htmlFile = preferredBuiltMain ? { name: preferredBuiltMain } : null;
-        if (htmlFile) mainFile = htmlFile.name;
+        // Never override mainFile if index.html already exists and is set as main
+        if (htmlFile && !(mainFile === 'index.html' && fileSystem['index.html'])) mainFile = htmlFile.name;
 
         renderFileTree();
         renderTabs();
@@ -4846,6 +5225,7 @@ async function aiCallAPI() {
             }
             aiMarkPillDone(fileKey);
             currentStreamingFile = null;
+            if (fileKey === '_backend' && _paneMode === 'backend') { bkRenderCollSidebar(); bkRenderSchema(); bkRenderAPI(); }
             livePreviewUpdate(fileKey.endsWith('.html'));
           }
         }
@@ -4898,16 +5278,46 @@ async function aiCallAPI() {
           scrollIfSticky();
         }
 
-        if (eventType === 'suggestions' && data && Array.isArray(data.items) && data.items.length) {
-          renderAiSuggestions(data.items, row._contentWrap || row);
-          scrollIfSticky();
-        }
+
 
         if (eventType === 'plan' && data && data.needs_steps && data.steps && data.steps.length > 1) {
-          // Store the plan — step 1 is already building in this same stream
-          _stepPlan = data;
-          _currentStep = 0;
+          if (_stepPlan && _stepPlan.steps) {
+            // Extend existing plan — append new steps rather than replacing
+            const existingTitles = new Set(_stepPlan.steps.map(s => s.title));
+            const newSteps = data.steps.filter(s => !existingTitles.has(s.title));
+            if (newSteps.length) _stepPlan.steps.push(...newSteps);
+          } else {
+            _stepPlan = data;
+            _currentStep = 0;
+          }
           updateStepHeader();
+          saveStepPlan();
+        }
+
+        if (eventType === 'rename' && data.from && data.to) {
+          if (fileSystem[data.from] !== undefined) {
+            fileSystem[data.to] = fileSystem[data.from];
+            delete fileSystem[data.from];
+            dirtyFiles.add(data.to);
+            dirtyFiles.delete(data.from);
+            if (mainFile === data.from) mainFile = data.to;
+            const ti = openTabs.indexOf(data.from);
+            if (ti !== -1) openTabs[ti] = data.to;
+            if (activeFile === data.from) activeFile = data.to;
+            renderFileTree(); renderTabs(); saveNow();
+          }
+        }
+
+        if (eventType === 'delete' && data.name) {
+          if (fileSystem[data.name] !== undefined) {
+            delete fileSystem[data.name];
+            dirtyFiles.delete(data.name);
+            const ti = openTabs.indexOf(data.name);
+            if (ti !== -1) openTabs.splice(ti, 1);
+            if (mainFile === data.name) mainFile = Object.keys(fileSystem).find(k => k.endsWith('.html')) || 'index.html';
+            if (activeFile === data.name) { activeFile = null; }
+            renderFileTree(); renderTabs(); saveNow();
+          }
         }
 
         if (eventType === 'error') throw new Error(data.error || 'Stream error');
@@ -5096,7 +5506,526 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
 window.addEventListener('load', init);
+
+// ── CUSTOM MODALS ─────────────────────────────────────────────────────────────
+let _bkModalResolve = null;
+
+function bkConfirm(title, msg, danger = true) {
+  return new Promise(resolve => {
+    _bkModalResolve = resolve;
+    document.getElementById('bkModalTitle').textContent  = title;
+    document.getElementById('bkModalMsg').textContent    = msg;
+    document.getElementById('bkModalInputWrap').classList.remove('show');
+    const btn = document.getElementById('bkModalConfirm');
+    btn.textContent = danger ? 'Delete' : 'Confirm';
+    btn.className   = danger ? 'danger' : 'primary';
+    document.getElementById('bkModal').classList.add('show');
+    document.getElementById('bkModalInput').value = '';
+  });
+}
+
+function bkPrompt(title, placeholder) {
+  return new Promise(resolve => {
+    _bkModalResolve = resolve;
+    document.getElementById('bkModalTitle').textContent  = title;
+    document.getElementById('bkModalMsg').textContent    = '';
+    const wrap = document.getElementById('bkModalInputWrap');
+    const input = document.getElementById('bkModalInput');
+    input.placeholder = placeholder || '';
+    input.value = '';
+    wrap.classList.add('show');
+    const btn = document.getElementById('bkModalConfirm');
+    btn.textContent = 'Add';
+    btn.className = 'primary';
+    document.getElementById('bkModal').classList.add('show');
+    setTimeout(() => input.focus(), 60);
+  });
+}
+
+function _bkModalClose(val) {
+  document.getElementById('bkModal').classList.remove('show');
+  if (_bkModalResolve) { _bkModalResolve(val); _bkModalResolve = null; }
+}
+function _bkModalConfirmClick() {
+  const wrap = document.getElementById('bkModalInputWrap');
+  if (wrap && wrap.classList.contains('show')) {
+    const v = document.getElementById('bkModalInput').value.trim();
+    _bkModalClose(v || null);
+  } else {
+    _bkModalClose(true);
+  }
+}
+
+
+// ── BACKEND PANE ─────────────────────────────────────────────────────────────
+
+let _paneMode = (() => { try { return localStorage.getItem('vexium_last_pane_mode') || 'code'; } catch(e) { return 'code'; } })();
+let _bkTab    = 'data';
+const BK_URL  = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
+const BK_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MDkxOTUsImV4cCI6MjA2MDA4NTE5NX0.ZKHdTLSEsQYKmVnM3T9gJ59l8U6V6DYxHFrcrOmXMM4';
+
+// ── Pane mode (code vs backend) ───────────────────────────────────────────────
+function setPaneMode(mode) {
+  _paneMode = mode;
+  try { localStorage.setItem('vexium_last_pane_mode', mode); } catch(e) {}
+  document.getElementById('modeBtnCode').classList.toggle('active', mode === 'code');
+  document.getElementById('modeBtnBackend').classList.toggle('active', mode === 'backend');
+  ['paneTabs','monacoWrap','imgPreviewPane'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = mode === 'code' ? '' : 'none';
+  });
+  document.getElementById('backendPane').classList.toggle('show', mode === 'backend');
+  const sb2 = document.getElementById('sidebar');
+  if (sb2) sb2.classList.toggle('backend-hidden', mode === 'backend');
+  if (mode === 'backend') {
+    requestAnimationFrame(() => bkSetTab(_bkTab));
+    if (typeof editor !== 'undefined' && editor) setTimeout(() => editor.layout(), 50);
+  }
+  if (mode === 'code' && typeof editor !== 'undefined' && editor) setTimeout(() => editor.layout(), 50);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function bkSetTab(tab) {
+  _bkTab = tab;
+  document.querySelectorAll('.bk-nav-item').forEach(el => el.classList.toggle('active', el.dataset.bk === tab));
+  document.querySelectorAll('.bk-panel').forEach(el => el.classList.toggle('active', el.id === 'bkPanel' + tab.charAt(0).toUpperCase() + tab.slice(1)));
+  if (tab === 'data')   { bkRenderPicker(); }
+  if (tab === 'auth')   { bkLoadAuth(); }
+  if (tab === 'schema') { bkRenderSchema(); }
+  if (tab === 'api')    { bkRenderAPI(); }
+}
+
+// ── Config helpers ────────────────────────────────────────────────────────────
+function getBackendConfig() {
+  try { const r = fileSystem['_backend']; return r ? JSON.parse(r) : { collections: [], auth: { enabled: false } }; }
+  catch { return { collections: [], auth: { enabled: false } }; }
+}
+function setBackendConfig(cfg) {
+  fileSystem['_backend'] = JSON.stringify(cfg, null, 2);
+  dirtyFiles.add('_backend');
+  debouncedSave();
+}
+function debouncedSave() {
+  clearTimeout(debouncedSave._t);
+  debouncedSave._t = setTimeout(() => saveNow(), 1500);
+}
+
+// ── Auth token helper ─────────────────────────────────────────────────────────
+function bkAuthHeader() {
+  try {
+    const s = sb?.auth?.session?.();
+    if (s?.access_token) return `Bearer ${s.access_token}`;
+  } catch {}
+  return `Bearer ${BK_ANON}`;
+}
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escA(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function bkRelTime(ts) {
+  if (!ts) return '—';
+  const s = (Date.now() - new Date(ts)) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+// ── DATA TAB ─────────────────────────────────────────────────────────────────
+let _bkCurrentColl = null;
+let _bkAllRows = [];
+
+function bkRenderPicker(filter) {
+  const cfg   = getBackendConfig();
+  const grid  = document.getElementById('bkPickerGrid');
+  const lf    = (filter||'').toLowerCase();
+  const colls = cfg.collections.filter(c => !lf || (c.label||c.id).toLowerCase().includes(lf));
+  grid.innerHTML = colls.map(c => `
+    <div class="bk-coll-card" onclick="bkSelectColl('${escA(c.id)}')">
+      <div class="bk-coll-card-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+      </div>
+      <div class="bk-coll-card-name">${escH(c.label||c.id)}</div>
+      <div class="bk-coll-card-meta">${(c.fields||[]).length} field${(c.fields||[]).length!==1?'s':''}</div>
+      <button class="bk-coll-card-del" onclick="event.stopPropagation();bkDeleteColl('${escA(c.id)}')" title="Delete">×</button>
+    </div>`).join('') +
+    (lf ? '' : `<div id="bkPickerNewCard" onclick="bkShowAddColl()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New collection
+    </div>`);
+  document.getElementById('bkPicker').style.display = '';
+  document.getElementById('bkTableView').classList.remove('show');
+}
+
+function bkFilterPicker(q) { bkRenderPicker(q); }
+
+function bkBack() {
+  _bkCurrentColl = null;
+  document.getElementById('bkTableView').classList.remove('show');
+  document.getElementById('bkPicker').style.display = '';
+  bkRenderPicker();
+}
+
+function bkRenderCollSidebar() { bkRenderPicker(); }
+
+function bkSelectColl(id) {
+  _bkCurrentColl = id;
+  const cfg  = getBackendConfig();
+  const coll = cfg.collections.find(c => c.id === id);
+  if (!coll) return;
+  document.getElementById('bkDataName').textContent = coll.label || coll.id;
+  document.getElementById('bkDataRowCount').textContent = '';
+  document.getElementById('bkDataSearch').value = '';
+  document.getElementById('bkPicker').style.display = 'none';
+  document.getElementById('bkTableView').classList.add('show');
+  bkLoadCurrentData();
+}
+
+async function bkLoadCurrentData() {
+  if (!_bkCurrentColl || !sb) return;
+  const cfg  = getBackendConfig();
+  const coll = cfg.collections.find(c => c.id === _bkCurrentColl);
+  if (!coll) return;
+  const wrap = document.getElementById('bkDataTableWrap');
+  wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-icon"><svg viewBox="0 0 24 24" stroke="var(--muted)" fill="none" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="bk-empty-t">Loading…</div></div>';
+  try {
+    const { data, error } = await sb.from('site_data')
+      .select('id, data, created_at')
+      .eq('project_id', projectId)
+      .eq('collection', _bkCurrentColl)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    _bkAllRows = data || [];
+    bkRenderDataTable(_bkAllRows, coll.fields || []);
+  } catch { wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-t">Failed to load</div></div>'; }
+}
+
+function bkRenderDataTable(rows, fields) {
+  const wrap    = document.getElementById('bkDataTableWrap');
+  const countEl = document.getElementById('bkDataRowCount');
+  countEl.textContent = rows.length + ' row' + (rows.length !== 1 ? 's' : '');
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-icon"><svg viewBox="0 0 24 24" stroke="var(--muted)" fill="none" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div><div class="bk-empty-t">No data yet</div><div class="bk-empty-s">Submissions will appear here once users interact with your site.</div></div>';
+    return;
+  }
+  const cols = fields.length ? fields : Object.keys(rows[0].data||{}).slice(0,6).map(k=>({key:k,label:k}));
+  wrap.innerHTML = `<table class="bk-table">
+    <thead><tr>${cols.map(f=>`<th>${escH(f.label||f.key)}</th>`).join('')}<th>Submitted</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      ${cols.map(f=>`<td title="${escA(String(r.data?.[f.key]??''))}">${escH(String(r.data?.[f.key]??'—'))}</td>`).join('')}
+      <td class="bk-td-normal" style="color:var(--muted)">${bkRelTime(r.created_at)}</td>
+      <td><button class="bk-del-btn" onclick="bkDeleteRow('${escA(r.id)}')" title="Delete row">×</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function bkFilterRows(q) {
+  if (!q) { bkRenderDataTable(_bkAllRows, (getBackendConfig().collections.find(c=>c.id===_bkCurrentColl)||{}).fields||[]); return; }
+  const lq = q.toLowerCase();
+  const filtered = _bkAllRows.filter(r => JSON.stringify(r.data).toLowerCase().includes(lq));
+  bkRenderDataTable(filtered, (getBackendConfig().collections.find(c=>c.id===_bkCurrentColl)||{}).fields||[]);
+}
+
+function bkExportCSV() {
+  if (!_bkAllRows.length) return;
+  const cfg  = getBackendConfig();
+  const coll = cfg.collections.find(c => c.id === _bkCurrentColl);
+  const fields = coll?.fields || Object.keys(_bkAllRows[0].data||{}).map(k=>({key:k,label:k}));
+  const headers = [...fields.map(f=>f.label||f.key), 'created_at'];
+  const rows    = _bkAllRows.map(r => [...fields.map(f=>JSON.stringify(r.data?.[f.key]??'')), r.created_at]);
+  const csv     = [headers, ...rows].map(r=>r.join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), { href: 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv), download: (_bkCurrentColl||'data') + '.csv' });
+  a.click();
+}
+
+async function bkDeleteRow(rowId) {
+  if (!await bkConfirm('Delete row', 'This row will be permanently deleted.')) return;
+  if (sb) await sb.from('site_data').delete().eq('id', rowId);
+  bkLoadCurrentData();
+}
+
+async function bkShowAddColl() {
+  const label = await bkPrompt('New collection', 'e.g. Waitlist, Orders, Contacts');
+  if (!label) return;
+  const id = label.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  const cfg = getBackendConfig();
+  if (cfg.collections.find(c=>c.id===id)) { showToast('!','Collection exists'); return; }
+  cfg.collections.push({ id, label, icon:'📁', fields:[{key:'email',label:'Email',type:'email'}] });
+  setBackendConfig(cfg);
+  bkRenderPicker();
+  bkSelectColl(id);
+}
+
+function bkAddColl() { bkShowAddColl(); }
+
+async function bkDeleteColl(id) {
+  if (!await bkConfirm('Delete collection', 'This will permanently delete the collection and all its data.')) return;
+  const cfg = getBackendConfig();
+  cfg.collections = cfg.collections.filter(c=>c.id!==id);
+  setBackendConfig(cfg);
+  if (_bkCurrentColl === id) bkBack();
+  else bkRenderPicker();
+}
+
+// ── AUTH TAB ──────────────────────────────────────────────────────────────────
+let _bkAuthRows = [];
+
+async function bkLoadAuth() {
+  if (!sb) return;
+  const wrap = document.getElementById('bkAuthTableWrap');
+  wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted)">Loading…</div></div>';
+  try {
+    const { data, error } = await sb.from('site_users')
+      .select('id, email, created_at, metadata')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    _bkAuthRows = data || [];
+    bkRenderAuthTable(_bkAuthRows);
+    document.getElementById('bkAuthSubtitle').textContent = _bkAuthRows.length + ' user' + (_bkAuthRows.length!==1?'s':'') + ' signed up';
+  } catch { wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-t">Failed to load</div></div>'; }
+}
+
+function bkRenderAuthTable(rows) {
+  const wrap = document.getElementById('bkAuthTableWrap');
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="bk-empty"><div class="bk-empty-icon"><svg viewBox="0 0 24 24" stroke="var(--muted)" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="bk-empty-t">No users yet</div><div class="bk-empty-s">Users who sign up on your site will appear here.</div></div>';
+    return;
+  }
+  wrap.innerHTML = `<table class="bk-table">
+    <thead><tr><th>Email</th><th>Joined</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td class="bk-td-normal">${escH(r.email)}</td>
+      <td class="bk-td-normal" style="color:var(--muted)">${bkRelTime(r.created_at)}</td>
+      <td><button class="bk-del-btn" onclick="bkDeleteUser('${escA(r.id)}')">×</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function bkAuthFilter(q) {
+  const lq = q.toLowerCase();
+  bkRenderAuthTable(q ? _bkAuthRows.filter(r=>r.email.toLowerCase().includes(lq)) : _bkAuthRows);
+}
+
+async function bkDeleteUser(id) {
+  if (!await bkConfirm('Delete user', 'This user account will be permanently deleted.')) return;
+  if (sb) await sb.from('site_users').delete().eq('id', id);
+  bkLoadAuth();
+}
+
+// ── SQL TAB ───────────────────────────────────────────────────────────────────
+let _bkSQLRows = [];
+
+async function bkRunSQL() {
+  const query = document.getElementById('bkSqlTextarea').value.trim();
+  if (!query) return;
+  const btn = document.getElementById('bkRunBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  const resultsBody = document.getElementById('bkSqlResultsBody');
+  const resultsHead = document.getElementById('bkSqlResultsBar');
+  resultsBody.innerHTML = '<div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted)">Running…</div></div>';
+  if (resultsHead) resultsHead.style.display = 'none';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token || BK_ANON;
+    const res = await fetch(`${BK_URL}/functions/v1/site-sql`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ project_id: projectId, query })
+    });
+    const payload = await res.json();
+    if (payload.error) {
+      resultsBody.innerHTML = `<div class="bk-sql-error">Error: ${escH(payload.error)}</div>`;
+    } else {
+      _bkSQLRows = Array.isArray(payload.rows) ? payload.rows : [];
+      bkRenderSQLResults(_bkSQLRows);
+    }
+  } catch(e) {
+    resultsBody.innerHTML = `<div class="bk-sql-error">Error: ${escH(String(e))}</div>`;
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg> Run';
+}
+
+function bkRenderSQLResults(rows) {
+  const body = document.getElementById('bkSqlResultsBody');
+  const head = document.getElementById('bkSqlResultsBar');
+  if (!rows.length) {
+    body.innerHTML = '<div class="bk-empty"><div class="bk-empty-t">No rows returned</div></div>';
+    head.style.display = 'flex';
+    document.getElementById('bkSqlResultCount').textContent = '0 rows';
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  head.style.display = 'flex';
+  document.getElementById('bkSqlResultCount').textContent = rows.length + ' row' + (rows.length!==1?'s':'');
+  body.innerHTML = `<table class="bk-table">
+    <thead><tr>${cols.map(c=>`<th>${escH(c)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td title="${escA(String(r[c]??''))}">${escH(String(r[c]??''))}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function bkExportSQLCSV() {
+  if (!_bkSQLRows.length) return;
+  const cols = Object.keys(_bkSQLRows[0]);
+  const csv  = [cols, ..._bkSQLRows.map(r=>cols.map(c=>JSON.stringify(r[c]??'')))].map(r=>r.join(',')).join('\n');
+  Object.assign(document.createElement('a'), { href:'data:text/csv;charset=utf-8,'+encodeURIComponent(csv), download:'query_result.csv' }).click();
+}
+
+// Keyboard shortcut: Ctrl/Cmd+Enter to run SQL
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter' && _paneMode==='backend' && _bkTab==='sql') { e.preventDefault(); bkRunSQL(); }
+});
+
+// ── SCHEMA TAB ────────────────────────────────────────────────────────────────
+function bkRenderSchema() {
+  const cfg  = getBackendConfig();
+  const list = document.getElementById('bkSchemaList');
+  if (!list) return;
+  list.innerHTML = cfg.collections.map((c,ci) => `
+    <div class="bk-schema-card">
+      <div class="bk-schema-card-head" onclick="bkSchemaToggle(${ci})">
+        <div class="bk-schema-card-name">${escH(c.label||c.id)}</div>
+        <div class="bk-schema-card-meta">${(c.fields||[]).length} field${(c.fields||[]).length!==1?'s':''} · <code style="font-family:var(--mono);font-size:10px;color:var(--muted)">${escH(c.id)}</code></div>
+        <button class="bk-schema-card-del" onclick="event.stopPropagation();bkSchemaDel(${ci})" title="Delete">×</button>
+      </div>
+      <div class="bk-schema-card-body" id="bkSchemaBody${ci}">
+        ${(c.fields||[]).map((f,fi)=>`
+          <div class="bk-schema-field">
+            <span class="bk-schema-field-key">${escH(f.key)}</span>
+            <input class="bk-schema-field-lbl" value="${escA(f.label||f.key)}" onchange="bkSchemaUpdateLabel(${ci},${fi},this.value)" placeholder="Label"/>
+            <span class="bk-schema-field-type">${escH(f.type||'text')}</span>
+            <button class="bk-schema-field-del" onclick="bkSchemaDelField(${ci},${fi})">×</button>
+          </div>`).join('')}
+        <button class="bk-schema-add-field" onclick="bkSchemaAddField(${ci})">+ Add field</button>
+      </div>
+    </div>`).join('');
+  const tog = document.getElementById('bkAuthToggle');
+  if (tog) tog.checked = !!cfg.auth?.enabled;
+}
+
+function bkSchemaToggle(ci) {
+  const body = document.getElementById('bkSchemaBody'+ci);
+  if (body) body.classList.toggle('open');
+}
+
+async function bkSchemaDel(ci) {
+  if (!await bkConfirm('Delete collection', 'This collection and all its field definitions will be removed.')) return;
+  const cfg = getBackendConfig();
+  cfg.collections.splice(ci,1);
+  setBackendConfig(cfg);
+  bkRenderSchema();
+  bkRenderCollSidebar();
+}
+
+function bkSchemaUpdateLabel(ci, fi, label) {
+  const cfg = getBackendConfig();
+  cfg.collections[ci].fields[fi].label = label;
+  setBackendConfig(cfg);
+}
+
+function bkSchemaDelField(ci, fi) {
+  const cfg = getBackendConfig();
+  cfg.collections[ci].fields.splice(fi,1);
+  setBackendConfig(cfg);
+  bkRenderSchema();
+}
+
+function bkSchemaAddField(ci) {
+  const key = prompt('Field key (e.g. "phone", "message"):');
+  if (!key) return;
+  const cfg = getBackendConfig();
+  cfg.collections[ci].fields = cfg.collections[ci].fields || [];
+  cfg.collections[ci].fields.push({ key: key.trim().toLowerCase().replace(/\s+/g,'_'), label: key.trim(), type:'text' });
+  setBackendConfig(cfg);
+  bkRenderSchema();
+}
+
+async function bkSchemaShowAdd() {
+  const label = await bkPrompt('New collection', 'e.g. Waitlist, Orders, Contacts');
+  if (!label) return;
+  const id = label.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  const cfg = getBackendConfig();
+  if (cfg.collections.find(c=>c.id===id)) { showToast('!','Collection exists'); return; }
+  cfg.collections.push({ id, label, icon:'📁', fields:[{key:'email',label:'Email',type:'email'}] });
+  setBackendConfig(cfg);
+  bkRenderSchema();
+  bkRenderCollSidebar();
+}
+
+function bkSchemaAddColl() { bkSchemaShowAdd(); }
+
+function bkToggleAuth(on) {
+  const cfg = getBackendConfig();
+  cfg.auth = { ...(cfg.auth||{}), enabled: on };
+  setBackendConfig(cfg);
+  bkRenderAPI();
+}
+
+// ── API TAB ───────────────────────────────────────────────────────────────────
+function bkRenderAPI() {
+  const cfg  = getBackendConfig();
+  const el   = document.getElementById('bkApiContent');
+  const base = `const SITE_ID = '{{VEXIUM_PROJECT_ID}}';\nconst VX_API = '${BK_URL}/functions/v1/site-api';\nasync function vxCall(action, payload = {}) {\n  const res = await fetch(VX_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: SITE_ID, action, ...payload }) });\n  return res.json();\n}`;
+
+  let html = bkApiBlock('Setup', 'JS', base);
+
+  cfg.collections.forEach(c => {
+    const submitSnippet = `// Submit to ${c.label||c.id}\nawait vxCall('submit', {\n  collection: '${c.id}',\n  data: { ${(c.fields||[]).map(f=>`${f.key}: '...'`).join(', ')} }\n});`;
+    const getSnippet    = `// Get ${c.label||c.id} data\nconst result = await vxCall('get_data', { collection: '${c.id}' });\nconsole.log(result.rows);`;
+    html += bkApiBlock(c.label||c.id, 'SUBMIT', submitSnippet);
+    html += bkApiBlock(c.label||c.id, 'GET', getSnippet);
+  });
+
+  if (cfg.auth?.enabled) {
+    const authSnippet = `// Sign up\nconst signup = await vxCall('signup', { email, password });\nif (signup.token) localStorage.setItem('vx_token', signup.token);\n\n// Log in\nconst login = await vxCall('login', { email, password });\nif (login.token) localStorage.setItem('vx_token', login.token);`;
+    html += bkApiBlock('User Auth', 'AUTH', authSnippet);
+  }
+
+  el.innerHTML = html;
+}
+
+function bkApiBlock(title, tag, code) {
+  const id = 'bkApiCode_' + Math.random().toString(36).slice(2);
+  return `<div class="bk-api-block">
+    <div class="bk-api-block-head">
+      <div class="bk-api-block-title">${escH(title)}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="bk-api-block-tag">${escH(tag)}</span>
+        <button class="bk-copy-btn" onclick="bkCopyCode('${id}',this)">Copy</button>
+      </div>
+    </div>
+    <pre class="bk-api-code" id="${id}">${escH(code)}</pre>
+  </div>`;
+}
+
+function bkCopyCode(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
 </script>
+
+<!-- Backend modal -->
+<div id="bkModal" onclick="if(event.target.id==='bkModal')_bkModalClose(null)">
+  <div id="bkModalCard">
+    <div id="bkModalTitle"></div>
+    <div id="bkModalMsg"></div>
+    <div id="bkModalInputWrap"><input id="bkModalInput" autocomplete="off" onkeydown="if(event.key==='Enter')_bkModalConfirmClick();if(event.key==='Escape')_bkModalClose(null)"/></div>
+    <div id="bkModalBtns">
+      <button id="bkModalCancel" onclick="_bkModalClose(null)">Cancel</button>
+      <button id="bkModalConfirm" onclick="_bkModalConfirmClick()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chart tooltip -->
+<div id="chartTip"><div id="chartTipName"></div><div id="chartTipVal"></div></div>
 
 </body>
 </html>

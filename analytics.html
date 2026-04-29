@@ -23,13 +23,8 @@
 
     /* TOPBAR */
     #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
-    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
+    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform 60ms ease-out}
     .tb-logo:hover img{transform:scale(1.08)}
-    .tb-back{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--sub);transition:color .15s;cursor:pointer;background:none;border:none;font-family:var(--sans);padding:0}
-    .tb-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-    .tb-back:hover{color:var(--text)}
-    .tb-sep{width:1px;height:16px;background:var(--b2)}
-    .tb-title{font-size:13px;font-weight:700}
     .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
     .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000 !important;cursor:pointer;flex-shrink:0;text-decoration:none}
 
@@ -83,21 +78,31 @@
 
     /* CHART */
     .chart-section{background:var(--s1);border-radius:16px;padding:24px 28px;margin-bottom:10px}
-    .chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px}
-    .chart-title{font-size:13px;font-weight:700;letter-spacing:-.1px}
+    .chart-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
+    .chart-title{font-size:13px;font-weight:700;letter-spacing:-.1px;margin-bottom:3px}
     .chart-meta{font-size:11px;font-weight:700;color:var(--sub)}
+    .chart-controls{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+    .chart-pill-row{display:flex;gap:2px}
+    .chart-pill{padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .chart-pill.active,.chart-pill:hover{background:var(--s2);color:var(--text)}
     .chart-area{display:flex;flex-direction:column;gap:8px}
-    .bar-chart{display:flex;align-items:flex-end;gap:3px;height:140px;width:100%}
-    .bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:opacity .12s;cursor:default;position:relative}
-    .bar:hover{opacity:.75}
-    .bar-labels{display:flex;gap:3px}
+    .bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;width:100%}
+    .bar{flex:1;border-radius:8px 8px 0 0;min-height:3px;transition:opacity .12s;cursor:default}
+    .bar:hover{opacity:.7}
+    .bar-labels{display:flex;gap:4px}
     .bar-label{flex:1;font-size:9px;color:var(--sub);text-align:center;overflow:hidden;white-space:nowrap}
 
     /* stacked bar segments */
-    .bar-stack{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:1px;min-height:2px}
-    .bar-seg{border-radius:2px;min-height:2px;transition:opacity .12s}
-    .bar-seg:hover{opacity:.75}
-    .bar-seg:first-child{border-radius:3px 3px 0 0}
+    .bar-stack{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:0;min-height:3px}
+    .bar-seg{min-height:3px;transition:opacity .12s;cursor:default}
+    .bar-seg:hover{opacity:.7}
+    .bar-seg:first-child{border-radius:8px 8px 0 0}
+    .bar-seg:last-child{border-radius:0}
+
+    /* tooltip */
+    #chartTip{position:fixed;pointer-events:none;z-index:9999;display:none;background:rgba(14,14,14,.96);border-radius:10px;padding:9px 13px;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,.5);min-width:120px}
+    #chartTipName{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.8);margin-bottom:2px}
+    #chartTipVal{font-size:11px;font-weight:600;color:var(--sub)}
 
     /* color key */
     .color-key{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04)}
@@ -141,14 +146,7 @@
 <body>
 
 <div id="topbar">
-  <a href="home.html" class="tb-logo"><img src="logo_background.png" alt="Vexium"/></a>
-  <div class="tb-sep"></div>
-  <button class="tb-back" onclick="history.back()">
-    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-    Back
-  </button>
-  <div class="tb-sep"></div>
-  <span class="tb-title">Analytics</span>
+  <a href="home.html" class="tb-logo"><img src="vexium_logo.png" alt="Vexium"/></a>
   <div class="tb-right">
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
@@ -174,12 +172,6 @@
           </div>
         </div>
       </div>
-      <!-- Range pills -->
-      <div class="range-pills">
-        <button class="range-pill active" data-days="7">7d</button>
-        <button class="range-pill" data-days="30">30d</button>
-        <button class="range-pill" data-days="365">All time</button>
-      </div>
     </div>
   </div>
 
@@ -196,7 +188,7 @@
     <div class="stat-card" data-metric="views" onclick="selectMetric('views')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Page Views
+        Visits
       </div>
       <div class="stat-value empty" id="statViews">—</div>
       <div class="stat-meta" id="statViewsMeta">—</div>
@@ -204,7 +196,7 @@
     <div class="stat-card" data-metric="sites" onclick="selectMetric('sites')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Live Sites
+        Public Projects
       </div>
       <div class="stat-value empty" id="statSites">—</div>
       <div class="stat-meta" id="statSitesMeta">—</div>
@@ -223,8 +215,11 @@
   <!-- Chart -->
   <div class="chart-section">
     <div class="chart-head">
-      <div class="chart-title" id="chartTitle">Visitors over time</div>
-      <div class="chart-meta" id="chartMeta"></div>
+      <div>
+        <div class="chart-title" id="chartTitle">Visitors over time</div>
+        <div class="chart-meta" id="chartMeta"></div>
+      </div>
+      <div id="chartControls"></div>
     </div>
     <div id="chartInner">
       <div class="chart-empty">
@@ -249,11 +244,13 @@
   // Project palette — assigned in order
   const PALETTE = ['#60a5fa','#a78bfa','#4ade80','#fbbf24','#f87171','#34d399','#f472b6','#38bdf8','#fb923c','#e879f9'];
 
-  let _projects    = [];   // all user projects
-  let _views       = [];   // raw page_view rows for current range
-  let _days        = 7;
+  let _projects    = [];
+  let _views       = [];
+  let _days        = 7;       // default 7d
   let _metric      = 'visitors';
-  let _selectedPid = 'all'; // 'all' or a project id
+  let _selectedPid = 'all';
+  let _mode        = 'overall'; // cumulative is default
+  let _chartZoneData = {};     // populated by buildMultiLineGraph for hover zones
 
   // ── utils ──────────────────────────────────────────────────────────────────
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -301,6 +298,69 @@
     render();
   }
 
+  // ── mode selection (cumulative vs daily/over-time) ────────────────────────
+  function selectMode(m){
+    _mode = m;
+    if(m === 'daily') _days = 7; // reset to 7d when switching to over time
+    loadData();
+  }
+
+  function setChartDays(d){
+    _days = d;
+    loadData();
+  }
+
+  // ── inject chart controls (mode + range pills) ────────────────────────────
+  function buildChartControls(){
+    const modeRow = `<div class="chart-pill-row">
+      <button class="chart-pill ${_mode==='overall'?'active':''}" onclick="selectMode('overall')">Cumulative</button>
+      <button class="chart-pill ${_mode==='daily'?'active':''}" onclick="selectMode('daily')">Over time</button>
+    </div>`;
+    const rangeRow = `<div class="chart-pill-row">
+      <button class="chart-pill ${_days===7?'active':''}" onclick="setChartDays(7)">7d</button>
+      <button class="chart-pill ${_days===30?'active':''}" onclick="setChartDays(30)">30d</button>
+      <button class="chart-pill ${_days===365?'active':''}" onclick="setChartDays(365)">All time</button>
+    </div>`;
+    return `<div class="chart-controls">${modeRow}${rangeRow}</div>`;
+  }
+
+  // ── SVG line graph for cumulative mode ────────────────────────────────────
+  function buildLineGraph(counts, labels, color, metricLabel){
+    const n = counts.length;
+    if(!n) return '';
+    const max  = Math.max(...counts, 1);
+    const W = 1000, H = 140, padT = 12;
+    const pts = counts.map((c,i)=>({
+      x: n > 1 ? (i/(n-1))*W : W/2,
+      y: padT + (1 - c/max) * (H - padT),
+      c, lbl: labels[i]
+    }));
+    const linePath = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const areaPath = `${linePath} L${pts[n-1].x.toFixed(1)} ${H} L${pts[0].x.toFixed(1)} ${H} Z`;
+    const gradId   = 'lg'+color.replace('#','');
+    const showEvery = n<=7?1:n<=14?2:5;
+    const circles = pts.map((p,i)=>
+      `<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${n>60?2.5:4}" fill="${color}" stroke="var(--s1)" stroke-width="2" data-tip-name="${esc(p.lbl)}" data-tip-val="${p.c} ${metricLabel}" style="cursor:default"/>`
+    ).join('');
+    const labelHtml = pts.map((p,i)=>
+      `<div class="bar-label">${i%showEvery===0||i===n-1?p.lbl:''}</div>`
+    ).join('');
+    return `<div class="chart-area">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:140px;overflow:visible" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#${gradId})"/>
+        <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${circles}
+      </svg>
+      <div class="bar-labels">${labelHtml}</div>
+    </div>`;
+  }
+
   // ── filtered views for current project selection ───────────────────────────
   function activeViews(){
     if(_selectedPid==='all') return _views;
@@ -337,15 +397,17 @@
 
   function updateStats(){
     const av = activeViews();
-    const totalViews     = av.length;
-    const uniqueVisitors = new Set(av.map(v=>v.session_id).filter(Boolean)).size;
     const rangeLabel     = _days===365 ? '12 months' : `${_days}d`;
 
+    // Unique Visitors = distinct persistent device IDs (visitor_id from localStorage)
+    const uniqueVisitors = new Set(av.map(v=>v.visitor_id).filter(Boolean)).size;
     setVal('statVisitors', uniqueVisitors ? fmt(uniqueVisitors) : '—', !uniqueVisitors);
     document.getElementById('statVisitorsMeta').textContent = uniqueVisitors ? `Last ${rangeLabel}` : 'No data yet';
 
-    setVal('statViews', totalViews ? fmt(totalViews) : '—', !totalViews);
-    document.getElementById('statViewsMeta').textContent = totalViews ? `Last ${rangeLabel}` : 'No data yet';
+    // Visits = distinct sessions (session_id from sessionStorage — new each time site is opened)
+    const visits = new Set(av.map(v=>v.session_id).filter(Boolean)).size;
+    setVal('statViews', visits ? fmt(visits) : '—', !visits);
+    document.getElementById('statViewsMeta').textContent = visits ? `Last ${rangeLabel}` : 'No data yet';
 
     const projectsWithData = new Set(av.map(v=>v.project_id)).size;
     const publicCount = _projects.filter(p=>p.is_public).length;
@@ -363,6 +425,7 @@
     const av      = activeViews();
 
     if(_metric === 'revenue'){
+      document.getElementById('chartControls').innerHTML = '';
       titleEl.textContent = 'Revenue over time';
       metaEl.textContent  = '';
       inner.innerHTML = `<div class="chart-empty">
@@ -374,6 +437,7 @@
     }
 
     if(_metric === 'sites'){
+      document.getElementById('chartControls').innerHTML = '';
       titleEl.textContent = 'Views by site';
       metaEl.textContent  = av.length ? fmt(av.length)+' total views' : '';
       if(!av.length){
@@ -395,9 +459,12 @@
       return;
     }
 
-    // Time series: visitors or views
+    // Time series: visitors or views — inject controls
+    document.getElementById('chartControls').innerHTML = buildChartControls();
+
     const isVisitors = _metric === 'visitors';
-    titleEl.textContent = isVisitors ? 'Unique visitors over time' : 'Page views over time';
+    const modeLabel  = _mode === 'overall' ? 'cumulative' : 'over time';
+    titleEl.textContent = isVisitors ? `Unique visitors ${modeLabel}` : `Visits ${modeLabel}`;
     const {keys,labels,useWeeks} = makeDayKeys(_days);
 
     if(!av.length){
@@ -406,77 +473,89 @@
       return;
     }
 
-    if(isAll && _projects.length > 1){
-      // Multi-project stacked bars
-      // buckets[dayKey][projectId] = count
-      const buckets = {};
-      keys.forEach(k=>{ buckets[k]={}; _projects.forEach(p=>{ buckets[k][p.id]=0; }); });
+    const metricLabel = isVisitors ? 'visitors' : 'visits';
+    const color = METRIC_COLOR[_metric];
 
-      _views.forEach(v=>{
-        const k = viewsToKey(v, useWeeks);
-        if(!(k in buckets)) return;
-        if(isVisitors){
-          // count unique sessions per project per bucket — simpler: just use session_id presence
-          if(v.session_id && !buckets[k][v.project_id+'_s'+v.session_id]){
-            buckets[k][v.project_id+'_s'+v.session_id] = true;
-            buckets[k][v.project_id] = (buckets[k][v.project_id]||0)+1;
-          }
-        } else {
-          buckets[k][v.project_id] = (buckets[k][v.project_id]||0)+1;
+    // ── Unified per-project bucket computation ────────────────────────────────
+    const buckets = {};
+    const sessionSeen = {};
+    keys.forEach(k=>{
+      buckets[k]={};
+      sessionSeen[k]={};
+      _projects.forEach(p=>{ buckets[k][p.id]=0; sessionSeen[k][p.id]=new Set(); });
+    });
+
+    av.forEach(v=>{
+      const k = viewsToKey(v, useWeeks);
+      if(!(k in buckets) || buckets[k][v.project_id]===undefined) return;
+      if(isVisitors){
+        if(v.session_id && !sessionSeen[k][v.project_id].has(v.session_id)){
+          sessionSeen[k][v.project_id].add(v.session_id);
+          buckets[k][v.project_id]++;
         }
-      });
+      } else {
+        buckets[k][v.project_id]++;
+      }
+    });
 
-      const stackedTotals = keys.map(k=>_projects.reduce((s,p)=>s+(buckets[k][p.id]||0),0));
-      const max = Math.max(...stackedTotals, 1);
-      const grandTotal = stackedTotals.reduce((a,b)=>a+b,0);
+    const visibleProjects = _selectedPid==='all' ? _projects : _projects.filter(p=>p.id===_selectedPid);
+    const showEvery = keys.length<=7?1:keys.length<=14?2:5;
+
+    if(_mode === 'overall'){
+      // ── Cumulative: one line per visible project ────────────────────────────
+      const projectLines = visibleProjects.map(p=>{
+        let run=0;
+        const cumCounts = keys.map(k=>{ run+=(buckets[k][p.id]||0); return run; });
+        return { project:p, counts:cumCounts, color:projectColor(p.id) };
+      }).filter(pl=>pl.counts[pl.counts.length-1]>0);
+
+      const grandTotal = projectLines.reduce((s,pl)=>s+pl.counts[pl.counts.length-1],0);
       metaEl.textContent = grandTotal ? fmt(grandTotal)+' total' : '';
 
-      const showEvery = keys.length<=7?1:keys.length<=14?2:5;
-      const bars = keys.map((k,i)=>{
-        const total = stackedTotals[i];
-        const segs  = _projects.filter(p=>(buckets[k][p.id]||0)>0).map(p=>{
-          const h = Math.round((buckets[k][p.id]||0)/max*100);
-          return `<div class="bar-seg" style="height:${h}%;background:${projectColor(p.id)}" title="${p.name||'Untitled'}: ${buckets[k][p.id]}"></div>`;
-        }).join('');
-        return `<div class="bar-stack" style="height:${total?Math.max(2,Math.round(total/max*100))+'%':'4px'}">${segs||`<div style="height:4px;background:var(--s2);border-radius:3px;opacity:.3"></div>`}</div>`;
-      });
-
-      const keyHtml = _projects.map(p=>`<div class="color-key-item"><div class="color-key-dot" style="background:${projectColor(p.id)}"></div>${esc(p.name||'Untitled')}</div>`).join('');
-
-      inner.innerHTML = `<div class="chart-area">
-        <div class="bar-chart">${bars.join('')}</div>
-        <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
-        <div class="color-key">${keyHtml}</div>
-      </div>`;
+      if(!projectLines.length){
+        inner.innerHTML = `<div class="chart-empty"><div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="chart-empty-t">No data yet</div><div class="chart-empty-s">Open your projects in the viewer and traffic will appear here.</div></div>`;
+      } else if(projectLines.length===1){
+        inner.innerHTML = buildLineGraph(projectLines[0].counts, labels, projectLines[0].color, metricLabel);
+      } else {
+        _chartZoneData={};
+        inner.innerHTML = buildMultiLineGraph(projectLines, keys, labels, metricLabel);
+      }
 
     } else {
-      // Single-color time series
-      const color = METRIC_COLOR[_metric];
-      const buckets = {};
-      const sessionSeen = {};
-      keys.forEach(k=>{ buckets[k]=0; sessionSeen[k]=new Set(); });
+      // ── Daily: stacked bars (multi) or single-color bars ───────────────────
+      const stackedTotals = keys.map(k=>visibleProjects.reduce((s,p)=>s+(buckets[k][p.id]||0),0));
+      const maxVal = Math.max(...stackedTotals,1);
+      const periodTotal = stackedTotals.reduce((a,b)=>a+b,0);
+      metaEl.textContent = periodTotal ? fmt(periodTotal)+' total' : '';
 
-      av.forEach(v=>{
-        const k = viewsToKey(v, useWeeks);
-        if(!(k in buckets)) return;
-        if(isVisitors){
-          if(v.session_id && !sessionSeen[k].has(v.session_id)){ sessionSeen[k].add(v.session_id); buckets[k]++; }
-        } else {
-          buckets[k]++;
-        }
-      });
-
-      const counts  = keys.map(k=>buckets[k]);
-      const max     = Math.max(...counts, 1);
-      const total   = counts.reduce((a,b)=>a+b,0);
-      metaEl.textContent = total ? fmt(total)+' total' : '';
-
-      const showEvery = keys.length<=7?1:keys.length<=14?2:5;
-      inner.innerHTML = `<div class="chart-area">
-        <div class="bar-chart">${counts.map((c,i)=>`<div class="bar" style="height:${Math.max(c?2:0,Math.round(c/max*100))}%;background:${color};opacity:${c?1:0.12}" title="${labels[i]}: ${c}"></div>`).join('')}</div>
-        <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
-      </div>`;
+      if(visibleProjects.length>1 && _selectedPid==='all'){
+        // Stacked bars
+        const keyHtml = visibleProjects.map(p=>`<div class="color-key-item"><div class="color-key-dot" style="background:${projectColor(p.id)}"></div>${esc(p.name||'Untitled')}</div>`).join('');
+        const bars = keys.map((k,i)=>{
+          const total=stackedTotals[i];
+          const segs=visibleProjects.filter(p=>(buckets[k][p.id]||0)>0).map(p=>{
+            const h=total>0?Math.round((buckets[k][p.id]||0)/total*100):0;
+            return `<div class="bar-seg" style="height:${h}%;background:${projectColor(p.id)}" data-tip-name="${esc(p.name||'Untitled')}" data-tip-val="${buckets[k][p.id]||0} ${metricLabel}"></div>`;
+          }).join('');
+          return `<div class="bar-stack" style="height:${total?Math.max(3,Math.round(total/maxVal*100))+'%':'4px'}">${segs||`<div style="height:4px;background:var(--s2);border-radius:3px;opacity:.3"></div>`}</div>`;
+        });
+        inner.innerHTML = `<div class="chart-area">
+          <div class="bar-chart">${bars.join('')}</div>
+          <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
+          <div class="color-key">${keyHtml}</div>
+        </div>`;
+      } else {
+        // Single-color bars
+        const p0 = visibleProjects[0];
+        const counts = keys.map(k=>p0?buckets[k][p0.id]||0:0);
+        const barColor = p0 ? projectColor(p0.id) : color;
+        inner.innerHTML = `<div class="chart-area">
+          <div class="bar-chart">${counts.map((c,i)=>`<div class="bar" style="height:${Math.max(c?3:0,Math.round(c/maxVal*100))}%;background:${barColor};opacity:${c?1:0.12}" data-tip-name="${esc(labels[i])}" data-tip-val="${c} ${metricLabel}"></div>`).join('')}</div>
+          <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
+        </div>`;
+      }
     }
+    attachChartTooltips();
   }
 
   function renderDetail(){
@@ -545,19 +624,136 @@
     </div>`;
   }
 
-  // ── load from supabase ─────────────────────────────────────────────────────
+  // ── SVG multi-line graph for cumulative all-projects mode ─────────────────
+  function buildMultiLineGraph(projectLines, keys, labels, metricLabel){
+    const n = keys.length;
+    if(!n) return '';
+    const W = 1000, H = 140, padT = 12;
+    const allVals = projectLines.flatMap(pl=>pl.counts);
+    const max = Math.max(...allVals, 1);
+
+    let defsHtml='', areasHtml='', linesHtml='', circlesHtml='';
+    projectLines.forEach(pl=>{
+      const id = 'lg_'+pl.color.replace('#','')+'_'+pl.project.id.slice(-4);
+      const pts = pl.counts.map((c,i)=>({
+        x: n>1?(i/(n-1))*W:W/2,
+        y: padT+(1-c/max)*(H-padT),
+        c
+      }));
+      const path = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const area = `${path} L${pts[n-1].x.toFixed(1)} ${H} L${pts[0].x.toFixed(1)} ${H} Z`;
+      const r = n>60?2:3.5;
+      defsHtml  += `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${pl.color}" stop-opacity="0.14"/><stop offset="100%" stop-color="${pl.color}" stop-opacity="0.01"/></linearGradient>`;
+      areasHtml += `<path d="${area}" fill="url(#${id})"/>`;
+      linesHtml += `<path d="${path}" fill="none" stroke="${pl.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      circlesHtml += pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${pl.color}" stroke="var(--s1)" stroke-width="1.5"/>`).join('');
+    });
+
+    // Vertical hover zones — one per day, show all projects' values
+    const zoneW = n>1?W/(n-1):W;
+    const zonesHtml = keys.map((k,i)=>{
+      const x = n>1?(i/(n-1))*W:W/2;
+      _chartZoneData[i] = {
+        label: labels[i],
+        stats: projectLines.map(pl=>({ name:pl.project.name||'Untitled', color:pl.color, count:pl.counts[i] })).filter(s=>s.count>0)
+      };
+      return `<rect x="${Math.max(0,x-zoneW/2).toFixed(1)}" y="0" width="${zoneW.toFixed(1)}" height="${H}" fill="transparent" class="chart-hover-zone" data-idx="${i}" style="cursor:default"/>`;
+    }).join('');
+
+    const showEvery = n<=7?1:n<=14?2:5;
+    const labelHtml = labels.map((l,i)=>`<div class="bar-label">${i%showEvery===0||i===n-1?l:''}</div>`).join('');
+
+    return `<div class="chart-area">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:140px;overflow:visible" preserveAspectRatio="none">
+        <defs>${defsHtml}</defs>
+        ${areasHtml}${linesHtml}${circlesHtml}${zonesHtml}
+      </svg>
+      <div class="bar-labels">${labelHtml}</div>
+    </div>`;
+  }
+
+  // ── chart tooltip ─────────────────────────────────────────────────────────────
+  function posTip(e, tip){
+    const x = e.clientX+14, y = e.clientY-52;
+    tip.style.left = (x+tip.offsetWidth>window.innerWidth ? e.clientX-tip.offsetWidth-14 : x)+'px';
+    tip.style.top  = (y<8 ? e.clientY+14 : y)+'px';
+  }
+
+  function attachChartTooltips(){
+    const tip    = document.getElementById('chartTip');
+    const nameEl = document.getElementById('chartTipName');
+    const valEl  = document.getElementById('chartTipVal');
+    if(!tip) return;
+
+    // Single-value: bars and single-line dots
+    document.querySelectorAll('[data-tip-name]').forEach(el=>{
+      el.addEventListener('mouseenter', ()=>{
+        nameEl.textContent = el.dataset.tipName;
+        valEl.innerHTML = `<span style="color:var(--sub)">${esc(el.dataset.tipVal)}</span>`;
+        tip.style.display = 'block';
+      });
+      el.addEventListener('mousemove', e=>posTip(e,tip));
+      el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
+    });
+
+    // Multi-value: vertical hover zones on multi-line chart
+    document.querySelectorAll('.chart-hover-zone').forEach(el=>{
+      const data = _chartZoneData[parseInt(el.dataset.idx)];
+      if(!data) return;
+      el.addEventListener('mouseenter', ()=>{
+        nameEl.textContent = data.label;
+        valEl.innerHTML = data.stats.map(s=>
+          `<div style="display:flex;align-items:center;gap:7px;margin-top:5px">
+            <div style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+            <span style="color:rgba(255,255,255,.85);font-size:11px;font-weight:600">${esc(s.name)}</span>
+            <span style="color:var(--sub);font-size:11px;font-weight:700;margin-left:auto;padding-left:12px">${s.count}</span>
+          </div>`
+        ).join('');
+        tip.style.display = 'block';
+      });
+      el.addEventListener('mousemove', e=>posTip(e,tip));
+      el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
+    });
+  }
+
+  // ── load everything via edge function (bypasses all RLS/auth issues) ────────
+  let _session = null;
+
   async function loadData(){
     const since = new Date(Date.now()-_days*86400000).toISOString();
-    const ids   = _projects.map(p=>p.id);
-    if(!ids.length){ _views=[]; render(); document.getElementById('pageSub').textContent='No projects yet.'; return; }
     try{
-      const {data, error} = await sb.rpc('get_my_page_views', { since_ts: since });
-      if(error) console.error('page_views rpc error:', error);
-      _views = data||[];
-    }catch(e){ console.error('page_views fetch failed:', e); _views=[]; }
+      const res = await fetch('https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${_session.access_token}`
+        },
+        body: JSON.stringify({ since_ts: since })
+      });
+      const payload = await res.json();
+      _projects = payload.projects || [];
+      _views    = payload.views    || [];
+    }catch(e){ _projects=[]; _views=[]; }
+
+    // Rebuild dropdown from fresh project list (public projects only)
+    const menu = document.getElementById('projDdMenu');
+    // remove old project options, keep "All projects"
+    menu.querySelectorAll('.proj-dd-opt:not([data-id="all"])').forEach(o=>o.remove());
+    const publicProjects = _projects.filter(p=>p.is_public);
+    publicProjects.forEach((p,i)=>{
+      const opt=document.createElement('div');
+      opt.className='proj-dd-opt';
+      opt.dataset.id=p.id;
+      opt.onclick=()=>selectProject(p.id);
+      opt.innerHTML=`<div class="proj-dd-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>${esc(p.name||'Untitled')}`;
+      menu.appendChild(opt);
+    });
+    // if selected project no longer exists, reset to all
+    if(_selectedPid!=='all' && !_projects.find(p=>p.id===_selectedPid)) _selectedPid='all';
+
     render();
-    const total   = _views.length;
-    const unique  = new Set(_views.map(v=>v.session_id).filter(Boolean)).size;
+    const total  = _views.length;
+    const unique = new Set(_views.map(v=>v.session_id).filter(Boolean)).size;
     document.getElementById('pageSub').textContent = total
       ? `${fmt(total)} page views · ${fmt(unique)} unique visitors`
       : 'No traffic yet — open your projects in the viewer to see data here.';
@@ -567,27 +763,13 @@
   (async()=>{
     const {data:{session}} = await sb.auth.getSession();
     if(!session){ window.location.href='index.html'; return; }
+    _session = session;
     const u=session.user;
-    const initials=(u.user_metadata?.display_name||u.email||'?').trim().slice(0,2).toUpperCase();
+    const initials=(u.user_metadata?.display_name||u.email||'?').trim().slice(0,1).toUpperCase();
     const pfp=document.getElementById('tbPfp');
     if(pfp) pfp.textContent=initials;
 
-    const {data:projects, error:projErr} = await sb.rpc('get_my_projects');
-    if(projErr) console.error('projects rpc error:', projErr);
-    _projects = projects||[];
-
-    // Populate dropdown with project options
-    const menu=document.getElementById('projDdMenu');
-    _projects.forEach((p,i)=>{
-      const opt=document.createElement('div');
-      opt.className='proj-dd-opt';
-      opt.dataset.id=p.id;
-      opt.onclick=()=>selectProject(p.id);
-      opt.innerHTML=`<div class="proj-dd-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>${esc(p.name||'Untitled')}`;
-      menu.appendChild(opt);
-    });
-
-    // Read metric + project from URL params
+    // Read metric from URL params before first render
     const params=new URLSearchParams(location.search);
     const urlMetric=params.get('metric');
     if(urlMetric && ['visitors','views','sites','revenue'].includes(urlMetric)){
@@ -598,15 +780,7 @@
     await loadData();
   })();
 
-  // ── range pills ────────────────────────────────────────────────────────────
-  document.querySelectorAll('.range-pill').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.range-pill').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      _days=parseInt(btn.dataset.days);
-      loadData();
-    });
-  });
 </script>
+<div id="chartTip"><div id="chartTipName"></div><div id="chartTipVal"></div></div>
 </body>
 </html>

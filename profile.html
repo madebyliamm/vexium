@@ -32,7 +32,7 @@
       border-bottom:1px solid var(--b1);
     }
     .tb-logo{display:flex;align-items:center;flex-shrink:0}
-    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform .15s cubic-bezier(0.16,1,0.3,1)}
+    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform 60ms ease-out}
     .tb-logo:hover img,.tb-logo:focus-visible img{transform:scale(1.08)}
     .tb-r{display:flex;align-items:center;gap:clamp(4px,0.8vw,10px);flex-shrink:0}
     /* search */
@@ -192,7 +192,7 @@
       transition:max-height .4s var(--ease), opacity .3s ease;
       opacity:0;
     }
-    body.edit-mode .account-actions{max-height:400px;opacity:1}
+    body.edit-mode .account-actions{max-height:900px;opacity:1}
     .account-section{
       padding:clamp(14px,1.5vw,20px) 0;
       border-bottom:1px solid var(--b1);
@@ -200,6 +200,18 @@
     }
     .account-section:last-child{border-bottom:none}
     .account-section-label{font-size:clamp(14px,1.2vw,17px);font-weight:800;letter-spacing:-.3px;color:var(--text);margin-bottom:clamp(12px,1.2vw,18px)}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0}
+    .toggle-row+.toggle-row{border-top:1px solid var(--b1)}
+    .toggle-info{display:flex;flex-direction:column}
+    .toggle-title{font-size:13px;font-weight:700;color:var(--text)}
+    .toggle-sub{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.45}
+    .toggle{position:relative;width:40px;height:24px;flex-shrink:0;cursor:pointer}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .toggle-track{display:block;width:40px;height:24px;background:var(--b2);border-radius:99px;transition:background .2s ease}
+    .toggle input:checked~.toggle-track{background:var(--text)}
+    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s ease;pointer-events:none}
+    .toggle input:not(:checked)~.toggle-track~.toggle-thumb{background:var(--b3)}
+    .toggle input:checked~.toggle-track~.toggle-thumb{transform:translateX(16px);background:#0a0a0a}
     .account-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,1.2vw,18px)}
     .btn-danger{
       display:flex;align-items:center;gap:6px;
@@ -437,6 +449,22 @@
           <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           Delete account
         </button>
+      </div>
+    </div>
+
+    <!-- Accessibility -->
+    <div class="account-section">
+      <div class="account-section-label">Accessibility</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Advanced mode</div>
+          <div class="toggle-sub">Shows the Code Editor tab so you can view and edit the code your AI builds.</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="advancedModeToggle" onchange="setAdvancedMode(this.checked)"/>
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
       </div>
     </div>
 
@@ -722,6 +750,18 @@
       btn.style.color=acctPublic?'#4ade80':'#f87171';
     }
   }
+  function setAdvancedMode(on) {
+    try { localStorage.setItem('vexium_advanced_mode', on ? '1' : '0'); } catch(e) {}
+  }
+
+  // Init toggle state from localStorage
+  (function() {
+    const tog = document.getElementById('advancedModeToggle');
+    if (tog) {
+      try { tog.checked = localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) {}
+    }
+  })();
+
   async function togglePrivacy(){
     acctPublic=!acctPublic;updatePrivacyPill();
     if(sb&&myId)try{await sb.from('profiles').update({is_public:acctPublic}).eq('id',myId);}catch(e){}

@@ -2,1218 +2,766 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Vexium — Build your website by describing it</title>
-  <meta name="description" content="Describe what you want. Vexium's AI writes real code and publishes a complete website in minutes."/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vexium — Build your website with AI</title>
   <link rel="icon" type="image/png" href="logo_background.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --bg:#0a0a0a; --surface:#141414; --surface2:#1c1c1c;
-      --text:#ffffff; --muted:#666666; --muted2:#999999;
-      --sans:'Plus Jakarta Sans',sans-serif;
-      --rainbow:linear-gradient(90deg,#ff6b6b,#ffb347,#ffe066,#4ade80,#38bdf8,#a78bfa,#ff6b6b);
+      --bg:      #0a0a0a;
+      --surface: #141414;
+      --surface2:#1c1c1c;
+      --border:  #262626;
+      --border2: #333333;
+      --text:    #ffffff;
+      --muted:   #666666;
+      --accent:  #ffffff;
+      --accent2: #aaaaaa;
+      --sans:    'Plus Jakarta Sans', sans-serif;
     }
-    html { scroll-behavior:smooth }
-    body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden }
-    a { color:inherit; text-decoration:none }
 
-    /* ─── NAV ─── */
-    nav {
-      position:fixed; top:0; left:0; right:0; z-index:200;
-      height:60px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 clamp(20px,4vw,52px);
-      transition:background .4s, backdrop-filter .4s;
+    html { scroll-behavior: smooth; }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
-    nav.scrolled { background:rgba(10,10,10,.92); backdrop-filter:blur(20px) }
-    .nav-logo { font-weight:800; font-size:16px; letter-spacing:-.02em }
-    .nav-r { display:flex; align-items:center; gap:8px }
-    .nav-ghost { font-size:13px; font-weight:500; color:var(--muted2); padding:7px 14px; border-radius:8px; transition:color .15s }
-    .nav-ghost:hover { color:var(--text) }
-    .nav-cta { font-size:13px; font-weight:700; padding:8px 18px; background:var(--text); color:var(--bg); border-radius:8px; transition:opacity .15s; display:inline-block }
-    .nav-cta:hover { opacity:.88 }
 
-    /* ─── HERO ─── */
+    /* ── NAV ──────────────────────────────────────────────────────── */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: clamp(52px, 4.5vw, 64px);
+      display: flex; align-items: center;
+      padding: 0 clamp(20px, 5vw, 80px);
+      gap: clamp(24px, 3vw, 48px);
+      background: rgba(10, 10, 10, 0.92);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: height 0.3s;
+    }
+    #nav.scrolled {
+      height: clamp(44px, 3.8vw, 56px);
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+    .nav-logo img {
+      width: 30px; height: 30px; border-radius: 6px; display: block;
+      transform: scale(1); transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-logo:hover img, .nav-logo:focus-visible img { transform: scale(1.08); }
+    .nav-links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+    .nav-link { padding: clamp(5px, 0.5vw, 8px) clamp(10px, 1vw, 16px); border-radius: 6px; font-size: clamp(12px, 0.9vw, 14px); font-weight: 600; color: var(--muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-link:hover { color: var(--text); background: var(--surface2); }
+    .nav-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .nav-btn-ghost { padding: clamp(6px, 0.5vw, 8px) clamp(12px, 1vw, 16px); border-radius: 6px; font-size: clamp(12px, 0.9vw, 14px); font-weight: 700; color: var(--muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-btn-ghost:hover { color: var(--text); background: var(--surface2); }
+    .nav-btn-primary { padding: clamp(6px, 0.5vw, 8px) clamp(14px, 1.1vw, 18px); border-radius: 6px; font-size: clamp(12px, 0.9vw, 14px); font-weight: 700; color: #000; text-decoration: none; background: var(--text); transition: opacity 0.15s; }
+    .nav-btn-primary:hover { opacity: 0.88; }
+    @media (max-width: 700px) { .nav-links { display: none; } }
+
+    @keyframes heroUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────────── */
     #hero {
-      min-height:100vh;
-      display:grid; grid-template-columns:1fr 1fr;
-      align-items:center;
-      gap:clamp(32px,4vw,64px);
-      padding:80px max(20px, calc(50vw - 580px));
-      position:relative;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      padding: 80px clamp(20px, 5vw, 80px) clamp(60px, 8vw, 100px);
+      overflow: hidden;
+      background: var(--bg);
     }
-    #hero::before {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(ellipse 900px 500px at 50% 30%, rgba(167,139,250,.055), transparent 70%);
-      pointer-events:none;
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 10%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 10%, transparent 70%);
     }
-
-    /* Left column: headline + CTAs */
-    .hero-top {
-      text-align:left;
-      display:flex; flex-direction:column; align-items:flex-start;
-      position:relative; z-index:1;
+    .hero-tagline {
+      position: relative; z-index: 2;
+      font-size: clamp(20px, 2.6vw, 36px);
+      font-weight: 800; color: var(--text);
+      text-align: center; letter-spacing: -0.035em; line-height: 1.12;
+      margin-bottom: clamp(12px, 1.2vw, 18px);
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s forwards;
     }
-    .hero-badge {
-      display:inline-flex; align-items:center; gap:7px;
-      background:rgba(255,255,255,.06); border-radius:99px; padding:5px 14px;
-      font-size:12px; font-weight:600; color:var(--muted2); margin-bottom:28px;
-    }
-    .badge-pulse { width:6px; height:6px; border-radius:50%; background:#4ade80; animation:bpulse 2s ease-in-out infinite }
-    @keyframes bpulse { 0%,100%{box-shadow:0 0 4px rgba(74,222,128,.5)} 50%{box-shadow:0 0 12px rgba(74,222,128,.9)} }
-    h1.hero-title {
-      font-size:clamp(36px,5vw,86px);
-      font-weight:800; letter-spacing:-.04em; line-height:1.06; margin-bottom:24px;
-    }
-    h1.hero-title .rb {
-      background:var(--rainbow); background-size:200% auto;
-      animation:rbShift 4s linear infinite;
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-    }
-    @keyframes rbShift { to { background-position:200% center } }
     .hero-sub {
-      font-size:clamp(15px,1.5vw,21px); color:var(--muted2); line-height:1.65;
-      max-width:520px; margin-bottom:36px;
+      position: relative; z-index: 2;
+      font-size: clamp(14px, 1.1vw, 17px); font-weight: 500; color: var(--muted);
+      text-align: center; max-width: 480px; line-height: 1.65;
+      margin-bottom: clamp(28px, 3vw, 44px);
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
     }
-    .hero-btns { display:flex; align-items:center; gap:12px }
-    .btn-primary { display:inline-block; padding:15px 28px; background:var(--text); color:var(--bg); font-size:15px; font-weight:700; border-radius:9px; transition:opacity .15s }
-    .btn-primary:hover { opacity:.88 }
-    .btn-secondary { display:inline-block; padding:15px 28px; background:rgba(255,255,255,.07); color:var(--text); font-size:15px; font-weight:600; border-radius:9px; transition:background .15s }
-    .btn-secondary:hover { background:rgba(255,255,255,.11) }
+    .hero-features {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+      margin-top: clamp(20px, 2vw, 32px);
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s forwards;
+    }
+    .hero-feat {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; background: var(--surface);
+      border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--muted);
+    }
+    .hero-feat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .hero-proof {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+      margin-top: 14px; margin-bottom: 0;
+      font-size: 12px; color: var(--muted);
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.6s forwards;
+    }
+    .hero-proof-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--border2); }
 
-    /* ── Right column: animation stage ── */
-    .hero-stage {
-      position:relative; z-index:1;
-      min-height:clamp(340px,44vw,620px);
+    /* ── HERO WORDMARK ────────────────────────────────────────────── */
+    #heroWordmark {
+      position: relative; z-index: 2;
+      display: flex; justify-content: center; align-items: baseline;
+      white-space: nowrap;
+      font-size: clamp(72px, 11vw, 160px);
+      font-weight: 800; letter-spacing: -0.05em; line-height: 1;
+      margin-bottom: clamp(20px, 2vw, 32px);
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
     }
-
-    /* ── Prompt box ── */
-    .prompt-stage {
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-    }
-    /* Pill-shaped border wrapper */
-    .prompt-wrap {
-      width:100%; position:relative;
-      padding:2px; border-radius:99px;
-      /* Inactive: subtle single-color border */
-      background:rgba(255,255,255,.1);
-    }
-    /* Rainbow overlay — fades in on activation */
-    .prompt-wrap::before {
-      content:''; position:absolute; inset:0; border-radius:99px;
-      background:var(--rainbow); background-size:300% auto;
-      animation:rbShift var(--rb-dur, 2.5s) linear infinite;
-      opacity:0; transition:opacity .45s ease;
-    }
-    .prompt-wrap.rb-on::before { opacity:1 }
-    @keyframes promptPop {
-      0%   { transform:scale(1) }
-      30%  { transform:scale(0.968) }
-      65%  { transform:scale(1.022) }
-      100% { transform:scale(1) }
-    }
-    .prompt-wrap.rb-on { animation:promptPop .4s cubic-bezier(.16,1,.3,1) }
-    .prompt-inner {
-      background:var(--surface); border-radius:99px;
-      padding:10px 10px 10px 20px;
-      display:flex; align-items:center; gap:10px; min-height:52px;
-      position:relative; /* stays above ::before */
-    }
-    .prompt-text {
-      flex:1; font-size:14px; line-height:1.6; color:rgba(255,255,255,.8);
-    }
-    .cursor-blink {
-      display:inline-block; width:2px; height:15px;
-      background:var(--text); margin-left:1px; vertical-align:text-bottom;
-      animation:cblink .8s step-end infinite;
-    }
-    @keyframes cblink { 0%,100%{opacity:1} 50%{opacity:0} }
-    /* Circle send button */
-    .send-btn {
-      width:34px; height:34px; flex-shrink:0;
-      background:var(--text); border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .send-btn svg { width:12px; height:12px; stroke:#000; fill:none; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round }
-
-    /* ── Browser mockup ── */
-    .browser-stage {
-      position:absolute; inset:0;
-      display:flex; flex-direction:column; align-items:stretch; justify-content:center;
-    }
-    .browser-outer {
-      background:#eee9df; border-radius:18px;
-      box-shadow:0 40px 100px rgba(0,0,0,.65), 0 2px 0 rgba(255,255,255,.05);
-      overflow:hidden;
-    }
-    .browser-chrome {
-      background:#fff; height:46px;
-      display:flex; align-items:center; padding:0 16px; gap:10px;
-    }
-    .bc-dots { display:flex; gap:6px; flex-shrink:0 }
-    .bc-dot { width:12px; height:12px; border-radius:50% }
-    .bc-url-bar { flex:1; background:#f3f3f3; border-radius:7px; height:28px; display:flex; align-items:center; padding:0 12px }
-    .bc-url { font-size:12px; color:#999; font-family:var(--sans) }
-    .bc-live { display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:99px; flex-shrink:0; font-family:var(--sans) }
-    .live-dot { width:7px; height:7px; border-radius:50% }
-    .browser-body { background:#fff }
-
-    /* Wireframe blocks */
-    .wf-el { transition:opacity .3s ease, transform .38s cubic-bezier(.16,1,.3,1) }
-    .wf-nav { background:#111; height:42px; display:flex; align-items:center; padding:0 18px; justify-content:space-between }
-    .wf-nav-logo { width:72px; height:11px; background:rgba(255,255,255,.55); border-radius:3px }
-    .wf-nav-links { display:flex; gap:10px }
-    .wf-nav-link { width:34px; height:8px; background:rgba(255,255,255,.22); border-radius:2px }
-    .wf-content { padding:22px 22px 18px }
-    .wf-h1 { width:71%; height:26px; background:#111; border-radius:5px; margin-bottom:13px }
-    .wf-sub { height:11px; background:#d4d4d4; border-radius:3px; margin-bottom:8px }
-    .wf-sub1 { width:62% } .wf-sub2 { width:48% }
-    .wf-ctas { display:flex; gap:9px; margin-top:18px }
-    .wf-cta-p { width:108px; height:34px; border-radius:6px }
-    .wf-cta-g { width:86px; height:34px; background:#e4e4e4; border-radius:6px }
-    .wf-cards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; margin-top:18px }
-    .wf-card { height:66px; background:#f0f0f0; border-radius:7px }
-    .wf-footer-bar { display:flex; align-items:center; gap:10px; padding:13px 22px; border-top:1px solid #efefef }
-    .wf-foot-dot { width:8px; height:8px; border-radius:50% }
-    .wf-foot-line { height:9px; width:130px; background:#e0e0e0; border-radius:3px }
-
-    /* ── Build status capsule ── */
-    .build-bar {
-      display:flex; justify-content:center;
-      margin-top:16px;
-    }
-    .build-capsule {
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 18px; border-radius:99px;
-      background:rgba(255,255,255,.07);
-      font-size:12px; font-weight:600; color:var(--muted2);
-      transition:background .4s ease, color .4s ease;
-    }
-    .build-capsule.live {
-      background:rgba(34,197,94,.14);
-      color:#22c55e;
-    }
-    .build-dot {
-      width:6px; height:6px; border-radius:50%; flex-shrink:0;
-      animation:bpulse 1s ease-in-out infinite;
-    }
-    .build-capsule.live .build-dot { animation:none }
-
-    /* ─── SECTIONS shared ─── */
-    .section { padding:clamp(80px,10vw,120px) clamp(20px,4vw,52px) }
-    .container { max-width:1100px; margin:0 auto }
-    .reveal { transform:translateY(26px); opacity:0; transition:transform .7s cubic-bezier(.16,1,.3,1), opacity .6s ease }
-    .reveal.in { transform:translateY(0); opacity:1 }
-    .s-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2); margin-bottom:14px }
-    .s-title { font-size:clamp(28px,4vw,46px); font-weight:800; letter-spacing:-.03em; line-height:1.1 }
-
-    /* ─── NUMBERS ─── */
-    .numbers { background:var(--surface); padding:clamp(28px,4vw,44px) clamp(20px,4vw,52px) }
-    .beta-release { display:flex; align-items:center; justify-content:center; gap:14px }
-    .beta-badge {
-      display:inline-block; background:rgba(255,255,255,.2); color:var(--surface);
-      font-size:clamp(32px,4vw,64px); font-weight:800; letter-spacing:-.03em;
-      padding:4px 20px; border-radius:9px; line-height:1.4;
-    }
-    .beta-word {
-      font-size:clamp(32px,4vw,64px); font-weight:800; letter-spacing:-.03em;
-      color:rgba(255,255,255,.2); line-height:1.4;
+    .hw-v, .hw-exium { color: var(--text); }
+    .hw-dotai { display: inline-flex; align-items: baseline; }
+    .hw-dot, .hw-a, .hw-i {
+      background-image: linear-gradient(90deg,
+        #ff3366, #ff8800, #ffee00, #33ff99, #00ccff, #9933ff, #ff3366);
+      background-repeat: repeat; background-size: 100% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    /* ─── VIDEO ─── */
-    .video-section { padding:clamp(80px,10vw,120px) clamp(20px,4vw,52px) }
-    .video-inner { max-width:920px; margin:0 auto }
-    .video-head { margin-bottom:48px }
-    .video-frame-wrap {
-      position:relative; border-radius:18px; padding:2px;
-      background:transparent;
-      transition:transform .4s cubic-bezier(.16,1,.3,1);
-      cursor:pointer;
+    /* ── CTAs ─────────────────────────────────────────────────────── */
+    .hero-ctas {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; animation: heroUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.45s forwards;
     }
-    .video-frame-wrap::before {
-      content:''; position:absolute; inset:0; border-radius:18px;
-      background:var(--rainbow); background-size:300% auto;
-      animation:rbShift 5s linear infinite;
-      opacity:0; transition:opacity .4s ease;
+    .hero-cta-primary {
+      padding: clamp(11px, 0.9vw, 14px) clamp(24px, 2vw, 32px);
+      border-radius: 10px; font-size: clamp(13px, 0.95vw, 15px);
+      font-weight: 700; color: var(--bg); text-decoration: none;
+      background: var(--text); transition: opacity 0.2s, transform 0.2s; white-space: nowrap;
     }
-    .video-frame-wrap:hover { transform:translateY(-6px) }
-    .video-frame-wrap:hover::before { opacity:1 }
-    .video-frame {
-      border-radius:16px; overflow:hidden;
-      aspect-ratio:16/9; position:relative;
-      background:#0d0d0d;
-      box-shadow:0 40px 100px rgba(0,0,0,.7);
-      transition:box-shadow .4s ease;
+    .hero-cta-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .hero-cta-ghost {
+      padding: clamp(11px, 0.9vw, 14px) clamp(24px, 2vw, 32px);
+      border-radius: 10px; font-size: clamp(13px, 0.95vw, 15px);
+      font-weight: 700; color: var(--muted); text-decoration: none;
+      background: transparent; border: 1.5px solid var(--border2);
+      transition: border-color 0.2s, color 0.2s, transform 0.2s; white-space: nowrap;
     }
-    .video-frame-wrap:hover .video-frame { box-shadow:0 60px 120px rgba(0,0,0,.8) }
-    .video-frame iframe {
-      width:100%; height:100%; border:none; display:block;
-    }
-    /* Placeholder shown until video ID is added */
-    .video-placeholder {
-      width:100%; height:100%; position:absolute; inset:0;
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-    }
-    .vp-play {
-      width:64px; height:64px; border-radius:50%;
-      background:rgba(255,255,255,.08);
-      display:flex; align-items:center; justify-content:center;
-      transition:background .2s;
-    }
-    .vp-play svg { width:22px; height:22px; fill:rgba(255,255,255,.5); margin-left:3px }
-    .vp-label { font-size:13px; font-weight:600; color:var(--muted); letter-spacing:.04em; text-transform:uppercase }
+    .hero-cta-ghost:hover { border-color: var(--muted); color: var(--text); transform: translateY(-1px); }
 
-    /* ─── CAROUSEL ─── */
-    .carousel-section { padding:clamp(80px,10vw,120px) 0; overflow:hidden }
-    .cs-head { padding:0 max(20px,calc(50vw - 580px)); margin-bottom:clamp(44px,5vw,64px) }
 
-    .carousel-wrap { position:relative; height:clamp(420px,46vw,560px) }
-    .carousel-inner { position:absolute; inset:0; perspective:1800px }
+    @media (max-width: 480px) {
+      .hero-h1 { font-size: clamp(24px, 7.8vw, 36px); }
+      .hero-ctas { flex-direction: column; width: 100%; max-width: 280px; }
+      .hero-cta-primary, .hero-cta-ghost { width: 100%; text-align: center; }
+    }
 
-    /* Base card — hidden off right by default */
-    .c-card {
-      position:absolute; left:50%; top:50%;
-      width:clamp(230px,21vw,310px); height:clamp(340px,36vw,460px);
-      border-radius:26px; overflow:hidden;
-      display:flex; flex-direction:column; cursor:pointer; user-select:none;
-      transition:transform .65s cubic-bezier(.16,1,.3,1), filter .6s ease, opacity .6s ease, box-shadow .4s ease;
-      transform:translate(-50%,-50%) translateX(60vw) scale(.4);
-      filter:blur(20px); opacity:0; z-index:1;
-    }
-    /* Positions */
-    .c-card[data-pos="0"]  { transform:translate(-50%,-50%) scale(1) rotateY(0deg); filter:blur(0); opacity:1; z-index:6; box-shadow:0 40px 100px rgba(0,0,0,.55) }
-    .c-card[data-pos="1"]  { transform:translate(-50%,-50%) translateX(min(23vw,320px)) scale(.8) rotateY(-7deg); filter:blur(6px); opacity:.68; z-index:5 }
-    .c-card[data-pos="-1"] { transform:translate(-50%,-50%) translateX(max(-23vw,-320px)) scale(.8) rotateY(7deg); filter:blur(6px); opacity:.68; z-index:5 }
-    .c-card[data-pos="2"]  { transform:translate(-50%,-50%) translateX(min(42vw,580px)) scale(.62) rotateY(-13deg); filter:blur(12px); opacity:.35; z-index:4 }
-    .c-card[data-pos="-2"] { transform:translate(-50%,-50%) translateX(max(-42vw,-580px)) scale(.62) rotateY(13deg); filter:blur(12px); opacity:.35; z-index:4 }
-    .c-card[data-pos="3"]  { transform:translate(-50%,-50%) translateX(min(58vw,760px)) scale(.48) rotateY(-18deg); filter:blur(18px); opacity:0; z-index:3 }
-    .c-card[data-pos="-3"] { transform:translate(-50%,-50%) translateX(max(-58vw,-760px)) scale(.48) rotateY(18deg); filter:blur(18px); opacity:0; z-index:3 }
+    /* ── LANDING SECTIONS ────────────────────────────────────────── */
+    .lp-section { padding: clamp(80px,10vw,140px) clamp(20px,5vw,80px); }
+    .lp-inner { max-width: 1100px; margin: 0 auto; }
+    .lp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; }
+    .lp-h2 { font-size: clamp(30px,4vw,52px); font-weight: 800; letter-spacing: -0.04em; line-height: 1.08; color: var(--text); margin-bottom: clamp(40px,5vw,64px); }
+    .lp-h2 em { font-style: normal; color: var(--muted); }
 
-    /* Rainbow card gradients */
-    .c-card[data-idx="0"] { background:linear-gradient(155deg,#7f1d1d,#f87171) }
-    .c-card[data-idx="1"] { background:linear-gradient(155deg,#7c2d12,#fb923c) }
-    .c-card[data-idx="2"] { background:linear-gradient(155deg,#713f12,#fbbf24) }
-    .c-card[data-idx="3"] { background:linear-gradient(155deg,#064e3b,#34d399) }
-    .c-card[data-idx="4"] { background:linear-gradient(155deg,#1e3a8a,#60a5fa) }
-    .c-card[data-idx="5"] { background:linear-gradient(155deg,#3b0764,#a78bfa) }
+    /* Steps */
+    .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); border-radius: 16px; overflow: hidden; }
+    .step { background: var(--surface); padding: clamp(28px,3.5vw,44px); }
+    .step-num { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--muted); margin-bottom: 28px; }
+    .step-title { font-size: clamp(18px,1.8vw,24px); font-weight: 800; letter-spacing: -0.03em; color: var(--text); margin-bottom: 10px; }
+    .step-desc { font-size: clamp(13px,1vw,15px); color: var(--muted); line-height: 1.65; }
 
-    /* Visual area — fills top of card */
-    .c-visual {
-      flex:1; display:flex; align-items:center; justify-content:center;
-      padding:clamp(18px,2vw,26px) clamp(18px,2vw,26px) clamp(10px,1vw,14px);
-    }
-    /* Dark-tint glass panel inside visual — good contrast on any card color */
-    .cv-glass {
-      background:rgba(0,0,0,.22); border-radius:14px;
-      border:1px solid rgba(255,255,255,.1);
-      width:100%; overflow:hidden;
-    }
-    /* Info strip at bottom */
-    .c-info { padding:clamp(12px,1.4vw,18px) clamp(18px,2vw,26px) clamp(16px,1.8vw,22px) }
-    .c-num { font-size:10px; font-weight:700; color:rgba(255,255,255,.35); letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px }
-    .c-name { font-size:clamp(17px,1.7vw,24px); font-weight:800; color:#fff; letter-spacing:-.02em; line-height:1.1; margin-bottom:4px }
-    .c-desc { font-size:clamp(10px,.9vw,12px); color:rgba(255,255,255,.58); line-height:1.5 }
+    /* Features */
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); border-radius: 16px; overflow: hidden; }
+    .feat-card { background: var(--surface); padding: clamp(24px,3vw,40px); }
+    .feat-icon { width: 20px; height: 20px; margin-bottom: 18px; stroke: var(--text); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; display: block; }
+    .feat-title { font-size: clamp(14px,1.2vw,17px); font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: 8px; }
+    .feat-desc { font-size: clamp(12px,0.9vw,14px); color: var(--muted); line-height: 1.65; }
 
-    /* ── Card visuals (white-on-dark-glass) ── */
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; background: var(--border); border-radius: 16px; overflow: hidden; }
+    .price-card { background: var(--surface); padding: clamp(22px,2.5vw,34px); display: flex; flex-direction: column; gap: 0; }
+    .price-card-featured { background: #fff; }
+    .price-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 20px; }
+    .price-card-featured .price-name { color: #888; }
+    .price-amount { font-size: clamp(30px,3vw,42px); font-weight: 800; letter-spacing: -0.04em; color: var(--text); line-height: 1; }
+    .price-card-featured .price-amount { color: #000; }
+    .price-per { font-size: 12px; color: var(--muted); margin-top: 4px; margin-bottom: 16px; }
+    .price-card-featured .price-per { color: #888; }
+    .price-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; flex: 1; }
+    .price-card-featured .price-desc { color: #666; }
+    .price-feats { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 28px; }
+    .price-feat { font-size: 12px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+    .price-feat::before { content: "✓"; color: var(--text); font-weight: 700; flex-shrink: 0; }
+    .price-card-featured .price-feat { color: #555; }
+    .price-card-featured .price-feat::before { color: #000; }
+    .price-btn { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; text-align: center; display: block; transition: opacity .15s, transform .15s; cursor: pointer; font-family: var(--sans); }
+    .price-btn:hover { opacity: .82; transform: translateY(-1px); }
+    .price-btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border2); }
+    .price-btn-dark { background: #000; color: #fff; border: none; }
 
-    /* 01 Website */
-    .cv-site-chrome { background:rgba(255,255,255,.08); height:22px; display:flex; align-items:center; padding:0 8px; gap:4px }
-    .cv-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.4) }
-    .cv-site-nav { background:rgba(255,255,255,.06); height:18px }
-    .cv-site-body { padding:10px; display:flex; flex-direction:column; gap:6px }
-    .cv-sh { height:10px; background:rgba(255,255,255,.65); border-radius:2px; width:68% }
-    .cv-sp { height:6px; background:rgba(255,255,255,.25); border-radius:2px }
-    .cv-sp2 { width:50% }
-    .cv-sbtn { height:16px; background:rgba(255,255,255,.35); border-radius:4px; width:30%; margin-top:2px }
-    .cv-scards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px }
-    .cv-sc { height:22px; background:rgba(255,255,255,.1); border-radius:3px }
+    /* Final CTA */
+    .lp-cta { text-align: center; padding: clamp(100px,12vw,160px) clamp(20px,5vw,80px); border-top: 1px solid var(--border); }
+    .lp-cta-h2 { font-size: clamp(36px,5vw,68px); font-weight: 800; letter-spacing: -0.04em; color: var(--text); margin-bottom: 14px; }
+    .lp-cta-sub { font-size: clamp(14px,1.1vw,17px); color: var(--muted); margin-bottom: 40px; }
+    .lp-cta-btn { display: inline-block; padding: 15px 38px; background: var(--text); color: var(--bg); border-radius: 10px; font-size: 15px; font-weight: 700; text-decoration: none; transition: opacity .15s, transform .15s; }
+    .lp-cta-btn:hover { opacity: .85; transform: translateY(-2px); }
 
-    /* 02 Payments */
-    .cv-pay-inner { padding:14px 14px 12px }
-    .cv-plabel { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.4); margin-bottom:4px }
-    .cv-pamount { font-size:28px; font-weight:800; color:#fff; letter-spacing:-.04em; line-height:1; margin-bottom:10px }
-    .cv-pline { height:1px; background:rgba(255,255,255,.1); margin-bottom:10px }
-    .cv-prow { display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,.5); margin-bottom:12px }
-    .cv-pbtn { background:rgba(255,255,255,.25); color:#fff; font-size:11px; font-weight:700; padding:7px; border-radius:6px; text-align:center }
+    @media (max-width: 900px) {
+      .steps-grid, .feat-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 560px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
 
-    /* 03 Domain */
-    .cv-dom-inner { padding:12px; display:flex; flex-direction:column; gap:8px }
-    .cv-dbar { background:rgba(255,255,255,.1); border-radius:7px; height:30px; display:flex; align-items:center; padding:0 10px; gap:7px }
-    .cv-dlock { width:10px; height:10px; opacity:.45; flex-shrink:0; stroke:rgba(255,255,255,.8) }
-    .cv-durl { font-size:11px; color:rgba(255,255,255,.8); font-weight:500; flex:1 }
-    .cv-dbadge { font-size:8px; font-weight:700; background:rgba(255,255,255,.2); color:#fff; padding:2px 8px; border-radius:99px; white-space:nowrap }
-    .cv-drows { display:flex; flex-direction:column; gap:6px }
-    .cv-drow { display:flex; align-items:center; gap:7px; font-size:10px; color:rgba(255,255,255,.5) }
-    .cv-dcheck { width:13px; height:13px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:7px; color:#fff; flex-shrink:0 }
-
-    /* 04 Analytics */
-    .cv-an-inner { padding:14px }
-    .cv-anum { font-size:28px; font-weight:800; color:#fff; letter-spacing:-.04em; line-height:1 }
-    .cv-alabel { font-size:9px; color:rgba(255,255,255,.45); margin:3px 0 12px }
-    .cv-achart { display:flex; align-items:flex-end; gap:4px; height:44px }
-    .cv-abar { flex:1; background:rgba(255,255,255,.2); border-radius:2px 2px 0 0 }
-    .cv-abar.hi { background:rgba(255,255,255,.65) }
-
-    /* 05 Publishing */
-    .cv-pub-inner { padding:16px; display:flex; flex-direction:column; align-items:center; gap:10px }
-    .cv-pstates { display:flex; align-items:center; gap:12px }
-    .cv-pstate { padding:6px 14px; border-radius:7px; font-size:11px; font-weight:700; color:rgba(255,255,255,.45); background:rgba(255,255,255,.1) }
-    .cv-pstate.live { color:#fff; background:rgba(255,255,255,.25) }
-    .cv-parrow { color:rgba(255,255,255,.3); font-size:14px; font-weight:300 }
-    .cv-purl { font-size:9px; color:rgba(255,255,255,.4); background:rgba(255,255,255,.08); padding:4px 10px; border-radius:4px; font-family:monospace }
-
-    /* 06 Collaboration */
-    .cv-col-inner { padding:14px; display:flex; flex-direction:column; align-items:center; gap:10px }
-    .cv-cavs { display:flex }
-    .cv-cav { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; margin-left:-8px; border:2px solid rgba(0,0,0,.15); flex-shrink:0 }
-    .cv-cav:first-child { margin-left:0 }
-    .cv-clabel { font-size:10px; color:rgba(255,255,255,.5) }
-    .cv-cproj { font-size:10px; background:rgba(255,255,255,.1); color:rgba(255,255,255,.6); padding:6px 12px; border-radius:6px; width:100%; text-align:center }
-
-    /* Arrow buttons */
-    .c-arrow {
-      position:absolute; top:50%; transform:translateY(-50%);
-      width:40px; height:40px; border-radius:50%; border:none; cursor:pointer;
-      background:rgba(255,255,255,.08); backdrop-filter:blur(12px);
-      display:flex; align-items:center; justify-content:center;
-      z-index:10; transition:background .2s, transform .25s cubic-bezier(.16,1,.3,1);
-    }
-    .c-arrow:hover { background:rgba(255,255,255,.18); transform:translateY(-50%) scale(1.1) }
-    .c-arrow svg { width:15px; height:15px; stroke:#fff; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round }
-    .c-arrow-l { left:clamp(14px,2.5vw,36px) }
-    .c-arrow-r { right:clamp(14px,2.5vw,36px) }
-
-    /* Progress bar */
-    .cs-progress { padding:20px max(20px,calc(50vw - 580px)) 0 }
-    .cs-prog-track { height:5px; background:rgba(255,255,255,.07); border-radius:99px }
-    .cs-prog-fill { height:100%; width:0%; border-radius:99px; position:relative; transition:background .4s ease }
-
-    /* ─── PRICING ─── */
-    .pricing-section { padding:clamp(80px,10vw,120px) max(20px,calc(50vw - 580px)) }
-    /* Segmented billing toggle */
-    .billing-toggle {
-      display:inline-flex; background:var(--surface);
-      border-radius:99px; padding:4px; margin-top:32px;
-    }
-    .btog-opt {
-      padding:9px 22px; border-radius:99px;
-      font-size:13px; font-weight:600; color:var(--muted2);
-      background:transparent; border:none; cursor:pointer;
-      font-family:var(--sans); display:flex; align-items:center; gap:8px;
-      transition:background .22s, color .22s;
-    }
-    .btog-opt.on { background:var(--text); color:var(--bg) }
-    .btog-save {
-      font-size:10px; font-weight:700;
-      background:rgba(74,222,128,.18); color:#4ade80;
-      padding:2px 8px; border-radius:4px;
-    }
-    .btog-opt.on .btog-save { background:rgba(20,180,80,.18); color:#16a34a }
-    /* Trial banner */
-    .trial-banner {
-      display:flex; align-items:center; justify-content:space-between;
-      background:var(--surface); border-radius:99px;
-      padding:10px 10px 10px 28px;
-      margin:12px 0 12px;
-    }
-    .trial-banner-text { font-size:14px; color:var(--muted2) }
-    .trial-banner-btn {
-      display:inline-block; background:var(--text); color:var(--bg);
-      font-size:13px; font-weight:700; padding:10px 22px;
-      border-radius:99px; white-space:nowrap; flex-shrink:0;
-      transition:opacity .15s;
-    }
-    .trial-banner-btn:hover { opacity:.88 }
-    /* Cards */
-    .plans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
-    .plan {
-      background:var(--surface); border-radius:20px;
-      padding:clamp(28px,3vw,44px); position:relative;
-      overflow:hidden; display:flex; flex-direction:column;
-      transition:transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, background .2s;
-    }
-    .plan:hover {
-      transform:translateY(-6px);
-      box-shadow:0 32px 80px rgba(0,0,0,.5);
-      background:var(--surface2);
-    }
-    .plan.featured { background:var(--surface2) }
-    .plan.featured:hover { background:#202020 }
-    /* Rainbow top edge on Pro */
-    .plan.featured::before {
-      content:''; position:absolute; top:0; left:0; right:0; height:1px;
-      background:var(--rainbow); background-size:200% auto;
-      animation:rbShift 3s linear infinite;
-    }
-    /* Subtle radial spotlight on hover */
-    .plan::after {
-      content:''; position:absolute; top:-40px; left:50%; transform:translateX(-50%);
-      width:70%; height:80px; border-radius:50%;
-      background:radial-gradient(ellipse, rgba(255,255,255,.06), transparent 70%);
-      opacity:0; transition:opacity .35s ease; pointer-events:none;
-    }
-    .plan:hover::after { opacity:1 }
-    .plan-tag {
-      font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-      color:var(--muted); margin-bottom:clamp(20px,2.5vw,32px); height:14px;
-    }
-    .plan.featured .plan-tag { color:var(--muted2) }
-    .plan-name { font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2); margin-bottom:16px }
-    .plan-price {
-      font-size:clamp(44px,5vw,72px); font-weight:800;
-      letter-spacing:-.05em; line-height:1; margin-bottom:6px;
-      display:flex; align-items:flex-start; gap:2px;
-    }
-    .plan-price sup { font-size:.38em; margin-top:.22em; font-weight:700; letter-spacing:0 }
-    .plan-period { font-size:12px; color:var(--muted); margin-bottom:14px }
-    .plan-tagline { font-size:13px; color:var(--muted2); line-height:1.6; margin-bottom:28px; flex:1 }
-    /* CTA buttons */
-    .plan-cta {
-      display:block; width:100%; padding:13px; border-radius:10px;
-      text-align:center; font-size:14px; font-weight:700;
-      font-family:var(--sans); cursor:pointer; border:none;
-      position:relative; overflow:hidden; margin-bottom:0;
-      transition:transform .2s cubic-bezier(.16,1,.3,1), opacity .15s;
-    }
-    .plan-cta::before {
-      content:''; position:absolute; inset:0;
-      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.14),transparent 60%);
-      transform:translateX(-100%); transition:transform .5s ease;
-    }
-    .plan-cta:hover::before { transform:translateX(100%) }
-    .plan-cta:hover { transform:scale(1.02) }
-    .pc-ghost { background:rgba(255,255,255,.07); color:var(--text) }
-    .pc-solid { background:var(--text); color:var(--bg) }
-    .pc-solid::before { background:linear-gradient(105deg,transparent 40%,rgba(0,0,0,.08),transparent 60%) }
-    .plan-feats { display:flex; flex-direction:column; gap:11px; margin-top:28px; padding-top:24px; border-top:1px solid rgba(255,255,255,.06) }
-    .pf { font-size:13px; color:var(--muted2); display:flex; align-items:baseline; gap:10px; line-height:1.4 }
-    .pf::before { content:'—'; color:rgba(255,255,255,.18); flex-shrink:0 }
-
-    /* ─── TESTIMONIALS ─── */
-    .testi-section { padding:clamp(80px,10vw,120px) clamp(20px,4vw,52px) }
-    .testi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:48px }
-    .tc { background:var(--surface); border-radius:14px; padding:clamp(22px,3vw,30px) }
-    .tc-stars { display:flex; gap:3px; margin-bottom:16px }
-    .star { width:11px; height:11px; background:#fbbf24; clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%) }
-    .tc-q { font-size:15px; font-weight:500; line-height:1.65; color:rgba(255,255,255,.8); margin-bottom:20px; letter-spacing:-.01em }
-    .tc-who { display:flex; align-items:center; gap:10px }
-    .tc-av { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0 }
-    .tc-name { font-size:13px; font-weight:700 }
-    .tc-role { font-size:11px; color:var(--muted2) }
-
-    /* ─── CLOSING ─── */
-    .closing { padding:clamp(80px,12vw,140px) clamp(20px,4vw,52px); text-align:center }
-    .closing h2 { font-size:clamp(40px,6vw,80px); font-weight:800; letter-spacing:-.04em; line-height:1.04; margin-bottom:14px }
-    .closing p { font-size:16px; color:var(--muted2); margin-bottom:32px }
-    .closing-btns { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap }
-    .btn-white { display:inline-block; padding:14px 28px; background:var(--text); color:var(--bg); font-size:15px; font-weight:700; border-radius:10px; transition:opacity .15s }
-    .btn-white:hover { opacity:.88 }
-    .btn-text { font-size:14px; font-weight:500; color:var(--muted2); transition:color .15s }
-    .btn-text:hover { color:var(--text) }
-
-    /* ─── FOOTER ─── */
-    footer { padding:44px clamp(20px,4vw,52px) 36px }
-    .ft { max-width:1100px; margin:0 auto }
-    .ft-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; flex-wrap:wrap; gap:32px }
-    .ft-brand { font-weight:800; font-size:15px; margin-bottom:8px }
-    .ft-tag { font-size:12px; color:var(--muted); max-width:200px; line-height:1.6 }
-    .ft-cols { display:flex; gap:40px; flex-wrap:wrap }
-    .ft-col h5 { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2); margin-bottom:14px }
-    .ft-col a { display:block; font-size:13px; color:var(--muted); margin-bottom:9px; transition:color .15s }
-    .ft-col a:hover { color:var(--text) }
-    .ft-bottom { padding-top:24px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px }
-    .ft-copy { font-size:12px; color:var(--muted) }
-
-    /* ─── RESPONSIVE ─── */
-    @media(max-width:760px){
-      #hero { grid-template-columns:1fr; justify-items:center; padding-top:100px; padding-bottom:60px }
-      .hero-top { text-align:center; align-items:center }
-      .hero-sub { max-width:420px }
-      .hero-stage { display:none }
-      .numbers-inner { grid-template-columns:1fr; text-align:center }
-      .gallery-grid { grid-template-columns:repeat(3,1fr) }
-      .bento-grid { grid-template-columns:1fr }
-      .bc.wide{grid-column:1} .bc.tall{grid-row:auto}
-      .plans-grid { grid-template-columns:1fr }
-      .testi-grid { grid-template-columns:1fr }
-      .ft-top { flex-direction:column }
-    }
-    @media(max-width:600px){
-      .hero-btns { flex-direction:column; width:100% }
-      .btn-primary, .btn-secondary { text-align:center }
-      .gallery-grid { grid-template-columns:repeat(2,1fr) }
-      .closing-btns { flex-direction:column }
-    }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav id="mainNav">
-  <div class="nav-logo">Vexium</div>
-  <div class="nav-r">
-    <a href="auth.html?tab=signin" class="nav-ghost">Sign in</a>
-    <a href="auth.html" class="nav-cta">Start free trial</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<section id="hero">
-  <div class="hero-top">
-    <div class="hero-badge"><span class="badge-pulse"></span>2,400+ sites built in beta</div>
-    <h1 class="hero-title">Your online business,<br><span class="rb">fully handled.</span></h1>
-    <p class="hero-sub">Vexium is the all-in-one platform for launching and running your complete online presence — website, payments, domain, and analytics.</p>
-    <div class="hero-btns">
-      <a href="auth.html" class="btn-primary">Start free trial →</a>
-      <a href="#bento" class="btn-secondary">See how it works</a>
+  <nav id="nav">
+    <a href="/" class="nav-logo" title="Vexium — Home">
+      <img src="vexium_logo.png" alt="Vexium"/>
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="#features"     class="nav-link">Features</a>
+      <a href="#pricing"      class="nav-link">Pricing</a>
     </div>
-  </div>
+    <div class="nav-right">
+      <a href="/auth.html"          class="nav-btn-ghost">Sign in</a>
+      <a href="/auth.html" class="nav-btn-primary">Start free</a>
+    </div>
+  </nav>
 
-  <!-- Animation stage -->
-  <div class="hero-stage" id="heroStage">
+  <section id="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-noise"></div>
+    <div class="hero-particles" id="particles"></div>
 
-    <!-- Prompt box -->
-    <div class="prompt-stage" id="promptStage">
-      <div class="prompt-wrap" id="promptWrap">
-        <div class="prompt-inner">
-          <div class="prompt-text">
-            <span id="typedText"></span><span class="cursor-blink" id="typedCursor" style="display:none"></span>
-          </div>
-          <div class="send-btn" id="sendBtn" style="opacity:0;transform:scale(0);transition:opacity .28s ease,transform .32s cubic-bezier(.16,1,.3,1)">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-          </div>
-        </div>
-      </div>
+    <h1 class="hero-h1">
+      We don't just build websites, we
+      <span class="hero-carousel" id="carousel">
+        <span class="hero-carousel-sizer" id="carouselSizer"></span>
+        <span class="hero-carousel-track" id="carouselTrack"></span>
+      </span>
+    </h1>
+
+    <div class="hero-ctas">
+      <a href="/vexium/auth.html" class="hero-cta-primary">Start building free</a>
+      <a href="#how-it-works"       class="hero-cta-ghost">See how it works</a>
     </div>
 
-    <!-- Browser mockup -->
-    <div class="browser-stage" id="browserStage" style="opacity:0;transform:scale(.86) translateY(16px)">
-      <div class="browser-outer">
-        <div class="browser-chrome">
-          <div class="bc-dots">
-            <span class="bc-dot" style="background:#ff5f57"></span>
-            <span class="bc-dot" style="background:#febc2e"></span>
-            <span class="bc-dot" style="background:#28c840"></span>
-          </div>
-          <div class="bc-url-bar"><div class="bc-url" id="bcUrl">yourbusiness.com</div></div>
-          <div class="bc-live" id="bcLive" style="opacity:0;transition:opacity .5s ease">
-            <span class="live-dot" id="liveDot"></span>Live
-          </div>
+    <p class="hero-tagline">Your idea, built in seconds.</p>
+
+    <p class="hero-sub">Describe your website and Vexium.AI builds it from scratch — beautiful design, real functionality, ready to publish.</p>
+
+    <div class="hero-ctas">
+      <a href="/auth.html" class="hero-cta-primary">Start building free →</a>
+      <a href="#how-it-works" class="hero-cta-ghost">See how it works</a>
+    </div>
+
+    <div class="hero-features">
+      <div class="hero-feat"><div class="hero-feat-dot" style="background:#22c55e"></div>No code required</div>
+      <div class="hero-feat"><div class="hero-feat-dot" style="background:#3b82f6"></div>Instant live preview</div>
+      <div class="hero-feat"><div class="hero-feat-dot" style="background:#a855f7"></div>One-click publish</div>
+      <div class="hero-feat"><div class="hero-feat-dot" style="background:#f59e0b"></div>Built-in backend</div>
+    </div>
+
+    <div class="hero-proof">
+      <span>Free to start</span>
+      <div class="hero-proof-sep"></div>
+      <span>No credit card required</span>
+      <div class="hero-proof-sep"></div>
+      <span>10,000+ sites built</span>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       HOW IT WORKS
+  ═══════════════════════════════════════════ -->
+  <section class="lp-section" id="how-it-works">
+    <div class="lp-inner">
+      <div class="lp-label">How it works</div>
+      <h2 class="lp-h2">Live in three steps.</h2>
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-title">Describe</div>
+          <p class="step-desc">Type what you want to build. Be specific or vague — the AI figures it out and asks if it needs more.</p>
         </div>
-        <div class="browser-body">
-          <div class="wf-el wf-nav" id="wfNav" style="opacity:0;transform:translateY(5px)">
-            <div class="wf-nav-logo"></div>
-            <div class="wf-nav-links"><div class="wf-nav-link"></div><div class="wf-nav-link"></div><div class="wf-nav-link"></div></div>
-          </div>
-          <div class="wf-content">
-            <div class="wf-el wf-h1" id="wfH1" style="opacity:0;transform:translateY(5px)"></div>
-            <div class="wf-el wf-sub wf-sub1" id="wfSub1" style="opacity:0;transform:translateY(5px)"></div>
-            <div class="wf-el wf-sub wf-sub2" id="wfSub2" style="opacity:0;transform:translateY(5px)"></div>
-            <div class="wf-el wf-ctas" id="wfCtas" style="opacity:0;transform:translateY(5px)">
-              <div class="wf-cta-p" id="wfCtaP"></div>
-              <div class="wf-cta-g"></div>
+        <div class="hiw-visual">
+          <div class="hiw-v1">
+            <div class="hiw-v1-label">What do you want to build?</div>
+            <div class="hiw-v1-input" id="typingPrompt">
+              <span id="typingText"></span><span class="hiw-v1-cursor"></span>
             </div>
-            <div class="wf-el wf-cards" id="wfCards" style="opacity:0;transform:translateY(5px)">
-              <div class="wf-card"></div><div class="wf-card"></div><div class="wf-card"></div>
-            </div>
-          </div>
-          <div class="wf-el wf-footer-bar" id="wfFooter" style="opacity:0;transform:translateY(5px)">
-            <div class="wf-foot-dot" id="wfFootDot"></div>
-            <div class="wf-foot-line"></div>
-          </div>
-        </div>
-      </div>
-      <!-- Status capsule, centered below browser -->
-      <div class="build-bar" id="buildBar" style="opacity:0;transition:opacity .3s ease">
-        <div class="build-capsule" id="buildCapsule">
-          <div class="build-dot" id="buildDot"></div>
-          <span id="buildTxt"></span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- BETA STRIP -->
-<div class="numbers reveal">
-  <div class="beta-release">
-    <span class="beta-badge">Beta</span>
-    <span class="beta-word">Release</span>
-  </div>
-</div>
-
-<!-- VIDEO -->
-<section class="video-section">
-  <div class="video-inner">
-    <div class="video-head reveal" style="text-align:center">
-      <div class="s-title">What is Vexium?</div>
-    </div>
-    <div class="reveal">
-      <div class="video-frame-wrap">
-        <div class="video-frame">
-          <!-- Replace YOUTUBE_VIDEO_ID with your actual video ID when ready -->
-          <!-- <iframe src="https://www.youtube-nocookie.com/embed/YOUTUBE_VIDEO_ID?rel=0&modestbranding=1" allowfullscreen></iframe> -->
-          <div class="video-placeholder">
-            <div class="vp-play">
-              <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </div>
-            <div class="vp-label">Trailer coming soon</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="carousel-section" id="bento">
-  <div class="cs-head reveal">
-    <div class="s-label">Why Vexium</div>
-    <div class="s-title">Everything in one place.</div>
-  </div>
-
-  <div class="carousel-wrap">
-    <div class="carousel-inner" id="cInner">
-
-      <!-- 01 Website — red -->
-      <div class="c-card" data-idx="0">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-site-chrome"><div class="cv-dot"></div><div class="cv-dot"></div><div class="cv-dot"></div></div>
-            <div class="cv-site-nav"></div>
-            <div class="cv-site-body">
-              <div class="cv-sh"></div>
-              <div class="cv-sp"></div><div class="cv-sp cv-sp2"></div>
-              <div class="cv-sbtn"></div>
-              <div class="cv-scards"><div class="cv-sc"></div><div class="cv-sc"></div><div class="cv-sc"></div></div>
+            <div class="hiw-v1-examples">
+              <div class="hiw-v1-chip">Clothing brand</div>
+              <div class="hiw-v1-chip">SaaS landing page</div>
+              <div class="hiw-v1-chip">Online course</div>
+              <div class="hiw-v1-chip">Freelance portfolio</div>
+              <div class="hiw-v1-chip">Coaching business</div>
+              <div class="hiw-v1-chip">Digital products</div>
             </div>
           </div>
         </div>
-        <div class="c-info"><div class="c-num">01</div><div class="c-name">Website</div><div class="c-desc">A complete site, custom-built from your description. No two are ever the same.</div></div>
       </div>
 
-      <!-- 02 Payments — orange -->
-      <div class="c-card" data-idx="1">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-pay-inner">
-              <div class="cv-plabel">Order total</div>
-              <div class="cv-pamount">$149.00</div>
-              <div class="cv-pline"></div>
-              <div class="cv-prow"><span>Studio Package</span><span>$149</span></div>
-              <div class="cv-pbtn">Pay now</div>
+      <!-- ── Step 2 ───────────────────────────────── -->
+      <div class="hiw-step">
+        <div class="hiw-text">
+          <div class="hiw-num">02</div>
+          <div class="hiw-step-label">Watch it come to life</div>
+          <h3 class="hiw-step-h">A complete website builds itself in real time.</h3>
+          <p class="hiw-step-p">Not a template you fight with — real pages, real design, real code. Watch the files appear as Vexium writes every line. Then ask it to change anything. It listens.</p>
+        </div>
+        <div class="hiw-visual">
+          <div class="hiw-v2">
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#a78bfa"></div>style.css</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-1" style="background:linear-gradient(90deg,#a78bfa,#7c5fc7)"></div></div>
+              <div class="hiw-v2-lines" style="color:#a78bfa" id="hiwLines1">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#60a5fa"></div>index.html</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-2" style="background:linear-gradient(90deg,#60a5fa,#3b82f6)"></div></div>
+              <div class="hiw-v2-lines" style="color:#60a5fa" id="hiwLines2">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#fbbf24"></div>main.js</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-3" style="background:linear-gradient(90deg,#fbbf24,#d97706)"></div></div>
+              <div class="hiw-v2-lines" style="color:#fbbf24" id="hiwLines3">0 lines</div>
+            </div>
+            <div class="hiw-v2-row">
+              <div class="hiw-v2-file"><div class="hiw-v2-dot" style="background:#34d399"></div>about.html</div>
+              <div class="hiw-v2-bar-wrap"><div class="hiw-v2-bar hiw-v2-bar-4" style="background:linear-gradient(90deg,#34d399,#059669)"></div></div>
+              <div class="hiw-v2-lines" style="color:#34d399" id="hiwLines4">0 lines</div>
+            </div>
+            <div class="hiw-v2-done" id="hiwDone">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Built in 14 seconds
             </div>
           </div>
         </div>
-        <div class="c-info"><div class="c-num">02</div><div class="c-name">Payments</div><div class="c-desc">Describe a product and Stripe checkout appears. Collect money from day one.</div></div>
       </div>
 
-      <!-- 03 Domain — amber -->
-      <div class="c-card" data-idx="2">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-dom-inner">
-              <div class="cv-dbar">
-                <svg class="cv-dlock" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <div class="cv-durl">yourbrand.com</div>
-                <div class="cv-dbadge">● Live</div>
+      <!-- ── Step 3 ───────────────────────────────── -->
+      <div class="hiw-step">
+        <div class="hiw-text">
+          <div class="hiw-num">03</div>
+          <div class="hiw-step-label">You're open for business</div>
+          <h3 class="hiw-step-h">Payments, accounts, AI — everything's already there.</h3>
+          <p class="hiw-step-p">Hit publish and your site goes live on your own domain. Stripe payments are ready. User accounts work. Your AI tools are built in. Share the link. Start making money. That's it.</p>
+        </div>
+        <div class="hiw-visual">
+          <div class="hiw-v3">
+            <div class="hiw-v3-chrome">
+              <div class="hiw-v3-dots">
+                <div class="hiw-v3-dot"></div>
+                <div class="hiw-v3-dot"></div>
+                <div class="hiw-v3-dot"></div>
               </div>
-              <div class="cv-drows">
-                <div class="cv-drow"><div class="cv-dcheck">✓</div>DNS configured</div>
-                <div class="cv-drow"><div class="cv-dcheck">✓</div>SSL active</div>
-                <div class="cv-drow"><div class="cv-dcheck">✓</div>CDN enabled</div>
+              <div class="hiw-v3-url">
+                <div class="hiw-v3-url-dot"></div>
+                yourstore.vexium.ai
+              </div>
+            </div>
+            <div class="hiw-v3-site">
+              <div class="hiw-v3-site-h">Your Business Name</div>
+              <div class="hiw-v3-site-sub">Built with Vexium in under an hour</div>
+              <div class="hiw-v3-site-btn">Shop now</div>
+            </div>
+            <div class="hiw-v3-notif">
+              <div class="hiw-v3-notif-icon">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="hiw-v3-notif-text">
+                <div class="hiw-v3-notif-title">Payment received — $49.00</div>
+                <div class="hiw-v3-notif-sub">Your first sale. Just now.</div>
               </div>
             </div>
           </div>
         </div>
-        <div class="c-info"><div class="c-num">03</div><div class="c-name">Custom domain</div><div class="c-desc">One click to connect. DNS, SSL, and CDN handled automatically.</div></div>
       </div>
 
-      <!-- 04 Analytics — green -->
-      <div class="c-card" data-idx="3">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-an-inner">
-              <div class="cv-anum">2,841</div>
-              <div class="cv-alabel">visitors this week · ↑ 18%</div>
-              <div class="cv-achart">
-                <div class="cv-abar" style="height:42%"></div><div class="cv-abar" style="height:58%"></div>
-                <div class="cv-abar" style="height:46%"></div><div class="cv-abar" style="height:72%"></div>
-                <div class="cv-abar" style="height:60%"></div><div class="cv-abar hi" style="height:88%"></div>
-                <div class="cv-abar" style="height:74%"></div>
-              </div>
-            </div>
-          </div>
+    </div><!-- end hiw-steps -->
+
+    <!-- Bottom CTA -->
+    <div class="hiw-bottom" id="hiwBottom">
+      <p class="hiw-bottom-p">No code. No design skills. No team. Just you, an idea, and Vexium.</p>
+      <a href="/vexium/auth.html" class="hiw-bottom-cta">Build your business free</a>
+    </div>
+
+    </div><!-- end hiw-inner -->
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       FEATURES
+  ═══════════════════════════════════════════ -->
+  <section class="lp-section" id="features">
+    <div class="lp-inner">
+      <div class="lp-label">What you get</div>
+      <h2 class="lp-h2">Everything a site needs. <em>Nothing it doesn't.</em></h2>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <div class="feat-title">AI that actually builds</div>
+          <p class="feat-desc">Not templates. The AI writes real, complete code — design, layout, and logic — from a single description.</p>
         </div>
-        <div class="c-info"><div class="c-num">04</div><div class="c-name">Analytics</div><div class="c-desc">Visitors, sessions, revenue. Private — no third-party trackers on your site.</div></div>
-      </div>
-
-      <!-- 05 Publishing — blue -->
-      <div class="c-card" data-idx="4">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-pub-inner">
-              <div class="cv-pstates">
-                <div class="cv-pstate">Draft</div>
-                <div class="cv-parrow">→</div>
-                <div class="cv-pstate live">● Live</div>
-              </div>
-              <div class="cv-purl">yourbrand.vexium.ai</div>
-            </div>
-          </div>
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <div class="feat-title">Instant live preview</div>
+          <p class="feat-desc">See your site as it's being built. Every change updates instantly — no refreshing, no waiting.</p>
         </div>
-        <div class="c-info"><div class="c-num">05</div><div class="c-name">Publishing</div><div class="c-desc">One click from editor to a live URL. No config, no waiting.</div></div>
-      </div>
-
-      <!-- 06 Collaboration — purple -->
-      <div class="c-card" data-idx="5">
-        <div class="c-visual">
-          <div class="cv-glass">
-            <div class="cv-col-inner">
-              <div class="cv-cavs">
-                <div class="cv-cav">AL</div><div class="cv-cav">MK</div><div class="cv-cav">JT</div>
-              </div>
-              <div class="cv-clabel">3 collaborators · all active</div>
-              <div class="cv-cproj">Studio Redesign Project</div>
-            </div>
-          </div>
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <div class="feat-title">Built-in backend</div>
+          <p class="feat-desc">User accounts, form submissions, and data storage — no Supabase, Firebase, or Airtable. It just works.</p>
         </div>
-        <div class="c-info"><div class="c-num">06</div><div class="c-name">Collaboration</div><div class="c-desc">Invite your team. Everyone gets their own AI, everything stays in sync.</div></div>
-      </div>
-
-    </div>
-
-    <button class="c-arrow c-arrow-l" id="cPrev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <button class="c-arrow c-arrow-r" id="cNext"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
-  </div>
-
-  <div class="cs-progress">
-    <div class="cs-prog-track"><div class="cs-prog-fill" id="csProgFill"></div></div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="pricing-section" id="pricing">
-  <div class="reveal">
-    <div class="s-label">Pricing</div>
-    <div class="s-title">Simple pricing.<br>No surprises.</div>
-  </div>
-  <div class="reveal" style="display:flex;justify-content:center;margin-top:32px">
-    <div class="billing-toggle">
-      <button class="btog-opt on" id="bMonthly" onclick="setAnnual(false)">Monthly</button>
-      <button class="btog-opt" id="bAnnual" onclick="setAnnual(true)">Annual <span class="btog-save">Save 20%</span></button>
-    </div>
-  </div>
-  <div class="trial-banner reveal">
-    <span class="trial-banner-text">Not sure yet? Try any plan free for 7 days — no commitment.</span>
-    <a href="auth.html" class="trial-banner-btn">Start free trial →</a>
-  </div>
-  <div class="plans-grid reveal">
-
-    <!-- Starter -->
-    <div class="plan">
-      <div class="plan-tag">&nbsp;</div>
-      <div class="plan-name">Starter</div>
-      <div class="plan-price"><sup>$</sup><span data-m="12" data-a="10">12</span></div>
-      <div class="plan-period">per month</div>
-      <div class="plan-tagline">For individuals launching their first online presence.</div>
-      <a href="auth.html" class="plan-cta pc-ghost">Get Starter</a>
-      <div class="plan-feats">
-        <div class="pf">3 published websites</div>
-        <div class="pf">Payments & analytics</div>
-        <div class="pf">Custom domain</div>
-        <div class="pf">Email support</div>
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <div class="feat-title">Custom domain</div>
+          <p class="feat-desc">Connect your own domain in seconds. SSL is automatic. Your site loads fast on every device.</p>
+        </div>
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <div class="feat-title">Analytics</div>
+          <p class="feat-desc">See who's visiting, where they came from, and what they clicked. No third-party script needed.</p>
+        </div>
+        <div class="feat-card">
+          <svg class="feat-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="feat-title">Collaborate</div>
+          <p class="feat-desc">Invite teammates to any project. Everyone edits in real time — no version conflicts, no merging.</p>
+        </div>
       </div>
     </div>
+  </section>
 
-    <!-- Pro -->
-    <div class="plan featured">
-      <div class="plan-tag">Most popular</div>
-      <div class="plan-name">Pro</div>
-      <div class="plan-price"><sup>$</sup><span data-m="29" data-a="23">29</span></div>
-      <div class="plan-period">per month</div>
-      <div class="plan-tagline">For businesses ready to grow without limits.</div>
-      <a href="auth.html" class="plan-cta pc-solid">Get Pro</a>
-      <div class="plan-feats">
-        <div class="pf">Unlimited websites</div>
-        <div class="pf">Team collaboration</div>
-        <div class="pf">Everything in Starter</div>
-        <div class="pf">Priority support</div>
+  <!-- ═══════════════════════════════════════════
+       PRICING
+  ═══════════════════════════════════════════ -->
+  <section id="pricing">
+    <div class="price-inner">
+
+      <div class="price-header">
+        <div class="price-label price-reveal">Pricing</div>
+        <h2 class="price-headline price-reveal">Simple pricing.<br><em>No surprises.</em></h2>
+        <p class="price-sub price-reveal">Start free. Upgrade when you're ready. Cancel anytime.</p>
+
+        <!-- Toggle -->
+        <div class="price-toggle-wrap price-reveal">
+          <span class="price-toggle-label" id="toggleLabelMonthly">Monthly</span>
+          <button class="price-toggle" id="billingToggle" aria-label="Toggle billing period">
+            <span class="price-toggle-knob"></span>
+          </button>
+          <span class="price-toggle-label" id="toggleLabelAnnual">Annual</span>
+          <span class="price-save-badge">Save 20%</span>
+        </div>
       </div>
-    </div>
 
-    <!-- Max -->
-    <div class="plan">
-      <div class="plan-tag">&nbsp;</div>
-      <div class="plan-name">Max</div>
-      <div class="plan-price"><sup>$</sup><span data-m="79" data-a="63">79</span></div>
-      <div class="plan-period">per month</div>
-      <div class="plan-tagline">For agencies building and managing multiple clients.</div>
-      <a href="auth.html" class="plan-cta pc-ghost">Get Max</a>
-      <div class="plan-feats">
-        <div class="pf">Everything in Pro</div>
-        <div class="pf">White-label option</div>
-        <div class="pf">Client workspaces</div>
-        <div class="pf">Dedicated support</div>
+      <!-- Free trial — horizontal banner above the 3 cards -->
+      <div class="price-free-banner price-reveal">
+        <div class="price-free-glow"></div>
+        <div class="price-free-left">
+          <div class="price-free-eyebrow">Start for free</div>
+          <div class="price-free-big">$0</div>
+          <div class="price-free-sub">3-day free trial · No credit card required</div>
+        </div>
+        <div class="price-free-divider"></div>
+        <div class="price-free-right">
+          <p class="price-free-desc">Try the full Vexium AI builder — build a real website, see what it can do, and decide if it's worth it. Most people decide in the first 10 minutes.</p>
+          <div class="price-free-checks">
+            <div class="price-free-check"><span class="price-check">✓</span>Full AI builder & chat</div>
+            <div class="price-free-check"><span class="price-check">✓</span>1 complete project</div>
+            <div class="price-free-check"><span class="price-check">✓</span>Live preview & editor</div>
+            <div class="price-free-check"><span class="price-check">✓</span>No card, no commitment</div>
+          </div>
+          <a href="/vexium/auth.html" class="price-free-cta">Start building free</a>
+        </div>
       </div>
-    </div>
 
-  </div>
-</section>
+      <div class="price-cards price-reveal">
 
-<!-- TESTIMONIALS -->
-<section class="testi-section">
-  <div class="container">
-    <div class="reveal">
-      <div class="s-label">From the people using it</div>
-      <div class="s-title">Real words.</div>
-    </div>
-    <div class="testi-grid reveal">
-      <div class="tc">
-        <div class="tc-stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
-        <p class="tc-q">"I described my portfolio in a voice note transcript and showed my client the live site before I finished my coffee. That's not a product. That's a superpower."</p>
-        <div class="tc-who"><div class="tc-av" style="background:rgba(167,139,250,.12);color:#a78bfa">AR</div><div><div class="tc-name">Alex R.</div><div class="tc-role">Freelance designer, Toronto</div></div></div>
-      </div>
-      <div class="tc">
-        <div class="tc-stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
-        <p class="tc-q">"I've tried Webflow, Framer, every no-code tool. Vexium is the first one where I say what I want and it gets it right. Not close — right."</p>
-        <div class="tc-who"><div class="tc-av" style="background:rgba(56,189,248,.1);color:#38bdf8">MK</div><div><div class="tc-name">Maya K.</div><div class="tc-role">Founder, Stacklane</div></div></div>
-      </div>
-      <div class="tc">
-        <div class="tc-stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
-        <p class="tc-q">"11 client sites in 30 days. Our old process took 3 months. Our clients think we hired a full design team."</p>
-        <div class="tc-who"><div class="tc-av" style="background:rgba(74,222,128,.1);color:#4ade80">JT</div><div><div class="tc-name">James T.</div><div class="tc-role">Agency owner, New York</div></div></div>
-      </div>
-    </div>
-  </div>
-</section>
+        <!-- Starter -->
+        <div class="price-card">
+          <div class="price-card-top">
+            <div class="price-tier">Starter</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="12" data-annual="10">$12</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For founders launching their first real business online.</p>
+            <a href="/vexium/auth.html" class="price-cta price-cta-ghost">Start Starter</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>3 projects</li>
+            <li><span class="price-check">✓</span>Full AI builder</li>
+            <li><span class="price-check">✓</span>Custom domain</li>
+            <li><span class="price-check">✓</span>Remove Vexium branding</li>
+            <li><span class="price-check">✓</span>Publish & host</li>
+            <li><span class="price-x">✗</span>Payments & accounts</li>
+            <li><span class="price-x">✗</span>AI inside your site</li>
+          </ul>
+          <a href="/auth.html" class="price-btn price-btn-dark">Start building</a>
+        </div>
 
-<!-- CLOSING -->
-<section class="closing">
-  <div class="container reveal">
-    <h2>Your idea is ready.<br><span class="rb">Is your website?</span></h2>
-    <p>No design skills. No code. No waiting.</p>
-    <div class="closing-btns">
-      <a href="auth.html" class="btn-white">Start your free trial →</a>
-      <a href="#pricing" class="btn-text">See pricing</a>
-    </div>
-  </div>
-</section>
+        <!-- Pro — highlighted -->
+        <div class="price-card price-card-pro">
+          <div class="price-popular-badge">Recommended</div>
+          <div class="price-card-top">
+            <div class="price-tier">Pro</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="29" data-annual="23">$29</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For entrepreneurs building serious income online.</p>
+            <a href="/vexium/auth.html" class="price-cta price-cta-primary">Start Pro</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>Unlimited projects</li>
+            <li><span class="price-check">✓</span>Priority AI</li>
+            <li><span class="price-check">✓</span>Payments & Stripe</li>
+            <li><span class="price-check">✓</span>User accounts & auth</li>
+            <li><span class="price-check">✓</span>AI inside your site</li>
+            <li><span class="price-check">✓</span>Analytics dashboard</li>
+            <li><span class="price-check">✓</span>Marketing guidance</li>
+          </ul>
+          <a href="/auth.html" class="price-btn price-btn-outline">Get started</a>
+        </div>
+        <div class="price-card">
+          <div class="price-card-top">
+            <div class="price-tier">Max</div>
+            <div class="price-amount-wrap">
+              <div class="price-amount" data-monthly="79" data-annual="63">$79</div>
+              <div class="price-period">/month</div>
+            </div>
+            <p class="price-desc">For agencies and power users managing multiple clients.</p>
+            <a href="/vexium/auth.html" class="price-cta price-cta-ghost">Start Max</a>
+          </div>
+          <div class="price-divider"></div>
+          <ul class="price-features">
+            <li><span class="price-check">✓</span>Everything in Pro</li>
+            <li><span class="price-check">✓</span>White label</li>
+            <li><span class="price-check">✓</span>Client management</li>
+            <li><span class="price-check">✓</span>Team collaboration</li>
+            <li><span class="price-check">✓</span>Priority support</li>
+            <li><span class="price-check">✓</span>Custom integrations</li>
+            <li><span class="price-check">✓</span>Advanced analytics</li>
+          </ul>
+        </div>
 
-<!-- FOOTER -->
-<footer>
-  <div class="ft">
-    <div class="ft-top">
-      <div>
-        <div class="ft-brand">Vexium</div>
-        <div class="ft-tag">AI-powered website builder for founders and creators.</div>
-      </div>
-      <div class="ft-cols">
-        <div class="ft-col"><h5>Product</h5><a href="#pricing">Pricing</a><a href="auth.html">Get started</a><a href="editor.html">Editor</a></div>
-        <div class="ft-col"><h5>Company</h5><a href="#">About</a><a href="mailto:hello@vexium.ai">Contact</a></div>
-        <div class="ft-col"><h5>Legal</h5><a href="#">Privacy</a><a href="#">Terms</a></div>
-      </div>
-    </div>
-    <div class="ft-bottom">
-      <span class="ft-copy">© 2026 Vexium Inc.</span>
-      <span class="ft-copy">Built with Vexium</span>
-    </div>
-  </div>
-</footer>
+      </div><!-- end price-cards -->
 
-<script>
-  // ── NAV ──
-  addEventListener('scroll', () => document.getElementById('mainNav').classList.toggle('scrolled', scrollY > 30), {passive:true});
+      <!-- Bottom note -->
+      <p class="price-note price-reveal">All plans include a 5% revenue share on payments processed through your Vexium sites. Annual billing saves 20% — billed once per year.</p>
 
-  // ── SCROLL REVEAL ──
-  (() => {
-    const obs = new IntersectionObserver((entries, o) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); o.unobserve(e.target); } });
-    }, {threshold:.05});
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-  })();
+    </div><!-- end price-inner -->
+  </section>
 
-  // ── PRICING ──
-  let isAnnual = false;
-  function setAnnual(a) {
-    isAnnual = a;
-    document.getElementById('bMonthly').classList.toggle('on', !a);
-    document.getElementById('bAnnual').classList.toggle('on', a);
-    document.querySelectorAll('[data-m]').forEach(el => el.textContent = a ? el.dataset.a : el.dataset.m);
-  }
 
-  // ── HERO ANIMATION ──
-  const DEMOS = [
-    {
-      prompt: "Build me a landing page for a design studio called Forma. Dark and minimal.",
-      url: "formastudio.com",
-      accent: "#22c55e", liveBg: "#dcfce7", liveC: "#15803d",
-      steps: ["Writing the nav…", "Designing the hero…", "Adding content sections…", "Building feature cards…", "Polishing the footer…"],
-    },
-    {
-      prompt: "Restaurant site for Sakura. Warm Japanese feel, with a reservations page.",
-      url: "sakura-dining.com",
-      accent: "#f97316", liveBg: "#fff7ed", liveC: "#c2410c",
-      steps: ["Writing the nav…", "Designing the hero…", "Adding the menu section…", "Building reservations…", "Polishing the footer…"],
-    },
-    {
-      prompt: "SaaS landing page for Flow, a team task manager. Clean and modern.",
-      url: "useflow.io",
-      accent: "#a78bfa", liveBg: "#ede9fe", liveC: "#5b21b6",
-      steps: ["Writing the nav…", "Designing the hero…", "Adding feature sections…", "Building pricing cards…", "Polishing the footer…"],
-    },
-    {
-      prompt: "Portfolio site for a photographer named Maya Chen. Light, editorial.",
-      url: "mayachen.co",
-      accent: "#38bdf8", liveBg: "#e0f2fe", liveC: "#0369a1",
-      steps: ["Writing the nav…", "Designing the gallery hero…", "Adding the work grid…", "Building the about section…", "Polishing the footer…"],
-    },
-  ];
-
-  const GROUPS = [
-    { ids: ['wfNav'],            stepIdx: 0, gap: 0   },
-    { ids: ['wfH1'],             stepIdx: 1, gap: 520 },
-    { ids: ['wfSub1', 'wfSub2'],stepIdx: 1, gap: 290 },
-    { ids: ['wfCtas'],           stepIdx: 2, gap: 380 },
-    { ids: ['wfCards'],          stepIdx: 3, gap: 520 },
-    { ids: ['wfFooter'],         stepIdx: 4, gap: 440 },
-  ];
-
-  const WF_ALL = ['wfNav','wfH1','wfSub1','wfSub2','wfCtas','wfCards','wfFooter'];
-
-  let _demoIdx = 0;
-  let _aniT = null;
-  const _wait = ms => new Promise(r => { _aniT = setTimeout(r, ms); });
-
-  async function runDemo() {
-    clearTimeout(_aniT);
-    const demo = DEMOS[_demoIdx % DEMOS.length];
-    _demoIdx++;
-
-    const promptStage  = document.getElementById('promptStage');
-    const promptWrap   = document.getElementById('promptWrap');
-    const browserStage = document.getElementById('browserStage');
-    const typedText    = document.getElementById('typedText');
-    const typedCursor  = document.getElementById('typedCursor');
-    const sendBtn      = document.getElementById('sendBtn');
-    const buildBar     = document.getElementById('buildBar');
-    const buildCapsule = document.getElementById('buildCapsule');
-    const buildDot     = document.getElementById('buildDot');
-    const buildTxt     = document.getElementById('buildTxt');
-    const bcLive       = document.getElementById('bcLive');
-    const bcUrl        = document.getElementById('bcUrl');
-    const wfCtaP       = document.getElementById('wfCtaP');
-    const wfFootDot    = document.getElementById('wfFootDot');
-    const liveDot      = document.getElementById('liveDot');
-
-    // ─ Reset prompt stage ─
-    promptStage.style.transition = 'none';
-    promptStage.style.opacity = '1';
-    promptStage.style.transform = 'translateY(0)';
-    promptStage.style.pointerEvents = 'auto';
-    // Prompt box: inactive (no rainbow)
-    promptWrap.classList.remove('rb-on');
-    promptWrap.style.setProperty('--rb-dur', '2.5s');
-    typedText.textContent = '';
-    typedCursor.style.display = 'none';
-    sendBtn.style.transition = 'none';
-    sendBtn.style.opacity = '0';
-    sendBtn.style.transform = 'scale(0)';
-
-    // ─ Reset browser stage ─
-    browserStage.style.transition = 'none';
-    browserStage.style.opacity = '0';
-    browserStage.style.transform = 'scale(.86) translateY(16px)';
-    buildBar.style.transition = 'none';
-    buildBar.style.opacity = '0';
-    buildCapsule.classList.remove('live');
-    bcLive.style.opacity = '0';
-    bcUrl.textContent = 'yourbusiness.com';
-
-    // Reset wireframe elements
-    WF_ALL.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(5px)'; }
-    });
-
-    // Set accent colors
-    buildDot.style.background = demo.accent;
-    wfCtaP.style.background = demo.accent;
-    wfFootDot.style.background = demo.accent;
-    liveDot.style.background = demo.accent;
-    bcLive.style.background = demo.liveBg;
-    bcLive.style.color = demo.liveC;
-
-    // ─ Phase 1: 0.5s pause, then rainbow "activates" ─
-    await _wait(500);
-
-    // Rainbow fades in, cursor appears
-    promptWrap.classList.add('rb-on');
-    typedCursor.style.display = 'inline-block';
-
-    // ─ Phase 2: Type prompt (starts alongside rainbow activation) ─
-    for (let i = 0; i < demo.prompt.length; i++) {
-      typedText.textContent += demo.prompt[i];
-      await _wait(i < 4 ? 70 : 23);
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════ -->
+  <style>
+    footer {
+      background: var(--surface);
+      padding: clamp(48px, 7vw, 96px) clamp(20px, 5vw, 80px) clamp(28px, 4vw, 48px);
     }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: clamp(32px, 5vw, 80px);
+      padding-bottom: clamp(32px, 4vw, 56px);
+      margin-bottom: clamp(28px, 3vw, 40px);
+      border-bottom: 1px solid var(--border);
+    }
+    .footer-brand { display: flex; flex-direction: column; }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      margin-bottom: 14px;
+    }
+    .footer-logo img {
+      width: 30px; height: 30px; border-radius: 6px; display: block;
+      transform: scale(1); transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .footer-logo:hover img, .footer-logo:focus-visible img { transform: scale(1.08); }
+    .footer-desc {
+      font-size: clamp(12px, 0.9vw, 14px);
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 240px;
+    }
+    .footer-col-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footer-links a {
+      font-size: clamp(12px, 0.9vw, 14px);
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer-bottom-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-bottom-links a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-bottom-links a:hover { color: var(--text); }
+    @media (max-width: 768px) {
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .footer-brand { grid-column: 1 / -1; }
+      .footer-desc { max-width: none; }
+    }
+    @media (max-width: 480px) {
+      .footer-top { grid-template-columns: 1fr; }
+    }
+  </style>
 
-    // ─ Phase 3: Send button pops in ─
-    typedCursor.style.display = 'none';
-    sendBtn.style.transition = 'opacity .28s ease, transform .32s cubic-bezier(.16,1,.3,1)';
-    sendBtn.style.opacity = '1';
-    sendBtn.style.transform = 'scale(1)';
-    await _wait(700);
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo" title="Vexium — Home">
+            <img src="vexium_logo.png" alt="Vexium"/>
+          </a>
+          <p class="footer-desc">The AI website builder for people who want to make money online. Describe your idea, watch it build, start earning.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Product</div>
+          <div class="footer-links">
+            <a href="#how-it-works">How it works</a>
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="/auth.html">Start building</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Legal</div>
+          <div class="footer-links">
+            <a href="#">Privacy policy</a>
+            <a href="#">Terms of service</a>
+            <a href="#">Cookie policy</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2025 Vexium. All rights reserved.</div>
+        <div class="footer-bottom-links">
+          <a href="#">Twitter</a>
+          <a href="#">TikTok</a>
+          <a href="#">YouTube</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
-    // Button press
-    sendBtn.style.transition = 'transform .1s ease';
-    sendBtn.style.transform = 'scale(0.78)';
-    await _wait(110);
-    sendBtn.style.transform = 'scale(1.06)';
-    await _wait(80);
-    sendBtn.style.transform = 'scale(1)';
-    await _wait(100);
+  <script>
+    // Nav scroll shrink
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 10);
+    }, { passive: true });
 
-    // ─ Phase 4: Prompt flies up ─
-    promptStage.style.transition = 'opacity .32s ease, transform .4s cubic-bezier(.4,0,.2,1)';
-    promptStage.style.opacity = '0';
-    promptStage.style.transform = 'translateY(-34px)';
-    promptStage.style.pointerEvents = 'none';
+    // .AI rainbow — continuous RAF loop that:
+    // 1. Syncs backgroundPosition across all 3 spans so they share one seamless gradient
+    // 2. Slides the position over time so the rainbow moves (background-repeat:repeat tiles it cleanly)
+    (function() {
+      var AI_SPANS = ['hw-dot', 'hw-a', 'hw-i'];
+      var SPEED = 36; // px per second
+      var startTs = null;
 
-    await _wait(260);
+      function animateAi(ts) {
+        if (!startTs) startTs = ts;
+        var dotai = document.querySelector('.hw-dotai');
+        if (!dotai) { requestAnimationFrame(animateAi); return; }
+        var dRect = dotai.getBoundingClientRect();
+        var dW = dRect.width;
+        if (dW < 2) { requestAnimationFrame(animateAi); return; }
 
-    // ─ Phase 5: Browser window pops in ─
-    void browserStage.offsetWidth;
-    browserStage.style.transition = 'opacity .46s ease, transform .52s cubic-bezier(.16,1,.3,1)';
-    browserStage.style.opacity = '1';
-    browserStage.style.transform = 'scale(1) translateY(0)';
-    buildTxt.textContent = demo.steps[0];
-    await _wait(220);
-    buildBar.style.transition = 'opacity .3s ease';
-    buildBar.style.opacity = '1';
+        var slide = ((ts - startTs) / 1000 * SPEED) % dW;
 
-    await _wait(280);
+        AI_SPANS.forEach(function(cls) {
+          var el = dotai.querySelector('.' + cls);
+          if (!el) return;
+          var rect = el.getBoundingClientRect();
+          var offsetX = rect.left - dRect.left;
+          el.style.backgroundSize = dW + 'px 100%';
+          el.style.backgroundPosition = (-(offsetX + slide)) + 'px 0';
+        });
 
-    // ─ Phase 6: Build wireframe block by block ─
-    let lastStep = -1;
-    for (const grp of GROUPS) {
-      if (grp.gap > 0) await _wait(grp.gap);
-
-      if (grp.stepIdx !== lastStep) {
-        buildTxt.textContent = demo.steps[grp.stepIdx];
-        lastStep = grp.stepIdx;
+        requestAnimationFrame(animateAi);
       }
 
-      grp.ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.style.transition = 'opacity .3s ease, transform .38s cubic-bezier(.16,1,.3,1)';
-          el.style.opacity = '1';
-          el.style.transform = 'translateY(0)';
-        }
-      });
-    }
+      requestAnimationFrame(animateAi);
+    })();
+  </script>
 
-    // ─ Phase 7: Site is live ─
-    await _wait(480);
-    buildTxt.textContent = 'Your site is live ✓';
-    buildDot.style.background = '#22c55e';
-    buildCapsule.classList.add('live');
-    bcUrl.textContent = demo.url;
-    bcLive.style.opacity = '1';
-
-    // ─ Hold ─
-    await _wait(7000);
-
-    // ─ Phase 8: Fade out ─
-    buildBar.style.transition = 'opacity .4s ease';
-    buildBar.style.opacity = '0';
-    bcLive.style.transition = 'opacity .3s ease';
-    bcLive.style.opacity = '0';
-    await _wait(200);
-    browserStage.style.transition = 'opacity .5s ease, transform .5s ease';
-    browserStage.style.opacity = '0';
-    browserStage.style.transform = 'scale(.95) translateY(8px)';
-    await _wait(600);
-
-    runDemo();
-  }
-
-  setTimeout(runDemo, 700);
-
-  // ── CAROUSEL ──
-  const C_COUNT = 6, C_INTERVAL = 5000;
-  const C_COLORS = ['#f87171','#fb923c','#fbbf24','#34d399','#60a5fa','#a78bfa'];
-  let _cIdx = 0, _cTimer = null, _cPaused = false;
-
-  function _cUpdate() {
-    document.querySelectorAll('.c-card').forEach((card, i) => {
-      const raw = ((i - _cIdx) % C_COUNT + C_COUNT) % C_COUNT;
-      const pos = raw === 0 ? 0 : raw === 1 ? 1 : raw === 2 ? 2 :
-                  raw === C_COUNT-1 ? -1 : raw === C_COUNT-2 ? -2 : 3;
-      card.setAttribute('data-pos', String(pos));
-    });
-  }
-
-  function _cProgStart() {
-    const f = document.getElementById('csProgFill');
-    if (!f) return;
-    f.style.background = C_COLORS[_cIdx];
-    f.style.transition = 'none'; f.style.width = '0%';
-    void f.offsetWidth;
-    f.style.transition = `width ${C_INTERVAL}ms linear`; f.style.width = '100%';
-  }
-  function _cProgStop() {
-    const f = document.getElementById('csProgFill');
-    if (!f) return;
-    f.style.transition = 'none'; f.style.width = '0%';
-  }
-
-  function _cStartAuto() {
-    clearInterval(_cTimer);
-    _cProgStart();
-    _cTimer = setInterval(() => {
-      _cIdx = (_cIdx + 1) % C_COUNT;
-      _cUpdate(); _cProgStart();
-    }, C_INTERVAL);
-  }
-
-  function carouselPrev() {
-    _cPaused = true; clearInterval(_cTimer); _cProgStop();
-    _cIdx = (_cIdx - 1 + C_COUNT) % C_COUNT;
-    _cUpdate();
-  }
-  function carouselNext() {
-    _cPaused = true; clearInterval(_cTimer); _cProgStop();
-    _cIdx = (_cIdx + 1) % C_COUNT;
-    _cUpdate();
-  }
-
-  // Click a side card to navigate to it
-  document.querySelectorAll('.c-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const pos = parseInt(card.getAttribute('data-pos') || '0');
-      if (pos === 0) return;
-      _cPaused = true; clearInterval(_cTimer); _cProgStop();
-      _cIdx = ((_cIdx + pos) % C_COUNT + C_COUNT) % C_COUNT;
-      _cUpdate();
-    });
-  });
-
-  document.getElementById('cPrev').addEventListener('click', carouselPrev);
-  document.getElementById('cNext').addEventListener('click', carouselNext);
-
-  new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { if (!_cPaused) _cStartAuto(); }
-      else { clearInterval(_cTimer); _cProgStop(); _cPaused = false; }
-    });
-  }, { threshold: 0.2 }).observe(document.getElementById('bento'));
-
-  _cUpdate();
-</script>
 </body>
 </html>

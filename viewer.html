@@ -97,56 +97,44 @@
     const projectId = new URLSearchParams(location.search).get('project') || '';
     if (projectId) html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
 
-    const isImgFile = fn => /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i.test(fn);
-
-    // Pass 1: inline CSS/JS so url() refs inside CSS are present before image substitution
     Object.entries(fileSystem).forEach(([fn, fc]) => {
-      if (!fc || fn === pageName || isImgFile(fn)) return;
+      if (!fc || fn === pageName) return;
       if (projectId && typeof fc === 'string') fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
       const safe = escRe(fn);
       if (fn.endsWith('.css')) {
         const inlined = fc.replace(/<\/style>/gi, '<\\/style>');
         html = html.replace(
           new RegExp(`<link[^>]+href=["']${safe}["'][^>]*/?>`, 'gi'),
-          '<style>' + inlined + '<' + '/style>'
+          `<style>${inlined}<\/style>`
         );
       } else if (fn.endsWith('.js')) {
         const inlined = fc.replace(/<\/script>/gi, '<\\/script>');
         html = html.replace(
           new RegExp(`<script[^>]+src=["']${safe}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'),
-          '<script>' + inlined + '<' + '/script>'
+          `<script>${inlined}<\/script>`
         );
       }
     });
 
-    // Pass 2: substitute image data URLs (now also catches url() inside inlined CSS)
-    Object.entries(fileSystem).forEach(([fn, fc]) => {
-      if (!fc || fn === pageName || !isImgFile(fn)) return;
-      if (typeof fc !== 'string' || !fc.startsWith('data:')) return;
-      const safe = escRe(fn);
-      html = html.replace(new RegExp(`(src=["'])${safe}(["'])`, 'gi'), `$1${fc}$2`);
-      html = html.replace(new RegExp(`url\\(["']?${safe}["']?\\)`, 'gi'), `url(${fc})`);
-    });
-
-    // Rewrite anchor links to use hash navigation — same approach as editor preview
-    Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_') && f !== pageName).forEach(target => {
-      [target, './' + target].forEach(variant => {
-        const dq = 'href="' + variant + '"';
-        const sq = "href='" + variant + "'";
-        while (html.includes(dq)) html = html.replace(dq, 'href="#vexnav=' + target + '"');
-        while (html.includes(sq)) html = html.replace(sq, "href='#vexnav=" + target + "'");
+    const interceptor = `(function(){
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var href = a.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('tel')) return;
+        var page = href.split('?')[0].split('#')[0];
+        if (!page) return;
+        e.preventDefault();
+        window.parent.postMessage({ type: 'vexium_navigate', page: page }, '*');
       });
-    });
+    })();`;
 
-    // Inject JS nav interceptor for window.location.href = '...' navigation
-    const interceptor = `(function(){if(!location.href.startsWith('blob:'))return;function _nav(u){var s=String(u||'');if(!s||s.startsWith('http')||s.startsWith('//')||s.startsWith('#')||s.startsWith('blob:')||s.startsWith('javascript:'))return false;var p=s.split('?')[0].split('#')[0];while(p.startsWith('./'))p=p.slice(2);while(p.startsWith('/'))p=p.slice(1);if(!p)return false;if(p.indexOf('.')===-1)p=p+'.html';location.hash='vexnav='+p;return true;}try{var d=Object.getOwnPropertyDescriptor(Location.prototype,'href');if(d&&d.set)Object.defineProperty(Location.prototype,'href',{get:d.get,set:function(u){if(!_nav(u))d.set.call(this,u);}});}catch(e){}})();`;
-    const bridge = '<script>' + interceptor + '<' + '/script>';
+    const bridge = `<script>${interceptor}<\/script>`;
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
       html = bridge + html;
     }
-
     return html;
   }
 
@@ -161,18 +149,6 @@
     frame.src = burl;
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     if (titleMatch) document.title = titleMatch[1] || document.title;
-    // Re-attach hash navigation listener after each page load
-    frame.onload = function() {
-      try {
-        frame.contentWindow.addEventListener('hashchange', function() {
-          const h = frame.contentWindow.location.hash || '';
-          if (h.startsWith('#vexnav=')) {
-            const pg = decodeURIComponent(h.slice(8));
-            if (pg && fileSystem[pg]) renderPage(pg);
-          }
-        });
-      } catch(e) {}
-    };
   }
 
   window.addEventListener('message', function(e) {
@@ -205,8 +181,6 @@
     document.title = project.name || 'Vexium';
     fileSystem = project.files || {};
     const mainFile = project.main_file || 'index.html';
-    const requestedPage = params.get('page');
-    const startFile = (requestedPage && project.files?.[requestedPage]) ? requestedPage : mainFile;
 
     const frame = document.getElementById('frame');
     frame.addEventListener('load', function() {
@@ -214,7 +188,7 @@
       frame.style.display = 'block';
     }, { once: false });
 
-    renderPage(startFile);
+    renderPage(mainFile);
 
     // Track this site open
     (function(){
@@ -230,6 +204,122 @@
         }).catch(function(){});
       } catch(e) {}
     })();
+  }
+
+  window.addEventListener('load', init);
+</script>
+</body>
+</html>
+  } catch(e) {}
+
+  let fileSystem = {};
+
+  function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
+
+  function showNotFound() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('notFound').classList.add('show');
+  }
+
+  function buildPageHtml(pageName) {
+    let html = fileSystem[pageName] || '';
+
+    // Substitute project ID placeholder so backend calls work
+    const projectId = new URLSearchParams(location.search).get('project') || '';
+    if (projectId) html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
+
+    Object.entries(fileSystem).forEach(([fn, fc]) => {
+      if (!fc || fn === pageName) return;
+      if (projectId && typeof fc === 'string') fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
+      const safe = escRe(fn);
+      if (fn.endsWith('.css')) {
+        const inlined = fc.replace(/<\/style>/gi, '<\\/style>');
+        html = html.replace(
+          new RegExp(`<link[^>]+href=["']${safe}["'][^>]*/?>`, 'gi'),
+          `<style>${inlined}<\/style>`
+        );
+      } else if (fn.endsWith('.js')) {
+        const inlined = fc.replace(/<\/script>/gi, '<\\/script>');
+        html = html.replace(
+          new RegExp(`<script[^>]+src=["']${safe}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'),
+          `<script>${inlined}<\/script>`
+        );
+      }
+    });
+
+    const interceptor = `(function(){
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var href = a.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('tel')) return;
+        var page = href.split('?')[0].split('#')[0];
+        if (!page) return;
+        e.preventDefault();
+        window.parent.postMessage({ type: 'vexium_navigate', page: page }, '*');
+      });
+    })();`;
+
+    const bridge = `<script>${interceptor}<\/script>`;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
+    } else {
+      html = bridge + html;
+    }
+    return html;
+  }
+
+  function renderPage(pageName) {
+    const frame = document.getElementById('frame');
+    const html = buildPageHtml(pageName);
+    const prev = frame._blob;
+    if (prev) URL.revokeObjectURL(prev);
+    const blob = new Blob([html], { type: 'text/html' });
+    const burl = URL.createObjectURL(blob);
+    frame._blob = burl;
+    frame.src = burl;
+    const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+    if (titleMatch) document.title = titleMatch[1] || document.title;
+  }
+
+  window.addEventListener('message', function(e) {
+    if (e.data?.type !== 'vexium_navigate') return;
+    const page = e.data.page;
+    if (page && fileSystem[page]) renderPage(page);
+  });
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    if (!projectId) { showNotFound(); return; }
+
+    let project = null;
+
+    if (sb) {
+      try {
+        const { data } = await sb.from('projects').select('*').eq('id', projectId).single();
+        if (data) project = data;
+      } catch(e) {}
+    }
+    if (!project) {
+      try {
+        const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+        project = list.find(p => p.id === projectId) || null;
+      } catch(e) {}
+    }
+    if (!project) { showNotFound(); return; }
+
+    document.title = project.name || 'Vexium';
+    fileSystem = project.files || {};
+    const mainFile = project.main_file || 'index.html';
+
+    const frame = document.getElementById('frame');
+    frame.addEventListener('load', function() {
+      document.getElementById('loading').style.display = 'none';
+      frame.style.display = 'block';
+    }, { once: false });
+
+    renderPage(mainFile);
   }
 
   window.addEventListener('load', init);

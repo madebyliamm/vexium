@@ -60,24 +60,30 @@
     .tb-bell:hover svg,.tb-bell.active svg{stroke:#fff}
     .bell-dot{position:absolute;top:0;right:0;min-width:15px;height:15px;border-radius:99px;background:var(--text);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;padding:0 3px;font-family:var(--sans);line-height:1}
     .bell-dot.show{display:flex}
-    .notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:310px;background:var(--bg);border:1px solid var(--b1);border-radius:14px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,.1);display:none;overflow:hidden}
-    .notif-drop.show{display:block}
-    .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
-    .notif-head-t{font-size:13px;font-weight:800}
+    /* ── NOTIFICATION SIDEBAR ── */
+    #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+    #notifBackdrop.show{display:block}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--s1);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
+    #notifSidebar.show{transform:translateX(0)}
+    .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
+    .notif-head-right{display:flex;align-items:center;gap:10px}
     .notif-mark{font-size:11px;color:var(--sub);cursor:pointer;font-weight:600;transition:color .12s}
     .notif-mark:hover{color:var(--text)}
-    .notif-list{max-height:360px;overflow-y:auto}
-    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(255,255,255,.025)}
-    .notif-item:last-child{border-bottom:none}
+    .notif-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .notif-close:hover{background:var(--b1);color:var(--text)}
+    .notif-close svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+    .notif-list{flex:1;overflow-y:auto;padding:0 8px 16px}
+    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer;transition:background .1s;border-radius:10px;margin-bottom:2px}
     .notif-item:hover{background:var(--b1)}
-    .notif-item.unread{background:rgba(79,110,247,.05)}
-    .notif-av{width:30px;height:30px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000 !important;flex-shrink:0;margin-top:1px}
+    .notif-item.unread{background:var(--s2)}
+    .notif-av{width:32px;height:32px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000 !important;flex-shrink:0;margin-top:1px}
     .notif-body{flex:1;min-width:0}
     .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
-    .notif-text b{font-weight:700;color:#fff}
-    .notif-time{font-size:10px;color:var(--sub);margin-top:2px}
-    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--a1);flex-shrink:0;margin-top:6px}
-    .notif-empty{padding:36px 16px;text-align:center;font-size:12px;color:var(--sub)}
+    .notif-text b{font-weight:700}
+    .notif-time{font-size:10px;color:var(--sub);margin-top:3px}
+    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--text);flex-shrink:0;margin-top:7px}
+    .notif-empty{padding:60px 20px;text-align:center;font-size:13px;color:var(--sub)}
 
     /* ══ PAGE ══ */
     .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(32px,5vw,72px) clamp(16px,4vw,56px)}
@@ -110,13 +116,13 @@
     .pc-invite-btn.decline:hover{background:rgba(239,68,68,.2)}
     /* collab status badges */
     .cl-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
-    .cl-status.joined{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
-    .cl-status.pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+    .cl-status.joined{background:rgba(34,197,94,.1);color:#4ade80}
+    .cl-status.pending{background:rgba(245,158,11,.1);color:#fbbf24}
     .cl-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:8px 0 4px;margin-top:4px}
     /* accept popup overlay */
     #acceptOverlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
     #acceptOverlay.show{display:flex}
-    .accept-modal{background:var(--bg);border:1px solid var(--b1);border-radius:20px;width:360px;max-width:100%;padding:28px 28px 24px;box-shadow:0 40px 100px rgba(0,0,0,.9);text-align:center}
+    .accept-modal{background:var(--s1);border-radius:20px;width:360px;max-width:100%;padding:28px 28px 24px;box-shadow:0 40px 100px rgba(0,0,0,.9);text-align:center}
     .accept-modal-emoji{font-size:44px;margin-bottom:14px}
     .accept-modal-title{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
     .accept-modal-sub{font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:22px}
@@ -141,8 +147,8 @@
     .overlay.show{display:flex}
 
     /* ══ PROJECT SETTINGS MODAL ══ */
-    .ps-modal{background:var(--bg);border:1px solid var(--b1);border-radius:20px;width:480px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column;}
-    .ps-hero{background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(155,121,252,.06));border-bottom:1px solid var(--b1);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+    .ps-modal{background:var(--s1);border-radius:20px;width:480px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column;}
+    .ps-hero{background:var(--s2);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;border-radius:20px 20px 0 0}
     .ps-hero-left{display:flex;align-items:center;gap:12px}
     .ps-hero-emoji{font-size:36px;line-height:1}
     .ps-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
@@ -152,14 +158,13 @@
     .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
     .ps-field{display:flex;flex-direction:column;gap:6px}
     .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
-    .ps-input{background:var(--b1);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:border-color .15s;width:100%}
-    .ps-input:focus{border-color:rgba(79,110,247,.5)}
+    .ps-input{background:var(--b1);border:none;border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:background .15s;width:100%}
+    .ps-input:focus{background:var(--b2)}
     .ps-input::placeholder{color:var(--sub)}
-    /* FIX 3: emoji strip 5x2 grid */
     .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
     .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;}
     .emoji-opt:hover{background:var(--b2)}
-    .emoji-opt.sel{background:rgba(79,110,247,.12);border-color:rgba(79,110,247,.4)}
+    .emoji-opt.sel{background:var(--b3);border-color:transparent}
     .ps-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .ps-vis-label{font-size:13px;font-weight:700}
     .ps-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
@@ -175,23 +180,23 @@
     .cl-info{flex:1;min-width:0}
     .cl-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cl-handle{font-size:10px;color:var(--sub)}
-    .cl-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,110,247,.1);color:#818cf8;flex-shrink:0}
+    .cl-role{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--b1);color:var(--sub);flex-shrink:0}
     .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
     .cl-rm:hover{color:#ef4444}
     .cl-none{font-size:11px;color:var(--sub);padding:2px 0}
     .invite-search-wrap{position:relative}
-    .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
+    .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--b1);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
     .invite-drop.show{display:block}
     .invite-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .1s}
     .invite-item:hover{background:var(--b2)}
     .inv-av{width:24px;height:24px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#000 !important;flex-shrink:0}
     .inv-name{font-size:12px;font-weight:700}
     .inv-handle{font-size:10px;color:var(--sub)}
-    .inv-rel{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(79,110,247,.1);color:#818cf8;margin-left:auto;flex-shrink:0}
+    .inv-rel{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--b2);color:var(--sub);margin-left:auto;flex-shrink:0}
     .invite-msg{font-size:11px;margin-top:5px;min-height:14px}
     .invite-msg.ok{color:var(--ok)} .invite-msg.err{color:var(--err)}
-    .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
-    .ps-delete-btn:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+    .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.06);border:none;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:background .15s}
+    .ps-delete-btn:hover{background:rgba(239,68,68,.12)}
     .ps-delete-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
     .ps-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
     .mbtn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
@@ -201,12 +206,12 @@
     .mbtn-ok:hover{opacity:.82}
 
     /* ══ NEW PROJECT MODAL ══ */
-    .modal{background:var(--bg);border:1px solid var(--b1);border-radius:16px;padding:30px;width:360px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.8)}
+    .modal{background:var(--s1);border-radius:16px;padding:30px;width:360px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.8)}
     .modal-t{font-size:18px;font-weight:800;margin-bottom:22px;letter-spacing:-.3px}
     .m-field{margin-bottom:14px}
     .m-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;display:block}
-    .m-input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--sans);transition:border-color .15s}
-    .m-input:focus{border-color:rgba(79,110,247,.4)}
+    .m-input{width:100%;background:var(--b1);border:none;border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--sans);transition:background .15s}
+    .m-input:focus{background:var(--b2)}
     .m-input::placeholder{color:var(--sub)}
     .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 
@@ -341,13 +346,6 @@
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <div class="bell-dot" id="bellDot"></div>
-      <div class="notif-drop" id="notifDrop" onclick="event.stopPropagation()">
-        <div class="notif-head">
-          <span class="notif-head-t">Notifications</span>
-          <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
-        </div>
-        <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
-      </div>
     </div>
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
@@ -446,6 +444,18 @@
 </div>
 
 <!-- ══ ACCEPT INVITE OVERLAY ══ -->
+<div id="notifBackdrop" onclick="hideNotifDrop()"></div>
+<div id="notifSidebar">
+  <div class="notif-head">
+    <span class="notif-head-t">Notifications</span>
+    <div class="notif-head-right">
+      <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
+      <button class="notif-close" onclick="hideNotifDrop()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+  <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
+</div>
+
 <div id="acceptOverlay">
   <div class="accept-modal">
     <div class="accept-modal-emoji" id="acceptEmoji">💻</div>
@@ -530,7 +540,7 @@
     </div>
     <div class="m-field">
       <label class="m-label">Name</label>
-      <input class="m-input" id="projNameInput" placeholder="my-project" autocomplete="off"/>
+      <input class="m-input" id="projNameInput" placeholder="My project" autocomplete="off"/>
     </div>
     <div class="modal-btns">
       <button class="mbtn mbtn-cancel" onclick="closeNewModal()">Cancel</button>
@@ -1083,10 +1093,9 @@
   }
 
   function hideNotifDrop(){
-    const drop=document.getElementById('notifDrop');
-    const bell=document.getElementById('bellBtn');
-    if(drop)drop.classList.remove('show');
-    if(bell)bell.classList.remove('active');
+    document.getElementById('notifSidebar').classList.remove('show');
+    document.getElementById('notifBackdrop').classList.remove('show');
+    document.getElementById('bellBtn').classList.remove('active');
   }
 
   async function markAllRead(){
@@ -1099,11 +1108,11 @@
   }
 
   function toggleNotifDrop(){
-    const bell=document.getElementById('bellBtn');
-    const drop=document.getElementById('notifDrop');
-    const opening=!drop.classList.contains('show');
-    drop.classList.toggle('show');
-    bell.classList.toggle('active',drop.classList.contains('show'));
+    const sidebar=document.getElementById('notifSidebar');
+    const opening=!sidebar.classList.contains('show');
+    sidebar.classList.toggle('show');
+    document.getElementById('notifBackdrop').classList.toggle('show',opening);
+    document.getElementById('bellBtn').classList.toggle('active',opening);
     if(opening&&!notifLoaded)loadNotifications();
   }
 
@@ -1176,11 +1185,27 @@
   async function confirmNew(){
     const name=document.getElementById('projNameInput').value.trim();
     if(!name){document.getElementById('projNameInput').focus();return;}
+
+    // Block duplicate project names within the same account
+    if(session&&sb){
+      const{data:existing}=await sb.from('projects').select('id').eq('user_id',session.user.id).eq('name',name).limit(1);
+      if(existing&&existing.length){
+        const inp=document.getElementById('projNameInput');
+        inp.style.outline='2px solid #ef4444';
+        inp.style.outlineOffset='2px';
+        setTimeout(()=>{inp.style.outline='';inp.style.outlineOffset='';},2000);
+        showToast('You already have a project called "'+name+'"');
+        return;
+      }
+    }else{
+      if(projects.some(p=>p.name===name)){showToast('You already have a project called "'+name+'"');return;}
+    }
+
     const id='proj_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     const proj={id,name,emoji:selectedEmoji,files:{'index.html':`<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`},main_file:'index.html',is_public:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     if(session&&sb){
       const{error}=await sb.from('projects').insert({...proj,user_id:session.user.id});
-      if(error){console.error('insert error:',error);alert('Could not save: '+error.message);return;}
+      if(error){console.error('insert error:',error);showToast('Could not save: '+error.message);return;}
     }else{
       projects.unshift(proj);
       localStorage.setItem('vexium_projects',JSON.stringify(projects));
@@ -1193,8 +1218,7 @@
   /* ── GLOBAL CLICK ── */
   document.addEventListener('click',e=>{
     if(!document.getElementById('bellBtn').contains(e.target)){
-      document.getElementById('notifDrop').classList.remove('show');
-      document.getElementById('bellBtn').classList.remove('active');
+      // Sidebar is closed by its own backdrop — no action needed here
     }
     if(!document.getElementById('tbSearchWrap').contains(e.target))hideSearchDrop();
     if(!document.getElementById('psInviteInput').contains(e.target)&&!document.getElementById('inviteDrop').contains(e.target))hideInviteDrop();

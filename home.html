@@ -1185,11 +1185,27 @@
   async function confirmNew(){
     const name=document.getElementById('projNameInput').value.trim();
     if(!name){document.getElementById('projNameInput').focus();return;}
+
+    // Block duplicate project names within the same account
+    if(session&&sb){
+      const{data:existing}=await sb.from('projects').select('id').eq('user_id',session.user.id).eq('name',name).limit(1);
+      if(existing&&existing.length){
+        const inp=document.getElementById('projNameInput');
+        inp.style.outline='2px solid #ef4444';
+        inp.style.outlineOffset='2px';
+        setTimeout(()=>{inp.style.outline='';inp.style.outlineOffset='';},2000);
+        showToast('You already have a project called "'+name+'"');
+        return;
+      }
+    }else{
+      if(projects.some(p=>p.name===name)){showToast('You already have a project called "'+name+'"');return;}
+    }
+
     const id='proj_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     const proj={id,name,emoji:selectedEmoji,files:{'index.html':`<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>${name}</title>\n</head>\n<body>\n\n</body>\n</html>`},main_file:'index.html',is_public:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     if(session&&sb){
       const{error}=await sb.from('projects').insert({...proj,user_id:session.user.id});
-      if(error){console.error('insert error:',error);alert('Could not save: '+error.message);return;}
+      if(error){console.error('insert error:',error);showToast('Could not save: '+error.message);return;}
     }else{
       projects.unshift(proj);
       localStorage.setItem('vexium_projects',JSON.stringify(projects));

@@ -105,13 +105,13 @@
         const inlined = fc.replace(/<\/style>/gi, '<\\/style>');
         html = html.replace(
           new RegExp(`<link[^>]+href=["']${safe}["'][^>]*/?>`, 'gi'),
-          `<style>${inlined}<\/style>`
+          '<style>' + inlined + '<' + '/style>'
         );
       } else if (fn.endsWith('.js')) {
         const inlined = fc.replace(/<\/script>/gi, '<\\/script>');
         html = html.replace(
           new RegExp(`<script[^>]+src=["']${safe}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'),
-          `<script>${inlined}<\/script>`
+          '<script>' + inlined + '<' + '/script>'
         );
       }
     });
@@ -129,7 +129,7 @@
       });
     })();`;
 
-    const bridge = `<script>${interceptor}<\/script>`;
+    const bridge = '<script>' + interceptor + '<' + '/script>';
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
@@ -201,130 +201,6 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ project_id: projectId, page: '/', referrer: document.referrer, session_id: sid, visitor_id: vid })
-        }).catch(function(){});
-      } catch(e) {}
-    })();
-  }
-
-  window.addEventListener('load', init);
-</script>
-</body>
-</html>
-  } catch(e) {}
-
-  let fileSystem = {};
-
-  function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
-
-  function showNotFound() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('notFound').classList.add('show');
-  }
-
-  function buildPageHtml(pageName) {
-    let html = fileSystem[pageName] || '';
-
-    Object.entries(fileSystem).forEach(([fn, fc]) => {
-      if (!fc || fn === pageName) return;
-      const safe = escRe(fn);
-      if (fn.endsWith('.css')) {
-        const inlined = fc.replace(/<\/style>/gi, '<\\/style>');
-        html = html.replace(
-          new RegExp(`<link[^>]+href=["']${safe}["'][^>]*/?>`, 'gi'),
-          `<style>${inlined}<\/style>`
-        );
-      } else if (fn.endsWith('.js')) {
-        const inlined = fc.replace(/<\/script>/gi, '<\\/script>');
-        html = html.replace(
-          new RegExp(`<script[^>]+src=["']${safe}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'),
-          `<script>${inlined}<\/script>`
-        );
-      }
-    });
-
-    const interceptor = `(function(){
-      document.addEventListener('click', function(e) {
-        var a = e.target.closest('a');
-        if (!a) return;
-        var href = a.getAttribute('href') || '';
-        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('tel')) return;
-        var page = href.split('?')[0].split('#')[0];
-        if (!page) return;
-        e.preventDefault();
-        window.parent.postMessage({ type: 'vexium_navigate', page: page }, '*');
-      });
-    })();`;
-
-    const bridge = `<script>${interceptor}<\/script>`;
-    if (/<head[^>]*>/i.test(html)) {
-      html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
-    } else {
-      html = bridge + html;
-    }
-    return html;
-  }
-
-  function renderPage(pageName) {
-    const frame = document.getElementById('frame');
-    const html = buildPageHtml(pageName);
-    const prev = frame._blob;
-    if (prev) URL.revokeObjectURL(prev);
-    const blob = new Blob([html], { type: 'text/html' });
-    const burl = URL.createObjectURL(blob);
-    frame._blob = burl;
-    frame.src = burl;
-    const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
-    if (titleMatch) document.title = titleMatch[1] || document.title;
-  }
-
-  window.addEventListener('message', function(e) {
-    if (e.data?.type !== 'vexium_navigate') return;
-    const page = e.data.page;
-    if (page && fileSystem[page]) renderPage(page);
-  });
-
-  async function init() {
-    const params = new URLSearchParams(location.search);
-    const projectId = params.get('project');
-    if (!projectId) { showNotFound(); return; }
-
-    let project = null;
-
-    if (sb) {
-      try {
-        const { data } = await sb.from('projects').select('*').eq('id', projectId).single();
-        if (data) project = data;
-      } catch(e) {}
-    }
-    if (!project) {
-      try {
-        const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
-        project = list.find(p => p.id === projectId) || null;
-      } catch(e) {}
-    }
-    if (!project) { showNotFound(); return; }
-
-    document.title = project.name || 'Vexium';
-    fileSystem = project.files || {};
-    const mainFile = project.main_file || 'index.html';
-
-    const frame = document.getElementById('frame');
-    frame.addEventListener('load', function() {
-      document.getElementById('loading').style.display = 'none';
-      frame.style.display = 'block';
-    }, { once: false });
-
-    renderPage(mainFile);
-
-    // Track this page view
-    (function(){
-      try {
-        var sid = sessionStorage.getItem('_vsid') || Math.random().toString(36).slice(2);
-        sessionStorage.setItem('_vsid', sid);
-        fetch('https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project_id: projectId, page: '/', referrer: document.referrer, session_id: sid })
         }).catch(function(){});
       } catch(e) {}
     })();

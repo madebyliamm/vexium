@@ -48,8 +48,6 @@
       --z-toast:   9999;
     }
 
-
-
     html, body {
       height: 100%;
       overflow: hidden;
@@ -413,8 +411,13 @@
     .ep-published-state { display: flex; flex-direction: column; gap: 10px; }
     .ep-pub-status-row { display: flex; align-items: center; gap: 6px; }
     .ep-pub-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; box-shadow: 0 0 6px rgba(74,222,128,.6); }
+    @keyframes epDotPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .ep-pub-dot.pulsing { animation: epDotPulse 1s ease-in-out infinite; }
+    .ep-pub-dot.launching { background:#fbbf24; box-shadow:0 0 6px rgba(251,191,36,.5); }
+    .ep-pub-dot.updating { background:#60a5fa; box-shadow:0 0 6px rgba(96,165,250,.5); }
     .ep-pub-status-label { font-size: 12px; font-weight: 700; color: #4ade80; }
     .ep-pub-status-time { font-size: 11px; color: var(--muted); margin-left: auto; }
+    .ep-unpublished-note { font-size: 11px; color: var(--muted); padding: 0; }
     .ep-pub-url-row {
       display: flex; align-items: center; gap: 6px;
       background: var(--border); border-radius: var(--r-sm);
@@ -464,6 +467,13 @@
       font-family: var(--sans); cursor: pointer; transition: all var(--t-fast); flex-shrink: 0; outline: none;
     }
     .pub-copy-btn:hover { background: var(--border3); }
+    .pub-copy-icon-btn {
+      width: 28px; height: 28px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; display: flex; align-items: center;
+      justify-content: center; border-radius: 5px; flex-shrink: 0; outline: none;
+      transition: color var(--t-fast);
+    }
+    .pub-copy-icon-btn:hover { color: var(--text); }
     .pub-domain-row { display: flex; gap: 6px; }
     .pub-domain-input {
       flex: 1; background: var(--border); border: none; border-radius: var(--r-md);
@@ -2184,17 +2194,17 @@
         <div class="settings-section-label">Publishing</div>
         <!-- Unpublished state -->
         <div class="ep-publish-unpublished" id="epPublishUnpublished">
-          <p class="ep-publish-desc">Publish your site to get a shareable link anyone can visit. Your editor preview stays separate and always reflects your latest changes.</p>
           <button class="ep-publish-btn" id="epPublishBtn" onclick="publishSite()">
             <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             Publish site
           </button>
+          <p class="ep-publish-desc" style="text-align:center">Make your site a real shareable link anyone can visit</p>
         </div>
         <!-- Published state -->
         <div class="ep-published-state" id="epPublishedState" style="display:none">
           <div class="ep-pub-status-row">
-            <div class="ep-pub-dot"></div>
-            <div class="ep-pub-status-label">Live</div>
+            <div class="ep-pub-dot" id="epPubDot"></div>
+            <div class="ep-pub-status-label" id="epPubStatusLabel">Live</div>
             <div class="ep-pub-status-time" id="epPubTime"></div>
           </div>
           <div class="ep-pub-url-row">
@@ -2206,8 +2216,9 @@
               <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </a>
           </div>
+          <div class="ep-unpublished-note" id="epUnpublishedNote" style="display:none">Unpublished changes — click Update to push</div>
           <div class="ep-pub-actions-row">
-            <button class="ep-pub-action-btn republish" onclick="republishSite()">Republish</button>
+            <button class="ep-pub-action-btn republish" onclick="updateSite()">Update</button>
             <button class="ep-pub-action-btn pub-settings" onclick="closeEditorSettings();openPubSettings()">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
               Publish settings
@@ -2229,7 +2240,7 @@
 <div id="pubSettingsOverlay" onclick="if(event.target===this)closePubSettings()">
   <div class="pub-settings-modal">
     <div class="pub-settings-header">
-      <button class="pub-settings-back" onclick="closePubSettings();openEditorSettings()">
+      <button class="pub-settings-back" onclick="closePubSettingsBack()">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         Back
       </button>
@@ -2240,8 +2251,10 @@
       <div>
         <div class="pub-settings-label">Published URL</div>
         <div class="pub-url-display">
-          <div class="pub-url-text" id="pubSettingsUrl">vexium.ai/s/—</div>
-          <button class="pub-copy-btn" onclick="copyPubUrl()">Copy</button>
+          <a class="pub-url-text" id="pubSettingsUrl" href="#" target="_blank" style="cursor:pointer;text-decoration:none">vexium.ai/s/—</a>
+          <button class="pub-copy-icon-btn" onclick="copyPubUrl()" title="Copy link">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
         </div>
       </div>
       <div class="pub-settings-divider"></div>
@@ -2251,16 +2264,13 @@
           <input class="pub-domain-input" id="pubDomainInput" placeholder="yourdomain.com" autocomplete="off"/>
           <button class="pub-domain-btn" onclick="savePubDomain()">Connect</button>
         </div>
-        <p class="pub-domain-hint"><a href="https://www.youtube.com" target="_blank" style="color:var(--text);text-decoration:underline;text-underline-offset:3px">See how to set up your own domain here</a></p>
+        <p class="pub-domain-hint" style="text-align:center"><a href="https://www.youtube.com" target="_blank" style="color:var(--text);text-decoration:underline;text-underline-offset:3px">How to set up your own domain</a></p>
       </div>
       <div class="pub-settings-divider"></div>
       <div>
         <div class="pub-settings-label">Danger zone</div>
         <button class="pub-danger-btn" onclick="unpublishSite()">Unpublish site</button>
       </div>
-    </div>
-    <div class="pub-settings-footer">
-      <button class="settings-btn cancel" onclick="closePubSettings()">Done</button>
     </div>
   </div>
 </div>
@@ -2951,13 +2961,15 @@ async function loadProject() {
 async function saveNow() {
   if (!project) return;
   document.getElementById('tbSaving').classList.add('show');
+  const _saveNowTs = new Date().toISOString();
   project.files = fileSystem;
   project.main_file = mainFile;
+  project.updated_at = _saveNowTs;
   if (sb) {
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
-        const { error } = await sb.from('projects').update({ files: fileSystem, main_file: mainFile, updated_at: new Date().toISOString() }).eq('id', project.id);
+        const { error } = await sb.from('projects').update({ files: fileSystem, main_file: mainFile, updated_at: _saveNowTs }).eq('id', project.id);
         if (error) console.warn('[saveNow]', error.message);
       }
     } catch(e) { console.error('[saveNow] exception:', e); }
@@ -2973,6 +2985,7 @@ async function saveNow() {
   dirtyFiles.clear();
   renderTabs();
   if (previewVisible) refreshPreview();
+  _updateUnpublishedNote();
   showToast('✓', 'Saved');
   setTimeout(() => document.getElementById('tbSaving').classList.remove('show'), 700);
 }
@@ -3352,6 +3365,58 @@ function _pubSlugFrom(name) {
   return (name || 'my-site').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'my-site';
 }
 
+// ── PUBLISH STATUS POLLING ────────────────────────────────────────────────────
+let _pubStatus = 'live'; // 'live' | 'launching' | 'updating'
+let _pubPollTimer = null;
+
+function _setPubStatus(status) {
+  _pubStatus = status;
+  const dot = document.getElementById('epPubDot');
+  const lbl = document.getElementById('epPubStatusLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'ep-pub-dot';
+  if (status === 'launching') {
+    dot.classList.add('pulsing', 'launching');
+    lbl.textContent = 'Launching…';
+    lbl.style.color = '#fbbf24';
+  } else if (status === 'updating') {
+    dot.classList.add('pulsing', 'updating');
+    lbl.textContent = 'Updating…';
+    lbl.style.color = '#60a5fa';
+  } else {
+    lbl.textContent = 'Live';
+    lbl.style.color = '#4ade80';
+    _updateUnpublishedNote();
+  }
+}
+
+function _updateUnpublishedNote() {
+  const note = document.getElementById('epUnpublishedNote');
+  if (!note || !project || !project.published_slug) return;
+  const hasChanges = project.updated_at && project.published_at &&
+    new Date(project.updated_at) > new Date(project.published_at);
+  note.style.display = (hasChanges && _pubStatus === 'live') ? '' : 'none';
+}
+
+async function _startLivePoll(type) {
+  if (_pubPollTimer) { clearTimeout(_pubPollTimer); _pubPollTimer = null; }
+  _setPubStatus(type);
+  const username = await _pubUsername();
+  const pingUrl = `https://${username}.vexium.ai/__vexium_ping`;
+  let attempts = 0;
+  function poll() {
+    fetch(pingUrl, { cache: 'no-store' })
+      .then(r => { if (r.ok) { _setPubStatus('live'); } else { retry(); } })
+      .catch(() => retry());
+  }
+  function retry() {
+    attempts++;
+    if (attempts >= 20) { _setPubStatus('live'); return; }
+    _pubPollTimer = setTimeout(poll, 2000);
+  }
+  poll();
+}
+
 async function renderPublishSection() {
   const published = project && project.published_slug;
   document.getElementById('epPublishUnpublished').style.display = published ? 'none' : '';
@@ -3361,7 +3426,9 @@ async function renderPublishSection() {
     document.getElementById('epPubUrl').textContent = url;
     document.getElementById('epPubOpenBtn').href = 'https://' + url;
     const t = project.published_at ? new Date(project.published_at) : null;
-    document.getElementById('epPubTime').textContent = t ? 'Published ' + _relTime(t) : '';
+    document.getElementById('epPubTime').textContent = t ? _relTime(t) : '';
+    _setPubStatus(_pubStatus);
+    _updateUnpublishedNote();
   }
 }
 
@@ -3382,32 +3449,41 @@ async function publishSite() {
   const slug = _pubSlugFrom(project.name);
   const now = new Date().toISOString();
 
-  // Save published snapshot — for now just mark the project as published
-  // Full file snapshot serving comes with the /s/ route implementation
   if (sb) {
     try {
-      await sb.from('projects').update({ published_slug: slug, published_at: now }).eq('id', project.id);
+      await sb.from('projects').update({
+        published_slug: slug,
+        published_at: now,
+        published_files: fileSystem,
+      }).eq('id', project.id);
     } catch(e) {}
   }
-  project.published_slug = slug;
-  project.published_at   = now;
+  project.published_slug  = slug;
+  project.published_at    = now;
+  project.published_files = fileSystem;
 
   btn.classList.remove('loading');
   renderPublishSection();
+  _startLivePoll('launching');
   showToast('🚀', 'Published!');
 }
 
-async function republishSite() {
+async function updateSite() {
   if (!project || !project.published_slug) return;
   const now = new Date().toISOString();
   if (sb) {
-    try { await sb.from('projects').update({ published_at: now }).eq('id', project.id); } catch(e) {}
+    try {
+      await sb.from('projects').update({
+        published_at: now,
+        published_files: fileSystem,
+      }).eq('id', project.id);
+    } catch(e) {}
   }
-  project.published_at = now;
+  project.published_at    = now;
+  project.published_files = fileSystem;
   renderPublishSection();
-  // Also update pub settings modal if open
-  document.getElementById('epPubTime').textContent = 'Published just now';
-  showToast('🚀', 'Republished!');
+  _startLivePoll('updating');
+  showToast('🚀', 'Updated!');
 }
 
 function unpublishSite() {
@@ -3438,13 +3514,20 @@ async function copyPubUrl() {
 async function openPubSettings() {
   if (!project || !project.published_slug) return;
   const url = await _pubUrl(project.published_slug);
-  document.getElementById('pubSettingsUrl').textContent = 'https://' + url;
+  const linkEl = document.getElementById('pubSettingsUrl');
+  linkEl.textContent = 'https://' + url;
+  linkEl.href = 'https://' + url;
   document.getElementById('pubDomainInput').value = project.custom_domain || '';
   document.getElementById('pubSettingsOverlay').classList.add('show');
 }
 
 function closePubSettings() {
   document.getElementById('pubSettingsOverlay').classList.remove('show');
+}
+
+function closePubSettingsBack() {
+  document.getElementById('pubSettingsOverlay').classList.remove('show');
+  document.getElementById('epOverlay').classList.add('show');
 }
 
 async function savePubDomain() {
@@ -3463,11 +3546,45 @@ async function saveEditorSettings() {
   if (!project) return;
   const name = document.getElementById('epNameInput').value.trim();
   if (!name) { document.getElementById('epNameInput').focus(); return; }
+
+  // Duplicate name check
+  if (sb) {
+    try {
+      const { data: { session: s } } = await sb.auth.getSession();
+      if (s) {
+        const { data: existing } = await sb.from('projects')
+          .select('id').eq('user_id', s.user.id).eq('name', name).neq('id', project.id).limit(1);
+        if (existing && existing.length > 0) {
+          showToast('!', 'You already have a project with that name');
+          document.getElementById('epNameInput').focus();
+          return;
+        }
+      }
+    } catch(e) {}
+  } else {
+    try {
+      const list = JSON.parse(localStorage.getItem('vexium_projects') || '[]');
+      if (list.some(p => p.name === name && p.id !== project.id)) {
+        showToast('!', 'You already have a project with that name');
+        document.getElementById('epNameInput').focus();
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Update slug if project is published and name changed
+  const nameChanged = name !== project.name;
+  const newSlug = (nameChanged && project.published_slug) ? _pubSlugFrom(name) : null;
+
   project.name = name;
   project.emoji = epEmojiCur;
   project.is_public = epPublicCur;
+  if (newSlug) { project.published_slug = newSlug; _ownerUsername = null; }
   document.getElementById('tbProj').textContent = name;
+
   const updates = { name, emoji: epEmojiCur, is_public: epPublicCur, updated_at: new Date().toISOString() };
+  if (newSlug) updates.published_slug = newSlug;
+
   if (sb) {
     try {
       const { data: { session: s } } = await sb.auth.getSession();
@@ -3481,6 +3598,7 @@ async function saveEditorSettings() {
     } catch(e) {}
   }
   closeEditorSettings();
+  if (newSlug) renderPublishSection();
   showToast('✓', 'Saved');
 }
 

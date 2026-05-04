@@ -3232,6 +3232,7 @@ function closeTab(e, f) {
 const EP_EMOJIS = ['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
 let epEmojiCur = '💻';
 let epPublicCur = false;
+let _ownerUsername = null;
 let epPickerOpen = false;
 
 async function openEditorSettings() {
@@ -3328,24 +3329,35 @@ async function epRemoveCollab(uid) {
 
 // ── PUBLISHING ────────────────────────────────────────────────────────────────
 
-function _pubUsername() {
-  return localStorage.getItem('vexium_username') || 'user';
+// Cache of owner username so we don't re-fetch on every call
+async function _pubUsername() {
+  if (_ownerUsername) return _ownerUsername;
+  // Use the project owner's username (not the current user's — they may be a collaborator)
+  if (project && project.user_id && sb) {
+    try {
+      const { data } = await sb.from('profiles').select('username').eq('id', project.user_id).single();
+      if (data && data.username) { _ownerUsername = data.username; return _ownerUsername; }
+    } catch(e) {}
+  }
+  // Fallback to current user's stored username
+  _ownerUsername = localStorage.getItem('vexium_username') || 'user';
+  return _ownerUsername;
 }
 
-function _pubUrl(slug) {
-  return _pubUsername() + '.vexium.ai/' + slug;
+async function _pubUrl(slug) {
+  return (await _pubUsername()) + '.vexium.ai/' + slug;
 }
 
 function _pubSlugFrom(name) {
   return (name || 'my-site').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'my-site';
 }
 
-function renderPublishSection() {
+async function renderPublishSection() {
   const published = project && project.published_slug;
   document.getElementById('epPublishUnpublished').style.display = published ? 'none' : '';
   document.getElementById('epPublishedState').style.display    = published ? ''     : 'none';
   if (published) {
-    const url = _pubUrl(project.published_slug);
+    const url = await _pubUrl(project.published_slug);
     document.getElementById('epPubUrl').textContent = url;
     document.getElementById('epPubOpenBtn').href = 'https://' + url;
     const t = project.published_at ? new Date(project.published_at) : null;
@@ -3416,15 +3428,16 @@ async function _confirmUnpublish() {
   showToast('✓', 'Unpublished');
 }
 
-function copyPubUrl() {
+async function copyPubUrl() {
   if (!project || !project.published_slug) return;
-  navigator.clipboard.writeText('https://' + _pubUrl(project.published_slug)).catch(() => {});
+  const url = await _pubUrl(project.published_slug);
+  navigator.clipboard.writeText('https://' + url).catch(() => {});
   showToast('✓', 'Copied!');
 }
 
-function openPubSettings() {
+async function openPubSettings() {
   if (!project || !project.published_slug) return;
-  const url = _pubUrl(project.published_slug);
+  const url = await _pubUrl(project.published_slug);
   document.getElementById('pubSettingsUrl').textContent = 'https://' + url;
   document.getElementById('pubDomainInput').value = project.custom_domain || '';
   document.getElementById('pubSettingsOverlay').classList.add('show');

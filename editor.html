@@ -333,7 +333,7 @@
     .ep-name-input::placeholder { color: var(--muted); }
 
     /* Emoji picker */
-    .ep-emoji-strip { display: flex; gap: 5px; flex-wrap: wrap; }
+    .ep-emoji-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
     .ep-emoji-opt {
       font-size: 20px;
       width: 34px;
@@ -638,17 +638,18 @@
 
     /* Image preview in editor */
     #imgPreviewPane {
+    #imgPreviewPane {
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 14px;
-      flex: 1;
       background: var(--bg);
       padding: 32px;
       position: absolute;
       inset: 0;
-      z-index: 1;
+      z-index: 2;
+    }
     }
     #imgPreviewPane.show { display: flex; }
     #imgPreviewPane img { max-width: 100%; max-height: 60vh; border-radius: var(--r-sm); border: 1px solid var(--border2); object-fit: contain; }
@@ -702,6 +703,7 @@
       flex-direction: column;
       min-width: 0;
       overflow: hidden;
+      position: relative;
     }
     .pane-tabs {
       display: none !important;
@@ -990,12 +992,13 @@
       justify-content: center;
       pointer-events: none;
       position: relative;
+      overflow: visible;
     }
-    /* Warp container — stretched as an oval toward cursor via rotate+scaleX+rotate */
     .ai-star-warp {
       position: absolute;
-      inset: 0;
+      inset: -40px;
       transform-origin: center;
+      pointer-events: none;
     }
     .ai-star-gradient {
       position: absolute;
@@ -1069,7 +1072,7 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: var(--text);
+      background: var(--border2);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -1077,11 +1080,32 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: opacity var(--t-fast), transform var(--t-fast);
+      position: relative;
+      transition: background var(--t-fast), transform var(--t-fast);
     }
-    #aiSend:hover { opacity: .82; transform: scale(1.06); }
-    #aiSend:disabled { opacity: .25; cursor: default; transform: none; }
-    #aiSend svg { width: 13px; height: 13px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    #aiSend.has-text { background: var(--text); }
+    #aiSend.has-text:hover { background: transparent; transform: scale(1.08); }
+    #aiSend::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: sendColorFade 20s linear infinite;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    @keyframes sendColorFade {
+      0%   { background: #ff6b6b; box-shadow: 0 0 8px 1px rgba(255,107,107,.55); }
+      16%  { background: #ff9f43; box-shadow: 0 0 8px 1px rgba(255,159,67,.55); }
+      33%  { background: #0be881; box-shadow: 0 0 8px 1px rgba(11,232,129,.55); }
+      50%  { background: #48dbfb; box-shadow: 0 0 8px 1px rgba(72,219,251,.55); }
+      66%  { background: #ff9ff3; box-shadow: 0 0 8px 1px rgba(255,159,243,.55); }
+      83%  { background: #6c5ce7; box-shadow: 0 0 8px 1px rgba(108,92,231,.55); }
+      100% { background: #ff6b6b; box-shadow: 0 0 8px 1px rgba(255,107,107,.55); }
+    }
+    #aiSend.has-text:hover::before { opacity: 1; }
+    #aiSend:disabled { opacity: .3; cursor: default; transform: none; }
+    #aiSend svg { width: 13px; height: 13px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
 
     /* Template chips */
     #aiTemplates {
@@ -1121,7 +1145,7 @@
       border-radius: 50%;
       background: transparent;
       border: none;
-      color: rgba(255, 255, 255, .5);
+      color: rgba(255, 255, 255, .9);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1129,11 +1153,10 @@
       flex-shrink: 0;
       padding: 0;
       transition: color var(--t-fast), background var(--t-fast);
-      align-self: flex-end;
-      margin-bottom: 4px;
+      align-self: center;
     }
     .ai-attach-btn:hover { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .9); }
-    .ai-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+    .ai-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: round; }
 
     /* ─────────────────────────────────────────────
        CHAT AREA
@@ -1630,7 +1653,7 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: var(--text);
+      background: var(--border2);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -1638,13 +1661,24 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: opacity var(--t-fast), transform var(--t-fast);
-      align-self: flex-end;
-      margin-bottom: 4px;
+      position: relative;
+      transition: background var(--t-fast), transform var(--t-fast);
+      align-self: center;
     }
-    #aiBottomSend:hover { opacity: .82; transform: scale(1.08); }
-    #aiBottomSend:disabled { opacity: .25; cursor: default; transform: none; }
-    #aiBottomSend svg { width: 14px; height: 14px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    #aiBottomSend.has-text { background: var(--text); }
+    #aiBottomSend.has-text:hover { background: transparent; transform: scale(1.08); }
+    #aiBottomSend::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: sendColorFade 20s linear infinite;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    #aiBottomSend.has-text:hover::before { opacity: 1; }
+    #aiBottomSend:disabled { opacity: .3; cursor: default; transform: none; }
+    #aiBottomSend svg { width: 14px; height: 14px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
     #aiStopBtn {
       width: 38px;
       height: 38px;
@@ -2260,11 +2294,44 @@
       <div class="pub-settings-divider"></div>
       <div>
         <div class="pub-settings-label">Custom domain</div>
-        <div class="pub-domain-row">
-          <input class="pub-domain-input" id="pubDomainInput" placeholder="yourdomain.com" autocomplete="off"/>
-          <button class="pub-domain-btn" onclick="savePubDomain()">Connect</button>
+        <!-- Input row — shown when no domain connected -->
+        <div id="pubDomainConnectRow">
+          <div class="pub-domain-row">
+            <input class="pub-domain-input" id="pubDomainInput" placeholder="yourdomain.com" autocomplete="off" onkeydown="if(event.key==='Enter')connectCustomDomain()"/>
+            <button class="pub-domain-btn" id="pubDomainConnectBtn" onclick="connectCustomDomain()">Connect</button>
+          </div>
+          <p class="pub-domain-hint" style="text-align:center"><a href="https://www.youtube.com" target="_blank" style="color:var(--text);text-decoration:underline;text-underline-offset:3px">How to set up your own domain</a></p>
         </div>
-        <p class="pub-domain-hint" style="text-align:center"><a href="https://www.youtube.com" target="_blank" style="color:var(--text);text-decoration:underline;text-underline-offset:3px">How to set up your own domain</a></p>
+        <!-- Connected state — shown after domain is saved -->
+        <div id="pubDomainConnected" style="display:none;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--border);border-radius:var(--r-sm)">
+            <div id="pubDomainVerifyDot" style="width:7px;height:7px;border-radius:50%;background:#fbbf24;flex-shrink:0"></div>
+            <div id="pubDomainName" style="flex:1;font-size:12px;font-weight:600;font-family:'SF Mono','Fira Code',monospace;color:var(--text)"></div>
+            <button onclick="checkDomainStatus()" style="font-size:10px;font-weight:700;background:var(--border2);border:none;border-radius:4px;padding:3px 8px;color:var(--muted);cursor:pointer;font-family:var(--sans)" id="pubDomainCheckBtn">Check</button>
+            <button onclick="removeCustomDomain()" style="font-size:10px;font-weight:700;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--sans);padding:3px 6px">Remove</button>
+          </div>
+          <div id="pubDomainStatusLabel" style="font-size:11px;color:#fbbf24;font-weight:600"></div>
+          <!-- DNS instructions -->
+          <div id="pubDnsInstructions" style="display:none;flex-direction:column;gap:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Add these DNS records</div>
+            <div style="background:var(--border);border-radius:var(--r-sm);overflow:hidden">
+              <div style="display:grid;grid-template-columns:48px 1fr 1fr;gap:0;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;border-bottom:1px solid var(--border2)">
+                <span>Type</span><span>Name</span><span>Value</span>
+              </div>
+              <div style="display:grid;grid-template-columns:48px 1fr 1fr;gap:0;padding:8px 10px;border-bottom:1px solid var(--border2);font-size:11px;align-items:center">
+                <span style="color:var(--muted);font-weight:700">CNAME</span>
+                <span id="pubDnsCnameName" style="font-family:'SF Mono','Fira Code',monospace;color:var(--text);word-break:break-all"></span>
+                <span style="font-family:'SF Mono','Fira Code',monospace;color:var(--text);word-break:break-all">proxy.vexium.ai</span>
+              </div>
+              <div id="pubDnsTxtRow" style="display:none;grid-template-columns:48px 1fr 1fr;gap:0;padding:8px 10px;font-size:11px;align-items:start">
+                <span style="color:var(--muted);font-weight:700">TXT</span>
+                <span id="pubDnsTxtName" style="font-family:'SF Mono','Fira Code',monospace;color:var(--text);word-break:break-all;padding-right:8px"></span>
+                <span id="pubDnsTxtValue" style="font-family:'SF Mono','Fira Code',monospace;color:var(--text);word-break:break-all"></span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">DNS changes can take a few minutes to propagate. Click <strong style="color:var(--text)">Check</strong> to verify.</div>
+          </div>
+        </div>
       </div>
       <div class="pub-settings-divider"></div>
       <div>
@@ -2944,7 +3011,20 @@ async function loadProject() {
   }
   renderTabs();
 
-  const _advancedMode = (() => { try { return localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) { return false; } })();
+  // Read advanced_mode from profile (source of truth), fall back to localStorage cache
+  let _advancedMode = (() => { try { return localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) { return false; } })();
+  if (sb) {
+    try {
+      const { data: { session: _amSession } } = await sb.auth.getSession();
+      if (_amSession) {
+        const { data: _amProfile } = await sb.from('profiles').select('advanced_mode').eq('id', _amSession.user.id).single();
+        if (_amProfile && typeof _amProfile.advanced_mode === 'boolean') {
+          _advancedMode = _amProfile.advanced_mode;
+          try { localStorage.setItem('vexium_advanced_mode', _advancedMode ? '1' : '0'); } catch(e) {}
+        }
+      }
+    } catch(e) {}
+  }
   const _tbModes = document.getElementById('tbModes');
   if (_tbModes) _tbModes.style.display = _advancedMode ? '' : 'none';
 
@@ -3165,6 +3245,11 @@ function openFile(f) {
 
   if (isImageFile(f)) {
     if (currentMode === 'editor' && edPane) edPane.style.display = 'flex';
+    // Hide backend pane and switch to code layout so image fills the editor area cleanly
+    const bkPane = document.getElementById('backendPane');
+    if (bkPane) bkPane.classList.remove('show');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('backend-hidden');
     if (monacoWrap) monacoWrap.style.display = 'none';
     if (imgPane) {
       imgPane.classList.add('show');
@@ -3242,7 +3327,7 @@ function closeTab(e, f) {
 }
 
 // ── PROJECT SETTINGS ──────────────────────────────────────────────────────────
-const EP_EMOJIS = ['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
+const EP_EMOJIS = ['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯','🚀','✨','🎬','🎵','📝','🔥','💡','🏆','💎','🌈','🎮','📸','🧠','🌿','🏠','💰','🎪','🧩','⚽','🎭'];
 let epEmojiCur = '💻';
 let epPublicCur = false;
 let _ownerUsername = null;
@@ -3258,6 +3343,13 @@ async function openEditorSettings() {
   updateEpLock();
   epPickerOpen = false;
   document.getElementById('epEmojiPicker').style.display = 'none';
+  // Disable visibility toggle for non-owners
+  let isOwner = true;
+  if (sb && project.user_id) {
+    try { const { data: { session: _s } } = await sb.auth.getSession(); isOwner = _s?.user?.id === project.user_id; } catch {}
+  }
+  const lockBtn = document.getElementById('epLockBtn');
+  if (lockBtn) { lockBtn.disabled = !isOwner; lockBtn.style.opacity = isOwner ? '' : '0.4'; lockBtn.style.pointerEvents = isOwner ? '' : 'none'; }
   await loadEpCollabs();
   renderPublishSection();
   document.getElementById('epOverlay').classList.add('show');
@@ -3306,6 +3398,10 @@ function updateEpLock() {
 async function loadEpCollabs() {
   const list = document.getElementById('epCollabList');
   if (!sb || !project) { list.innerHTML = '<div class="ep-collab-none">No collaborators yet</div>'; return; }
+  // Determine if current user is the project owner
+  const isOwner = await (async () => {
+    try { const { data: { session: s } } = await sb.auth.getSession(); return s?.user?.id === project.user_id; } catch { return false; }
+  })();
   try {
     const { data } = await sb.from('project_members')
       .select('user_id,role,status').eq('project_id', project.id).neq('status', 'declined');
@@ -3324,7 +3420,7 @@ async function loadEpCollabs() {
           <div class="ep-collab-av">${n.charAt(0).toUpperCase()}</div>
           <div class="ep-collab-info"><div class="ep-collab-name">${esc(n)}</div><div class="ep-collab-handle">@${esc(p.username || '')}</div></div>
           <div class="ep-collab-role" style="background:rgba(74,222,128,.1);color:#4ade80">Joined</div>
-          <button class="ep-collab-rm" onclick="epRemoveCollab('${m.user_id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          ${isOwner ? `<button class="ep-collab-rm" onclick="epRemoveCollab('${m.user_id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : ''}
         </div>`;
       }).join('');
     }
@@ -3335,7 +3431,7 @@ async function loadEpCollabs() {
 }
 
 async function epRemoveCollab(uid) {
-  if (!confirm('Remove this collaborator?')) return;
+  if (!await bkConfirm('Remove collaborator', 'This collaborator will lose access to the project.')) return;
   await sb.from('project_members').delete().eq('project_id', project.id).eq('user_id', uid);
   await loadEpCollabs();
 }
@@ -3455,12 +3551,14 @@ async function publishSite() {
         published_slug: slug,
         published_at: now,
         published_files: fileSystem,
+        is_public: true,
       }).eq('id', project.id);
     } catch(e) {}
   }
   project.published_slug  = slug;
   project.published_at    = now;
   project.published_files = fileSystem;
+  project.is_public       = true;
 
   btn.classList.remove('loading');
   renderPublishSection();
@@ -3495,10 +3593,11 @@ async function _confirmUnpublish() {
   document.getElementById('pubConfirmOverlay').classList.remove('show');
   if (!project) return;
   if (sb) {
-    try { await sb.from('projects').update({ published_slug: null, published_at: null }).eq('id', project.id); } catch(e) {}
+    try { await sb.from('projects').update({ published_slug: null, published_at: null, is_public: false }).eq('id', project.id); } catch(e) {}
   }
   project.published_slug = null;
   project.published_at   = null;
+  project.is_public      = false;
   closePubSettings();
   renderPublishSection();
   showToast('✓', 'Unpublished');
@@ -3517,7 +3616,7 @@ async function openPubSettings() {
   const linkEl = document.getElementById('pubSettingsUrl');
   linkEl.textContent = 'https://' + url;
   linkEl.href = 'https://' + url;
-  document.getElementById('pubDomainInput').value = project.custom_domain || '';
+  _renderDomainSection();
   document.getElementById('pubSettingsOverlay').classList.add('show');
 }
 
@@ -3530,14 +3629,125 @@ function closePubSettingsBack() {
   document.getElementById('epOverlay').classList.add('show');
 }
 
-async function savePubDomain() {
-  if (!project) return;
-  const domain = document.getElementById('pubDomainInput').value.trim().replace(/^https?:\/\//, '');
-  if (sb) {
-    try { await sb.from('projects').update({ custom_domain: domain || null }).eq('id', project.id); } catch(e) {}
+// ── CUSTOM DOMAIN ─────────────────────────────────────────────────────────────
+const CUSTOM_DOMAIN_URL = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/custom-domain';
+
+function _renderDomainSection() {
+  const hasDomain = !!(project && project.custom_domain);
+  document.getElementById('pubDomainConnectRow').style.display = hasomain() ? 'none' : '';
+  document.getElementById('pubDomainConnected').style.display  = hasomain() ? 'flex' : 'none';
+  if (hasomain()) {
+    document.getElementById('pubDomainName').textContent = project.custom_domain;
+    _setDomainVerified(project.custom_domain_verified);
+    // Hide DNS instructions by default — user can expand by checking
+    document.getElementById('pubDnsInstructions').style.display = project.custom_domain_verified ? 'none' : 'flex';
+    document.getElementById('pubDnsCnameName').textContent = project.custom_domain;
   }
-  project.custom_domain = domain || null;
-  showToast('✓', 'Saved');
+  function hasomain() { return !!(project && project.custom_domain); }
+}
+
+function _setDomainVerified(verified) {
+  const dot = document.getElementById('pubDomainVerifyDot');
+  const lbl = document.getElementById('pubDomainStatusLabel');
+  if (!dot || !lbl) return;
+  if (verified) {
+    dot.style.background = '#4ade80';
+    dot.style.boxShadow = '0 0 6px rgba(74,222,128,.5)';
+    lbl.textContent = '✓ Domain verified and live';
+    lbl.style.color = '#4ade80';
+    document.getElementById('pubDnsInstructions').style.display = 'none';
+  } else {
+    dot.style.background = '#fbbf24';
+    dot.style.boxShadow = '0 0 6px rgba(251,191,36,.4)';
+    lbl.textContent = 'Waiting for DNS — add the records below';
+    lbl.style.color = '#fbbf24';
+    document.getElementById('pubDnsInstructions').style.display = 'flex';
+  }
+}
+
+async function connectCustomDomain() {
+  if (!project) return;
+  const input = document.getElementById('pubDomainInput');
+  const domain = input.value.trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+  if (!domain || !domain.includes('.')) { showToast('!', 'Enter a valid domain'); return; }
+
+  const btn = document.getElementById('pubDomainConnectBtn');
+  btn.textContent = 'Connecting…';
+  btn.disabled = true;
+
+  try {
+    const headers = await getEdgeHeaders(false);
+    const res = await fetch(CUSTOM_DOMAIN_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ project_id: project.id, domain }),
+    });
+    const data = await res.json();
+    if (data.error) { showToast('!', data.error); return; }
+
+    project.custom_domain = data.domain;
+    project.custom_domain_verified = data.verified;
+
+    // Store TXT record info for display
+    if (data.txt) {
+      document.getElementById('pubDnsTxtName').textContent  = data.txt.name;
+      document.getElementById('pubDnsTxtValue').textContent = data.txt.value;
+      document.getElementById('pubDnsTxtRow').style.display = 'grid';
+    }
+    document.getElementById('pubDnsCnameName').textContent = data.domain;
+
+    _renderDomainSection();
+    showToast('✓', 'Domain connected');
+  } catch(e) {
+    showToast('!', 'Connection failed');
+  } finally {
+    btn.textContent = 'Connect';
+    btn.disabled = false;
+  }
+}
+
+async function checkDomainStatus() {
+  if (!project || !project.custom_domain) return;
+  const btn = document.getElementById('pubDomainCheckBtn');
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+  try {
+    const headers = await getEdgeHeaders(false);
+    const res = await fetch(CUSTOM_DOMAIN_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ project_id: project.id, action: 'check' }),
+    });
+    const data = await res.json();
+    project.custom_domain_verified = data.verified;
+    _setDomainVerified(data.verified);
+    if (!data.verified) showToast('…', 'Not verified yet — DNS may still be propagating');
+  } catch(e) {
+    showToast('!', 'Check failed');
+  } finally {
+    btn.textContent = 'Check';
+    btn.disabled = false;
+  }
+}
+
+async function removeCustomDomain() {
+  if (!project || !project.custom_domain) return;
+  if (!await bkConfirm('Remove domain', `Remove ${project.custom_domain} from this project?`)) return;
+  try {
+    const headers = await getEdgeHeaders(false);
+    await fetch(CUSTOM_DOMAIN_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ project_id: project.id, action: 'remove' }),
+    });
+    project.custom_domain = null;
+    project.custom_domain_cf_id = null;
+    project.custom_domain_verified = false;
+    _renderDomainSection();
+    showToast('✓', 'Domain removed');
+  } catch(e) {
+    showToast('!', 'Remove failed');
+  }
 }
 
 // ── SAVE SETTINGS ─────────────────────────────────────────────────────────────
@@ -3615,12 +3825,10 @@ function buildPageHtml(pageName) {
     html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
   }
 
+  // Pass 1: inline CSS and JS (must run before image substitution so url() refs inside CSS get replaced)
   Object.entries(fileSystem).forEach(([fn, fc]) => {
-    if (!fc || fn === pageName) return;
-    // Also substitute placeholder inside inlined files
-    if (projectId && typeof fc === 'string') {
-      fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
-    }
+    if (!fc || fn === pageName || isImageFile(fn)) return;
+    if (projectId && typeof fc === 'string') fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
     const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (fn.endsWith('.css')) {
       const safe = fc.replace(/<\/style>/gi, '<\\/style>');
@@ -3628,10 +3836,15 @@ function buildPageHtml(pageName) {
     } else if (fn.endsWith('.js')) {
       const safe2 = fc.replace(/<\/script>/gi, '<\\/script>');
       html = html.replace(new RegExp('<script[^>]+src=["\']' + safeFn + '["\'][^>]*><\/script>','gi'), '<script>' + safe2 + '<\/script>');
-    } else if (isImageFile(fn) && fc && fc.startsWith('data:')) {
-      html = html.replace(new RegExp('(src=["\'])' + safeFn + '(["\'])','gi'), '$1' + fc + '$2');
-      html = html.replace(new RegExp('url\\(["\']?' + safeFn + '["\']?\\)','gi'), 'url(' + fc + ')');
     }
+  });
+  // Pass 2: substitute image data URLs (now sees url() refs that were inside inlined CSS)
+  Object.entries(fileSystem).forEach(([fn, fc]) => {
+    if (!fc || fn === pageName || !isImageFile(fn)) return;
+    if (!fc.startsWith('data:')) return;
+    const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    html = html.replace(new RegExp('(src=["\'])' + safeFn + '(["\'])','gi'), '$1' + fc + '$2');
+    html = html.replace(new RegExp('url\\(["\']?' + safeFn + '["\']?\\)','gi'), 'url(' + fc + ')');
   });
   const _trackPid = projectId || '';
   const navInterceptor = [
@@ -4038,10 +4251,10 @@ function ctxSetMain() {
   mainFile = ctxTarget; setUrl(mainFile); renderFileTree(); saveNow(); showToast('✓', ctxTarget + ' is main');
 }
 
-function ctxDelete() {
+async function ctxDelete() {
   if (!ctxTarget) return;
   if (ctxTarget === mainFile) { showToast('!', 'Cannot delete the main file'); return; }
-  if (!confirm('Delete ' + ctxTarget + '?')) return;
+  if (!await bkConfirm('Delete file', `Delete ${ctxTarget}? This cannot be undone.`)) return;
   delete fileSystem[ctxTarget];
   openTabs = openTabs.filter(f => f !== ctxTarget);
   if (activeFile === ctxTarget) {
@@ -4145,7 +4358,7 @@ function aiTransitionToChat() {
 
   const bi = document.getElementById('aiBottomInput');
   bi.addEventListener('input', function() {
-    aiAutoResize(bi);
+    aiAutoResize(bi); _syncSendBtnState();
   });
   bi.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(true); }
@@ -4561,55 +4774,70 @@ const AI_PLACEHOLDERS = [
   'Create an event landing page with a ticket signup…',
 ];
 
-// ── STAR CURSOR WARP ─────────────────────────────────────────────────────────
-// Stretches the blob as an oval toward the cursor using rotate+scaleX+rotate(-angle).
-// Spin pauses when cursor is near so the direction is clear.
+// ── STAR BLOB WARP ────────────────────────────────────────────────────────────
 (function() {
   let mouseX = null, mouseY = null;
-  let curAngle = 0, curStretch = 1;
-  const MAX_STRETCH = 1.45;
+  const N     = 8;
+  const phases = Array.from({length: N}, () => Math.random() * Math.PI * 2);
+  const freqs  = Array.from({length: N}, () => 0.22 + Math.random() * 0.52);
+  const amps   = Array.from({length: N}, () => 1.5  + Math.random() * 2.5);
+  let cur = new Array(N).fill(0);
+
+  function blobPath(cx, cy, r, offsets) {
+    const pts = Array.from({length: N}, (_, i) => {
+      const a = (2 * Math.PI * i / N) - Math.PI / 2;
+      const rad = r + offsets[i];
+      return [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];
+    });
+    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)} `;
+    for (let i = 0; i < N; i++) {
+      const p0 = pts[(i - 1 + N) % N];
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % N];
+      const p3 = pts[(i + 2) % N];
+      const s  = 0.4;
+      const cp1 = [p1[0] + (p2[0] - p0[0]) * s / 2, p1[1] + (p2[1] - p0[1]) * s / 2];
+      const cp2 = [p2[0] - (p3[0] - p1[0]) * s / 2, p2[1] - (p3[1] - p1[1]) * s / 2];
+      d += `C ${cp1[0].toFixed(2)} ${cp1[1].toFixed(2)}, ${cp2[0].toFixed(2)} ${cp2[1].toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)} `;
+    }
+    return d + 'Z';
+  }
 
   function tick(t) {
-    const star   = document.getElementById('aiStarEl');
-    const warp   = document.getElementById('aiStarWarp');
-    const grad   = document.getElementById('aiStarGrad');
+    const star = document.getElementById('aiStarEl');
+    const warp = document.getElementById('aiStarWarp');
     if (!star || !star.offsetParent) { requestAnimationFrame(tick); return; }
 
-    // Baseline slow morph when cursor is away — gentle oval slowly rotating direction
     const ts = t / 1000;
-    const baseAngle   = ts * 0.18;                          // oval direction slowly drifts
-    const baseStretch = 1 + 0.13 * Math.abs(Math.sin(ts * 0.35)); // gentle pulse 0→13%
+    const cx = 70, cy = 70, r = 28;
 
-    let targetAngle = baseAngle, targetStretch = baseStretch, cursorF = 0;
+    const target = phases.map((ph, i) => amps[i] * Math.sin(ts * freqs[i] + ph));
+
+    // Push only the single point closest to the cursor
     if (mouseX !== null) {
       const rect = star.getBoundingClientRect();
-      const ox = rect.left + rect.width / 2;
-      const oy = rect.top + rect.height / 2;
-      const dx = mouseX - ox, dy = mouseY - oy;
+      const dx = mouseX - (rect.left + rect.width  / 2);
+      const dy = mouseY - (rect.top  + rect.height / 2);
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const maxR = 220;
-      if (dist < maxR) {
-        cursorF = Math.pow(1 - dist / maxR, 1.3);
-        // Blend cursor direction + stretch on top of baseline
-        targetAngle   = Math.atan2(dy, dx);
-        targetStretch = 1 + cursorF * (MAX_STRETCH - 1);
+      if (dist < 260) {
+        const push = Math.pow(1 - dist / 260, 1.2) * 32;
+        const cursorAngle = Math.atan2(dy, dx);
+        let nearestIdx = 0, minDa = Infinity;
+        for (let i = 0; i < N; i++) {
+          const ptAngle = (2 * Math.PI * i / N) - Math.PI / 2;
+          let da = Math.abs(cursorAngle - ptAngle);
+          if (da > Math.PI) da = Math.abs(da - 2 * Math.PI);
+          if (da < minDa) { minDa = da; nearestIdx = i; }
+        }
+        target[nearestIdx] += push;
       }
     }
 
-    // Smooth lerp — angle with wrap-around handling
-    let da = targetAngle - curAngle;
-    while (da >  Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    const spd = cursorF > 0.05 ? 0.10 : 0.04; // snap faster toward cursor, drift slowly on baseline
-    curAngle   += da * spd;
-    curStretch += (targetStretch - curStretch) * spd;
+    cur = cur.map((v, i) => v + (target[i] - v) * 0.08);
 
-    if (warp) {
-      const deg = curAngle * 180 / Math.PI;
-      warp.style.transform = `rotate(${deg.toFixed(2)}deg) scaleX(${curStretch.toFixed(3)}) rotate(${(-deg).toFixed(2)}deg)`;
-    }
-    // Pause spin when cursor is near so the reach direction is clear
-    if (grad) grad.style.animationPlayState = cursorF > 0.08 ? 'paused' : 'running';
+    // Apply clip-path to the non-rotating wrapper so gradient colors spin freely
+    const path = blobPath(cx, cy, r, cur);
+    if (warp) warp.style.clipPath = `path('${path}')`;
 
     requestAnimationFrame(tick);
   }
@@ -4617,7 +4845,6 @@ const AI_PLACEHOLDERS = [
   document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
   requestAnimationFrame(tick);
 })();
-
 function startPlaceholderRotator() {
   const input = document.getElementById('aiInput');
   if (!input) return;
@@ -4707,7 +4934,7 @@ function tplEditSave() {
   const emoji  = document.getElementById('tplEditEmoji').value.trim()  || '✨';
   const name   = document.getElementById('tplEditName').value.trim();
   const prompt = document.getElementById('tplEditPrompt').value.trim();
-  if (!name || !prompt) { alert('Please fill in both the name and prompt.'); return; }
+  if (!name || !prompt) { showToast('!', 'Fill in both name and prompt'); return; }
   if (tplEditIndex <= -10) {
     const defaultIdx = -tplEditIndex - 10;
     const t = DEFAULT_TEMPLATES[defaultIdx];
@@ -4725,18 +4952,18 @@ function tplEditSave() {
   openTplModal();
 }
 
-function tplEditDelete() {
+async function tplEditDelete() {
   if (tplEditIndex <= -10) {
     const defaultIdx = -tplEditIndex - 10;
     const t = DEFAULT_TEMPLATES[defaultIdx];
-    if (!confirm('Reset "' + t.name + '" to its original?')) return;
+    if (!await bkConfirm('Reset template', `Reset "${t.name}" back to its default?`, false)) return;
     const overrides = getDefaultTplOverrides();
     delete overrides[t.id];
     saveDefaultTplOverrides(overrides);
     closeTplEditModal(); renderTemplates(); openTplModal(); return;
   }
   if (tplEditIndex < 0) return;
-  if (!confirm('Delete this template?')) return;
+  if (!await bkConfirm('Delete template', 'This template will be permanently deleted.')) return;
   const custom = getTplStorage();
   custom.splice(tplEditIndex, 1);
   saveTplStorage(custom);
@@ -5012,6 +5239,7 @@ async function aiSend(fromBottom) {
 
   input.value = '';
   input.style.height = '';
+  _syncSendBtnState();
   aiTransitionToChat();
   aiTyping = true;
   aiSetGenerating(true);
@@ -6232,14 +6460,24 @@ async function aiCallPageBuilds(pageNames) {
 }
 
 // ── WIRE UP INPUTS ────────────────────────────────────────────────────────────
+function _syncSendBtnState() {
+  const cv = (document.getElementById('aiInput') || {}).value || '';
+  const bv = (document.getElementById('aiBottomInput') || {}).value || '';
+  const cs = document.getElementById('aiSend');
+  const bs = document.getElementById('aiBottomSend');
+  if (cs) cs.classList.toggle('has-text', !!cv.trim());
+  if (bs) bs.classList.toggle('has-text', !!bv.trim());
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const centerInput = document.getElementById('aiInput');
   if (centerInput) {
-    centerInput.addEventListener('input', () => aiAutoResize(centerInput));
+    centerInput.addEventListener('input', () => { aiAutoResize(centerInput); _syncSendBtnState(); });
     centerInput.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(false); }
     });
   }
+  _syncSendBtnState();
 });
 
 window.addEventListener('beforeunload', () => { if (dirtyFiles.size > 0) saveNow(); });
@@ -6670,8 +6908,8 @@ function bkSchemaDelField(ci, fi) {
   bkRenderSchema();
 }
 
-function bkSchemaAddField(ci) {
-  const key = prompt('Field key (e.g. "phone", "message"):');
+async function bkSchemaAddField(ci) {
+  const key = await bkPrompt('New field', 'e.g. phone, message');
   if (!key) return;
   const cfg = getBackendConfig();
   cfg.collections[ci].fields = cfg.collections[ci].fields || [];

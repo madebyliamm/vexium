@@ -123,6 +123,10 @@
       </div>
     </div>
     <div class="field">
+      <label>Email</label>
+      <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="field">
       <label>Password</label>
       <input type="password" id="signupPass" placeholder="••••••••"/>
     </div>
@@ -153,7 +157,7 @@
   <div class="msg" id="msgBox"></div>
 </div>
 
-<p class="note">By signing up you agree to our terms. No email required.</p>
+<p class="note">By signing up you agree to our terms.</p>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
@@ -208,10 +212,19 @@
     return username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '') + FAKE_DOMAIN;
   }
 
+  async function saveRealEmail(userId, realEmail) {
+    if (!sb || !userId || !realEmail) return;
+    try {
+      await sb.from('profiles').update({ email: realEmail.trim().toLowerCase() }).eq('id', userId);
+    } catch(e) {}
+  }
+
   async function doSignup() {
-    const user = document.getElementById('signupUser').value.trim();
-    const pass = document.getElementById('signupPass').value;
+    const user      = document.getElementById('signupUser').value.trim();
+    const realEmail = document.getElementById('signupEmail').value.trim();
+    const pass      = document.getElementById('signupPass').value;
     if (!user) { setMsg('Enter a username.', 'err'); return; }
+    if (!realEmail || !realEmail.includes('@')) { setMsg('Enter a valid email.', 'err'); return; }
     if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
 
     if (!sb) {
@@ -235,6 +248,7 @@
         if (error.message.toLowerCase().includes('database')) {
           const { data: si } = await sb.auth.signInWithPassword({ email, password: pass });
           if (si?.session) {
+            await saveRealEmail(si.session.user.id, realEmail);
             localStorage.removeItem('vexium_guest');
             localStorage.setItem('vexium_username', user);
             window.location.href = 'home.html';
@@ -247,6 +261,7 @@
       }
       // Got a session immediately (email confirm disabled)
       if (data.session) {
+        await saveRealEmail(data.session.user.id, realEmail);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';
@@ -255,6 +270,7 @@
       // No session yet — try signing in directly
       const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pass });
       if (si?.session) {
+        await saveRealEmail(si.session.user.id, realEmail);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';

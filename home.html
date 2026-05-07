@@ -103,9 +103,13 @@
 
     .proj-card{background:var(--s1);border:none;border-radius:14px;padding:44px 20px 28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-align:center}
     .proj-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2;line-height:1}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:1.5px;font-weight:900;transition:all .15s;position:absolute;top:10px;left:10px;z-index:2;line-height:1;padding-bottom:2px}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
+    .pc-open{opacity:0;background:transparent;border:none;color:var(--sub);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:absolute;top:10px;right:10px;z-index:2}
+    .proj-card:hover .pc-open{opacity:1}
+    .pc-open:hover{background:var(--b2);color:var(--text)}
+    .pc-open svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
     /* shared invite actions */
     .pc-invite-actions{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,var(--s1) 90%,transparent);gap:7px;z-index:3}
     .proj-card:hover .pc-invite-actions{display:flex}
@@ -161,7 +165,7 @@
     .ps-input{background:var(--b1);border:none;border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:background .15s;width:100%}
     .ps-input:focus{background:var(--b2)}
     .ps-input::placeholder{color:var(--sub)}
-    .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+    .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-height:78px;overflow:hidden;transition:max-height .2s ease}.emoji-strip.expanded{max-height:none}.emoji-expand{display:block;width:100%;text-align:center;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;padding:4px 0 0;background:none;border:none;font-family:var(--sans);transition:color .12s}.emoji-expand:hover{color:var(--text)}
     .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none;}
     .emoji-opt:hover{background:var(--b2)}
     .emoji-opt.sel{background:var(--b3);border-color:transparent}
@@ -214,6 +218,24 @@
     .m-input:focus{background:var(--b2)}
     .m-input::placeholder{color:var(--sub)}
     .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+
+    /* ══ CUSTOM CONFIRM ══ */
+    .cfrm-modal{background:var(--s1);border-radius:16px;padding:28px;width:340px;max-width:100%;box-shadow:0 40px 80px rgba(0,0,0,.8)}
+    .cfrm-title{font-size:15px;font-weight:800;letter-spacing:-.2px;margin-bottom:8px}
+    .cfrm-msg{font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:22px}
+    .cfrm-btns{display:flex;gap:8px;justify-content:flex-end}
+    .cfrm-cancel{padding:9px 18px;border:none;border-radius:8px;background:var(--s2);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .cfrm-cancel:hover{background:var(--b1);color:var(--text)}
+    .cfrm-ok{padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s}
+    .cfrm-ok.danger{background:rgba(239,68,68,.12);color:#f87171}
+    .cfrm-ok.danger:hover{background:rgba(239,68,68,.2)}
+    .cfrm-ok.safe{background:var(--b2);color:var(--text)}
+    .cfrm-ok.safe:hover{background:var(--b3)}
+    .cfrm-name-hint{font-size:11px;color:var(--sub);margin-bottom:6px}
+    .cfrm-name-hint b{color:var(--text);font-weight:700}
+    .cfrm-input{width:100%;background:var(--b1);border:1px solid transparent;border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:all .15s;margin-bottom:16px}
+    .cfrm-input:focus{background:var(--b2);border-color:var(--b3)}
+    .cfrm-input::placeholder{color:var(--sub)}
 
     /* ══ TOAST ══ */
     #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);z-index:9999;background:var(--text);color:var(--bg);border-radius:99px;padding:10px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
@@ -283,10 +305,17 @@
 
     .friends-see-all{font-size:11px;font-weight:600;color:var(--sub);text-decoration:none;transition:color .15s}
     .friends-see-all:hover{color:var(--text)}
-    .friends-track-wrap{overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none;margin:0 -4px;padding:4px}
+    .friends-track-outer{position:relative;overflow:hidden;padding:8px 0;margin:-8px 0}
+    .friends-track-outer::before,.friends-track-outer::after{content:'';position:absolute;top:0;bottom:0;width:64px;pointer-events:none;z-index:3;transition:opacity .18s;opacity:0}
+    .friends-track-outer::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+    .friends-track-outer::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+    .friends-track-outer.show-left::before{opacity:1}
+    .friends-track-outer.show-right::after{opacity:1}
+    .friends-track-wrap{overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;-webkit-user-select:none;user-select:none;margin:0 -4px;padding:4px}
     .friends-track-wrap::-webkit-scrollbar{display:none}
     .friends-track-wrap.grabbing{cursor:grabbing}
     .friends-track{display:flex;gap:clamp(8px,1vw,12px);width:max-content}
+    @keyframes friendIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
     .friend-card{
       display:flex;flex-direction:column;align-items:center;gap:8px;
       background:var(--s1);border-radius:14px;
@@ -294,7 +323,10 @@
       min-width:clamp(90px,8vw,120px);
       cursor:pointer;transition:background .15s,transform .15s;
       text-decoration:none;flex-shrink:0;
+      -webkit-user-select:none;user-select:none;
+      animation:friendIn .18s ease both;
     }
+    .friend-card *{-webkit-user-select:none;user-select:none}
     .friend-card:hover{background:var(--s2);transform:translateY(-2px)}
     .friend-av{
       width:clamp(36px,3.5vw,48px);height:clamp(36px,3.5vw,48px);
@@ -422,8 +454,10 @@
         </div>
       </div>
     </div>
-    <div class="friends-track-wrap" id="friendsTrackWrap">
-      <div class="friends-track" id="friendsTrack"></div>
+    <div class="friends-track-outer">
+      <div class="friends-track-wrap" id="friendsTrackWrap">
+        <div class="friends-track" id="friendsTrack"></div>
+      </div>
     </div>
   </div>
   <div class="empty" id="emptyState">
@@ -493,33 +527,41 @@
           oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
       </div>
       <div class="ps-div"></div>
-      <div class="ps-vis-row">
-        <div class="ps-vis-info">
-          <div class="ps-vis-label" id="psVisLabel">Private</div>
-          <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
+      <div id="psVisSection">
+        <div class="ps-vis-row">
+          <div class="ps-vis-info">
+            <div class="ps-vis-label" id="psVisLabel">Private</div>
+            <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
+          </div>
+          <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
+            <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="psLockTxt">Locked</span>
+          </button>
         </div>
-        <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
-          <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span id="psLockTxt">Locked</span>
+      </div>
+      <div class="ps-div"></div>
+      <div id="psCollabSection">
+        <div class="ps-field">
+          <div class="ps-label">Collaborators</div>
+          <div class="collab-list" id="psCollabList"><div class="cl-none">Loading…</div></div>
+          <div id="psInviteSection">
+          <div style="height:6px"></div>
+          <div class="invite-search-wrap">
+            <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
+              oninput="onInviteInput()" onkeydown="onInviteKey(event)"/>
+            <div class="invite-drop" id="inviteDrop"></div>
+          </div>
+          <div class="invite-msg" id="psInviteMsg"></div>
+        </div>
+        </div>
+      </div>
+      <div class="ps-div" id="psDeleteDivider"></div>
+      <div id="psDeleteSection">
+        <button class="ps-delete-btn" onclick="psDelete()">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Delete project
         </button>
       </div>
-      <div class="ps-div"></div>
-      <div class="ps-field">
-        <div class="ps-label">Collaborators</div>
-        <div class="collab-list" id="psCollabList"><div class="cl-none">Loading…</div></div>
-        <div style="height:6px"></div>
-        <div class="invite-search-wrap">
-          <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
-            oninput="onInviteInput()" onkeydown="onInviteKey(event)"/>
-          <div class="invite-drop" id="inviteDrop"></div>
-        </div>
-        <div class="invite-msg" id="psInviteMsg"></div>
-      </div>
-      <div class="ps-div"></div>
-      <button class="ps-delete-btn" onclick="psDelete()">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        Delete project
-      </button>
     </div>
 
     <div class="ps-footer">
@@ -549,15 +591,85 @@
   </div>
 </div>
 
+<!-- Custom confirm modal -->
+<div class="overlay" id="cfrmOverlay">
+  <div class="cfrm-modal">
+    <div class="cfrm-title" id="cfrmTitle">Are you sure?</div>
+    <div class="cfrm-msg" id="cfrmMsg"></div>
+    <div class="cfrm-btns">
+      <button class="cfrm-cancel" onclick="cfrmResolve(false)">Cancel</button>
+      <button class="cfrm-ok danger" id="cfrmOk" onclick="cfrmResolve(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete project modal (requires typing name) -->
+<div class="overlay" id="deleteOverlay">
+  <div class="cfrm-modal">
+    <div class="cfrm-title">Delete project</div>
+    <div class="cfrm-msg">This is permanent and cannot be undone.</div>
+    <div class="cfrm-name-hint">Type <b id="deleteNameHint"></b> to confirm</div>
+    <input class="cfrm-input" id="deleteNameInput" placeholder="Project name" autocomplete="off" oninput="onDeleteInput()"/>
+    <div class="cfrm-btns">
+      <button class="cfrm-cancel" onclick="deleteResolve(false)">Cancel</button>
+      <button class="cfrm-ok danger" id="deleteOk" onclick="deleteResolve(true)" disabled style="opacity:.35;cursor:not-allowed">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"><span id="toastMsg"></span></div>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
   let sb=null, session=null, myProfile=null;
+
+  /* ── Custom confirm ── */
+  let _cfrmResolve=null;
+  function homeConfirm(title,msg,danger=true){
+    return new Promise(resolve=>{
+      _cfrmResolve=v=>{document.getElementById('cfrmOverlay').classList.remove('show');_cfrmResolve=null;resolve(v);};
+      document.getElementById('cfrmTitle').textContent=title;
+      document.getElementById('cfrmMsg').textContent=msg;
+      const ok=document.getElementById('cfrmOk');
+      ok.textContent=danger?'Delete':'Confirm';
+      ok.className='cfrm-ok '+(danger?'danger':'safe');
+      document.getElementById('cfrmOverlay').classList.add('show');
+    });
+  }
+  function cfrmResolve(v){if(_cfrmResolve)_cfrmResolve(v);}
+
+  /* ── Delete with name confirm ── */
+  let _deleteResolve=null, _deleteExpected='';
+  function homeDeleteConfirm(projectName){
+    return new Promise(resolve=>{
+      _deleteExpected=projectName;
+      _deleteResolve=v=>{document.getElementById('deleteOverlay').classList.remove('show');_deleteResolve=null;resolve(v);};
+      document.getElementById('deleteNameHint').textContent=projectName;
+      const inp=document.getElementById('deleteNameInput');
+      inp.value='';
+      const ok=document.getElementById('deleteOk');
+      ok.disabled=true;ok.style.opacity='.35';ok.style.cursor='not-allowed';
+      document.getElementById('deleteOverlay').classList.add('show');
+      setTimeout(()=>inp.focus(),60);
+    });
+  }
+  function onDeleteInput(){
+    const val=document.getElementById('deleteNameInput').value;
+    const ok=document.getElementById('deleteOk');
+    const match=val===_deleteExpected;
+    ok.disabled=!match;ok.style.opacity=match?'1':'.35';ok.style.cursor=match?'pointer':'not-allowed';
+  }
+  function deleteResolve(v){if(_deleteResolve)_deleteResolve(v);}
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){cfrmResolve(false);deleteResolve(false);}
+    if(e.key==='Enter'&&document.getElementById('deleteOverlay').classList.contains('show')){
+      const ok=document.getElementById('deleteOk');if(!ok.disabled)deleteResolve(true);
+    }
+  });
   let projects=[], selectedEmoji='💻';
-  let psProjectId=null, psCurPublic=false, psEmojiCur='💻';
+  let psProjectId=null, psCurPublic=false, psEmojiCur='💻', psIsOwner=true;
   let myFollowing=[], myFollowers=[];
-  const EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯'];
+  const EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯','🚀','✨','🎬','🎵','📝','🔥','💡','🏆','💎','🌈','🎮','📸','🧠','🌿','🏠','💰','🎪','🧩','⚽','🎭'];
 
   try{
     if(!window._noConfig&&typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined')
@@ -589,7 +701,7 @@
   async function loadMyProfile(){
     if(!sb||!session)return;
     try{
-      const{data}=await sb.from('profiles').select('id,username,display_name,is_public').eq('id',session.user.id).maybeSingle();
+      const{data}=await sb.from('profiles').select('id,username,display_name').eq('id',session.user.id).maybeSingle();
       myProfile=data||null;
     }catch(e){}
   }
@@ -667,24 +779,24 @@
 
   function renderGrid(){
     document.getElementById('projectGrid').innerHTML=projects.map(p=>{
-      const fc=Object.keys(p.files||{}).length;
       const upd=relTime(new Date(p.updated_at||Date.now()));
-      const isPub=!!p.is_public;
+      const myUser=localStorage.getItem('vexium_username')||'';
+      const liveUrl=p.published_slug&&myUser?`https://${myUser}.vexium.ai/${p.published_slug}`:'';
+      const openHref=liveUrl||`viewer.html?project=${p.id}`;
       return `<div class="proj-card" onclick="openProject(event,'${p.id}')">
-        <div class="pc-vis ${isPub?'pub':'priv'}">${isPub
-          ?'<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Public'
-          :'<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Private'
-        }</div>
         <button class="pc-more" onclick="openPsModal(event,'${p.id}')">···</button>
+        <a class="pc-open" href="${openHref}" target="_blank" onclick="event.stopPropagation()" title="${liveUrl?'Open live site':'Open preview'}">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
         <div class="pc-emoji">${p.emoji||'💻'}</div>
         <div class="pc-name">${esc(p.name||'Untitled')}</div>
-        <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${upd}</span></div>
+        <div class="pc-meta"><span>${upd}</span></div>
       </div>`;
     }).join('');
   }
 
   function openProject(e,id){
-    if(e.target.closest('.pc-more'))return;
+    if(e.target.closest('.pc-more')||e.target.closest('.pc-open')||e.target.closest('.pc-invite-actions'))return;
     localStorage.setItem('vexium_current_project',id);
     location.href='editor.html';
   }
@@ -704,20 +816,21 @@
       document.getElementById('sharedGrid').innerHTML=rows.map(r=>{
         const p=r.projects;
         const isPending=r.status==='pending';
-        const fc=Object.keys(p.files||{}).length;
-        const badge=isPending
-          ?'<div class="pc-vis" style="background:rgba(245,158,11,.1);color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Invited</div>'
-          :'<div class="pc-vis" style="background:rgba(155,121,252,.08);color:#a78bfa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shared</div>';
+        const upd=relTime(new Date(p.updated_at||Date.now()));
+        const openHref=`viewer.html?project=${p.id}`;
         const inviteActions=isPending?`
           <div class="pc-invite-actions">
             <button class="pc-invite-btn decline" onclick="quickDecline(event,'${p.id}')">Decline</button>
             <button class="pc-invite-btn accept" onclick="quickAccept(event,'${p.id}')">Accept</button>
           </div>`:''
-        return `<div class="proj-card" onclick="openShared('${p.id}','${isPending}','${esc(p.emoji||'💻')}','${esc(p.name||'Untitled')}')">
-          ${badge}
+        return `<div class="proj-card" onclick="openProject(event,'${p.id}')">
+          <button class="pc-more" onclick="openPsModal(event,'${p.id}',false)">···</button>
+          <a class="pc-open" href="${openHref}" target="_blank" onclick="event.stopPropagation()" title="Open preview">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
           <div class="pc-emoji">${p.emoji||'💻'}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
-          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Pending invite':'Collaborator'}</span></div>
+          <div class="pc-meta"><span>${upd}</span></div>
           ${inviteActions}
         </div>`;
       }).join('');
@@ -770,10 +883,18 @@
   }
 
   /* ── PS MODAL ── */
-  async function openPsModal(e,id){
+  async function openPsModal(e,id,isOwner=true){
+    psIsOwner=isOwner;
     e.preventDefault();e.stopPropagation();
     psProjectId=id;
-    const p=projects.find(x=>x.id===id);
+    ['psVisSection','psDeleteSection','psDeleteDivider'].forEach(sid=>{
+      const el=document.getElementById(sid);
+      if(el)el.style.display=isOwner?'':'none';
+    });
+    const _inv=document.getElementById('psInviteSection');
+    if(_inv)_inv.style.display=isOwner?'':'none';
+    const p=projects.find(x=>x.id===id)||
+            (await sb?.from('projects').select('*').eq('id',id).single())?.data;
     if(!p)return;
     psCurPublic=!!p.is_public;
     psEmojiCur=p.emoji||'💻';
@@ -795,9 +916,12 @@
   function closePsModal(){document.getElementById('psOverlay').classList.remove('show');hideInviteDrop();}
 
   function buildPsEmojiStrip(){
-    document.getElementById('psEmojiStrip').innerHTML=EMOJIS.map(em=>
-      `<div class="emoji-opt${em===psEmojiCur?' sel':''}" onclick="pickPsEmoji('${em}')">${em}</div>`
-    ).join('');
+    const strip=document.getElementById('psEmojiStrip');
+    strip.classList.remove('expanded');
+    strip.innerHTML=EMOJIS.map(em=>`<div class="emoji-opt${em===psEmojiCur?' sel':''}" onclick="pickPsEmoji('${em}')">${em}</div>`).join('');
+    let btn=document.getElementById('psEmojiExpandBtn');
+    if(!btn){btn=document.createElement('button');btn.id='psEmojiExpandBtn';btn.className='emoji-expand';btn.textContent='Show all ↓';btn.onclick=function(){strip.classList.add('expanded');this.style.display='none';};strip.parentNode.insertBefore(btn,strip.nextSibling);}
+    else{btn.style.display='';}
   }
 
   function pickPsEmoji(em){
@@ -846,7 +970,9 @@
 
   async function psDelete(){
     if(!psProjectId)return;
-    if(!confirm('Delete this project? This cannot be undone.'))return;
+    const proj=projects.find(p=>p.id===psProjectId);
+    const name=proj?.name||'this project';
+    if(!await homeDeleteConfirm(name))return;
     if(session&&sb){await sb.from('projects').delete().eq('id',psProjectId);}
     else{const list=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==psProjectId);localStorage.setItem('vexium_projects',JSON.stringify(list));}
     closePsModal();
@@ -881,7 +1007,7 @@
             <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
             <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
             <div class="cl-status joined">Joined</div>
-            <button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+${psIsOwner?`<button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
           </div>`;
         }).join('');
       }
@@ -894,7 +1020,7 @@
             <div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div>
             <div class="cl-info"><div class="cl-name" style="opacity:.7">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
             <div class="cl-status pending">Pending</div>
-            <button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>
+${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
           </div>`;
         }).join('');
       }
@@ -904,7 +1030,7 @@
   }
 
   async function psRemoveCollab(uid){
-    if(!confirm('Remove this collaborator?'))return;
+    if(!await homeConfirm('Remove collaborator','This person will lose access to the project.',false))return;
     await sb.from('project_members').delete().eq('project_id',psProjectId).eq('user_id',uid);
     await loadPsCollabs();
   }
@@ -934,17 +1060,13 @@
   }
 
   async function searchInvite(q){
-    if(myProfile&&myProfile.is_public===false){
-      renderInviteDrop('<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t invite others. <a href="profile.html" style="color:#818cf8;text-decoration:none">Go public →</a></div>');
-      return;
-    }
     let html='';
     const socialMatches=[...new Map([...myFollowing,...myFollowers].map(u=>[u.id,u])).values()]
       .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
     if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>inviteItemHTML(u,getRelLabel(u.id))).join('');
     if(sb){
       try{
-        const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(5);
+        const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').limit(5);
         const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
         if(others.length){html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>inviteItemHTML(u,'')).join('');}
       }catch(e){}
@@ -1134,11 +1256,6 @@
   }
 
   async function doSearch(q){
-    if(myProfile&&myProfile.is_public===false){
-      const drop=document.getElementById('searchDrop')||document.getElementById('tbSearchDrop');
-      if(drop){drop.innerHTML='<div class="search-msg" style="padding:14px 16px;color:var(--sub);font-size:12px">Private accounts can\'t search users. <a href="profile.html" style="color:#818cf8;text-decoration:none">Make your profile public →</a></div>';drop.classList.add('show');}
-      return;
-    }
     const drop=document.getElementById('searchDrop');
     drop.innerHTML='<div class="search-msg">Searching…</div>';showSearchDrop();
     if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}
@@ -1147,7 +1264,7 @@
       .filter(u=>(u.username||'').toLowerCase().includes(q.toLowerCase())||(u.display_name||'').toLowerCase().includes(q.toLowerCase()));
     if(socialMatches.length)html+='<div class="sd-section-label">People you know</div>'+socialMatches.map(u=>searchItemHTML(u,getRelLabel(u.id))).join('');
     try{
-      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(6);
+      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').limit(6);
       const others=(data||[]).filter(p=>p.id!==session?.user.id&&!socialMatches.find(s=>s.id===p.id));
       if(others.length)html+=(socialMatches.length?'<div class="sd-section-label">Other users</div>':'')+others.map(u=>searchItemHTML(u,'')).join('');
     }catch(e){}
@@ -1253,10 +1370,13 @@
   /* ── FRIENDS SLIDER ── */
   let _sliderData = {friends:[], following:[], followers:[]};
   let _sliderMode = 'friends';
+  let _sliderLoaded = false;
   let _dragInit = false;
+  const SLIDE_PAGE = 15;
+  let _sentinelObs = null;
 
   function renderFriendsSlider(friends, following, followers){
-    if(friends !== undefined) _sliderData = {friends, following, followers};
+    if(friends !== undefined){ _sliderData = {friends, following, followers}; _sliderLoaded = true; }
     const section = document.getElementById('friendsSection');
     const track = document.getElementById('friendsTrack');
     if(!section || !track) return;
@@ -1264,7 +1384,7 @@
     const list = _sliderData[_sliderMode] || [];
 
     // Always show section; hide only if all three lists are confirmed empty after load
-    const isLoading = friends === undefined;
+    const isLoading = !_sliderLoaded;
     const total = _sliderData.friends.length + _sliderData.following.length + _sliderData.followers.length;
     if(!isLoading && total === 0){ section.style.display='none'; return; }
     section.style.display = '';
@@ -1289,15 +1409,11 @@
       </div>`).join('');
     } else if(!list.length){
       track.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:10px 4px">None yet.</div>';
+      _updateSliderFades();
     } else {
-      track.innerHTML = list.map(u => {
-        const n = u.display_name || u.username || '?';
-        return `<div class="friend-card" onclick="goFriend('${esc(u.username||'')}')">
-          <div class="friend-av">${esc(n.charAt(0).toUpperCase())}</div>
-          <div class="friend-name">${esc(n)}</div>
-          <div class="friend-handle">@${esc(u.username||'')}</div>
-        </div>`;
-      }).join('');
+      if(_sentinelObs){_sentinelObs.disconnect();_sentinelObs=null;}
+      track.innerHTML='';
+      _appendSliderCards(list, 0, _sliderMode);
     }
 
     // Init drag-to-scroll with rubber-band snap-back once
@@ -1347,14 +1463,57 @@
         if(!isDown)return;
         e.preventDefault();
         setPos(startScroll + (startX - e.pageX));
+        _updateSliderFades();
       });
+      wrap.addEventListener('scroll', _updateSliderFades);
     }
+  }
+
+  function _updateSliderFades(){
+    requestAnimationFrame(()=>{
+      const wrap = document.getElementById('friendsTrackWrap');
+      const outer = wrap && wrap.parentElement;
+      if(!wrap || !outer) return;
+      const atStart = wrap.scrollLeft <= 0;
+      const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1;
+      outer.classList.toggle('show-left', !atStart);
+      outer.classList.toggle('show-right', !atEnd && wrap.scrollWidth > wrap.clientWidth);
+    });
   }
 
   function setSliderMode(mode){
     _sliderMode = mode;
     document.getElementById('friendsDdMenu').classList.remove('show');
     renderFriendsSlider();
+  }
+
+  function _appendSliderCards(list, from, mode){
+    const to = Math.min(from + SLIDE_PAGE, list.length);
+    const track = document.getElementById('friendsTrack');
+    if(!track) return;
+    const html = list.slice(from, to).map((u, i) => {
+      const n = u.display_name || u.username || '?';
+      return `<div class="friend-card" onclick="goFriend('${esc(u.username||'')}')" style="animation-delay:${i*12}ms">
+        <div class="friend-av">${esc(n.charAt(0).toUpperCase())}</div>
+        <div class="friend-name">${esc(n)}</div>
+        <div class="friend-handle">@${esc(u.username||'')}</div>
+      </div>`;
+    }).join('');
+    track.insertAdjacentHTML('beforeend', html);
+    if(to < list.length){
+      const sentinel = document.createElement('div');
+      sentinel.style.cssText = 'width:1px;flex-shrink:0';
+      track.appendChild(sentinel);
+      _sentinelObs = new IntersectionObserver(entries => {
+        if(!entries[0].isIntersecting) return;
+        _sentinelObs.disconnect(); _sentinelObs = null;
+        if(_sliderMode !== mode) return;
+        sentinel.remove();
+        _appendSliderCards(list, to, mode);
+      }, {root: document.getElementById('friendsTrackWrap'), threshold: 0});
+      _sentinelObs.observe(sentinel);
+    }
+    _updateSliderFades();
   }
   function toggleFriendsDd(e){
     e.stopPropagation();

@@ -86,6 +86,13 @@
     .chart-pill{padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--sub);cursor:pointer;font-family:var(--sans);transition:all .15s}
     .chart-pill.active,.chart-pill:hover{background:var(--s2);color:var(--text)}
     .chart-area{display:flex;flex-direction:column;gap:8px}
+    /* line chart animation */
+    @keyframes chartLineIn { from { stroke-dashoffset: var(--dash-len, 9999); } to { stroke-dashoffset: 0; } }
+    @keyframes chartAreaIn { from { opacity: 0; } to { opacity: 1; } }
+    .chart-line-path { stroke-dasharray: var(--dash-len, 9999); stroke-dashoffset: var(--dash-len, 9999); animation: chartLineIn .7s cubic-bezier(.4,0,.2,1) forwards; }
+    .chart-area-path { opacity: 0; animation: chartAreaIn .5s ease .3s forwards; }
+    .line-pt { opacity: 0; transition: opacity .12s, r .12s; pointer-events: all; cursor: default; }
+    .line-pt.visible { opacity: 1; }
     .bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;width:100%}
     .bar{flex:1;border-radius:8px 8px 0 0;min-height:3px;transition:opacity .12s;cursor:default}
     .bar:hover{opacity:.7}
@@ -134,6 +141,23 @@
     .detail-bar-fill{height:100%;border-radius:99px;transition:width .4s ease}
     .detail-bar-pct{font-size:11px;font-weight:700;width:32px;text-align:right;flex-shrink:0;color:var(--sub)}
     .detail-empty{font-size:11px;color:var(--b3);padding:12px 0;text-align:center}
+    /* project overview table */
+    .proj-tbl-card{background:var(--s1);border-radius:16px;padding:22px 24px;margin-bottom:10px}
+    .proj-tbl-head,.proj-tbl-row{display:grid;grid-template-columns:1fr 80px 80px 110px;gap:8px;align-items:center}
+    .proj-tbl-head{padding-bottom:10px;border-bottom:1px solid var(--b1)}
+    .proj-tbl-hcell{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;text-align:right}
+    .proj-tbl-hcell:first-child{text-align:left}
+    .proj-tbl-row{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.035)}
+    .proj-tbl-row:last-child{border-bottom:none}
+    .proj-tbl-cell{font-size:12px;font-weight:700;color:var(--sub);text-align:right}
+    .proj-tbl-cell.hi{color:var(--text)}
+    .proj-tbl-name{display:flex;align-items:center;gap:9px;min-width:0}
+    .proj-tbl-emoji{font-size:14px;flex-shrink:0;line-height:1}
+    .proj-tbl-label{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .proj-tbl-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0;text-align:center;white-space:nowrap}
+    .proj-tbl-badge.live{background:rgba(74,222,128,.1);color:#4ade80}
+    .proj-tbl-badge.draft{background:var(--s2);color:var(--sub)}
+    @media(max-width:600px){.proj-tbl-head,.proj-tbl-row{grid-template-columns:1fr 70px 60px}.proj-tbl-hide-mobile{display:none}}
 
     /* coming soon */
     .coming-card{background:rgba(251,191,36,.06);border-radius:16px;padding:48px 24px;text-align:center;margin-bottom:10px}
@@ -162,6 +186,7 @@
       <!-- Project picker -->
       <div class="proj-dd-wrap" id="projDdWrap">
         <button class="proj-dd-btn" id="projDdBtn" onclick="toggleDd()">
+          <div class="proj-dd-dot" id="projDdBtnDot" style="background:var(--b3)"></div>
           <span id="projDdLabel">All projects</span>
           <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
@@ -246,10 +271,10 @@
 
   let _projects    = [];
   let _views       = [];
-  let _days        = 7;       // default 7d
+  let _days        = 30;      // default 30d — matches home page
   let _metric      = 'visitors';
   let _selectedPid = 'all';
-  let _mode        = 'overall'; // cumulative is default
+  let _mode        = 'daily'; // over time is default
   let _chartZoneData = {};     // populated by buildMultiLineGraph for hover zones
 
   // ── utils ──────────────────────────────────────────────────────────────────
@@ -286,6 +311,8 @@
   function selectProject(pid){
     _selectedPid = pid;
     document.getElementById('projDdLabel').textContent = pid==='all' ? 'All projects' : (_projects.find(p=>p.id===pid)?.name||'Project');
+    const btnDot = document.getElementById('projDdBtnDot');
+    if(btnDot) btnDot.style.background = pid==='all' ? 'var(--b3)' : projectColor(pid);
     document.querySelectorAll('.proj-dd-opt').forEach(o=>o.classList.toggle('active', o.dataset.id===pid));
     toggleDd();
     render();
@@ -301,7 +328,6 @@
   // ── mode selection (cumulative vs daily/over-time) ────────────────────────
   function selectMode(m){
     _mode = m;
-    if(m === 'daily') _days = 7; // reset to 7d when switching to over time
     loadData();
   }
 
@@ -313,8 +339,8 @@
   // ── inject chart controls (mode + range pills) ────────────────────────────
   function buildChartControls(){
     const modeRow = `<div class="chart-pill-row">
-      <button class="chart-pill ${_mode==='overall'?'active':''}" onclick="selectMode('overall')">Cumulative</button>
       <button class="chart-pill ${_mode==='daily'?'active':''}" onclick="selectMode('daily')">Over time</button>
+      <button class="chart-pill ${_mode==='overall'?'active':''}" onclick="selectMode('overall')">Cumulative</button>
     </div>`;
     const rangeRow = `<div class="chart-pill-row">
       <button class="chart-pill ${_days===7?'active':''}" onclick="setChartDays(7)">7d</button>
@@ -325,6 +351,17 @@
   }
 
   // ── SVG line graph for cumulative mode ────────────────────────────────────
+  function smoothPath(pts){
+    if(pts.length < 2) return pts.length ? `M${pts[0].x} ${pts[0].y}` : '';
+    let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for(let i = 0; i < pts.length - 1; i++){
+      const p0 = pts[i], p1 = pts[i+1];
+      const cpx = (p0.x + p1.x) / 2;
+      d += ` C${cpx.toFixed(1)} ${p0.y.toFixed(1)},${cpx.toFixed(1)} ${p1.y.toFixed(1)},${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
   function buildLineGraph(counts, labels, color, metricLabel){
     const n = counts.length;
     if(!n) return '';
@@ -335,12 +372,13 @@
       y: padT + (1 - c/max) * (H - padT),
       c, lbl: labels[i]
     }));
-    const linePath = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const linePath = smoothPath(pts);
     const areaPath = `${linePath} L${pts[n-1].x.toFixed(1)} ${H} L${pts[0].x.toFixed(1)} ${H} Z`;
     const gradId   = 'lg'+color.replace('#','');
+    const r        = n > 60 ? 2.5 : 4;
     const showEvery = n<=7?1:n<=14?2:5;
     const circles = pts.map((p,i)=>
-      `<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${n>60?2.5:4}" fill="${color}" stroke="var(--s1)" stroke-width="2" data-tip-name="${esc(p.lbl)}" data-tip-val="${p.c} ${metricLabel}" style="cursor:default"/>`
+      `<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${color}" stroke="var(--s1)" stroke-width="2" data-tip-name="${esc(p.lbl)}" data-tip-val="${p.c} ${metricLabel}" data-pt-idx="${i}"/>`
     ).join('');
     const labelHtml = pts.map((p,i)=>
       `<div class="bar-label">${i%showEvery===0||i===n-1?p.lbl:''}</div>`
@@ -353,8 +391,8 @@
             <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
           </linearGradient>
         </defs>
-        <path d="${areaPath}" fill="url(#${gradId})"/>
-        <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="chart-area-path" d="${areaPath}" fill="url(#${gradId})"/>
+        <path class="chart-line-path" d="${linePath}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${circles}
       </svg>
       <div class="bar-labels">${labelHtml}</div>
@@ -488,12 +526,9 @@
     av.forEach(v=>{
       const k = viewsToKey(v, useWeeks);
       if(!(k in buckets) || buckets[k][v.project_id]===undefined) return;
-      if(isVisitors){
-        if(v.session_id && !sessionSeen[k][v.project_id].has(v.session_id)){
-          sessionSeen[k][v.project_id].add(v.session_id);
-          buckets[k][v.project_id]++;
-        }
-      } else {
+      // Both visitors and visits count distinct sessions per bucket — same method as home page
+      if(v.session_id && !sessionSeen[k][v.project_id].has(v.session_id)){
+        sessionSeen[k][v.project_id].add(v.session_id);
         buckets[k][v.project_id]++;
       }
     });
@@ -522,40 +557,34 @@
       }
 
     } else {
-      // ── Daily: stacked bars (multi) or single-color bars ───────────────────
-      const stackedTotals = keys.map(k=>visibleProjects.reduce((s,p)=>s+(buckets[k][p.id]||0),0));
-      const maxVal = Math.max(...stackedTotals,1);
-      const periodTotal = stackedTotals.reduce((a,b)=>a+b,0);
+      // ── Daily: line graph (same as cumulative but non-cumulative counts) ─────
+      const periodTotal = keys.reduce((s,k)=>s+visibleProjects.reduce((ss,p)=>ss+(buckets[k][p.id]||0),0),0);
       metaEl.textContent = periodTotal ? fmt(periodTotal)+' total' : '';
 
-      if(visibleProjects.length>1 && _selectedPid==='all'){
-        // Stacked bars
-        const keyHtml = visibleProjects.map(p=>`<div class="color-key-item"><div class="color-key-dot" style="background:${projectColor(p.id)}"></div>${esc(p.name||'Untitled')}</div>`).join('');
-        const bars = keys.map((k,i)=>{
-          const total=stackedTotals[i];
-          const segs=visibleProjects.filter(p=>(buckets[k][p.id]||0)>0).map(p=>{
-            const h=total>0?Math.round((buckets[k][p.id]||0)/total*100):0;
-            return `<div class="bar-seg" style="height:${h}%;background:${projectColor(p.id)}" data-tip-name="${esc(p.name||'Untitled')}" data-tip-val="${buckets[k][p.id]||0} ${metricLabel}"></div>`;
-          }).join('');
-          return `<div class="bar-stack" style="height:${total?Math.max(3,Math.round(total/maxVal*100))+'%':'4px'}">${segs||`<div style="height:4px;background:var(--s2);border-radius:3px;opacity:.3"></div>`}</div>`;
-        });
-        inner.innerHTML = `<div class="chart-area">
-          <div class="bar-chart">${bars.join('')}</div>
-          <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
-          <div class="color-key">${keyHtml}</div>
-        </div>`;
+      const projectLines = visibleProjects.map(p=>{
+        const counts = keys.map(k=>buckets[k][p.id]||0);
+        return { project:p, counts, color:projectColor(p.id) };
+      }).filter(pl=>pl.counts.some(c=>c>0));
+
+      if(!projectLines.length){
+        inner.innerHTML = `<div class="chart-empty"><div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="chart-empty-t">No data yet</div><div class="chart-empty-s">Open your projects in the viewer and traffic will appear here.</div></div>`;
+      } else if(projectLines.length===1){
+        inner.innerHTML = buildLineGraph(projectLines[0].counts, labels, projectLines[0].color, metricLabel);
       } else {
-        // Single-color bars
-        const p0 = visibleProjects[0];
-        const counts = keys.map(k=>p0?buckets[k][p0.id]||0:0);
-        const barColor = p0 ? projectColor(p0.id) : color;
-        inner.innerHTML = `<div class="chart-area">
-          <div class="bar-chart">${counts.map((c,i)=>`<div class="bar" style="height:${Math.max(c?3:0,Math.round(c/maxVal*100))}%;background:${barColor};opacity:${c?1:0.12}" data-tip-name="${esc(labels[i])}" data-tip-val="${c} ${metricLabel}"></div>`).join('')}</div>
-          <div class="bar-labels">${keys.map((k,i)=>`<div class="bar-label">${i%showEvery===0||i===keys.length-1?labels[i]:''}</div>`).join('')}</div>
-        </div>`;
+        _chartZoneData={};
+        inner.innerHTML = buildMultiLineGraph(projectLines, keys, labels, metricLabel);
       }
     }
     attachChartTooltips();
+    // Set each line path's dash length to its actual length so the draw-in animation works
+    requestAnimationFrame(()=>{
+      document.querySelectorAll('.chart-line-path').forEach(p=>{
+        const len = p.getTotalLength();
+        p.style.setProperty('--dash-len', len);
+        p.style.strokeDasharray = len;
+        p.style.strokeDashoffset = len;
+      });
+    });
   }
 
   function renderDetail(){
@@ -563,65 +592,74 @@
     if(_metric==='revenue'){ el.innerHTML=''; return; }
 
     const av = activeViews();
-    const isVisitors = _metric==='visitors';
     const color = METRIC_COLOR[_metric];
 
-    // Per-site breakdown
-    const byProjViews   = {};
-    const byProjSession = {};
+    // Per-project counts
+    const byProjViews={}, byProjSession={};
     av.forEach(v=>{
       byProjViews[v.project_id]=(byProjViews[v.project_id]||0)+1;
       if(!byProjSession[v.project_id]) byProjSession[v.project_id]=new Set();
       if(v.session_id) byProjSession[v.project_id].add(v.session_id);
     });
 
-    const siteRows = _projects.map(p=>({
-      id:p.id, name:p.name||'Untitled',
+    const rows = _projects.map(p=>({
+      id:p.id, name:p.name||'Untitled', emoji:p.emoji||'💻',
+      live:!!p.published_slug,
       views:byProjViews[p.id]||0,
       visitors:byProjSession[p.id]?.size||0,
-    })).sort((a,b)=>b.views-a.views).slice(0,6);
+    })).sort((a,b)=>b.views-a.views);
 
-    const leftTitle  = _metric==='sites'?'Sites by views':isVisitors?'Sites by visitors':'Sites by views';
-    const leftValFn  = r => isVisitors ? (r.visitors?fmt(r.visitors):'—') : (r.views?fmt(r.views):'—');
+    const tableRows = rows.length ? rows.map(r=>`
+      <div class="proj-tbl-row">
+        <div class="proj-tbl-name">
+          <div class="detail-dot" style="background:${r.views?projectColor(r.id):'var(--b2)'}"></div>
+          <span class="proj-tbl-emoji">${r.emoji}</span>
+          <span class="proj-tbl-label">${esc(r.name)}</span>
+        </div>
+        <div class="proj-tbl-cell${r.visitors?' hi':''}">${r.visitors?fmt(r.visitors):'—'}</div>
+        <div class="proj-tbl-cell${r.views?' hi':''}">${r.views?fmt(r.views):'—'}</div>
+        <div class="proj-tbl-cell proj-tbl-hide-mobile"><span class="proj-tbl-badge ${r.live?'live':'draft'}">${r.live?'Published':'Not published'}</span></div>
+      </div>`).join('')
+    : `<div class="detail-empty">No projects yet</div>`;
 
-    const siteHtml = siteRows.length
-      ? siteRows.map(r=>`<div class="detail-row">
-          <div class="detail-row-name"><div class="detail-dot" style="background:${r.views?projectColor(r.id):'var(--b2)'}"></div><span>${esc(r.name)}</span></div>
-          <div class="detail-row-val">${leftValFn(r)}</div>
-        </div>`).join('')
-      : '<div class="detail-empty">No projects yet</div>';
+    // Referrers
+    const refCounts={};
+    av.forEach(v=>{
+      if(!v.referrer) return;
+      let host=v.referrer;
+      try{ host=new URL(v.referrer).hostname.replace(/^www\./,''); }catch{}
+      refCounts[host]=(refCounts[host]||0)+1;
+    });
+    const refs=Object.entries(refCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const refMax=refs[0]?.[1]||1;
+    const refHtml = refs.length
+      ? refs.map(([h,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(h)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/refMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${fmt(c)}</div></div>`).join('')
+      : '<div class="detail-empty">No referrer data yet</div>';
 
-    // Right: devices (visitors) or referrers (views/sites)
-    let rightTitle, rightHtml;
-    if(!isVisitors){
-      rightTitle = 'Top referrers';
-      const refCounts={};
-      av.forEach(v=>{
-        if(!v.referrer) return;
-        let host=v.referrer;
-        try{ host=new URL(v.referrer).hostname.replace(/^www\./,''); }catch{}
-        refCounts[host]=(refCounts[host]||0)+1;
-      });
-      const refs=Object.entries(refCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      const refMax=refs[0]?.[1]||1;
-      rightHtml = refs.length
-        ? refs.map(([h,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(h)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/refMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${fmt(c)}</div></div>`).join('')
-        : '<div class="detail-empty">No referrer data yet</div>';
-    } else {
-      rightTitle = 'Devices';
-      const dc={};
-      av.forEach(v=>{ const d=v.device||'unknown'; dc[d]=(dc[d]||0)+1; });
-      const tot=Object.values(dc).reduce((a,b)=>a+b,0);
-      const dcMax=Object.values(dc).reduce((a,b)=>Math.max(a,b),1);
-      rightHtml = tot
-        ? Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(d)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/dcMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${Math.round(c/tot*100)}%</div></div>`).join('')
-        : '<div class="detail-empty">No device data yet</div>';
-    }
+    // Devices
+    const dc={};
+    av.forEach(v=>{ const d=v.device||'unknown'; dc[d]=(dc[d]||0)+1; });
+    const tot=Object.values(dc).reduce((a,b)=>a+b,0);
+    const dcMax=Object.values(dc).reduce((a,b)=>Math.max(a,b),1);
+    const devHtml = tot
+      ? Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(d)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/dcMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${Math.round(c/tot*100)}%</div></div>`).join('')
+      : '<div class="detail-empty">No device data yet</div>';
 
-    el.innerHTML=`<div class="detail-grid">
-      <div class="detail-card"><div class="detail-card-title">${leftTitle}</div>${siteHtml}</div>
-      <div class="detail-card"><div class="detail-card-title">${rightTitle}</div>${rightHtml}</div>
-    </div>`;
+    el.innerHTML=`
+      <div class="proj-tbl-card">
+        <div class="detail-card-title">Projects</div>
+        <div class="proj-tbl-head">
+          <div class="proj-tbl-hcell">Project</div>
+          <div class="proj-tbl-hcell">Visitors</div>
+          <div class="proj-tbl-hcell">Views</div>
+          <div class="proj-tbl-hcell proj-tbl-hide-mobile">Status</div>
+        </div>
+        ${tableRows}
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card"><div class="detail-card-title">Top referrers</div>${refHtml}</div>
+        <div class="detail-card"><div class="detail-card-title">Devices</div>${devHtml}</div>
+      </div>`;
   }
 
   // ── SVG multi-line graph for cumulative all-projects mode ─────────────────
@@ -640,13 +678,13 @@
         y: padT+(1-c/max)*(H-padT),
         c
       }));
-      const path = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const path = smoothPath(pts);
       const area = `${path} L${pts[n-1].x.toFixed(1)} ${H} L${pts[0].x.toFixed(1)} ${H} Z`;
       const r = n>60?2:3.5;
       defsHtml  += `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${pl.color}" stop-opacity="0.14"/><stop offset="100%" stop-color="${pl.color}" stop-opacity="0.01"/></linearGradient>`;
-      areasHtml += `<path d="${area}" fill="url(#${id})"/>`;
-      linesHtml += `<path d="${path}" fill="none" stroke="${pl.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-      circlesHtml += pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${pl.color}" stroke="var(--s1)" stroke-width="1.5"/>`).join('');
+      areasHtml += `<path class="chart-area-path" d="${area}" fill="url(#${id})"/>`;
+      linesHtml += `<path class="chart-line-path" d="${path}" fill="none" stroke="${pl.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      circlesHtml += pts.map((p,i)=>`<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${pl.color}" stroke="var(--s1)" stroke-width="1.5" data-pt-idx="${i}"/>`).join('');
     });
 
     // Vertical hover zones — one per day, show all projects' values
@@ -685,8 +723,20 @@
     const valEl  = document.getElementById('chartTipVal');
     if(!tip) return;
 
-    // Single-value: bars and single-line dots
-    document.querySelectorAll('[data-tip-name]').forEach(el=>{
+    // Single-line dots — show only the hovered dot
+    document.querySelectorAll('[data-tip-name].line-pt').forEach(el=>{
+      el.addEventListener('mouseenter', ()=>{
+        nameEl.textContent = el.dataset.tipName;
+        valEl.innerHTML = `<span style="color:var(--sub)">${esc(el.dataset.tipVal)}</span>`;
+        tip.style.display = 'block';
+        el.classList.add('visible');
+      });
+      el.addEventListener('mousemove', e=>posTip(e,tip));
+      el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; el.classList.remove('visible'); });
+    });
+
+    // Bars and other non-line elements
+    document.querySelectorAll('[data-tip-name]:not(.line-pt)').forEach(el=>{
       el.addEventListener('mouseenter', ()=>{
         nameEl.textContent = el.dataset.tipName;
         valEl.innerHTML = `<span style="color:var(--sub)">${esc(el.dataset.tipVal)}</span>`;
@@ -696,9 +746,10 @@
       el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
     });
 
-    // Multi-value: vertical hover zones on multi-line chart
+    // Multi-line hover zones — show dots for that column only
     document.querySelectorAll('.chart-hover-zone').forEach(el=>{
-      const data = _chartZoneData[parseInt(el.dataset.idx)];
+      const idx  = parseInt(el.dataset.idx);
+      const data = _chartZoneData[idx];
       if(!data) return;
       el.addEventListener('mouseenter', ()=>{
         nameEl.textContent = data.label;
@@ -710,9 +761,13 @@
           </div>`
         ).join('');
         tip.style.display = 'block';
+        document.querySelectorAll(`.line-pt[data-pt-idx="${idx}"]`).forEach(d=>d.classList.add('visible'));
       });
       el.addEventListener('mousemove', e=>posTip(e,tip));
-      el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
+      el.addEventListener('mouseleave', ()=>{
+        tip.style.display='none';
+        document.querySelectorAll(`.line-pt[data-pt-idx="${idx}"]`).forEach(d=>d.classList.remove('visible'));
+      });
     });
   }
 
@@ -745,7 +800,7 @@
       opt.className='proj-dd-opt';
       opt.dataset.id=p.id;
       opt.onclick=()=>selectProject(p.id);
-      opt.innerHTML=`<div class="proj-dd-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>${esc(p.name||'Untitled')}`;
+      opt.innerHTML=`<div class="proj-dd-dot" style="background:${projectColor(p.id)}"></div>${esc(p.name||'Untitled')}`;
       menu.appendChild(opt);
     });
     // if selected project no longer exists, reset to all

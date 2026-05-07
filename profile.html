@@ -119,7 +119,7 @@
       padding:clamp(8px,0.75vw,11px) clamp(18px,1.8vw,26px);
       border-radius:9px;
       background:var(--text);
-      color:#fff;font-size:clamp(12px,0.9vw,14px);font-weight:700;
+      color:#000;font-size:clamp(12px,0.9vw,14px);font-weight:700;
       border:none;cursor:pointer;font-family:var(--sans);
       transition:all .2s;box-shadow:0 0 20px rgba(79,110,247,.2);
       white-space:nowrap;
@@ -131,12 +131,14 @@
       display:flex;align-items:center;justify-content:center;
       width:32px;height:32px;
       border-radius:8px;background:transparent;border:none;
-      color:var(--sub);cursor:pointer;font-family:var(--sans);
+      color:rgba(255,255,255,.75);cursor:pointer;font-family:var(--sans);
+      font-size:15px;font-weight:900;letter-spacing:2px;line-height:1;
+      padding-left:2px; /* offset letter-spacing on last char for true center */
+      padding-bottom:4px; /* middle-dot glyph sits low — nudge it up */
       transition:all .15s;flex-shrink:0;
     }
-    .btn-edit:hover{background:var(--b1);color:var(--text)}
-    .btn-edit svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-    body.edit-mode .btn-edit{background:rgba(79,110,247,.1);color:var(--a1)}
+    .btn-edit:hover{background:var(--b1);color:#fff}
+    body.edit-mode .btn-edit{background:rgba(255,255,255,.08);color:#fff}
     .edit-mode-only{display:none!important}
     body.edit-mode .edit-mode-only{display:block!important}
 
@@ -270,9 +272,13 @@
     .pc-badge svg{width:8px;height:8px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
     .pc-badge.pub{background:rgba(34,197,94,.1);color:#4ade80}
     .pc-badge.priv{background:rgba(96,96,160,.08);color:var(--sub)}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;position:absolute;top:10px;left:10px}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1.5px;font-weight:900;transition:all .15s;position:absolute;top:10px;left:10px;padding-bottom:2px}
     .proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
+    .pc-open{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:absolute;top:10px;right:10px;text-decoration:none}
+    .proj-card:hover .pc-open{opacity:1}
+    .pc-open:hover{background:var(--b2);color:var(--text)}
+    .pc-open svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
     .pc-emoji{font-size:clamp(32px,3.5vw,44px);line-height:1;margin-bottom:clamp(10px,1vw,14px);display:block}
     .pc-name{font-size:clamp(13px,1.1vw,16px);font-weight:800;letter-spacing:-.3px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pc-meta{font-size:clamp(10px,0.8vw,12px);color:var(--sub);display:flex;align-items:center;justify-content:center;gap:5px}
@@ -284,6 +290,62 @@
     .pc-invite-btn.accept:hover{background:rgba(34,197,94,.25)}
     .pc-invite-btn.decline{background:rgba(239,68,68,.1);color:#f87171}
     .pc-invite-btn.decline:hover{background:rgba(239,68,68,.2)}
+    /* ── psModal ── */
+    .ps-modal{background:var(--s1);border-radius:20px;width:480px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.9);display:flex;flex-direction:column}
+    .ps-hero{background:var(--s2);padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;border-radius:20px 20px 0 0}
+    .ps-hero-left{display:flex;align-items:center;gap:12px}
+    .ps-hero-emoji{font-size:36px;line-height:1}
+    .ps-hero-name{font-size:18px;font-weight:800;letter-spacing:-.4px}
+    .ps-hero-meta{font-size:11px;color:var(--sub);margin-top:2px}
+    .ps-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
+    .ps-close:hover{background:var(--b2);color:var(--text)}
+    .ps-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:18px}
+    .ps-field{display:flex;flex-direction:column;gap:6px}
+    .ps-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
+    .ps-input{background:var(--b1);border:none;border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;font-weight:600;outline:none;font-family:var(--sans);transition:background .15s;width:100%}
+    .ps-input:focus{background:var(--b2)}
+    .ps-input::placeholder{color:var(--sub)}
+    .emoji-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-height:78px;overflow:hidden;transition:max-height .2s ease}.emoji-strip.expanded{max-height:none}.emoji-expand{display:block;width:100%;text-align:center;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;padding:4px 0 0;background:none;border:none;font-family:var(--sans);transition:color .12s}.emoji-expand:hover{color:var(--text)}
+    .emoji-opt{font-size:20px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;user-select:none}
+    .emoji-opt:hover{background:var(--b2)}
+    .emoji-opt.sel{background:var(--b3)}
+    .ps-vis-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .ps-vis-label{font-size:13px;font-weight:700}
+    .ps-vis-sub{font-size:11px;color:var(--sub);margin-top:2px}
+    .lock-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;flex-shrink:0}
+    .lock-btn:hover{background:var(--b2);color:var(--text)}
+    .lock-btn.unlocked{color:#4ade80}
+    .lock-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .ps-div{height:1px;background:var(--b1);margin:0 -24px}
+    .collab-list{display:flex;flex-direction:column;gap:4px}
+    .cl-item{display:flex;align-items:center;gap:10px;padding:7px 0}
+    .cl-av{width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#000 !important;flex-shrink:0}
+    .cl-info{flex:1;min-width:0}
+    .cl-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cl-handle{font-size:10px;color:var(--sub)}
+    .cl-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
+    .cl-status.joined{background:rgba(34,197,94,.1);color:#4ade80}
+    .cl-status.pending{background:rgba(245,158,11,.1);color:#fbbf24}
+    .cl-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:8px 0 4px;margin-top:4px}
+    .cl-rm{width:22px;height:22px;border-radius:5px;background:transparent;border:none;color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .cl-rm:hover{color:#ef4444}
+    .cl-none{font-size:12px;color:var(--sub)}
+    .invite-search-wrap{position:relative}
+    .invite-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--b1);border-radius:10px;padding:4px;z-index:10;box-shadow:0 8px 28px rgba(0,0,0,.6);display:none;max-height:200px;overflow-y:auto}
+    .invite-drop.show{display:block}
+    .invite-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .1s}
+    .invite-item:hover{background:var(--b2)}
+    .invite-msg{font-size:11px;margin-top:5px;min-height:14px}
+    .invite-msg.ok{color:var(--ok)}.invite-msg.err{color:var(--err)}
+    .ps-delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:rgba(239,68,68,.06);border:none;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:background .15s}
+    .ps-delete-btn:hover{background:rgba(239,68,68,.12)}
+    .ps-delete-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .ps-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+    .mbtn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s}
+    .mbtn-cancel{background:var(--s2);color:var(--sub)}
+    .mbtn-cancel:hover{background:var(--b1);color:var(--text)}
+    .mbtn-ok{background:var(--text);color:var(--bg)}
+    .mbtn-ok:hover{opacity:.82}
 
     /* Empty state */
     .empty{text-align:center;padding:clamp(48px,7vw,80px) 20px;display:none}
@@ -314,9 +376,14 @@
     .follow-modal-title{font-size:15px;font-weight:800;letter-spacing:-.3px}
     .follow-modal-close{width:26px;height:26px;border-radius:7px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
     .follow-modal-close:hover{background:var(--b2);color:var(--text)}
+    .follow-tabs{display:flex;gap:2px;flex:1}
+    .follow-tab{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;transition:all .12s;user-select:none}
+    .follow-tab:hover{color:var(--text)}
+    .follow-tab.active{background:var(--b2);color:var(--text)}
     .follow-list{overflow-y:auto;padding:6px;flex:1}
-    .fi{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+    .fi{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s;-webkit-user-select:none;user-select:none}
     .fi:hover{background:var(--b1)}
+    .fi *{-webkit-user-select:none;user-select:none}
     .fi-av{width:34px;height:34px;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000 !important;flex-shrink:0}
     .fi-name{font-size:13px;font-weight:700;line-height:1.3}
     .fi-handle{font-size:11px;color:var(--sub)}
@@ -379,6 +446,7 @@
         <div class="prof-name" id="profName">Loading…</div>
       </div>
       <div class="prof-handle" id="profHandle">@—</div>
+      <div class="prof-email" id="profEmail" style="display:none;font-size:12px;color:var(--sub);margin-top:2px;margin-bottom:4px"></div>
       <div class="prof-bio" id="profBio"></div>
 
       <!-- Edit mode fields -->
@@ -433,10 +501,6 @@
     <div class="account-section">
       <div class="account-section-label">Account</div>
       <div class="account-btns">
-        <button class="btn-signout" id="privacyPill" onclick="togglePrivacy()">
-          <svg id="privIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path id="privLockPath" d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span id="privLabel">Private profile</span>
-        </button>
         <button class="btn-signout" onclick="openPassModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
           Change password
@@ -453,6 +517,21 @@
     </div>
 
     <!-- Accessibility -->
+    <div class="account-section">
+      <div class="account-section-label">Privacy</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Show email on profile</div>
+          <div class="toggle-sub" id="showEmailSub">Your email will be visible to anyone who views your profile.</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="showEmailToggle" onchange="setShowEmail(this.checked)"/>
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+    </div>
+
     <div class="account-section">
       <div class="account-section-label">Accessibility</div>
       <div class="toggle-row">
@@ -488,7 +567,7 @@
   <!-- Tabs -->
   <div class="tabs" id="tabsRow">
     <div class="tab active" id="tabProjects" onclick="switchTab('projects')">Projects</div>
-    <div class="tab" id="tabShared" onclick="switchTab('shared')" style="display:none">Shared with me</div>
+    <div class="tab" id="tabShared" onclick="switchTab('shared')" style="display:none">Shared</div>
   </div>
 
   <!-- Projects pane -->
@@ -546,7 +625,11 @@
 <div class="overlay" id="followOverlay" onclick="if(event.target===this)closeFollowOverlay()">
   <div class="follow-modal">
     <div class="follow-modal-head">
-      <div class="follow-modal-title" id="followTitle">Followers</div>
+      <div class="follow-tabs">
+        <div class="follow-tab active" id="ftFollowers" onclick="switchFollowTab('followers')">Followers</div>
+        <div class="follow-tab" id="ftFollowing" onclick="switchFollowTab('following')">Following</div>
+        <div class="follow-tab" id="ftFriends" onclick="switchFollowTab('friends')">Friends</div>
+      </div>
       <button class="follow-modal-close" onclick="closeFollowOverlay()">✕</button>
     </div>
     <div class="follow-list" id="followList"></div>
@@ -571,6 +654,85 @@
   </div>
 </div>
 
+
+<!-- Project settings modal -->
+<div class="overlay" id="psOverlay" onclick="if(event.target===this)closePsModal()">
+  <div class="ps-modal">
+    <div class="ps-hero">
+      <div class="ps-hero-left">
+        <div class="ps-hero-emoji" id="psHeroEmoji">💻</div>
+        <div>
+          <div class="ps-hero-name" id="psHeroName">Project</div>
+          <div class="ps-hero-meta" id="psHeroMeta">—</div>
+        </div>
+      </div>
+      <button class="ps-close" onclick="closePsModal()">✕</button>
+    </div>
+    <div class="ps-body">
+      <div class="ps-field">
+        <div class="ps-label">Icon</div>
+        <div class="emoji-strip" id="psEmojiStrip"></div>
+      </div>
+      <div class="ps-field">
+        <div class="ps-label">Name</div>
+        <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"
+          oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
+      </div>
+      <div class="ps-div"></div>
+      <div id="psVisSection">
+        <div class="ps-vis-row">
+          <div class="ps-vis-info">
+            <div class="ps-vis-label" id="psVisLabel">Private</div>
+            <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
+          </div>
+          <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
+            <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="psLockTxt">Private</span>
+          </button>
+        </div>
+      </div>
+      <div class="ps-div"></div>
+      <div id="psCollabSection">
+        <div class="ps-field">
+          <div class="ps-label">Collaborators</div>
+          <div class="collab-list" id="psCollabList"><div class="cl-none">Loading…</div></div>
+          <div id="psInviteSection">
+            <div style="height:6px"></div>
+            <div class="invite-search-wrap">
+              <input class="ps-input" id="psInviteInput" placeholder="Search by username…" autocomplete="off"
+                oninput="onPsInviteInput()" onkeydown="onPsInviteKey(event)"/>
+              <div class="invite-drop" id="psInviteDrop"></div>
+            </div>
+            <div class="invite-msg" id="psInviteMsg"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ps-div" id="psDeleteDivider"></div>
+      <div id="psDeleteSection">
+        <button class="ps-delete-btn" onclick="psDelete()">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Delete project
+        </button>
+      </div>
+    </div>
+    <div class="ps-footer">
+      <button class="mbtn mbtn-cancel" onclick="closePsModal()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="psSave()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic confirm modal -->
+<div class="overlay" id="confirmOverlay">
+  <div class="follow-modal" style="width:340px;padding:24px 22px 20px">
+    <div style="font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px" id="confirmTitle"></div>
+    <div style="font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:22px" id="confirmMsg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="confirmCancel" style="padding:8px 18px;border-radius:8px;background:var(--b2);border:none;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)" onclick="_confirmResolve(false)">Cancel</button>
+      <button id="confirmOk" style="padding:8px 18px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)" onclick="_confirmResolve(true)">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <!-- Change password modal -->
 <div class="overlay" id="passOverlay" onclick="if(event.target===this)closePassModal()">
@@ -599,9 +761,28 @@
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
   let sb=null, session=null, myId=null, myProfile=null;
+
+  // ── Custom confirm modal ──────────────────────────────────────────────────
+  let _confirmResolve = null;
+  function profileConfirm(title, msg, danger=true){
+    return new Promise(resolve=>{
+      _confirmResolve = v => {
+        document.getElementById('confirmOverlay').classList.remove('show');
+        _confirmResolve = null;
+        resolve(v);
+      };
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMsg').textContent   = msg;
+      const ok = document.getElementById('confirmOk');
+      ok.textContent = danger ? 'Delete' : 'Confirm';
+      ok.style.background = danger ? 'rgba(239,68,68,.15)' : 'var(--b2)';
+      ok.style.color       = danger ? '#f87171' : 'var(--text)';
+      document.getElementById('confirmOverlay').classList.add('show');
+    });
+  }
   let viewProfile=null, viewId=null, isOwn=false;
   let projects=[], ctxId=null, ctxPub=false;
-  let acctPublic=true, notifLoaded=false;
+  let notifLoaded=false;
 
   try{
     if(!window._noConfig&&typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined')
@@ -634,7 +815,7 @@
     if(sb&&myId){
       try{
         const{data}=await sb.from('profiles').select('*').eq('id',myId).single();
-        if(data){viewProfile=data;myProfile=data;acctPublic=!!data.is_public;return;}
+        if(data){viewProfile=data;myProfile=data;return;}
       }catch(e){}
     }
     const u=localStorage.getItem('vexium_username')||'guest';
@@ -661,20 +842,28 @@
     document.getElementById('profName').textContent=name;
     document.getElementById('profHandle').textContent='@'+(p.username||'unknown');
     document.getElementById('profBio').textContent=p.bio||'';
+    const emailEl = document.getElementById('profEmail');
+    if(emailEl){
+      const showIt = isOwn ? !!p.email : (!!p.show_email && !!p.email);
+      emailEl.textContent = p.email || '';
+      emailEl.style.display = showIt ? '' : 'none';
+    }
     document.getElementById('statFollowers').textContent=p.follower_count||0;
     document.getElementById('statFollowing').textContent=p.following_count||0;
     document.title=(p.display_name||p.username||'Profile')+' — Vexium';
     loadFriendCount();
     if(isOwn){
-      updatePrivacyPill();
+      initAdvancedModeToggle();
+      const showEmailTog = document.getElementById('showEmailToggle');
+      if (showEmailTog && myProfile) showEmailTog.checked = !!myProfile.show_email;
+      const subEl = document.getElementById('showEmailSub');
+      if (subEl && myProfile?.email) subEl.textContent = `${myProfile.email} — visible to anyone when enabled.`;
       document.getElementById('fName').value=p.display_name||'';
       document.getElementById('fUsername').value=p.username||'';
       document.getElementById('fBio').value=p.bio||'';
       loadUsageBar();
       document.getElementById('profActions').innerHTML=`
-        <button class="btn-edit" id="btnEdit" onclick="toggleEditMode()" title="Edit profile">
-          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>`;
+        <button class="btn-edit" id="btnEdit" onclick="toggleEditMode()" title="Edit profile">···</button>`;
     }else{
       checkFollowing().then(f=>renderFollowBtn(f));
     }
@@ -739,34 +928,38 @@
     showToast('✓','Profile updated');
   }
 
-  /* ── PRIVACY ── */
-  function updatePrivacyPill(){
-    const path=document.getElementById('privLockPath');
-    if(path)path.setAttribute('d',acctPublic?'M7 11V7a5 5 0 0 1 9.9-1':'M7 11V7a5 5 0 0 1 10 0v4');
-    document.getElementById('privLabel').textContent=acctPublic?'Public profile':'Private profile';
-    const btn=document.getElementById('privacyPill');
-    if(btn){
-      btn.style.background=acctPublic?'rgba(34,197,94,.1)':'rgba(239,68,68,.08)';
-      btn.style.color=acctPublic?'#4ade80':'#f87171';
+  async function setShowEmail(on) {
+    if (sb && myId) {
+      try { await sb.from('profiles').update({ show_email: on }).eq('id', myId); } catch(e) {}
+    }
+    if (myProfile) myProfile.show_email = on;
+    // Re-render email visibility
+    const emailEl = document.getElementById('profEmail');
+    if (emailEl && myProfile?.email) {
+      emailEl.style.display = on ? '' : 'none';
     }
   }
-  function setAdvancedMode(on) {
+
+  async function setAdvancedMode(on) {
+    if (sb && myId) {
+      try { await sb.from('profiles').update({ advanced_mode: on }).eq('id', myId); } catch(e) {}
+    }
+    // Keep localStorage in sync so the editor can read it as a fast cache
     try { localStorage.setItem('vexium_advanced_mode', on ? '1' : '0'); } catch(e) {}
   }
 
-  // Init toggle state from localStorage
-  (function() {
+  function initAdvancedModeToggle() {
     const tog = document.getElementById('advancedModeToggle');
-    if (tog) {
+    if (!tog) return;
+    // Prefer the DB value loaded into myProfile; fall back to localStorage cache
+    if (myProfile && typeof myProfile.advanced_mode === 'boolean') {
+      tog.checked = myProfile.advanced_mode;
+      try { localStorage.setItem('vexium_advanced_mode', myProfile.advanced_mode ? '1' : '0'); } catch(e) {}
+    } else {
       try { tog.checked = localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) {}
     }
-  })();
-
-  async function togglePrivacy(){
-    acctPublic=!acctPublic;updatePrivacyPill();
-    if(sb&&myId)try{await sb.from('profiles').update({is_public:acctPublic}).eq('id',myId);}catch(e){}
-    showToast(acctPublic?'🌐':'🔒',acctPublic?'Profile is now public':'Profile is now private');
   }
+
 
   /* ── USAGE BAR ── */
   const USAGE_BUDGET_CENTS = 2000; // $20.00 = 2000 cents
@@ -902,13 +1095,13 @@
 
   /* ── ACCOUNT ── */
   async function doSignOut(){
-    if(!confirm('Sign out?'))return;
+    if(!await profileConfirm('Sign out?','You\'ll need to sign back in to access your account.',false))return;
     if(sb)try{await sb.auth.signOut();}catch(e){}
     localStorage.removeItem('vexium_guest');localStorage.removeItem('vexium_username');
     location.href='auth.html';
   }
   async function deleteAccount(){
-    if(!confirm('Delete your account and all data? This cannot be undone.'))return;
+    if(!await profileConfirm('Delete account','Delete your account and all data? This cannot be undone.'))return;
     if(sb&&session)try{await sb.rpc('delete_own_account');}catch(e){}
     localStorage.clear();location.href='index.html';
   }
@@ -933,19 +1126,20 @@
       return;
     }
     const grid=document.getElementById('projectGrid');
+    const profUser=viewProfile?.username||'';
     grid.innerHTML=projects.map(p=>{
-      const fc=Object.keys(p.files||{}).length;
       const upd=relTime(new Date(p.updated_at||Date.now()));
-      const isPub=!!p.is_public;
-      const moreBtn=isOwn?`<button class="pc-more" onclick="openCtx(event,'${p.id}',${isPub})">⋯</button>`:'';
-      const pubSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-      const privSvg='<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-      const badge=isOwn?`<div class="pc-badge ${isPub?'pub':'priv'}">${isPub?pubSvg+'Public':privSvg+'Private'}</div>`:'';
+      const moreBtn=`<button class="pc-more" onclick="openCtx(event,'${p.id}',true)">···</button>`;
+      const liveUrl=p.published_slug&&profUser?`https://${profUser}.vexium.ai/${p.published_slug}`:'';
+      const openHref=liveUrl||`viewer.html?project=${p.id}`;
       return `<div class="proj-card" onclick="cardClick(event,'${p.id}')">
-        ${moreBtn}${badge}
+        ${moreBtn}
+        <a class="pc-open" href="${openHref}" target="_blank" onclick="event.stopPropagation()" title="${liveUrl?'Open live site':'Open preview'}">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
         <div class="pc-emoji">${p.emoji||'💻'}</div>
         <div class="pc-name">${esc(p.name||'Untitled')}</div>
-        <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${upd}</span></div>
+        <div class="pc-meta"><span>${upd}</span></div>
       </div>`;
     }).join('');
   }
@@ -961,19 +1155,20 @@
       grid.innerHTML=rows.map(r=>{
         const p=r.projects;
         const isPending=r.status==='pending';
-        const fc=Object.keys(p.files||{}).length;
-        const clickHandler=isPending?'':`onclick="openShared('${p.id}')"`;  
-        const pendingBadge=isPending?'<div style="position:absolute;top:10px;left:10px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(251,191,36,.12);color:#fbbf24">Pending</div>':'';
+        const upd=relTime(new Date(p.updated_at||Date.now()));
         const inviteActions=isPending?`
           <div class="pc-invite-actions">
             <button class="pc-invite-btn decline" onclick="sharedDecline(event,'${p.id}')">Decline</button>
             <button class="pc-invite-btn accept" onclick="sharedAccept(event,'${p.id}')">Accept</button>
           </div>`:'';
-        return `<div class="proj-card" ${clickHandler} style="${isPending?'cursor:default':''}">
-          ${pendingBadge}
+        return `<div class="proj-card" onclick="cardClick(event,'${p.id}')">
+          <button class="pc-more" onclick="openCtx(event,'${p.id}',false)">···</button>
+          <a class="pc-open" href="viewer.html?project=${p.id}" target="_blank" onclick="event.stopPropagation()" title="Open preview">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
           <div class="pc-emoji">${p.emoji||'💻'}</div>
           <div class="pc-name">${esc(p.name||'Untitled')}</div>
-          <div class="pc-meta"><span>${fc} file${fc!==1?'s':''}</span><div class="pc-dot"></div><span>${isPending?'Invited':'Collaborator'}</span></div>
+          <div class="pc-meta"><span>${upd}</span></div>
           ${inviteActions}
         </div>`;
       }).join('');
@@ -995,43 +1190,173 @@
   }
 
   function cardClick(e,id){
-    if(e.target.closest('.pc-more'))return;
-    if(isOwn){localStorage.setItem('vexium_current_project',id);location.href='editor.html';}
-    else{window.open('viewer.html?project='+id,'_blank');}
+    if(e.target.closest('.pc-more')||e.target.closest('.pc-open')||e.target.closest('.pc-invite-actions'))return;
+    localStorage.setItem('vexium_current_project',id);
+    location.href='editor.html';
   }
   function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html';}
 
-  /* ── CTX MENU ── */
-  function openCtx(e,id,isPub){
-    e.preventDefault();e.stopPropagation();
-    ctxId=id;ctxPub=isPub;
-    document.getElementById('ctxPubLabel').textContent=isPub?'Make private':'Make public';
-    const m=document.getElementById('ctxMenu');
-    m.style.left=Math.min(e.clientX,innerWidth-180)+'px';
-    m.style.top=Math.min(e.clientY,innerHeight-200)+'px';
-    m.classList.add('show');
-  }
   document.addEventListener('click',e=>{
     if(!document.getElementById('bellBtn').contains(e.target)){document.getElementById('notifDrop').classList.remove('show');document.getElementById('bellBtn').classList.remove('active');}
     document.getElementById('ctxMenu').classList.remove('show');
   });
-  function ctxEdit(){if(!ctxId)return;localStorage.setItem('vexium_current_project',ctxId);location.href='editor.html';}
-  function ctxView(){if(!ctxId)return;window.open('viewer.html?project='+ctxId,'_blank');}
-  async function ctxTogglePublic(){
-    if(!ctxId||!sb)return;
-    const nv=!ctxPub;
-    await sb.from('projects').update({is_public:nv}).eq('id',ctxId);
-    showToast(nv?'🌐':'🔒',nv?'Project is now public':'Project is now private');
-    loadProjects();
+
+  /* ── PROJECT SETTINGS MODAL ── */
+  const PS_EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯','🚀','✨','🎬','🎵','📝','🔥','💡','🏆','💎','🌈','🎮','📸','🧠','🌿','🏠','💰','🎪','🧩','⚽','🎭'];
+  let psProjectId=null, psCurPublic=false, psEmojiCur='💻', psIsOwner=true;
+
+  async function openCtx(e,id,isOwner=true){
+    e.preventDefault();e.stopPropagation();
+    psProjectId=id;
+    psIsOwner=isOwner;
+    // Show/hide owner-only sections
+    ['psVisSection','psDeleteSection','psDeleteDivider'].forEach(sid=>{
+      const el=document.getElementById(sid);
+      if(el)el.style.display=isOwner?'':'none';
+    });
+    const _inv=document.getElementById('psInviteSection');
+    if(_inv)_inv.style.display=isOwner?'':'none';
+    const p=projects.find(x=>x.id===id)||
+            (await sb?.from('projects').select('*').eq('id',id).single())?.data;
+    if(!p)return;
+    psCurPublic=!!p.is_public;
+    psEmojiCur=p.emoji||'💻';
+    document.getElementById('psHeroEmoji').textContent=psEmojiCur;
+    document.getElementById('psHeroName').textContent=p.name||'Untitled';
+    document.getElementById('psHeroMeta').textContent='Updated '+relTime(new Date(p.updated_at||Date.now()));
+    document.getElementById('psNameInput').value=p.name||'';
+    const _strip=document.getElementById('psEmojiStrip');_strip.classList.remove('expanded');_strip.innerHTML=PS_EMOJIS.map(em=>`<div class="emoji-opt${em===psEmojiCur?' sel':''}" onclick="pickPsEmoji('${em}')">${em}</div>`).join('');let _ebtn=document.getElementById('psEmojiExpandBtn');if(!_ebtn){_ebtn=document.createElement('button');_ebtn.id='psEmojiExpandBtn';_ebtn.className='emoji-expand';_ebtn.textContent='Show all ↓';_ebtn.onclick=function(){_strip.classList.add('expanded');this.style.display='none';};_strip.parentNode.insertBefore(_ebtn,_strip.nextSibling);}else{_ebtn.style.display='';}
+    updateVisToggle();
+    document.getElementById('psInviteMsg').textContent='';
+    document.getElementById('psInviteMsg').className='invite-msg';
+    document.getElementById('psInviteInput').value='';
+    hideInviteDrop();
+    await loadPsCollabs();
+    document.getElementById('psOverlay').classList.add('show');
   }
-  async function ctxDelete(){
-    if(!ctxId)return;
-    if(!confirm('Delete this project? Cannot be undone.'))return;
-    if(sb){await sb.from('projects').delete().eq('id',ctxId);}
-    else{const l=JSON.parse(localStorage.getItem('vexium_projects')||'[]').filter(p=>p.id!==ctxId);localStorage.setItem('vexium_projects',JSON.stringify(l));}
-    loadProjects();
+
+  function closePsModal(){document.getElementById('psOverlay').classList.remove('show');hideInviteDrop();}
+
+  function pickPsEmoji(em){
+    psEmojiCur=em;
+    document.getElementById('psHeroEmoji').textContent=em;
+    document.querySelectorAll('#psEmojiStrip .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
   }
-  function ctxCollaborators(){if(!ctxId)return;openCollabModal(ctxId);}
+
+  function togglePsPublic(){psCurPublic=!psCurPublic;updateVisToggle();}
+
+  function updateVisToggle(){
+    const btn=document.getElementById('psLockBtn');
+    const ico=document.getElementById('psLockIco');
+    const txt=document.getElementById('psLockTxt');
+    document.getElementById('psVisLabel').textContent=psCurPublic?'Public':'Private';
+    document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
+    if(psCurPublic){
+      btn.className='lock-btn unlocked';
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
+      txt.textContent='Public';
+    }else{
+      btn.className='lock-btn';
+      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+      txt.textContent='Private';
+    }
+  }
+
+  async function psSave(){
+    if(!psProjectId)return;
+    const name=document.getElementById('psNameInput').value.trim();
+    if(!name){document.getElementById('psNameInput').focus();return;}
+    const updates={name,emoji:psEmojiCur,is_public:psCurPublic,updated_at:new Date().toISOString()};
+    if(sb&&session){await sb.from('projects').update(updates).eq('id',psProjectId);}
+    closePsModal();
+    showToast('✓','Saved');
+    await loadProjects();
+  }
+
+  async function psDelete(){
+    if(!psProjectId)return;
+    if(!await profileConfirm('Delete project','This project and all its files will be permanently deleted.'))return;
+    if(sb){await sb.from('projects').delete().eq('id',psProjectId);}
+    closePsModal();
+    showToast('🗑','Deleted');
+    await loadProjects();
+  }
+
+  async function loadPsCollabs(){
+    const list=document.getElementById('psCollabList');
+    if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
+    try{
+      const{data}=await sb.from('project_members').select('user_id,role,status').eq('project_id',psProjectId).neq('status','declined');
+      if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
+      const{data:profs}=await sb.from('profiles').select('id,username,display_name').in('id',data.map(m=>m.user_id));
+      const pm={};(profs||[]).forEach(p=>{pm[p.id]=p;});
+      const joined=data.filter(m=>m.status==='accepted'||!m.status);
+      const pending=data.filter(m=>m.status==='pending');
+      let html='';
+      if(joined.length){
+        html+='<div class="cl-section-label">Active</div>';
+        html+=joined.map(m=>{const p=pm[m.user_id]||{};const n=p.display_name||p.username||'?';
+          return `<div class="cl-item"><div class="cl-av">${n.charAt(0).toUpperCase()}</div><div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div><div class="cl-status joined">Joined</div>${psIsOwner?`<button class="cl-rm" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}</div>`;
+        }).join('');
+      }
+      if(pending.length){
+        html+='<div class="cl-section-label">Invited</div>';
+        html+=pending.map(m=>{const p=pm[m.user_id]||{};const n=p.display_name||p.username||'?';
+          return `<div class="cl-item"><div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div><div class="cl-info"><div class="cl-name" style="opacity:.7">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div><div class="cl-status pending">Pending</div>${psIsOwner?`<button class="cl-rm" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}</div>`;
+        }).join('');
+      }
+      list.innerHTML=html||'<div class="cl-none">No collaborators yet</div>';
+    }catch(e){list.innerHTML='<div class="cl-none">No collaborators yet</div>';}
+  }
+
+  async function psRemoveCollab(uid){
+    if(!await profileConfirm('Remove collaborator','This person will lose access to the project.',false))return;
+    await sb.from('project_members').delete().eq('project_id',psProjectId).eq('user_id',uid);
+    await loadPsCollabs();
+  }
+
+  let psInviteTimer=null;
+  function onPsInviteInput(){
+    clearTimeout(psInviteTimer);
+    const q=document.getElementById('psInviteInput').value.trim();
+    if(!q){hideInviteDrop();return;}
+    psInviteTimer=setTimeout(()=>psSearchInvite(q),240);
+  }
+  function onPsInviteKey(e){
+    if(e.key==='Escape'){hideInviteDrop();document.getElementById('psInviteInput').blur();}
+    if(e.key==='Enter'){const first=document.querySelector('#psInviteDrop .invite-item');if(first)first.click();}
+  }
+  function hideInviteDrop(){const d=document.getElementById('psInviteDrop');if(d)d.classList.remove('show');}
+
+  async function psSearchInvite(q){
+    const drop=document.getElementById('psInviteDrop');
+    if(!sb)return;
+    try{
+      const{data}=await sb.from('profiles').select('id,username,display_name').or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).limit(6);
+      const others=(data||[]).filter(p=>p.id!==myId);
+      if(!others.length){drop.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--sub)">No users found</div>';drop.classList.add('show');return;}
+      drop.innerHTML=others.map(u=>{
+        const n=u.display_name||u.username||'?';
+        return `<div class="invite-item" onclick="psSendInvite('${u.id}','${esc(n)}')">
+          <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
+          <div><div style="font-size:12px;font-weight:700">${esc(n)}</div><div style="font-size:10px;color:var(--sub)">@${esc(u.username||'')}</div></div>
+        </div>`;
+      }).join('');
+      drop.classList.add('show');
+    }catch(e){}
+  }
+
+  async function psSendInvite(uid,name){
+    hideInviteDrop();
+    document.getElementById('psInviteInput').value='';
+    const msg=document.getElementById('psInviteMsg');
+    try{
+      await sb.from('project_members').upsert({project_id:psProjectId,user_id:uid,role:'editor',status:'pending'},{onConflict:'project_id,user_id'});
+      msg.textContent='Invite sent to '+name;msg.className='invite-msg ok';
+      await loadPsCollabs();
+    }catch(e){msg.textContent='Failed to send invite';msg.className='invite-msg err';}
+    setTimeout(()=>{msg.textContent='';msg.className='invite-msg';},3000);
+  }
 
   /* ── COLLABORATORS ── */
   async function openCollabModal(pid){
@@ -1082,19 +1407,20 @@
     }catch(e){msg.textContent=e.message||'Could not invite.';msg.className='pass-msg err';}
   }
   async function removeCollab(pid,uid){
-    if(!confirm('Remove this collaborator?'))return;
+    if(!await profileConfirm('Remove collaborator','This person will lose access to the project.',false))return;
     await sb.from('project_members').delete().eq('project_id',pid).eq('user_id',uid);
     await refreshCollabList(pid);
   }
 
   /* ── FOLLOW LIST ── */
+  let _followCache=null;
   async function openFollowList(type){
-    const titles={followers:'Followers',following:'Following',friends:'Friends'};
-    document.getElementById('followTitle').textContent=titles[type]||type;
+    _followCache=null;
+    document.getElementById('followOverlay').classList.add('show');
+    setFollowTab(type);
     const list=document.getElementById('followList');
     list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Loading…</div>';
-    document.getElementById('followOverlay').classList.add('show');
-    if(!sb||!viewId){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Not available.</div>';return;}
+    if(!sb||!viewId){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Sign in to view.</div>';return;}
     try{
       const[{data:fwing},{data:fwers}]=await Promise.all([
         sb.from('follows').select('following_id').eq('follower_id',viewId),
@@ -1102,21 +1428,42 @@
       ]);
       const followingIds=(fwing||[]).map(r=>r.following_id);
       const followerIds=(fwers||[]).map(r=>r.follower_id);
-      let ids=[];
-      if(type==='following')ids=followingIds;
-      else if(type==='followers')ids=followerIds;
-      else ids=followingIds.filter(id=>followerIds.includes(id));
-      if(!ids.length){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">None yet.</div>';return;}
-      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',ids);
-      list.innerHTML=(profiles||[]).map(p=>{
-        if(!p)return'';
-        const n=p.display_name||p.username||'?';
-        return`<div class="fi" onclick="goProfile('${esc(p.username||'')}')">
-          <div class="fi-av">${n.charAt(0).toUpperCase()}</div>
-          <div><div class="fi-name">${esc(n)}</div><div class="fi-handle">@${esc(p.username||'')}</div></div>
-        </div>`;
-      }).join('');
-    }catch(e){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Could not load.</div>';}
+      const allIds=[...new Set([...followingIds,...followerIds])];
+      let profileMap={};
+      if(allIds.length){
+        const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',allIds);
+        (profiles||[]).forEach(p=>{profileMap[p.id]=p;});
+      }
+      _followCache={followingIds,followerIds,profileMap};
+    }catch(e){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Could not load.</div>';return;}
+    renderFollowTab(type);
+  }
+  function setFollowTab(type){
+    ['followers','following','friends'].forEach(t=>{
+      document.getElementById('ft'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active',t===type);
+    });
+  }
+  function switchFollowTab(type){
+    setFollowTab(type);
+    renderFollowTab(type);
+  }
+  function renderFollowTab(type){
+    const list=document.getElementById('followList');
+    if(!_followCache){return;}
+    const{followingIds,followerIds,profileMap}=_followCache;
+    let ids=[];
+    if(type==='following')ids=followingIds;
+    else if(type==='followers')ids=followerIds;
+    else ids=followingIds.filter(id=>followerIds.includes(id));
+    if(!ids.length){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">None yet.</div>';return;}
+    list.innerHTML=ids.map(id=>{
+      const p=profileMap[id];if(!p)return'';
+      const n=p.display_name||p.username||'?';
+      return`<div class="fi" onclick="goProfile('${esc(p.username||'')}')">
+        <div class="fi-av">${n.charAt(0).toUpperCase()}</div>
+        <div><div class="fi-name">${esc(n)}</div><div class="fi-handle">@${esc(p.username||'')}</div></div>
+      </div>`;
+    }).join('');
   }
   function closeFollowOverlay(){document.getElementById('followOverlay').classList.remove('show');}
   function goProfile(u){closeFollowOverlay();if(u)location.href='profile.html?user='+u;}
@@ -1201,9 +1548,16 @@
     if(!sb){drop.innerHTML='<div class="search-msg">Sign in to search</div>';return;}
     let html='';
     try{
-      const{data}=await sb.from('profiles').select('id,username,display_name').ilike('username','%'+q+'%').eq('is_public',true).limit(8);
+      const{data,error}=await sb.from('profiles')
+        .select('id,username,display_name')
+        .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+        .limit(8);
+      if(error) throw error;
       if(data&&data.length)html=data.filter(p=>p.id!==myId).map(u=>searchItemHTML(u)).join('');
-    }catch(e){}
+    }catch(e){
+      drop.innerHTML=`<div class="search-msg">Error: ${e.message||'Search failed'}</div>`;
+      return;
+    }
     drop.innerHTML=html||'<div class="search-msg">No users found</div>';
   }
   function searchItemHTML(u){

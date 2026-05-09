@@ -66,6 +66,8 @@
     /* ─────────────────────────────────────────────
        TOPBAR
     ───────────────────────────────────────────── */
+    #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;opacity:.65;width:0;pointer-events:none;z-index:calc(var(--z-topbar) + 1);background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
+    @keyframes tbLoad{0%{width:0%}15%{width:30%}50%{width:60%}100%{width:80%}}
     #topbar {
       height: 48px;
       background: var(--surface);
@@ -757,6 +759,13 @@
     /* ── BACKEND PANE ── */
     #backendPane { flex:1; display:none; flex-direction:row; min-height:0; overflow:hidden; }
     #backendPane.show { display:flex; }
+    /* ── EDIT PANE ── */
+    #editPane { flex:1; display:none; flex-direction:row; min-height:0; overflow:hidden; min-width:0; }
+    #editPane.show { display:flex; }
+    #editNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; border-right:1px solid var(--border); }
+    #editMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
+    .edit-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
+    .edit-panel.active { display:flex; }
 
     /* Nav sidebar — no borders, color contrast only */
     #bkNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; }
@@ -1084,26 +1093,19 @@
       transition: background var(--t-fast), transform var(--t-fast);
     }
     #aiSend.has-text { background: var(--text); }
-    #aiSend.has-text:hover { background: transparent; transform: scale(1.08); }
+    #aiSend.has-text:hover { background: var(--text); transform: scale(1.08); }
     #aiSend::before {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      animation: sendColorFade 20s linear infinite;
+      background: repeating-linear-gradient(90deg,#f87171,#fb923c 16%,#fbbf24 33%,#4ade80 50%,#60a5fa 66%,#a78bfa 83%,#f472b6 100%);
+      background-size: 200px 100%;
       opacity: 0;
-      transition: opacity .25s;
+      transition: opacity .2s;
     }
-    @keyframes sendColorFade {
-      0%   { background: #ff6b6b; box-shadow: 0 0 8px 1px rgba(255,107,107,.55); }
-      16%  { background: #ff9f43; box-shadow: 0 0 8px 1px rgba(255,159,67,.55); }
-      33%  { background: #0be881; box-shadow: 0 0 8px 1px rgba(11,232,129,.55); }
-      50%  { background: #48dbfb; box-shadow: 0 0 8px 1px rgba(72,219,251,.55); }
-      66%  { background: #ff9ff3; box-shadow: 0 0 8px 1px rgba(255,159,243,.55); }
-      83%  { background: #6c5ce7; box-shadow: 0 0 8px 1px rgba(108,92,231,.55); }
-      100% { background: #ff6b6b; box-shadow: 0 0 8px 1px rgba(255,107,107,.55); }
-    }
-    #aiSend.has-text:hover::before { opacity: 1; }
+    @keyframes sendRainbowLeft { from{background-position:0 0} to{background-position:-200px 0} }
+    #aiSend.has-text:hover::before { opacity: .38; animation: sendRainbowLeft 6s linear infinite; }
     #aiSend:disabled { opacity: .3; cursor: default; transform: none; }
     #aiSend svg { width: 13px; height: 13px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
 
@@ -1153,7 +1155,7 @@
       flex-shrink: 0;
       padding: 0;
       transition: color var(--t-fast), background var(--t-fast);
-      align-self: center;
+      margin-bottom: 4px;
     }
     .ai-attach-btn:hover { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .9); }
     .ai-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: round; }
@@ -1656,6 +1658,7 @@
       background: var(--border2);
       border: none;
       border-radius: 50%;
+      margin-bottom: 4px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1663,20 +1666,20 @@
       flex-shrink: 0;
       position: relative;
       transition: background var(--t-fast), transform var(--t-fast);
-      align-self: center;
     }
     #aiBottomSend.has-text { background: var(--text); }
-    #aiBottomSend.has-text:hover { background: transparent; transform: scale(1.08); }
+    #aiBottomSend.has-text:hover { background: var(--text); transform: scale(1.08); }
     #aiBottomSend::before {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      animation: sendColorFade 20s linear infinite;
+      background: repeating-linear-gradient(90deg,#f87171,#fb923c 16%,#fbbf24 33%,#4ade80 50%,#60a5fa 66%,#a78bfa 83%,#f472b6 100%);
+      background-size: 200px 100%;
       opacity: 0;
-      transition: opacity .25s;
+      transition: opacity .2s;
     }
-    #aiBottomSend.has-text:hover::before { opacity: 1; }
+    #aiBottomSend.has-text:hover::before { opacity: .38; animation: sendRainbowLeft 6s linear infinite; }
     #aiBottomSend:disabled { opacity: .3; cursor: default; transform: none; }
     #aiBottomSend svg { width: 14px; height: 14px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
     #aiStopBtn {
@@ -2002,55 +2005,60 @@
       position: absolute;
       inset: 0;
       z-index: 300;
-      background: rgba(0,0,0,.6);
-      backdrop-filter: blur(4px);
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(8px);
       align-items: center;
       justify-content: center;
     }
     .tpl-modal.show { display: flex; }
     .tpl-modal-inner {
       background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: var(--r-lg);
+      border-radius: 18px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 24px 64px rgba(0,0,0,.6);
+      box-shadow: 0 32px 80px rgba(0,0,0,.7);
     }
-    .tpl-modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .tpl-modal-title { font-size: 14px; font-weight: 700; }
-    .tpl-modal-close { background: none; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: color var(--t-fast); }
-    .tpl-modal-close:hover { color: var(--text); }
-    .tpl-modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    .tpl-modal-body { overflow-y: auto; flex: 1; padding: 12px; }
-    .tpl-modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
-    .tpl-modal-new-btn { background: var(--border); border: 1px solid var(--border2); color: var(--text); border-radius: var(--r-md); padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); width: 100%; transition: background var(--t-fast); }
-    .tpl-modal-new-btn:hover { background: var(--border2); }
-    .tpl-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); cursor: pointer; transition: background var(--t-fast); border: 1px solid transparent; }
-    .tpl-row:hover { background: var(--border); }
-    .tpl-row-emoji { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
-    .tpl-row-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .tpl-modal-header { padding: 18px 20px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .tpl-modal-title { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
+    .tpl-modal-close { background: var(--border); border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; transition: all var(--t-fast); }
+    .tpl-modal-close:hover { background: var(--border2); color: var(--text); }
+    .tpl-modal-close svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .tpl-modal-body { overflow-y: auto; flex: 1; padding: 0 10px 10px; }
+    .tpl-modal-footer { padding: 10px 12px 12px; flex-shrink: 0; }
+    .tpl-modal-new-btn { background: rgba(255,255,255,.06); border: none; color: var(--muted); border-radius: 10px; padding: 10px 16px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); width: 100%; transition: all var(--t-fast); }
+    .tpl-modal-new-btn:hover { background: rgba(255,255,255,.1); color: var(--text); }
+    .tpl-row { display: flex; align-items: center; gap: 12px; padding: 10px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t-fast); }
+    .tpl-row:hover { background: rgba(255,255,255,.06); }
+    .tpl-row-emoji { font-size: 20px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); border-radius: 8px; flex-shrink: 0; }
+    .tpl-row-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
     .tpl-row-prompt { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Template edit modal */
-    .tpl-edit-modal-inner { width: min(92%, 500px); }
-    .tpl-edit-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-    .tpl-edit-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
-    .tpl-edit-row { display: flex; gap: 8px; }
-    .tpl-input { background: var(--border); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 8px 12px; font-size: 13px; color: var(--text); outline: none; font-family: var(--sans); transition: border-color var(--t-fast); }
-    .tpl-input:focus { border-color: rgba(79,110,247,.4); }
-    .tpl-input-emoji { width: 44px; text-align: center; font-size: 16px; padding: 8px; }
+    .tpl-edit-modal-inner { width: min(92%, 460px); }
+    .tpl-edit-body { padding: 4px 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+    .tpl-edit-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .7px; }
+    .tpl-edit-row { display: flex; gap: 8px; align-items: center; }
+    .tpl-emoji-cur { width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: background var(--t-fast); flex-shrink: 0; }
+    .tpl-emoji-cur:hover { background: rgba(255,255,255,.12); }
+    .tpl-emoji-picker { display: grid; grid-template-columns: repeat(8,1fr); gap: 3px; padding: 8px; background: rgba(255,255,255,.04); border-radius: 12px; }
+    .tpl-emoji-opt { font-size: 18px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; transition: background var(--t-fast); }
+    .tpl-emoji-opt:hover { background: rgba(255,255,255,.1); }
+    .tpl-emoji-opt.sel { background: rgba(255,255,255,.15); }
+    .tpl-input { background: rgba(255,255,255,.07); border: none; border-radius: 10px; padding: 10px 13px; font-size: 13px; color: var(--text); outline: none; font-family: var(--sans); transition: background var(--t-fast); }
+    .tpl-input:focus { background: rgba(255,255,255,.1); }
     .tpl-input-name { flex: 1; }
-    .tpl-textarea { width: 100%; background: var(--border); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--text); outline: none; font-family: var(--sans); resize: vertical; line-height: 1.5; min-height: 80px; transition: border-color var(--t-fast); }
-    .tpl-textarea:focus { border-color: rgba(79,110,247,.4); }
-    .tpl-edit-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
-    .tpl-btn { padding: 8px 14px; border: none; border-radius: var(--r-sm); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); }
-    .tpl-btn-delete { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: var(--err); }
+    .tpl-textarea { width: 100%; background: rgba(255,255,255,.07); border: none; border-radius: 10px; padding: 10px 13px; font-size: 13px; color: var(--text); outline: none; font-family: var(--sans); resize: vertical; line-height: 1.55; min-height: 90px; transition: background var(--t-fast); }
+    .tpl-textarea:focus { background: rgba(255,255,255,.1); }
+    .tpl-textarea::placeholder,.tpl-input::placeholder { color: var(--muted); }
+    .tpl-edit-footer { padding: 12px 20px 16px; display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
+    .tpl-btn { padding: 9px 18px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); }
+    .tpl-btn-delete { background: rgba(239,68,68,.1); color: var(--err); margin-right: auto; }
     .tpl-btn-delete:hover { background: rgba(239,68,68,.2); }
-    .tpl-btn-cancel { background: var(--border); border: 1px solid var(--border2); color: var(--muted); }
-    .tpl-btn-cancel:hover { background: var(--border2); color: var(--text); }
-    .tpl-btn-save { background: var(--accent); color: #fff; font-weight: 700; }
-    .tpl-btn-save:hover { background: #3d5df0; }
+    .tpl-btn-cancel { background: rgba(255,255,255,.07); color: var(--muted); }
+    .tpl-btn-cancel:hover { background: rgba(255,255,255,.11); color: var(--text); }
+    .tpl-btn-save { background: var(--text); color: var(--bg); }
+    .tpl-btn-save:hover { opacity: .88; }
 
     /* ─────────────────────────────────────────────
        DROP OVERLAY
@@ -2153,6 +2161,7 @@
      TOPBAR
 ═══════════════════════════════════════════ -->
 <div id="topbar">
+  <div id="topbarLoader"></div>
   <a href="home.html" class="tb-logo" title="Vexium — Home">
     <img src="vexium_logo.png" alt="Vexium"/>
   </a>
@@ -2164,6 +2173,10 @@
     <button class="tb-mode on" id="modeAI" onclick="handleModeClick('ai')">
       <svg viewBox="0 0 24 24"><path d="M12 2L9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z" fill="currentColor" stroke="none"/></svg>
       AI
+    </button>
+    <button class="tb-mode" id="modeEdit" onclick="handleModeClick('data')">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
     </button>
     <button class="tb-mode" id="modeEditor" onclick="handleModeClick('editor')">
       <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -2570,7 +2583,43 @@
 
           </div><!-- end #bkMain -->
         </div><!-- end #backendPane -->
+
       </div>
+
+      <!-- EDIT PANE (sibling of editorPane, not child) -->
+      <div id="editPane">
+        <div id="editNav">
+          <div class="bk-nav-section">SITE DATA</div>
+          <div class="bk-nav-item active" data-edit="users" onclick="editSetTab('users')">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Users
+          </div>
+          <div class="bk-nav-item" data-edit="collections" onclick="editSetTab('collections')">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            Collections
+          </div>
+          <div class="bk-nav-section">COMMERCE</div>
+          <div class="bk-nav-item" data-edit="orders" onclick="editSetTab('orders')">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Orders
+          </div>
+          <div class="bk-nav-item" data-edit="products" onclick="editSetTab('products')">
+            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Products
+          </div>
+          <div class="bk-nav-item" data-edit="subscriptions" onclick="editSetTab('subscriptions')">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Subscriptions
+          </div>
+        </div>
+        <div id="editMain">
+          <div class="edit-panel active" id="editPanelUsers"></div>
+          <div class="edit-panel" id="editPanelCollections"></div>
+          <div class="edit-panel" id="editPanelOrders"></div>
+          <div class="edit-panel" id="editPanelProducts"></div>
+          <div class="edit-panel" id="editPanelSubscriptions"></div>
+        </div>
+      </div><!-- end #editPane -->
 
       <!-- AI PANEL -->
       <div id="aiPanel">
@@ -2637,14 +2686,15 @@
             </div>
             <div class="tpl-edit-body">
               <div>
-                <div class="tpl-edit-label">Label</div>
+                <div class="tpl-edit-label">Name</div>
                 <div class="tpl-edit-row">
-                  <input id="tplEditEmoji" class="tpl-input tpl-input-emoji" placeholder="✨" maxlength="2"/>
+                  <div class="tpl-emoji-cur" id="tplEmojiCur" onclick="tplToggleEmojiPicker()">✨</div>
                   <input id="tplEditName" class="tpl-input tpl-input-name" placeholder="Template name"/>
                 </div>
+                <div id="tplEmojiPicker" class="tpl-emoji-picker" style="display:none;margin-top:8px"></div>
               </div>
               <div>
-                <div class="tpl-edit-label">Prompt sent to AI</div>
+                <div class="tpl-edit-label">Prompt</div>
                 <textarea id="tplEditPrompt" class="tpl-textarea" rows="4" placeholder="Describe what you want the AI to build…"></textarea>
               </div>
             </div>
@@ -2943,6 +2993,16 @@ async function init() {
   await loadProject();
   loadMonaco();
   loadUsageWarnPref();
+  topbarLoaderDone();
+}
+
+function topbarLoaderDone(){
+  const el=document.getElementById('topbarLoader');
+  if(!el)return;
+  el.style.animation='none';
+  el.style.transition='width .2s ease,opacity .3s ease .15s';
+  el.style.width='100%';
+  setTimeout(()=>{el.style.opacity='0';},50);
 }
 
 // ── PROJECT LOAD / SAVE ───────────────────────────────────────────────────────
@@ -3026,12 +3086,14 @@ async function loadProject() {
     } catch(e) {}
   }
   const _tbModes = document.getElementById('tbModes');
-  if (_tbModes) _tbModes.style.display = _advancedMode ? '' : 'none';
+  if (_tbModes) _tbModes.style.display = '';
+  document.getElementById('modeEditor')?.style.setProperty('display', _advancedMode ? '' : 'none');
+  document.getElementById('modeEdit')?.style.setProperty('display', _advancedMode ? 'none' : '');
 
   let lastMode = 'ai';
-  if (_advancedMode) {
-    try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
-  }
+  try { lastMode = localStorage.getItem('vexium_last_mode') || 'ai'; } catch(e) {}
+  if (!_advancedMode && lastMode === 'editor') lastMode = 'ai';
+  if (_advancedMode && lastMode === 'data') lastMode = 'ai';
   setMode(lastMode);
   await aiLoadHistory();
   renderTemplates();
@@ -3155,16 +3217,19 @@ function triggerIntroEntrance(id) {
 function setMode(m) {
   document.getElementById('modeEditor').classList.toggle('on', m === 'editor');
   document.getElementById('modeAI').classList.toggle('on', m === 'ai' || !m);
-  if (m === 'ai' || m === 'editor') {
+  document.getElementById('modeEdit')?.classList.toggle('on', m === 'data');
+  if (m === 'ai' || m === 'editor' || m === 'data') {
     try { localStorage.setItem('vexium_last_mode', m); } catch(e) {}
   }
   document.getElementById('editorPane').style.display  = m === 'editor' ? 'flex' : 'none';
   document.getElementById('aiPanel').style.display     = m === 'ai'     ? 'flex' : 'none';
   document.getElementById('aiPanel').classList.toggle('show', m === 'ai');
-  document.getElementById('sidebar').style.display     = m === 'ai'     ? 'none' : '';
-  document.getElementById('statusbar').classList.toggle('hidden', m === 'ai');
+  document.getElementById('sidebar').style.display     = (m === 'ai' || m === 'data') ? 'none' : '';
+  document.getElementById('statusbar').classList.toggle('hidden', m === 'ai' || m === 'data');
+  document.getElementById('editPane')?.classList.toggle('show', m === 'data');
   const pmSwitch = document.getElementById('paneModeSwitch');
   if (pmSwitch) pmSwitch.style.display = m === 'editor' ? '' : 'none';
+  if (m === 'data') editSetTab(_editTab);
 
   if (m !== 'editor') {
     const imgPane = document.getElementById('imgPreviewPane');
@@ -3883,7 +3948,8 @@ function refreshPreviewPage(pageName) {
     const fallback = normalizeMainFile(mainFile, fileSystem);
     if (!fallback) return;
     pageName = fallback;
-    mainFile = fallback;
+    // Don't mutate mainFile here — avoids switching away from index.html
+    // while it's still being built during the first AI response
   }
   const frame = document.getElementById('previewFrame');
   const html = buildPageHtml(pageName);
@@ -4718,14 +4784,14 @@ function formatChatText(raw) {
 
 // ── TEMPLATE SYSTEM ───────────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES = [
-  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build me a complete SaaS website. A home page with a hero that has a visual, features, testimonials, pricing overview, and footer. A pricing page with detailed plans and a comparison table. An about page with team, mission, and story. A sign in page with sign in and sign up tabs. Light theme, ultra-minimal design — almost no visible borders, use whitespace and subtle background shifts instead of lines or dividers. Modern, polished aesthetic.' },
-  { id: 'tpl_port',   emoji: '🎨', name: 'Portfolio',    prompt: 'Build me a complete portfolio website. A home page with an animated hero, about preview, featured work, and contact CTA. A work page with a project grid and filter chips. A contact page with form, social links, and availability status. Clean, editorial design — minimal borders, whitespace-driven layout. All navigation links work.' },
-  { id: 'tpl_store',  emoji: '🛍️', name: 'Online Store', prompt: 'Build me a complete e-commerce website. A home page with hero banner, featured products, categories, and newsletter signup. A shop page with product grid, filter sidebar, and sort options. A product detail page with images, size selector, add to cart, and reviews. A cart page with order summary and checkout button. Minimal, premium aesthetic. All links work.' },
-  { id: 'tpl_agency', emoji: '⚡', name: 'Agency',       prompt: 'Build me a complete creative agency website. A home page with bold hero, services overview, case study previews, client logos, and CTA. A services page with detailed cards and process breakdown. A work page with project showcase, tags, and filters. A contact page with project inquiry form and team intro. Bold, high-impact design — barely any borders, clean whitespace layout. All navigation works.' },
-  { id: 'tpl_rest',   emoji: '🍽️', name: 'Restaurant',   prompt: 'Build me a complete restaurant website. A home page with a cinematic hero and reservation CTA, about section, featured dishes, and hours plus location. A menu page with all items organized by category with prices and descriptions. A reservations page with a booking form including date, time, and party size. Warm, upscale aesthetic. All links work.' },
-  { id: 'tpl_blog',   emoji: '✍️', name: 'Blog',         prompt: 'Build me a complete blog website. A home page with featured post hero, recent posts grid, categories, and newsletter signup. A post page with full article layout, cover image, author bio, and related posts. An about page with author profile and social links. Editorial, readable design — minimal borders, generous whitespace. All navigation works.' },
-  { id: 'tpl_app',    emoji: '📱', name: 'App',          prompt: 'Build me a complete mobile app landing page. A home page with a bold hero showcasing app screens or a product visual, key features with icons, social proof, and app store download buttons. A features page with detailed capabilities and benefit-focused copy. A pricing page for subscription tiers. Ultra-clean design — no borders, heavy whitespace, strong typography hierarchy. All links work.' },
-  { id: 'tpl_creator',emoji: '⭐', name: 'Creator',      prompt: 'Build me a complete creator or personal brand website. A home page with a bold personal hero, what I do, featured content or work, and a CTA to follow or work together. A content page showcasing videos, posts, or products in a clean grid. A work with me page with service offerings and a contact or booking form. Warm, personality-driven design — minimal borders, expressive typography, feels like a real person built it. All navigation works.' },
+  { id: 'tpl_saas',    emoji: '🚀', name: 'SaaS',        prompt: 'Build a SaaS website with a home, pricing, about, and sign in page. Light theme, ultra-minimal — no visible borders, whitespace and soft background shifts only. Modern and polished.' },
+  { id: 'tpl_port',   emoji: '🎨', name: 'Portfolio',    prompt: 'Build a portfolio website with a home, work, and contact page. Editorial design — clean whitespace, bold typography, minimal UI. Make it feel high-end and personal.' },
+  { id: 'tpl_store',  emoji: '🛍️', name: 'Online Store', prompt: 'Build an online store with a home, shop, product, and cart page. Premium minimal aesthetic — no clutter, strong product focus, clean grid layouts.' },
+  { id: 'tpl_agency', emoji: '⚡', name: 'Agency',       prompt: 'Build a creative agency website with a home, services, work, and contact page. Bold, high-impact design — big type, strong contrast, barely any borders.' },
+  { id: 'tpl_rest',   emoji: '🍽️', name: 'Restaurant',   prompt: 'Build a restaurant website with a home, menu, and reservations page. Warm, upscale aesthetic — cinematic imagery feel, rich colors, elegant typography.' },
+  { id: 'tpl_blog',   emoji: '✍️', name: 'Blog',         prompt: 'Build a blog with a home, post, and about page. Editorial design — generous whitespace, readable typography, minimal chrome. Feels like a premium publication.' },
+  { id: 'tpl_school', emoji: '📚', name: 'School Tracker', prompt: 'Build a school tracker with a dashboard, assignments, and grades page. Clean academic aesthetic — organized, minimal, easy to scan. Use a light neutral theme with a calm accent color.' },
+  { id: 'tpl_health', emoji: '💪', name: 'Health Tracker', prompt: 'Build a health tracker with a dashboard, log, and stats page. Fresh, motivating design — clean cards, progress visuals, light and energetic feel.' },
 ];
 const MAX_CUSTOM_TEMPLATES = 10;
 let tplEditIndex = -1;
@@ -4868,12 +4934,22 @@ function startPlaceholderRotator() {
   setInterval(rotatePlaceholder, 5000);
 }
 
+let _typeTimer = null;
 function aiTemplate(text) {
+  if (_typeTimer) { clearTimeout(_typeTimer); _typeTimer = null; }
   const input = document.getElementById('aiInput');
   input.value = '';
   input.focus();
   let i = 0;
-  function typeChar() { if (i < text.length) { input.value += text[i++]; aiAutoResize(input); setTimeout(typeChar, 6); } }
+  function typeChar() {
+    if (i < text.length) {
+      input.value += text.slice(i, i + 4);
+      i += 4;
+      aiAutoResize(input);
+      input.dispatchEvent(new Event('input'));
+      _typeTimer = setTimeout(typeChar, 6);
+    } else { _typeTimer = null; }
+  }
   typeChar();
 }
 
@@ -4898,29 +4974,56 @@ function renderTplModalList() {
   }).join('');
 }
 
-function openTplEditDefault(i) {
-  const t = DEFAULT_TEMPLATES[i];
-  const overrides = getDefaultTplOverrides();
-  const override  = overrides[t.id] || {};
-  document.getElementById('tplEditTitle').textContent  = 'Edit Template';
-  document.getElementById('tplEditEmoji').value  = override.emoji  || t.emoji;
-  document.getElementById('tplEditName').value   = override.name   || t.name;
-  document.getElementById('tplEditPrompt').value = override.prompt || t.prompt;
-  document.getElementById('tplEditDelete').style.display = 'inline-flex';
-  tplEditIndex = -10 - i;
+const TPL_EMOJIS = ['✨','🚀','🎨','🛍️','⚡','🍽️','✍️','📚','💪','🌐','📱','💡','🏆','🔐','📊','🎯','🌿','🏠','💰','🎬','🎵','🧠','📸','🎮','🌈','💎','🤖','🔥','🎪','🧩'];
+let _tplEmojiVal = '✨';
+
+function _tplSetEmoji(em) {
+  _tplEmojiVal = em;
+  document.getElementById('tplEmojiCur').textContent = em;
+  document.querySelectorAll('.tpl-emoji-opt').forEach(el => el.classList.toggle('sel', el.dataset.em === em));
+}
+
+function tplToggleEmojiPicker() {
+  const picker = document.getElementById('tplEmojiPicker');
+  if (picker.style.display === 'none') {
+    if (!picker.innerHTML) {
+      picker.innerHTML = TPL_EMOJIS.map(em =>
+        `<div class="tpl-emoji-opt${em===_tplEmojiVal?' sel':''}" data-em="${em}" onclick="tplPickEmoji('${em}')">${em}</div>`
+      ).join('');
+    }
+    picker.style.display = 'grid';
+  } else {
+    picker.style.display = 'none';
+  }
+}
+
+function tplPickEmoji(em) {
+  _tplSetEmoji(em);
+  document.getElementById('tplEmojiPicker').style.display = 'none';
+}
+
+function _tplOpenModal(emoji, name, prompt, title, deleteDisplay, idx) {
+  _tplEmojiVal = emoji;
+  document.getElementById('tplEditTitle').textContent = title;
+  document.getElementById('tplEmojiCur').textContent = emoji;
+  document.getElementById('tplEmojiPicker').style.display = 'none';
+  document.getElementById('tplEmojiPicker').innerHTML = '';
+  document.getElementById('tplEditName').value = name;
+  document.getElementById('tplEditPrompt').value = prompt;
+  document.getElementById('tplEditDelete').style.display = deleteDisplay;
+  tplEditIndex = idx;
   document.getElementById('tplEditModal').classList.add('show');
 }
 
+function openTplEditDefault(i) {
+  const t = DEFAULT_TEMPLATES[i];
+  const override = getDefaultTplOverrides()[t.id] || {};
+  _tplOpenModal(override.emoji||t.emoji, override.name||t.name, override.prompt||t.prompt, 'Edit Template', 'none', -10-i);
+}
+
 function openTplEdit(customIdx) {
-  const custom = getTplStorage();
-  const t = custom[customIdx] || { emoji: '✨', name: '', prompt: '' };
-  document.getElementById('tplEditTitle').textContent  = customIdx === undefined ? 'New Template' : 'Edit Template';
-  document.getElementById('tplEditEmoji').value  = t.emoji  || '✨';
-  document.getElementById('tplEditName').value   = t.name   || '';
-  document.getElementById('tplEditPrompt').value = t.prompt || '';
-  document.getElementById('tplEditDelete').style.display = customIdx !== undefined ? 'inline-flex' : 'none';
-  tplEditIndex = customIdx !== undefined ? customIdx : -1;
-  document.getElementById('tplEditModal').classList.add('show');
+  const t = (getTplStorage()[customIdx] || { emoji:'✨', name:'', prompt:'' });
+  _tplOpenModal(t.emoji||'✨', t.name||'', t.prompt||'', customIdx===undefined?'New Template':'Edit Template', customIdx!==undefined?'inline-flex':'none', customIdx!==undefined?customIdx:-1);
 }
 
 function tplModalNew() {
@@ -4931,7 +5034,7 @@ function tplModalNew() {
 function closeTplEditModal() { document.getElementById('tplEditModal').classList.remove('show'); }
 
 function tplEditSave() {
-  const emoji  = document.getElementById('tplEditEmoji').value.trim()  || '✨';
+  const emoji  = _tplEmojiVal || '✨';
   const name   = document.getElementById('tplEditName').value.trim();
   const prompt = document.getElementById('tplEditPrompt').value.trim();
   if (!name || !prompt) { showToast('!', 'Fill in both name and prompt'); return; }
@@ -5984,7 +6087,9 @@ async function aiCallAPI() {
         const missingPages = specPages
           .filter(p => p !== 'index.html' && !builtNames.has(p) && !fileSystem[p]);
 
-        if (missingPages.length > 0) {
+        // Don't auto-build missing pages when a step plan is active —
+        // the user manually triggers each step
+        if (missingPages.length > 0 && !(_stepPlan && _stepPlan.needs_steps)) {
           setTimeout(() => aiCallPageBuilds(missingPages), 600);
         }
 
@@ -6465,8 +6570,8 @@ function _syncSendBtnState() {
   const bv = (document.getElementById('aiBottomInput') || {}).value || '';
   const cs = document.getElementById('aiSend');
   const bs = document.getElementById('aiBottomSend');
-  if (cs) cs.classList.toggle('has-text', !!cv.trim());
-  if (bs) bs.classList.toggle('has-text', !!bv.trim());
+  if (cs) { cs.classList.toggle('has-text', !!cv.trim()); cs.disabled = !cv.trim(); }
+  if (bs) { bs.classList.toggle('has-text', !!bv.trim()); bs.disabled = !bv.trim(); }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -6569,6 +6674,134 @@ function bkSetTab(tab) {
   if (tab === 'auth')   { bkLoadAuth(); }
   if (tab === 'schema') { bkRenderSchema(); }
   if (tab === 'api')    { bkRenderAPI(); }
+}
+
+// ── EDIT TAB ─────────────────────────────────────────────────────────────────
+let _editTab = 'users';
+
+function editSetTab(tab) {
+  _editTab = tab;
+  document.querySelectorAll('#editNav .bk-nav-item').forEach(el => el.classList.toggle('active', el.dataset.edit === tab));
+  document.querySelectorAll('.edit-panel').forEach(el => el.classList.toggle('active', el.id === 'editPanel' + tab.charAt(0).toUpperCase() + tab.slice(1)));
+  if (tab === 'users')         editLoadUsers();
+  else if (tab === 'collections') editLoadCollections();
+  else                         editLoadSiteData(tab);
+}
+
+function editFmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+
+function editEmpty(title, sub) {
+  return `<div class="bk-empty">
+    <div class="bk-empty-icon"><svg viewBox="0 0 24 24" stroke="var(--muted)" fill="none" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+    <div class="bk-empty-t">${title}</div>
+    <div class="bk-empty-s">${sub}</div>
+  </div>`;
+}
+
+function editRenderDataTable(rows, onDelete) {
+  const keys = [...new Set(rows.flatMap(r => r.data ? Object.keys(r.data) : []))];
+  if (!keys.length) return editEmpty('No fields', 'Records exist but have no data fields.');
+  const tbody = rows.map(r => {
+    const cells = keys.map(k => {
+      const v = r.data?.[k];
+      const str = v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `<td title="${esc(str)}">${esc(str.length > 48 ? str.slice(0,48) + '…' : str) || '<span style="color:var(--muted)">—</span>'}</td>`;
+    }).join('');
+    return `<tr>${cells}<td class="mono">${editFmtDate(r.created_at)}</td><td><button class="bk-del-btn" onclick="${onDelete}('${r.id}',this)">✕</button></td></tr>`;
+  }).join('');
+  return `<div class="bk-table-wrap"><table class="bk-table">
+    <thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}<th>Created</th><th></th></tr></thead>
+    <tbody>${tbody}</tbody>
+  </table></div>`;
+}
+
+async function editLoadUsers() {
+  const panel = document.getElementById('editPanelUsers');
+  if (!panel) return;
+  if (!sb || !project?.id) { panel.innerHTML = editEmpty('No users yet', 'Users who create accounts on your published site will appear here.'); return; }
+  panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">Users</div></div><div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted);font-weight:400;font-size:12px">Loading…</div></div>`;
+  try {
+    const { data } = await sb.from('site_users').select('id,email,metadata,created_at').eq('project_id', project.id).order('created_at', { ascending: false });
+    const rows = data || [];
+    if (!rows.length) { panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">Users</div><div class="bk-toolbar-sub">0 total</div></div>` + editEmpty('No users yet', 'Users who create accounts on your published site will appear here.'); return; }
+    const tbody = rows.map(r => {
+      const meta = r.metadata && Object.keys(r.metadata).length ? JSON.stringify(r.metadata).slice(0,52) + (JSON.stringify(r.metadata).length > 52 ? '…' : '') : '';
+      return `<tr><td>${esc(r.email||'—')}</td><td class="mono">${editFmtDate(r.created_at)}</td><td class="mono" style="color:var(--muted)">${esc(meta)||'<span style="color:var(--muted)">—</span>'}</td><td><button class="bk-del-btn" onclick="editDeleteUser('${r.id}',this)">✕</button></td></tr>`;
+    }).join('');
+    panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">Users</div><div class="bk-toolbar-sub">${rows.length} total</div></div>
+      <div class="bk-table-wrap"><table class="bk-table">
+        <thead><tr><th>Email</th><th>Joined</th><th>Metadata</th><th></th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table></div>`;
+  } catch(e) { panel.innerHTML = editEmpty('Could not load', 'Check your connection and try again.'); }
+}
+
+async function editDeleteUser(id, btn) {
+  if (!sb) return;
+  await sb.from('site_users').delete().eq('id', id);
+  btn.closest('tr').remove();
+}
+
+async function editLoadCollections() {
+  const panel = document.getElementById('editPanelCollections');
+  if (!panel) return;
+  if (!sb || !project?.id) { panel.innerHTML = editEmpty('No collections yet', 'Data stored by your published site will appear here.'); return; }
+  panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">Collections</div></div><div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted);font-weight:400;font-size:12px">Loading…</div></div>`;
+  try {
+    const { data } = await sb.from('site_data').select('collection').eq('project_id', project.id);
+    const counts = {};
+    (data||[]).forEach(r => { counts[r.collection] = (counts[r.collection]||0) + 1; });
+    const cols = Object.entries(counts);
+    if (!cols.length) { panel.innerHTML = editEmpty('No collections yet', 'Data stored by your AI-built site will appear here as named collections.'); return; }
+    const cards = cols.map(([name, count]) => `
+      <div class="bk-coll-card" onclick="editViewCollection('${esc(name)}')">
+        <div class="bk-coll-card-icon"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.75" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+        <div class="bk-coll-card-name">${esc(name)}</div>
+        <div class="bk-coll-card-meta">${count} record${count!==1?'s':''}</div>
+      </div>`).join('');
+    panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">Collections</div><div class="bk-toolbar-sub">${cols.length} collection${cols.length!==1?'s':''}</div></div>
+      <div style="padding:12px 20px;flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-content:start">${cards}</div>`;
+  } catch(e) { panel.innerHTML = editEmpty('Could not load', 'Check your connection and try again.'); }
+}
+
+async function editViewCollection(name) {
+  const panel = document.getElementById('editPanelCollections');
+  const back = `<button class="bk-btn-back" onclick="editLoadCollections()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Back</button>`;
+  panel.innerHTML = `<div class="bk-toolbar">${back}<div class="bk-toolbar-title" style="margin-left:8px">${esc(name)}</div></div><div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted);font-weight:400;font-size:12px">Loading…</div></div>`;
+  const { data } = await sb.from('site_data').select('id,data,created_at').eq('project_id', project.id).eq('collection', name).order('created_at', { ascending: false });
+  const rows = data||[];
+  const header = `<div class="bk-toolbar">${back}<div class="bk-toolbar-title" style="margin-left:8px">${esc(name)}</div><div class="bk-toolbar-sub">${rows.length} record${rows.length!==1?'s':''}</div></div>`;
+  panel.innerHTML = header + (rows.length ? editRenderDataTable(rows, 'editDeleteCollectionRecord') : editEmpty('Empty collection', 'No records yet.'));
+}
+
+async function editDeleteCollectionRecord(id, btn) {
+  if (!sb) return;
+  await sb.from('site_data').delete().eq('id', id);
+  btn.closest('tr').remove();
+}
+
+async function editLoadSiteData(collection) {
+  const cap = collection.charAt(0).toUpperCase() + collection.slice(1);
+  const panel = document.getElementById('editPanel' + cap);
+  if (!panel) return;
+  if (!sb || !project?.id) { panel.innerHTML = editEmpty(`No ${collection} yet`, `${cap} from your published site will appear here.`); return; }
+  panel.innerHTML = `<div class="bk-toolbar"><div class="bk-toolbar-title">${cap}</div></div><div class="bk-empty"><div class="bk-empty-t" style="color:var(--muted);font-weight:400;font-size:12px">Loading…</div></div>`;
+  try {
+    const { data } = await sb.from('site_data').select('id,data,created_at').eq('project_id', project.id).eq('collection', collection).order('created_at', { ascending: false });
+    const rows = data||[];
+    const header = `<div class="bk-toolbar"><div class="bk-toolbar-title">${cap}</div><div class="bk-toolbar-sub">${rows.length} record${rows.length!==1?'s':''}</div></div>`;
+    panel.innerHTML = header + (rows.length ? editRenderDataTable(rows, 'editDeleteSiteRecord') : editEmpty(`No ${collection} yet`, `${cap} created through your published site will appear here.`));
+  } catch(e) { panel.innerHTML = editEmpty('Could not load', 'Check your connection and try again.'); }
+}
+
+async function editDeleteSiteRecord(id, btn) {
+  if (!sb) return;
+  await sb.from('site_data').delete().eq('id', id);
+  btn.closest('tr').remove();
 }
 
 // ── Config helpers ────────────────────────────────────────────────────────────

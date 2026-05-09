@@ -31,6 +31,8 @@
       background:rgba(10,10,10,.92);backdrop-filter:blur(20px);
       border-bottom:1px solid var(--b1);
     }
+    #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;opacity:.65;width:0;pointer-events:none;z-index:201;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
+    @keyframes tbLoad{0%{width:0%}15%{width:30%}50%{width:60%}100%{width:80%}}
     .tb-logo{display:flex;align-items:center;flex-shrink:0}
     .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform 60ms ease-out}
     .tb-logo:hover img,.tb-logo:focus-visible img{transform:scale(1.08)}
@@ -272,10 +274,10 @@
     .pc-badge svg{width:8px;height:8px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
     .pc-badge.pub{background:rgba(34,197,94,.1);color:#4ade80}
     .pc-badge.priv{background:rgba(96,96,160,.08);color:var(--sub)}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1.5px;font-weight:900;transition:all .15s;position:absolute;top:10px;left:10px;padding-bottom:2px}
-    .proj-card:hover .pc-more{opacity:1}
+    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1.5px;font-weight:900;transition:all .15s;position:absolute;top:10px;right:10px;padding-bottom:2px}
+.proj-card:hover .pc-more{opacity:1}
     .pc-more:hover{background:var(--b2);color:var(--text)}
-    .pc-open{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:absolute;top:10px;right:10px;text-decoration:none}
+    .pc-open{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:absolute;top:10px;left:10px;text-decoration:none}
     .proj-card:hover .pc-open{opacity:1}
     .pc-open:hover{background:var(--b2);color:var(--text)}
     .pc-open svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -401,6 +403,7 @@
 <body>
 
 <div id="topbar">
+  <div id="topbarLoader"></div>
   <a href="home.html" class="tb-logo" title="Vexium — Home">
     <img src="vexium_logo.png" alt="Vexium"/>
   </a>
@@ -809,6 +812,16 @@
     loadProjects();
     if(isOwn){document.getElementById('tabShared').style.display='';loadShared();}
     if(session&&sb)loadNotifications();
+    topbarLoaderDone();
+  }
+
+  function topbarLoaderDone(){
+    const el=document.getElementById('topbarLoader');
+    if(!el)return;
+    el.style.animation='none';
+    el.style.transition='width .2s ease,opacity .3s ease .15s';
+    el.style.width='100%';
+    setTimeout(()=>{el.style.opacity='0';},50);
   }
 
   async function loadOwnProfile(){

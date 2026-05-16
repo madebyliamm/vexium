@@ -4867,6 +4867,7 @@ function aiAddAI(text, files) {
   row._contentWrap = contentWrap;
   msgs.appendChild(row);
   msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+  return row;
 }
 
 function aiShowTyping() {
@@ -7005,7 +7006,8 @@ async function aiCallAPI() {
           textEl.innerHTML = errHtml;
         } else {
           const r = aiAddAI('', []);
-          if (r._contentWrap) r._contentWrap.querySelector('.ai-text').innerHTML = errHtml;
+          const t = r && r._contentWrap && r._contentWrap.querySelector('.ai-text');
+          if (t) t.innerHTML = errHtml;
         }
       }
     }

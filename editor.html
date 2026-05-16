@@ -6314,13 +6314,16 @@ function _extractHtmlSummary(name, html) {
 }
 
 // Full untruncated file content for server-side patch application.
-// Patches are applied to this — if truncated, everything after the cutoff is deleted.
+// Only included when the file actually exceeds the truncation limit — otherwise
+// it's already sent in full via buildAiFilesPayload and we don't need to duplicate it.
 function buildFullFilesForPatching() {
   const fs = fileSystem || {};
   const out = {};
   [mainFile, activeFile].filter(Boolean).forEach(name => {
-    if (fs[name] && typeof fs[name] === 'string' && name.endsWith('.html') && !name.startsWith('_')) {
-      out[name] = fs[name]; // full content, no truncation
+    const s = fs[name];
+    if (s && typeof s === 'string' && name.endsWith('.html') && !name.startsWith('_') && s.length > AI_MAX_FILE_CHARS_PRIORITY) {
+      // Cap at 150k chars to avoid truly massive payloads — covers files up to ~3000 lines
+      out[name] = s.length > 150000 ? s.slice(0, 150000) : s;
     }
   });
   return out;
@@ -6501,7 +6504,7 @@ async function aiCallAPI() {
       body: JSON.stringify({
         messages: _apiMessages,
         files: buildAiFilesPayload(),
-        full_files: buildFullFilesForPatching(),
+        ...(Object.keys(buildFullFilesForPatching()).length ? { full_files: buildFullFilesForPatching() } : {}),
         brief: _pendingBrief || undefined,
         spec: _pendingSpec || undefined,
         auto_fix: aiAutofixEnabled(),

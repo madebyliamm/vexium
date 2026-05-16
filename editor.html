@@ -6325,7 +6325,7 @@ function buildAiFilesPayload() {
   // Only pull in mentioned files when there's no _pages index (small/early projects)
   if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
 
-  const charLimit = _compactMode ? 3000 : (hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY);
+  const charLimit = _compactMode ? 8000 : (hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY);
 
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;
@@ -7034,26 +7034,21 @@ function _aiAutoRetry() {
 }
 
 function aiCompactChat() {
-  // Trim history and enable compact file mode for the retry
-  if (aiHistory.length > 2) aiHistory = aiHistory.slice(-2);
+  // Keep only the last user message so history is minimal
+  const lastUser = [...aiHistory].reverse().find(m => m.role === 'user');
+  aiHistory = lastUser ? [lastUser] : [];
   _compactMode = true;
+  // Trim visible chat to last 2 rows
   const msgs = document.getElementById('aiMessages');
   if (msgs) {
     const rows = msgs.querySelectorAll('.ai-row');
     rows.forEach((r, i) => { if (i < rows.length - 2) r.remove(); });
   }
-  // Re-send the last user message automatically
-  const lastUser = [...aiHistory].reverse().find(m => m.role === 'user');
-  if (lastUser && !aiTyping) {
-    aiHistory = aiHistory.filter(m => m !== lastUser || m === aiHistory[aiHistory.length - 1]);
-    const text = typeof lastUser.content === 'string' ? lastUser.content : '';
-    if (text) {
-      aiTyping = true; aiSetGenerating(true); aiShowTyping();
-      aiCallAPI();
-      return;
-    }
+  // Auto-retry with the reduced context
+  if (!aiTyping) {
+    aiTyping = true; aiSetGenerating(true); aiShowTyping();
+    aiCallAPI();
   }
-  showToast('✓', 'Compacted — try your message again');
 }
 
 function _aiAutoComplete() {

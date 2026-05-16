@@ -7031,12 +7031,13 @@ function _aiAutoComplete() {
   if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') {
     aiHistory.pop();
   }
-  // If a specific file was cut off and it's missing or nearly empty, say so clearly
-  if (cutFile && (!fileSystem[cutFile] || fileSystem[cutFile].length < 500)) {
-    const msg = `Continue — ${cutFile} is missing or incomplete. Write it in full.`;
-    aiHistory.push({ role: 'user', content: msg });
-    aiSaveMsg('user', msg, []);
-  }
+  // Always send a clear instruction — without this the AI doesn't know to continue
+  // and dumps patch content as raw text in the chat instead of proper XML blocks
+  const msg = cutFile
+    ? `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} in full now as a <file> block. Do not use patches — write the entire file from top to bottom.`
+    : `The output was cut off. Continue from where it stopped and complete all remaining files.`;
+  aiHistory.push({ role: 'user', content: msg });
+  aiSaveMsg('user', msg, []);
   aiTyping = true; aiSetGenerating(true); aiShowTyping();
   aiCallAPI();
 }

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Settings — Vexium</title>
+  <link rel="icon" type="image/png" href="logo_background.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0a;--surface:#1a1a1a;--surface2:#222;
+      --text:#fff;--muted:#666;--sub:#999;
+      --err:#f87171;--ok:#4ade80;
+      --sans:'Plus Jakarta Sans',sans-serif;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+
+    /* ── TOPBAR ── */
+    #topbarLoader{position:fixed;top:0;left:0;height:2px;width:0%;pointer-events:none;z-index:9999;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);opacity:1;transition:width .35s ease,opacity .3s ease}
+    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+    .tb-logo{display:flex;align-items:center;flex-shrink:0}
+    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform 60ms ease-out}
+    .tb-logo:hover img{transform:scale(1.08)}
+    .tb-spacer{flex:1}
+    .tb-right{display:flex;align-items:center;gap:10px}
+    .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;transition:background .15s}
+    .tb-bell:hover{background:rgba(255,255,255,.07)}
+    .tb-bell svg{width:17px;height:17px;stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+    .tb-bell:hover svg{stroke:#fff}
+    .bell-dot{position:absolute;top:2px;right:2px;min-width:14px;height:14px;border-radius:99px;background:#fff;border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#000;padding:0 2px;font-family:var(--sans)}
+    .bell-dot.show{display:flex}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;cursor:pointer;flex-shrink:0;text-decoration:none}
+    /* notification sidebar */
+    #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+    #notifBackdrop.show{display:block}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid rgba(255,255,255,.08);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
+    #notifSidebar.show{transform:translateX(0)}
+    .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
+    .notif-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .notif-close:hover{background:rgba(255,255,255,.07);color:#fff}
+    .notif-close svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+    .notif-list{flex:1;overflow-y:auto;padding:0 8px 16px}
+    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer;border-radius:10px;transition:background .1s;margin-bottom:2px}
+    .notif-item:hover{background:rgba(255,255,255,.05)}
+    .notif-item.unread{background:rgba(255,255,255,.04)}
+    .notif-av{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;flex-shrink:0;margin-top:1px}
+    .notif-body{flex:1;min-width:0}
+    .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
+    .notif-text b{font-weight:700}
+    .notif-time{font-size:10px;color:var(--muted);margin-top:3px}
+    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;margin-top:7px}
+    .notif-empty{padding:60px 20px;text-align:center;font-size:13px;color:var(--muted)}
+
+    /* ── PAGE FRAME ── */
+    .page{display:flex;max-width:860px;margin:0 auto;padding:48px 24px 80px;gap:0}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:200px;flex-shrink:0;padding:0 8px;position:sticky;top:48px;align-self:flex-start}
+    .sidebar-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:20px;padding:0 10px}
+    .back-btn{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:600;padding:6px 10px;border-radius:8px;background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color .12s,background .12s;margin-bottom:16px;text-decoration:none}
+    .back-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+    .back-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
+    .nav-item{display:block;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--sub);background:none;border:none;cursor:pointer;text-align:left;font-family:var(--sans);transition:color .12s,background .12s}
+    .nav-item:hover{color:var(--text);background:rgba(255,255,255,.05)}
+    .nav-item.active{color:var(--text);background:rgba(255,255,255,.07);font-weight:600}
+
+    /* ── CONTENT ── */
+    .content{flex:1;min-width:0;padding:0 0 0 32px}
+
+    /* ── SECTIONS ── */
+    .section{display:none}
+    .section.active{display:block}
+
+    /* ── GROUP ── */
+    .group{margin-bottom:40px}
+    .group-title{font-size:16px;font-weight:700;margin-bottom:20px}
+
+    /* ── ROW ── */
+    .row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:24px}
+    .row:last-child{border-bottom:none}
+    .row-label{flex:1;min-width:0}
+    .row-label-text{font-size:14px;font-weight:500;color:var(--text)}
+    .row-label-sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+    .row-control{flex-shrink:0}
+
+    /* ── INPUTS ── */
+    .inp{background:var(--surface);border:none;border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;width:220px;transition:background .15s}
+    .inp:focus{background:var(--surface2)}
+    .inp::placeholder{color:var(--muted)}
+    .inp-wide{width:100%;margin-top:8px}
+    .inp-block{display:block;width:100%}
+
+    /* ── STACKED ROW (label above full-width input) ── */
+    .row-stack{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .row-stack:last-child{border-bottom:none}
+    .row-stack-label{font-size:14px;font-weight:500;margin-bottom:8px}
+    .row-stack-sub{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .btn-primary{background:var(--text);color:var(--bg)}
+    .btn-primary:hover:not(:disabled){opacity:.85}
+    .btn-ghost{background:var(--surface2);color:var(--text)}
+    .btn-ghost:hover:not(:disabled){opacity:.8}
+    .btn-danger{background:rgba(248,113,113,.12);color:var(--err)}
+    .btn-danger:hover:not(:disabled){background:rgba(248,113,113,.2)}
+    .save-row{display:flex;align-items:center;gap:10px;padding-top:14px}
+    .save-msg{font-size:12px;color:var(--ok)}
+    .save-msg.err{color:var(--err)}
+
+    /* ── BILLING ── */
+    .plan-row{display:flex;align-items:center;gap:10px}
+    .plan-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border-radius:99px;padding:5px 12px 5px 8px;font-size:13px;font-weight:600}
+    .plan-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .trial-dot{background:#facc15}
+    .starter-dot{background:#60a5fa}
+    .pro-dot{background:#a78bfa}
+    .max-dot{background:#f472b6}
+
+    .usage-wrap{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .usage-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+    .usage-title{font-size:14px;font-weight:500}
+    .usage-pct{font-size:12px;color:var(--muted);font-weight:600}
+    .usage-track{height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:6px}
+    .usage-fill{height:100%;border-radius:99px;transition:width .4s ease;background:#4ade80}
+    .usage-fill.warn{background:#facc15}
+    .usage-fill.crit{background:#f87171}
+    .usage-sub{font-size:11px;color:var(--muted)}
+
+    /* extra usage */
+    .extra-wrap{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .extra-top-row{display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .extra-left{display:flex;align-items:center;gap:16px}
+    .donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
+    .donut-wrap svg{transform:rotate(-90deg)}
+    .donut-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;letter-spacing:-.3px}
+    .extra-info-title{font-size:14px;font-weight:600;margin-bottom:2px}
+    .extra-info-sub{font-size:12px;color:var(--muted)}
+    /* extra panel */
+    .extra-panel{overflow:hidden;max-height:0;transition:max-height .25s ease,opacity .2s ease;opacity:0}
+    .extra-panel.open{max-height:200px;opacity:1}
+    .extra-custom-row{display:flex;gap:8px;margin:14px 0 10px}
+    .extra-custom-row .inp{flex:1;min-width:0}
+    .extra-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .preset-btn{padding:12px 0;border-radius:10px;background:var(--surface);border:none;color:var(--text);font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;transition:background .15s;text-align:center}
+    .preset-btn:hover{background:var(--surface2)}
+    #customExtraAmt{-moz-appearance:textfield}
+    #customExtraAmt::-webkit-outer-spin-button,#customExtraAmt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+    /* billing history */
+    .bh-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+    .bh-table th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:0 0 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .bh-table td{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle}
+    .bh-table td:last-child{text-align:right;font-weight:700}
+    .bh-table tr:last-child td{border-bottom:none}
+    .bh-type-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
+    .bh-type-sub{background:rgba(167,139,250,.15);color:#a78bfa}
+    .bh-type-extra{background:rgba(96,165,250,.15);color:#60a5fa}
+    .bh-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--muted)}
+
+    .trial-note-row{font-size:12px;color:var(--muted);padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .trial-days{font-weight:600;color:#facc15}
+
+    .plans-wrap{padding-top:28px}
+    .plans-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
+    .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .plan-card{border-radius:12px;padding:18px 16px;background:var(--surface);position:relative;transition:background .15s}
+    .plan-card.current{background:var(--surface2);outline:1.5px solid rgba(255,255,255,.15)}
+    .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+    .plan-card-name{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px}
+    .plan-card-price{font-size:22px;font-weight:800;letter-spacing:-.5px}
+    .plan-card-price span{font-size:11px;font-weight:500;color:var(--muted)}
+    .plan-card-budget{font-size:10px;color:var(--muted);margin-top:6px}
+    .plan-card-btn{margin-top:14px;width:100%;padding:7px 0;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s;background:rgba(255,255,255,.1);color:var(--text)}
+    .plan-card-btn:hover:not(:disabled){opacity:.75}
+    .plan-card-btn.upgrade{background:#fff;color:#000}
+    .plan-card-btn.current-btn{background:rgba(255,255,255,.06);color:var(--muted);cursor:default}
+    .beta-note{font-size:11px;color:var(--muted);text-align:center}
+
+    /* ── TOGGLE ── */
+    .toggle{position:relative;width:44px;height:26px;flex-shrink:0;display:inline-block}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .toggle-track{position:absolute;inset:0;background:#3a3a3a;border-radius:99px;cursor:pointer;transition:background .2s}
+    .toggle input:checked + .toggle-track{background:#fff}
+    .toggle-track::after{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#888;border-radius:50%;transition:transform .2s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+    .toggle input:checked + .toggle-track::after{transform:translateX(18px);background:#000}
+
+    /* ── SPINNER ── */
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{width:12px;height:12px;border:1.5px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+    .btn-primary .spin{border-color:rgba(0,0,0,.2);border-top-color:#000}
+    .btn-ghost .spin{border-color:rgba(255,255,255,.2);border-top-color:#fff}
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="topbarLoader"></div>
+  <a href="home.html" class="tb-logo" title="Vexium — Home"><img src="vexium_logo.png" alt="Vexium"/></a>
+  <div class="tb-spacer"></div>
+  <div class="tb-right">
+    <div class="tb-bell" id="bellBtn" onclick="toggleNotif()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="bell-dot" id="bellDot"></div>
+    </div>
+    <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
+  </div>
+</div>
+
+<div id="notifBackdrop" onclick="toggleNotif()"></div>
+<div id="notifSidebar">
+  <div class="notif-head">
+    <div class="notif-head-t">Notifications</div>
+    <button class="notif-close" onclick="toggleNotif()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="notif-list" id="notifList"><div class="notif-empty">No notifications yet</div></div>
+</div>
+
+<div class="page">
+  <nav class="sidebar">
+    <a href="profile.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Profile
+    </a>
+    <div class="sidebar-title">Settings</div>
+    <button class="nav-item active" id="navGeneral"  onclick="switchTab('general')">General</button>
+    <button class="nav-item"        id="navPrivacy"  onclick="switchTab('privacy')">Privacy</button>
+    <button class="nav-item"        id="navBilling"  onclick="switchTab('billing')">Billing</button>
+  </nav>
+
+  <div class="content">
+
+    <!-- ── GENERAL ── -->
+    <div class="section active" id="sectionGeneral">
+
+      <div class="group">
+        <div class="group-title">Profile</div>
+
+        <div class="row">
+          <div class="row-label"><div class="row-label-text">Display name</div></div>
+          <div class="row-control"><input class="inp" type="text" id="fDisplayName" placeholder="Your name"/></div>
+        </div>
+        <div class="row">
+          <div class="row-label"><div class="row-label-text">Username</div><div class="row-label-sub">Used for sign in and your public profile.</div></div>
+          <div class="row-control"><input class="inp" type="text" id="fUsername" placeholder="username" autocomplete="off" spellcheck="false"/></div>
+        </div>
+        <div class="row-stack">
+          <div class="row-stack-label">Bio</div>
+          <input class="inp inp-block" type="text" id="fBio" placeholder="A short bio (optional)"/>
+        </div>
+        <div class="save-row">
+          <button class="btn btn-primary" onclick="saveProfile()"><span id="saveProfileLabel">Save changes</span></button>
+          <span class="save-msg" id="saveProfileMsg"></span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Preferences</div>
+        <div class="row">
+          <div class="row-label">
+            <div class="row-label-text">Advanced mode</div>
+            <div class="row-label-sub">Unlocks the full editor with code, backend, and commerce tools.</div>
+          </div>
+          <div class="row-control">
+            <label class="toggle">
+              <input type="checkbox" id="toggleAdvanced" onchange="saveAdvancedMode()"/>
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Account</div>
+        <div class="row">
+          <div class="row-label">
+            <div class="row-label-text">Sign out</div>
+            <div class="row-label-sub">End your session on this device.</div>
+          </div>
+          <div class="row-control"><button class="btn btn-danger" onclick="doSignOut()">Sign out</button></div>
+        </div>
+        <div class="row">
+          <div class="row-label">
+            <div class="row-label-text">Delete account</div>
+            <div class="row-label-sub">Permanently delete your account and all your projects. This cannot be undone.</div>
+          </div>
+          <div class="row-control"><button class="btn btn-danger" onclick="confirmDelete()">Delete account</button></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── PRIVACY ── -->
+    <div class="section" id="sectionPrivacy">
+
+      <div class="group">
+        <div class="group-title">Profile visibility</div>
+        <div class="row">
+          <div class="row-label">
+            <div class="row-label-text">Show email on profile</div>
+            <div class="row-label-sub">Your email address will be visible to other users on your public profile.</div>
+          </div>
+          <div class="row-control">
+            <label class="toggle">
+              <input type="checkbox" id="toggleShowEmail" onchange="saveShowEmail()"/>
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Password</div>
+        <div class="row">
+          <div class="row-label">
+            <div class="row-label-text">Change password</div>
+            <div class="row-label-sub">Update the password used to sign in to your account.</div>
+          </div>
+          <div class="row-control"><button class="btn btn-ghost" onclick="openPassModal()">Change password</button></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── BILLING ── -->
+    <div class="section" id="sectionBilling">
+
+      <!-- 1. Current plan -->
+      <div class="group">
+        <div class="group-title">Current plan</div>
+        <div class="row">
+          <div class="row-label"><div class="row-label-text">Plan</div></div>
+          <div class="row-control">
+            <div class="plan-chip">
+              <div class="plan-dot trial-dot" id="planDot"></div>
+              <span id="planName">Loading…</span>
+            </div>
+          </div>
+        </div>
+        <div class="trial-note-row" id="trialNoteRow" style="display:none">
+          <span id="trialNoteText"></span>
+        </div>
+      </div>
+
+      <!-- 2. AI usage this month -->
+      <div class="group">
+        <div class="group-title">AI usage this month</div>
+        <div class="usage-wrap" style="border-bottom:none;padding-top:0">
+          <div class="usage-header">
+            <div class="usage-title" style="font-size:13px;color:var(--muted)">Monthly usage</div>
+            <div class="usage-pct" id="usagePct">—</div>
+          </div>
+          <div class="usage-track"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
+          <div class="usage-sub" id="usageSub">Loading…</div>
+        </div>
+      </div>
+
+      <!-- 3. Change plan -->
+      <div class="plans-wrap" style="padding-top:0">
+        <div class="plans-label">Change plan</div>
+        <div class="plans-grid">
+          <div class="plan-card" id="planCardStarter">
+            <div class="plan-card-name">Starter</div>
+            <div class="plan-card-price">$12<span>/mo</span></div>
+            <button class="plan-card-btn upgrade" id="btnStarter" onclick="changePlan('starter')">Upgrade</button>
+          </div>
+          <div class="plan-card" id="planCardPro">
+            <div class="plan-card-name">Pro</div>
+            <div class="plan-card-price">$29<span>/mo</span></div>
+            <button class="plan-card-btn upgrade" id="btnPro" onclick="changePlan('pro')">Upgrade</button>
+          </div>
+          <div class="plan-card" id="planCardMax">
+            <div class="plan-card-name">Max</div>
+            <div class="plan-card-price">$79<span>/mo</span></div>
+            <button class="plan-card-btn upgrade" id="btnMax" onclick="changePlan('max')">Upgrade</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Extra usage -->
+      <div class="group" style="margin-top:8px">
+        <div class="group-title">Extra usage</div>
+        <div class="extra-wrap" id="extraWrap" style="border-bottom:none;padding-top:0">
+          <div class="extra-top-row">
+            <div class="extra-left">
+              <div class="donut-wrap" id="donutWrap" style="display:none">
+                <svg width="72" height="72" viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
+                  <circle cx="36" cy="36" r="28" fill="none" stroke="#60a5fa" stroke-width="8"
+                    stroke-linecap="round" id="donutArc"
+                    stroke-dasharray="175.9" stroke-dashoffset="175.9"/>
+                </svg>
+                <div class="donut-label" id="donutLabel">$0</div>
+              </div>
+              <div>
+                <div class="extra-info-title" id="extraSub">Top up anytime</div>
+                <div class="extra-info-sub" id="extraInfoSub"></div>
+              </div>
+            </div>
+            <button class="btn btn-ghost" onclick="toggleExtraPanel()" id="extraToggleBtn">Get extra usage</button>
+          </div>
+          <div class="extra-panel" id="extraPanel">
+            <div class="extra-custom-row">
+              <input class="inp" type="number" id="customExtraAmt" placeholder="Custom amount ($)" min="1" step="1"/>
+              <button class="btn btn-primary" onclick="buyCustomExtra()"><span id="buyCustomLabel">Buy</span></button>
+            </div>
+            <div class="extra-presets">
+              <button class="preset-btn" onclick="buyExtra(500)">$5</button>
+              <button class="preset-btn" onclick="buyExtra(1000)">$10</button>
+              <button class="preset-btn" onclick="buyExtra(2500)">$25</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- billing history -->
+      <div class="group" style="margin-top:32px">
+        <div class="group-title">Billing history</div>
+        <div id="billingHistory"><div class="bh-empty">Loading…</div></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="config.js" onerror="window._noConfig=true"></script>
+<script>
+  let sb = null;
+  try {
+    if (!window._noConfig && typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  } catch(e) {}
+
+  const PLAN_CREDITS  = { trial: 300, starter: 1500, pro: 4000, max: 12000 };
+  const PLAN_LABELS   = { trial: 'Free Trial', starter: 'Starter', pro: 'Pro', max: 'Max' };
+  const PLAN_DOT_CLS  = { trial: 'trial-dot', starter: 'starter-dot', pro: 'pro-dot', max: 'max-dot' };
+  const PLAN_RANK     = { trial: 0, starter: 1, pro: 2, max: 3 };
+
+  let myId = null, myProfile = null;
+
+  // ── LOADER ──────────────────────────────────────────────────────────────
+  const _loader = document.getElementById('topbarLoader');
+  let _loaderTick = null;
+  let _loaderVal  = 0;
+  function loaderStart() {
+    _loaderVal = 0;
+    if (_loader) { _loader.style.opacity = '1'; _loader.style.width = '0%'; }
+    _loaderTick = setInterval(() => {
+      _loaderVal += (88 - _loaderVal) * 0.12;
+      if (_loader) _loader.style.width = _loaderVal + '%';
+    }, 80);
+  }
+  function loaderDone() {
+    clearInterval(_loaderTick);
+    if (!_loader) return;
+    _loader.style.width = '100%';
+    setTimeout(() => { _loader.style.opacity = '0'; }, 250);
+  }
+
+  (async () => {
+    loaderStart();
+    if (!sb) { loaderDone(); window.location.href = 'auth.html'; return; }
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { loaderDone(); window.location.href = 'auth.html'; return; }
+    myId = session.user.id;
+
+    const { data } = await sb.from('profiles')
+      .select('username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents')
+      .eq('id', myId).single();
+    loaderDone();
+    if (!data) return;
+    myProfile = data;
+
+    document.getElementById('fDisplayName').value    = data.display_name || '';
+    document.getElementById('fUsername').value       = data.username     || '';
+    document.getElementById('fBio').value            = data.bio          || '';
+    document.getElementById('toggleShowEmail').checked  = !!data.show_email;
+    document.getElementById('toggleAdvanced').checked   = !!data.advanced_mode;
+
+    const tab = new URLSearchParams(location.search).get('tab');
+    if (tab && ['general','privacy','billing'].includes(tab)) switchTab(tab);
+  })();
+
+  function switchTab(tab) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+    document.getElementById('nav'     + cap(tab)).classList.add('active');
+    document.getElementById('section' + cap(tab)).classList.add('active');
+    if (tab === 'billing' && myProfile) renderBilling(myProfile);
+    history.replaceState(null, '', '?tab=' + tab);
+  }
+
+  // ── PRIVACY ──────────────────────────────────────────────────────────────
+  async function saveShowEmail() {
+    if (!sb || !myId) return;
+    const val = document.getElementById('toggleShowEmail').checked;
+    await sb.from('profiles').update({ show_email: val }).eq('id', myId);
+    if (myProfile) myProfile.show_email = val;
+  }
+
+  async function saveAdvancedMode() {
+    if (!sb || !myId) return;
+    const val = document.getElementById('toggleAdvanced').checked;
+    await sb.from('profiles').update({ advanced_mode: val }).eq('id', myId);
+    if (myProfile) myProfile.advanced_mode = val;
+    try { localStorage.setItem('vexium_advanced_mode', val ? '1' : '0'); } catch(e) {}
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // ── BILLING ──────────────────────────────────────────────────────────────
+  function renderBilling(data) {
+    const plan        = data.plan || 'trial';
+    const credits     = Number(data.credits_used_cents || 0);
+    const limit       = PLAN_CREDITS[plan] || 300;
+    const extraCents      = Number(data.extra_credits_cents || 0);
+    const extraPurchased  = Number(data.extra_credits_purchased_cents || extraCents || 1);
+    const trialEnds   = data.trial_ends_at ? new Date(data.trial_ends_at) : null;
+    const now         = new Date();
+    const pct         = Math.min(100, Math.round((credits / limit) * 100));
+
+    // Plan badge
+    document.getElementById('planName').textContent = PLAN_LABELS[plan] || plan;
+    document.getElementById('planDot').className = 'plan-dot ' + (PLAN_DOT_CLS[plan] || 'trial-dot');
+
+    // Trial note
+    if (plan === 'trial' && trialEnds) {
+      const row = document.getElementById('trialNoteRow');
+      row.style.display = '';
+      const daysLeft = Math.ceil((trialEnds - now) / 86400000);
+      document.getElementById('trialNoteText').innerHTML = daysLeft > 0
+        ? `<span class="trial-days">${daysLeft} day${daysLeft===1?'':'s'} left</span> — trial ends ${trialEnds.toLocaleDateString(undefined,{month:'long',day:'numeric'})}. Upgrade any time.`
+        : `Your free trial has ended. Upgrade to continue building.`;
+    }
+
+    document.getElementById('usagePct').textContent = pct + '% used';
+    const fill = document.getElementById('usageFill');
+    fill.style.width = pct + '%';
+    fill.className   = 'usage-fill' + (pct >= 90 ? ' crit' : pct >= 70 ? ' warn' : '');
+    const cycleStart  = new Date(data.plan_cycle_start || now);
+    const resetDate   = new Date(cycleStart.getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toLocaleDateString(undefined, { month:'long', day:'numeric' });
+    // TODO remove dollar amounts before release — for internal debugging only
+    document.getElementById('usageSub').textContent =
+      `$${(credits/100).toFixed(2)} / $${(limit/100).toFixed(2)} · resets ${resetDate}`;
+
+    // Extra usage donut
+    const donutWrap = document.getElementById('donutWrap');
+    if (extraCents > 0) {
+      donutWrap.style.display = '';
+      const circ   = 175.93;
+      const frac   = Math.min(extraCents / extraPurchased, 1);
+      const offset = circ * (1 - frac);
+      document.getElementById('donutArc').setAttribute('stroke-dashoffset', offset.toFixed(1));
+      const extraDisplay = (extraCents * 1.5 / 100).toFixed(2);
+      document.getElementById('donutLabel').textContent = `$${extraDisplay}`;
+      document.getElementById('extraSub').textContent   = `$${extraDisplay} remaining`;
+    } else {
+      donutWrap.style.display = 'none';
+      document.getElementById('extraSub').textContent   = 'Top up anytime';
+    }
+    document.getElementById('extraInfoSub').textContent = extraPurchased > 0
+      ? `Out of $${(extraPurchased * 1.5 / 100).toFixed(2)} extra usage this month`
+      : '';
+
+    // Plan cards
+    const currentRank = PLAN_RANK[plan] || 0;
+    ['starter','pro','max'].forEach(p => {
+      const card = document.getElementById('planCard' + cap(p));
+      const btn  = document.getElementById('btn'      + cap(p));
+      const isCurrent = plan === p;
+      card.classList.toggle('current', isCurrent);
+      if (isCurrent) {
+        btn.textContent = 'Current plan';
+        btn.className   = 'plan-card-btn current-btn';
+        btn.disabled    = true;
+      } else {
+        const isUpgrade = PLAN_RANK[p] > currentRank;
+        btn.textContent = isUpgrade ? 'Upgrade' : 'Switch';
+        btn.className   = 'plan-card-btn ' + (isUpgrade ? 'upgrade' : '');
+        btn.disabled    = false;
+      }
+    });
+
+    // Billing history
+    loadBillingHistory();
+  }
+
+  function toggleExtraPanel() {
+    const panel = document.getElementById('extraPanel');
+    const isOpen = panel.classList.toggle('open');
+    document.getElementById('extraToggleBtn').textContent = isOpen ? 'Close' : 'Get extra usage';
+    if (isOpen) setTimeout(() => document.getElementById('customExtraAmt').focus(), 50);
+  }
+
+  async function buyCustomExtra() {
+    const val = parseFloat(document.getElementById('customExtraAmt').value);
+    if (!val || val < 1) return;
+    await buyExtra(Math.round(val * 100));
+    document.getElementById('customExtraAmt').value = '';
+  }
+
+  async function buyExtra(amountPaidCents) {
+    if (!sb || !myId) return;
+    // $1.50 paid → $1.00 of AI credits (100 cents)
+    const aiCentsAdded  = Math.round(amountPaidCents / 1.5);
+    const newExtra      = (myProfile?.extra_credits_cents || 0) + aiCentsAdded;
+    const newPurchased  = (myProfile?.extra_credits_purchased_cents || 0) + aiCentsAdded;
+    const desc = `Extra usage — $${(amountPaidCents/100).toFixed(0)} top-up`;
+    try {
+      await Promise.all([
+        sb.from('profiles').update({ extra_credits_cents: newExtra, extra_credits_purchased_cents: newPurchased }).eq('id', myId),
+        sb.from('billing_history').insert({ user_id: myId, type: 'extra_usage', description: desc, amount_paid_cents: amountPaidCents }),
+      ]);
+      myProfile = { ...myProfile, extra_credits_cents: newExtra, extra_credits_purchased_cents: newPurchased };
+      renderBilling(myProfile);
+      const panel = document.getElementById('extraPanel');
+      if (panel?.classList.contains('open')) {
+        panel.classList.remove('open');
+        const btn = document.getElementById('extraToggleBtn');
+        if (btn) btn.textContent = 'Get extra usage';
+      }
+    } catch(e) {}
+  }
+
+  async function loadBillingHistory() {
+    const el = document.getElementById('billingHistory');
+    if (!sb || !myId || !el) return;
+    try {
+      const { data } = await sb.from('billing_history')
+        .select('type,description,amount_paid_cents,created_at')
+        .eq('user_id', myId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (!data?.length) {
+        el.innerHTML = '<div class="bh-empty">No billing history yet.</div>';
+        return;
+      }
+      el.innerHTML = `<table class="bh-table">
+        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
+        <tbody>${data.map(r => {
+          const d = new Date(r.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+          const badge = r.type === 'subscription'
+            ? `<span class="bh-type-badge bh-type-sub">Subscription</span>`
+            : `<span class="bh-type-badge bh-type-extra">Extra usage</span>`;
+          return `<tr><td style="color:var(--muted)">${d}</td><td>${r.description}</td><td>${badge}</td><td>$${(r.amount_paid_cents/100).toFixed(2)}</td></tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = '<div class="bh-empty">Could not load billing history.</div>';
+    }
+  }
+
+  async function changePlan(plan) {
+    if (!sb || !myId) return;
+    const btn = document.getElementById('btn' + cap(plan));
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
+    btn.disabled  = true;
+    try {
+      await sb.from('profiles').update({
+        plan,
+        selected_plan: plan,
+      }).eq('id', myId);
+      myProfile = { ...myProfile, plan, selected_plan: plan };
+      renderBilling(myProfile);
+    } catch(e) {
+      btn.textContent = orig;
+      btn.disabled    = false;
+    }
+  }
+
+  // ── PROFILE ──────────────────────────────────────────────────────────────
+  async function saveProfile() {
+    if (!sb || !myId) return;
+    const lbl = document.getElementById('saveProfileLabel');
+    const msg = document.getElementById('saveProfileMsg');
+    lbl.innerHTML   = '<span class="spin"></span>';
+    msg.textContent = '';
+    try {
+      const display_name = document.getElementById('fDisplayName').value.trim();
+      const username     = document.getElementById('fUsername').value.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,'');
+      const bio          = document.getElementById('fBio').value.trim();
+      if (!username) { flash(lbl, msg, 'Save changes', 'Username required.', true); return; }
+
+      // Check if username is taken by someone else
+      if (username !== (myProfile?.username || '').toLowerCase()) {
+        const { data: existing } = await sb.from('profiles')
+          .select('id').eq('username', username).neq('id', myId).maybeSingle();
+        if (existing) { flash(lbl, msg, 'Save changes', 'That username is already taken.', true); return; }
+      }
+
+      await sb.from('profiles').update({ display_name, username, bio }).eq('id', myId);
+      if (myProfile) myProfile.username = username;
+      flash(lbl, msg, 'Save changes', 'Saved!', false);
+    } catch(e) { flash(lbl, msg, 'Save changes', 'Could not save.', true); }
+  }
+
+  async function changePassword() {
+    if (!sb) return;
+    const lbl = document.getElementById('changePassLabel');
+    const msg = document.getElementById('changePassMsg');
+    const np  = document.getElementById('fNewPass').value;
+    const cp  = document.getElementById('fConfirmPass').value;
+    if (!np) { msg.textContent = 'Enter a new password.'; msg.className = 'save-msg err'; return; }
+    if (np.length < 6) { msg.textContent = '6+ characters required.'; msg.className = 'save-msg err'; return; }
+    if (np !== cp) { msg.textContent = 'Passwords don\'t match.'; msg.className = 'save-msg err'; return; }
+    lbl.innerHTML   = '<span class="spin" style="border-top-color:#fff"></span>';
+    msg.textContent = '';
+    try {
+      const { error } = await sb.auth.updateUser({ password: np });
+      if (error) throw error;
+      document.getElementById('fNewPass').value     = '';
+      document.getElementById('fConfirmPass').value = '';
+      flash(lbl, msg, 'Update password', 'Password updated!', false);
+    } catch(e) { flash(lbl, msg, 'Update password', e.message || 'Could not update.', true); }
+  }
+
+  function flash(lbl, msg, resetText, text, isErr) {
+    lbl.textContent  = resetText;
+    msg.textContent  = text;
+    msg.className    = 'save-msg' + (isErr ? ' err' : '');
+    if (!isErr) setTimeout(() => { msg.textContent = ''; }, 2500);
+  }
+
+  async function doSignOut() {
+    if (sb) await sb.auth.signOut();
+    localStorage.removeItem('vexium_guest');
+    window.location.href = 'auth.html';
+  }
+
+  // ── TOPBAR ───────────────────────────────────────────────────────────────
+  async function loadTopbar() {
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const uid = session.user.id;
+    const { data: p } = await sb.from('profiles').select('username,display_name').eq('id', uid).single();
+    if (p) {
+      const initials = ((p.display_name || p.username || '?').trim()[0] || '?').toUpperCase();
+      const el = document.getElementById('tbPfp');
+      if (el) el.textContent = initials;
+    }
+    // Unread notification count
+    const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('read', false);
+    if (count > 0) {
+      const dot = document.getElementById('bellDot');
+      if (dot) { dot.textContent = count > 9 ? '9+' : count; dot.classList.add('show'); }
+    }
+  }
+  loadTopbar();
+
+  let _notifOpen = false;
+  function toggleNotif() {
+    _notifOpen = !_notifOpen;
+    document.getElementById('notifBackdrop').classList.toggle('show', _notifOpen);
+    document.getElementById('notifSidebar').classList.toggle('show', _notifOpen);
+    if (_notifOpen) loadNotifs();
+  }
+
+  async function loadNotifs() {
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: notifs } = await sb.from('notifications')
+      .select('id,type,read,created_at,actor_id').eq('user_id', session.user.id)
+      .order('created_at', { ascending: false }).limit(30);
+    if (!notifs?.length) return;
+    // Mark all read
+    sb.from('notifications').update({ read: true }).eq('user_id', session.user.id).eq('read', false).then(() => {
+      const dot = document.getElementById('bellDot');
+      if (dot) dot.classList.remove('show');
+    });
+    // Load actor profiles
+    const actorIds = [...new Set(notifs.filter(n => n.actor_id).map(n => n.actor_id))];
+    let actors = {};
+    if (actorIds.length) {
+      const { data: ps } = await sb.from('profiles').select('id,username,display_name').in('id', actorIds);
+      (ps || []).forEach(p => { actors[p.id] = p; });
+    }
+    const list = document.getElementById('notifList');
+    list.innerHTML = notifs.map(n => {
+      const actor = actors[n.actor_id] || {};
+      const name = actor.display_name || actor.username || 'Someone';
+      const initials = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const label = n.type === 'follow' ? `<b>${name}</b> followed you` : `<b>${name}</b> invited you to a project`;
+      const ago = timeAgo(n.created_at);
+      return `<div class="notif-item${n.read ? '' : ' unread'}">
+        <div class="notif-av">${initials}</div>
+        <div class="notif-body"><div class="notif-text">${label}</div><div class="notif-time">${ago}</div></div>
+        ${n.read ? '' : '<div class="notif-unread-dot"></div>'}
+      </div>`;
+    }).join('');
+  }
+
+  function timeAgo(iso) {
+    const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+  }
+</script>
+<!-- Change password modal -->
+<div id="passOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:16px;width:100%;max-width:380px;padding:28px">
+    <div style="font-size:18px;font-weight:800;margin-bottom:20px">Change password</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">New password</div>
+      <input id="mNewPass" type="password" placeholder="New password" autocomplete="new-password" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">Confirm password</div>
+      <input id="mConfirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost" style="flex:1" onclick="closePassModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="doChangePassword()"><span id="mPassLabel">Update password</span></button>
+    </div>
+    <div id="mPassMsg" style="font-size:12px;text-align:center;margin-top:10px;min-height:16px"></div>
+  </div>
+</div>
+
+<script>
+  function openPassModal() {
+    document.getElementById('mNewPass').value     = '';
+    document.getElementById('mConfirmPass').value = '';
+    document.getElementById('mPassMsg').textContent = '';
+    document.getElementById('passOverlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('mNewPass').focus(), 50);
+  }
+  function closePassModal() { document.getElementById('passOverlay').style.display = 'none'; }
+  async function doChangePassword() {
+    const np  = document.getElementById('mNewPass').value;
+    const cp  = document.getElementById('mConfirmPass').value;
+    const lbl = document.getElementById('mPassLabel');
+    const msg = document.getElementById('mPassMsg');
+    msg.style.color = 'var(--err)';
+    if (!np) { msg.textContent = 'Enter a new password.'; return; }
+    if (np.length < 6) { msg.textContent = '6+ characters required.'; return; }
+    if (np !== cp) { msg.textContent = "Passwords don't match."; return; }
+    lbl.innerHTML = '<span class="spin"></span>';
+    msg.textContent = '';
+    try {
+      const { error } = await sb.auth.updateUser({ password: np });
+      if (error) throw error;
+      lbl.textContent = 'Update password';
+      msg.style.color = 'var(--ok)';
+      msg.textContent = 'Password updated!';
+      setTimeout(() => closePassModal(), 1200);
+    } catch(e) {
+      lbl.textContent = 'Update password';
+      msg.textContent = e.message || 'Could not update.';
+    }
+  }
+  document.getElementById('passOverlay').addEventListener('click', e => { if (e.target === document.getElementById('passOverlay')) closePassModal(); });
+</script>
+
+<!-- Delete confirmation modal -->
+<div id="deleteOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid rgba(248,113,113,.2);border-radius:16px;width:100%;max-width:400px;padding:28px">
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Delete account?</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">This will permanently delete your account and every project you've created. There's no going back.</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">Type your username to confirm</div>
+      <input id="deleteConfirmInput" type="text" placeholder="your username" autocomplete="off" oninput="checkDeleteConfirm()" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" style="flex:1;opacity:.4;cursor:not-allowed" id="btnConfirmDelete" disabled onclick="doDeleteAccount()"><span id="deleteLabel">Delete account</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete() {
+    document.getElementById('deleteConfirmInput').value = '';
+    document.getElementById('btnConfirmDelete').disabled = true;
+    document.getElementById('btnConfirmDelete').style.opacity = '.4';
+    document.getElementById('btnConfirmDelete').style.cursor = 'not-allowed';
+    const overlay = document.getElementById('deleteOverlay');
+    overlay.style.display = 'flex';
+  }
+  function closeDeleteModal() {
+    document.getElementById('deleteOverlay').style.display = 'none';
+  }
+  function checkDeleteConfirm() {
+    const val = document.getElementById('deleteConfirmInput').value.trim();
+    const expected = (myProfile?.username || '').trim();
+    const btn = document.getElementById('btnConfirmDelete');
+    const match = val.toLowerCase() === expected.toLowerCase() && expected.length > 0;
+    btn.disabled = !match;
+    btn.style.opacity = match ? '1' : '.4';
+    btn.style.cursor = match ? 'pointer' : 'not-allowed';
+  }
+  async function doDeleteAccount() {
+    if (!sb || !myId) return;
+    const lbl = document.getElementById('deleteLabel');
+    lbl.innerHTML = '<span class="spin" style="border-top-color:var(--err)"></span>';
+    try {
+      // Delete projects, then profile, then auth user
+      await sb.from('projects').delete().eq('user_id', myId);
+      await sb.from('profiles').delete().eq('id', myId);
+      const { error } = await sb.rpc('delete_user');
+      if (error) throw error;
+    } catch(e) {}
+    await sb.auth.signOut();
+    localStorage.clear();
+    window.location.href = 'auth.html';
+  }
+</script>
+</body>
+</html>

@@ -96,6 +96,49 @@
 
     /* NOTE */
     .note{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6}
+
+    /* CARD EXPAND for plan step */
+    .card{transition:max-width .3s cubic-bezier(.16,1,.3,1)}
+    .card.wide{max-width:560px}
+
+    /* PLAN STEP */
+    .plan-step-head{text-align:center;margin-bottom:20px}
+    .plan-step-head h2{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+    .plan-step-head p{font-size:12px;color:var(--muted)}
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .plan-card{
+      border:1.5px solid var(--border);border-radius:var(--r-md);
+      padding:16px 14px;cursor:pointer;position:relative;
+      transition:border-color .15s,background .15s;user-select:none;
+    }
+    .plan-card:hover{border-color:var(--border2);background:var(--surface2)}
+    .plan-card.selected{border-color:#fff;background:rgba(255,255,255,.04)}
+    .plan-card.popular::before{
+      content:'Most popular';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+      background:#fff;color:#000;font-size:9px;font-weight:800;letter-spacing:.05em;
+      padding:2px 8px;border-radius:99px;white-space:nowrap;
+    }
+    .plan-name{font-size:13px;font-weight:800;margin-bottom:2px}
+    .plan-price{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
+    .plan-price span{font-size:11px;font-weight:600;color:var(--muted)}
+    .plan-desc{font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px}
+    .plan-check{
+      width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border2);
+      position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:center;
+    }
+    .plan-card.selected .plan-check{background:#fff;border-color:#fff}
+    .plan-card.selected .plan-check::after{content:'';width:6px;height:6px;background:#000;border-radius:50%;display:block}
+    .trial-note{
+      text-align:center;font-size:11px;color:var(--muted);
+      background:rgba(255,255,255,.04);border-radius:var(--r-sm);
+      padding:8px 12px;margin-bottom:14px;
+    }
+    .trial-note strong{color:var(--text)}
+    .back-link{
+      background:none;border:none;color:var(--muted);font-size:11px;font-family:var(--sans);
+      cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;padding:4px;
+    }
+    .back-link:hover{color:var(--text)}
   </style>
 </head>
 <body>
@@ -115,6 +158,7 @@
     <div class="tab" id="tabSignin" onclick="switchTab('signin')">Sign in</div>
   </div>
 
+  <!-- Step 1: account details -->
   <div id="formSignup">
     <div class="field">
       <label>Username</label>
@@ -130,9 +174,42 @@
       <label>Password</label>
       <input type="password" id="signupPass" placeholder="••••••••"/>
     </div>
-    <button type="button" class="submit" id="btnSignup" onclick="doSignup()">
-      <span id="signupLabel">Create account →</span>
+    <button type="button" class="submit" id="btnSignup" onclick="goToPlanStep()">
+      <span id="signupLabel">Continue →</span>
     </button>
+  </div>
+
+  <!-- Step 2: plan selection -->
+  <div id="formPlan" style="display:none">
+    <div class="plan-step-head">
+      <h2>Choose your plan</h2>
+      <p>All plans start with a 7-day free trial.</p>
+    </div>
+    <div class="plans">
+      <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
+        <div class="plan-check"></div>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$12<span>/mo</span></div>
+        <div class="plan-desc">Great for personal projects and getting started</div>
+      </div>
+      <div class="plan-card popular selected" data-plan="pro" onclick="selectPlan('pro')">
+        <div class="plan-check"></div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$29<span>/mo</span></div>
+        <div class="plan-desc">For builders who ship regularly and need more AI</div>
+      </div>
+      <div class="plan-card" data-plan="max" onclick="selectPlan('max')">
+        <div class="plan-check"></div>
+        <div class="plan-name">Max</div>
+        <div class="plan-price">$79<span>/mo</span></div>
+        <div class="plan-desc">Unlimited power for professionals and agencies</div>
+      </div>
+    </div>
+    <div class="trial-note"><strong>7 days free</strong> — no charge until your trial ends. Cancel anytime.</div>
+    <button type="button" class="submit" id="btnCreateAccount" onclick="doSignup()">
+      <span id="createLabel">Start free trial →</span>
+    </button>
+    <button type="button" class="back-link" onclick="backToForm()">← Back</button>
   </div>
 
   <div id="formSignin" style="display:none">
@@ -151,8 +228,8 @@
     </button>
   </div>
 
-  <div class="div"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
-  <button type="button" class="guest" onclick="doGuest(event)">Continue without account</button>
+  <div id="orDivider" class="div"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+  <button type="button" id="guestBtn" class="guest" onclick="doGuest(event)">Continue without account</button>
 
   <div class="msg" id="msgBox"></div>
 </div>
@@ -182,12 +259,49 @@
     if (p.get('tab') === 'signin') switchTab('signin');
   })();
 
+  let _selectedPlan = 'pro';
+
+  function selectPlan(plan) {
+    _selectedPlan = plan;
+    document.querySelectorAll('.plan-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.plan === plan);
+    });
+  }
+
+  function goToPlanStep() {
+    const user = document.getElementById('signupUser').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass  = document.getElementById('signupPass').value;
+    if (!user)  { setMsg('Enter a username.', 'err'); return; }
+    if (!email || !email.includes('@')) { setMsg('Enter a valid email.', 'err'); return; }
+    if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
+    setMsg('', '');
+    document.getElementById('formSignup').style.display  = 'none';
+    document.getElementById('formPlan').style.display    = '';
+    document.getElementById('orDivider').style.display   = 'none';
+    document.getElementById('guestBtn').style.display    = 'none';
+    document.querySelector('.card').classList.add('wide');
+  }
+
+  function backToForm() {
+    document.getElementById('formPlan').style.display    = 'none';
+    document.getElementById('formSignup').style.display  = '';
+    document.getElementById('orDivider').style.display   = '';
+    document.getElementById('guestBtn').style.display    = '';
+    document.querySelector('.card').classList.remove('wide');
+    setMsg('', '');
+  }
+
   function switchTab(tab) {
     const su = tab === 'signup';
     document.getElementById('tabSignup').classList.toggle('on', su);
     document.getElementById('tabSignin').classList.toggle('on', !su);
-    document.getElementById('formSignup').style.display = su ? '' : 'none';
-    document.getElementById('formSignin').style.display = su ? 'none' : '';
+    document.getElementById('formSignup').style.display  = su ? '' : 'none';
+    document.getElementById('formPlan').style.display    = 'none';
+    document.getElementById('formSignin').style.display  = su ? 'none' : '';
+    document.getElementById('orDivider').style.display   = '';
+    document.getElementById('guestBtn').style.display    = '';
+    document.querySelector('.card').classList.remove('wide');
     setMsg('', '');
   }
 
@@ -198,14 +312,31 @@
   }
 
   function setLoading(form, loading) {
-    const btn = document.getElementById('btn' + (form === 'signup' ? 'Signup' : 'Signin'));
-    const lbl = document.getElementById(form + 'Label');
-    btn.disabled = loading;
-    if (loading) {
-      lbl.innerHTML = '<div class="spin"></div>';
+    if (form === 'signup') {
+      const btn = document.getElementById('btnCreateAccount');
+      const lbl = document.getElementById('createLabel');
+      if (btn) btn.disabled = loading;
+      if (lbl) lbl.innerHTML = loading ? '<div class="spin"></div>' : 'Start free trial →';
     } else {
-      lbl.textContent = form === 'signup' ? 'Create account →' : 'Sign in →';
+      const btn = document.getElementById('btnSignin');
+      const lbl = document.getElementById('signinLabel');
+      if (btn) btn.disabled = loading;
+      if (lbl) lbl.textContent = loading ? '' : 'Sign in →';
     }
+  }
+
+  async function savePlanToProfile(userId) {
+    if (!sb || !userId) return;
+    const trialEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      await sb.from('profiles').update({
+        plan: 'trial',
+        selected_plan: _selectedPlan,
+        trial_ends_at: trialEnds,
+        credits_used_cents: 0,
+        usage_month: new Date().toISOString().slice(0, 7),
+      }).eq('id', userId);
+    } catch(e) {}
   }
 
   function toEmail(username) {
@@ -249,6 +380,7 @@
           const { data: si } = await sb.auth.signInWithPassword({ email, password: pass });
           if (si?.session) {
             await saveRealEmail(si.session.user.id, realEmail);
+            await savePlanToProfile(si.session.user.id);
             localStorage.removeItem('vexium_guest');
             localStorage.setItem('vexium_username', user);
             window.location.href = 'home.html';
@@ -262,6 +394,7 @@
       // Got a session immediately (email confirm disabled)
       if (data.session) {
         await saveRealEmail(data.session.user.id, realEmail);
+        await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';
@@ -271,6 +404,7 @@
       const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pass });
       if (si?.session) {
         await saveRealEmail(si.session.user.id, realEmail);
+        await savePlanToProfile(si.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html';
@@ -316,8 +450,11 @@
   // Enter key
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
-    const su = document.getElementById('formSignup').style.display !== 'none';
-    if (su) doSignup(); else doSignin();
+    const onPlan   = document.getElementById('formPlan').style.display   !== 'none';
+    const onSignup = document.getElementById('formSignup').style.display !== 'none';
+    if (onPlan)   doSignup();
+    else if (onSignup) goToPlanStep();
+    else doSignin();
   });
 </script>
 </body>

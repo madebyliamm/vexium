@@ -3160,6 +3160,9 @@ async function init() {
   loadMonaco();
   loadUsageWarnPref();
   topbarLoaderDone();
+  // Auto-rebuild memory if project has files but no summary
+  _autoRebuildMemoryIfNeeded();
+
   // Only show the intro screen after load confirms no chat history
   if (!aiStarted) {
     const _headlines = [
@@ -7031,6 +7034,35 @@ function _aiAutoRetry() {
   }
   aiTyping = true; aiSetGenerating(true); aiShowTyping();
   aiCallAPI();
+}
+
+async function aiRebuildMemory() {
+  if (aiTyping) return;
+  const htmlFiles = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_'));
+  if (!htmlFiles.length) return;
+
+  const summaries = htmlFiles.map(name => {
+    const content = fileSystem[name] || '';
+    return _extractHtmlSummary(name, content) || `=== ${name} ===\n[no summary]`;
+  }).join('\n\n');
+
+  const instruction = `You have a project with ${htmlFiles.length} page(s). Below are compact summaries (CSS tokens + nav + section structure) of each file. Regenerate your memory files (_longterm, _shortterm, _pages) to reflect the current state accurately.\n\n${summaries}`;
+
+  aiHistory.push({ role: 'user', content: instruction });
+  aiTyping = true; aiSetGenerating(true); aiShowTyping();
+  await aiCallAPI();
+}
+
+// Called at load — silently rebuilds memory if project has files but no summary yet
+async function _autoRebuildMemoryIfNeeded() {
+  const htmlFiles = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_') && (fileSystem[f] || '').length > 500);
+  if (!htmlFiles.length) return;
+  const hasMemory = !!(fileSystem['_longterm'] || fileSystem['_pages']);
+  if (hasMemory) return; // already up to date
+  // Small delay so the page finishes rendering first
+  await new Promise(r => setTimeout(r, 1200));
+  if (aiTyping || aiStarted) return; // user already started chatting
+  await aiRebuildMemory();
 }
 
 function aiCompactChat() {

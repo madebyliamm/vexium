@@ -4320,9 +4320,8 @@ function buildPageHtml(pageName) {
     // Also patches the URL constructor so new URL(window.location.href) doesn't throw SyntaxError
     // when the page is a blob: URL (common in AI-generated auth code that reads query params).
     // Both patches are active only in the editor (blob: URL context).
-    '(function(){if(!location.href.startsWith("blob:"))return;function _nav(url){var s=String(url||"");if(!s||s.startsWith("http")||s.startsWith("//")||s.startsWith("#")||s.startsWith("blob:")||s.startsWith("javascript:")||s.startsWith("mailto:")||s.startsWith("tel:"))return false;var page=s.split("?")[0].split("#")[0];if(!page)return false;window.parent.postMessage({type:"vexium_navigate",page:page},"*");return true;}try{var _hd=Object.getOwnPropertyDescriptor(Location.prototype,"href");if(_hd&&_hd.set)Object.defineProperty(Location.prototype,"href",{get:_hd.get,set:function(u){if(!_nav(u))_hd.set.call(this,u);}});}catch(e){}try{var _oa=location.assign.bind(location);Object.defineProperty(location,"assign",{value:function(u){if(!_nav(u))_oa(u);}});}catch(e){}try{var _or=location.replace.bind(location);Object.defineProperty(location,"replace",{value:function(u){if(!_nav(u))_or(u);}});}catch(e){}var _U=window.URL;function _SU(u,b){var us=String(u||"");if(us.startsWith("blob:"))us="http://vexium.preview/"+us.split("/").pop();try{return b?new _U(us,b):new _U(us);}catch(e){return new _U(us,"http://vexium.preview/");}}try{_SU.prototype=_U.prototype;["createObjectURL","revokeObjectURL","canParse"].forEach(function(k){if(_U[k])try{_SU[k]=_U[k].bind(_U);}catch(e){}});window.URL=_SU;}catch(e){}})();',
-    // Link click interceptor
-    'document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var href=a.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("http")||href.startsWith("mailto")||href.startsWith("tel"))return;var page=href.split("?")[0].split("#")[0];if(!page)return;e.preventDefault();window.parent.postMessage({type:"vexium_navigate",page:page},"*");});',
+    // JS navigation interceptor — catches window.location.href = 'page.html' and redirects to hash navigation
+    '(function(){if(!location.href.startsWith("blob:"))return;function _nav(url){var s=String(url||"");if(!s||s.startsWith("http")||s.startsWith("//")||s.startsWith("#")||s.startsWith("blob:")||s.startsWith("javascript:")||s.startsWith("mailto:")||s.startsWith("tel:"))return false;var page=s.split("?")[0].split("#")[0];while(page.startsWith("./"))page=page.slice(2);while(page.startsWith("/"))page=page.slice(1);if(!page)return false;if(page.indexOf(".")===-1)page=page+".html";location.hash="vexnav="+page;return true;}try{var _hd=Object.getOwnPropertyDescriptor(Location.prototype,"href");if(_hd&&_hd.set)Object.defineProperty(Location.prototype,"href",{get:_hd.get,set:function(u){if(!_nav(u))_hd.set.call(this,u);}});}catch(e){}try{var _oa=location.assign.bind(location);Object.defineProperty(location,"assign",{value:function(u){if(!_nav(u))_oa(u);}});}catch(e){}try{var _or=location.replace.bind(location);Object.defineProperty(location,"replace",{value:function(u){if(!_nav(u))_or(u);}});}catch(e){}var _U=window.URL;function _SU(u,b){var us=String(u||"");if(us.startsWith("blob:"))us="http://vexium.preview/"+us.split("/").pop();try{return b?new _U(us,b):new _U(us);}catch(e){return new _U(us,"http://vexium.preview/");}}try{_SU.prototype=_U.prototype;["createObjectURL","revokeObjectURL","canParse"].forEach(function(k){if(_U[k])try{_SU[k]=_U[k].bind(_U);}catch(e){}});window.URL=_SU;}catch(e){}})();',
     // Tracking: skip blob: URLs (editor preview) — only fires on real published deployments
     '(function(){var pid="' + _trackPid.replace(/"/g, '') + '";if(!pid||location.href.startsWith("blob:"))return;var sid=sessionStorage.getItem("_vsid")||Math.random().toString(36).slice(2);sessionStorage.setItem("_vsid",sid);var vid=localStorage.getItem("_vvid")||Math.random().toString(36).slice(2);localStorage.setItem("_vvid",vid);fetch("https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:pid,page:location.pathname||"/",referrer:document.referrer,session_id:sid,visitor_id:vid})}).catch(function(){});})();',
     '})();'
@@ -4333,6 +4332,18 @@ function buildPageHtml(pageName) {
   } else {
     html = bridge + html;
   }
+
+  // Rewrite anchor links to project pages as hash-based navigation.
+  // #vexnav=page.html is detected by the parent's hashchange listener — no onclick, no errors.
+  Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_') && f !== pageName).forEach(target => {
+    [target, './' + target].forEach(variant => {
+      const dq = 'href="' + variant + '"';
+      const sq = "href='" + variant + "'";
+      while (html.includes(dq)) html = html.replace(dq, 'href="#vexnav=' + target + '"');
+      while (html.includes(sq)) html = html.replace(sq, "href='#vexnav=" + target + "'");
+    });
+  });
+
   return html;
 }
 
@@ -4343,8 +4354,6 @@ function refreshPreviewPage(pageName) {
     const fallback = normalizeMainFile(mainFile, fileSystem);
     if (!fallback) return;
     pageName = fallback;
-    // Don't mutate mainFile here — avoids switching away from index.html
-    // while it's still being built during the first AI response
   }
   const frame = document.getElementById('previewFrame');
   const html = buildPageHtml(pageName);
@@ -4356,6 +4365,18 @@ function refreshPreviewPage(pageName) {
   frame.src = burl;
   setUrl(pageName);
   pushHist(pageName);
+  // Re-attach hash navigation listener after each page load
+  frame.onload = function() {
+    try {
+      frame.contentWindow.addEventListener('hashchange', function() {
+        const h = frame.contentWindow.location.hash || '';
+        if (h.startsWith('#vexnav=')) {
+          const pg = decodeURIComponent(h.slice(8));
+          if (pg && fileSystem[pg]) { mainFile = pg; refreshPreviewPage(pg); }
+        }
+      });
+    } catch(e) {}
+  };
 }
 
 function previewPageLabel(filename) {
@@ -4524,6 +4545,7 @@ function showPreviewDock(show) {
   if (rz) rz.classList.toggle('hidden', !show);
   if (btn) btn.classList.toggle('active', show);
   _syncEditorDock();
+  if (show) refreshPreview(); // always rebuild so link rewrites are applied
   if (editor) {
     if (show) editor.layout();
     else setTimeout(() => editor.layout(), 380);

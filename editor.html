@@ -1806,6 +1806,23 @@
     .ai-suggestions-apply:hover { background: #fff; }
     .ai-suggestions-apply:disabled { opacity: .3; cursor: not-allowed; }
 
+    /* ── COLLAB CHAT ── */
+    .collab-msg-av {
+      width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
+      cursor: default; align-self: flex-end; margin-right: 6px;
+      position: relative;
+    }
+    .collab-msg-av::after {
+      content: attr(title);
+      position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,.8); color: #fff; font-size: 10px; font-weight: 600;
+      padding: 3px 7px; border-radius: 5px; white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity .15s;
+    }
+    .collab-msg-av:hover::after { opacity: 1; }
+
     /* ─────────────────────────────────────────────
        RIGHT PANEL (Preview + Console)
     ───────────────────────────────────────────── */
@@ -1856,7 +1873,15 @@
     .prev-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .12); color: var(--text); }
     .prev-btn:disabled { opacity: .25; cursor: default; }
     .prev-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    .prev-url { flex: 1; text-align: center; background: transparent; border: none; border-radius: 0; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prev-url { flex: 1; text-align: center; background: transparent; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: background .12s, color .12s; }
+    .prev-url:hover { background: var(--border2); color: var(--text); }
+    .prev-page-drop { display: none; position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 4px; min-width: 160px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+    .prev-page-drop.show { display: block; }
+    .prev-page-opt { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border-radius: 7px; background: none; border: none; color: var(--text); font-size: 12px; font-weight: 500; font-family: var(--sans); cursor: pointer; text-align: left; transition: background .1s; white-space: nowrap; }
+    .prev-page-opt:hover { background: var(--border2); }
+    .prev-page-opt.active { color: var(--accent); font-weight: 700; }
+    .prev-page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; opacity: 0; }
+    .prev-page-opt.active .prev-page-dot { opacity: 1; }
     .prev-text-btn { padding: 4px 10px; background: rgba(255, 255, 255, .07); border: none; border-radius: 5px; font-size: 10px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: var(--sans); transition: background var(--t-fast), color var(--t-fast); white-space: nowrap; flex-shrink: 0; }
     .prev-text-btn:hover { background: rgba(255, 255, 255, .12); color: var(--text); }
 
@@ -2250,6 +2275,7 @@
   </div>
 
   <div class="tb-right">
+    <div id="tbPresence" style="display:flex;align-items:center;gap:-4px;margin-right:4px"></div>
     <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
     <button class="tb-icon-btn" id="btnEditToggle" onclick="toggleEditPane()" title="Edit data" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -2825,6 +2851,10 @@
           </div>
         </div>
 
+        <div id="aiLockBanner" style="display:none;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:none;border-radius:99px;padding:8px 18px;margin:0 auto 8px;width:min(500px,88%);font-size:12px;font-weight:500;color:rgba(255,255,255,.6);">
+          <span id="aiLockText">Someone is using AI…</span>
+        </div>
+
         <!-- Bottom input bar -->
         <div id="aiBottom">
           <div id="aiBottomWrap">
@@ -2909,7 +2939,10 @@
           <button class="prev-btn" onclick="refreshPreview()" title="Refresh">
             <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
-          <div class="prev-url" id="prevUrl">Home page</div>
+          <div class="prev-url-wrap" id="prevUrlWrap" onclick="togglePageDrop(event)" style="position:relative;flex:1;display:flex;justify-content:center">
+            <button class="prev-url" id="prevUrl">Home page</button>
+            <div class="prev-page-drop" id="prevPageDrop"></div>
+          </div>
           <div class="prev-device-wrap">
             <button class="prev-device-btn" id="prevDeviceBtn" onclick="toggleDeviceDrop(event)" title="Device view">
               <svg id="prevDeviceIco" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
@@ -3077,6 +3110,10 @@ try {
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let project = null, projectId = null;
+let _isCollabProject = false;
+let _myDisplayName = '';
+let _myUsername = '';
+let _realtimeChannel = null;
 let fileSystem = {}, mainFile = 'index.html';
 let openTabs = [], activeFile = null;
 let previewVisible = false;
@@ -3282,6 +3319,7 @@ async function loadProject() {
   _syncEditorDock(); // restore dock open/closed state from localStorage
   loadUserPlan();    // check plan/usage, show paywall if needed
   await aiLoadHistory();
+  await checkCollabProject();
   await checkInterruptedJob(); // resume any build that was interrupted by a refresh
   renderTemplates();
   startPlaceholderRotator();
@@ -4335,6 +4373,34 @@ function setUrl(u) {
   const el = document.getElementById('prevUrl');
   if (el) el.textContent = previewPageLabel(u || mainFile);
 }
+
+function togglePageDrop(e) {
+  const drop = document.getElementById('prevPageDrop');
+  if (!drop) return;
+  const isOpen = drop.classList.contains('show');
+  if (isOpen) { drop.classList.remove('show'); return; }
+  // Build the list of HTML pages
+  const pages = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_')).sort((a, b) => {
+    if (a === mainFile) return -1; if (b === mainFile) return 1;
+    return a.localeCompare(b);
+  });
+  const current = prevHistory[prevHistIdx] || mainFile;
+  drop.innerHTML = pages.map(f =>
+    `<button class="prev-page-opt${f === current ? ' active' : ''}" onclick="switchPreviewPage('${esc(f)}')">
+      <div class="prev-page-dot"></div>${escHtml(previewPageLabel(f))}
+    </button>`
+  ).join('');
+  drop.classList.add('show');
+  e.stopPropagation();
+}
+
+function switchPreviewPage(filename) {
+  document.getElementById('prevPageDrop')?.classList.remove('show');
+  if (fileSystem[filename]) refreshPreviewPage(filename);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => document.getElementById('prevPageDrop')?.classList.remove('show'));
 function pushHist(u) {
   if (prevHistory[prevHistIdx] === u) return;
   prevHistory = prevHistory.slice(0, prevHistIdx + 1);
@@ -4356,7 +4422,9 @@ function openInViewer() {
   if (!win) { showToast('!', 'Popup blocked — allow popups for this site'); return; }
   win.document.write('<html><body style="background:#020209;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">Loading…</body></html>');
   saveNow().then(() => {
-    win.location.href = 'viewer.html?project=' + project.id;
+    const currentPage = prevHistory[prevHistIdx] || mainFile;
+    const pageParam = currentPage && currentPage !== mainFile ? '&page=' + encodeURIComponent(currentPage) : '';
+    win.location.href = 'viewer.html?project=' + project.id + pageParam;
   });
 }
 
@@ -4800,10 +4868,19 @@ function aiTransitionToChat() {
 }
 
 // ── RENDER MESSAGES ───────────────────────────────────────────────────────────
-function aiAddUserRow(text, attachments) {
+function aiAddUserRow(text, attachments, senderInfo) {
   const msgs = document.getElementById('aiMessages');
   const row   = document.createElement('div');
   row.className = 'ai-row user';
+  if (_isCollabProject && senderInfo && senderInfo.senderName) {
+    row.dataset.senderId = senderInfo.senderId || '';
+    // Add small avatar before bubble - shown for all collab messages
+    const av = document.createElement('div');
+    av.className = 'collab-msg-av';
+    av.textContent = (senderInfo.senderName || '?').charAt(0).toUpperCase();
+    av.title = senderInfo.senderName;
+    row.insertBefore(av, row.firstChild);
+  }
   const bubble = document.createElement('div');
   bubble.className = 'ai-bubble';
   if (attachments && attachments.length) {
@@ -5049,6 +5126,150 @@ async function aiTrimPersistence(keepCount) {
   }
 }
 
+// ── COLLAB ────────────────────────────────────────────────────────────────────
+async function checkCollabProject() {
+  if (!sb || !projectId) return;
+  try {
+    const { data } = await sb.from('project_members')
+      .select('id').eq('project_id', projectId).eq('status', 'accepted').limit(1);
+    _isCollabProject = !!(data && data.length);
+    if (_isCollabProject) {
+      await loadMyProfile();
+      subscribeToCollabChat();
+      subscribeToAiLock();
+      startPresence();
+    }
+  } catch(e) {}
+}
+
+async function loadMyProfile() {
+  if (!sb) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data } = await sb.from('profiles').select('display_name,username').eq('id', session.user.id).single();
+    if (data) { _myDisplayName = data.display_name || data.username || 'Unknown'; _myUsername = data.username || ''; }
+  } catch(e) {}
+}
+
+function subscribeToCollabChat() {
+  if (!sb || !projectId) return;
+  if (_realtimeChannel) _realtimeChannel.unsubscribe();
+  _realtimeChannel = sb.channel('collab:' + projectId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'ai_messages',
+      filter: 'project_id=eq.' + projectId
+    }, async (payload) => {
+      const row = payload.new;
+      // Skip messages from ourselves (we already rendered them)
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session && row.user_id === session.user.id) return;
+      } catch(e) {}
+      // Skip AI messages when we're currently generating (we're streaming them)
+      if (row.role === 'assistant' && aiTyping) return;
+      // Render the incoming message
+      if (row.role === 'user') {
+        const senderInfo = { senderId: row.user_id, senderName: row.sender_display_name || 'Collaborator' };
+        aiAddUserRow(typeof row.content === 'string' ? row.content : '', row.file_names || [], senderInfo);
+        // Also add to history so AI has context
+        aiHistory.push({ role: 'user', content: row.content });
+      } else if (row.role === 'assistant') {
+        let displayText = row.content;
+        let displayFiles = row.file_names || [];
+        try {
+          const parsed = JSON.parse(row.content);
+          displayText = parsed.message || '';
+          if (Array.isArray(parsed.files)) displayFiles = parsed.files.map(f => f.name || f).filter(Boolean);
+        } catch(e) {}
+        aiAddAI(displayText, displayFiles);
+        aiHistory.push({ role: 'assistant', content: row.content });
+        aiAllMessages.push({ role: 'assistant', text: displayText, files: displayFiles, time: aiNow() });
+      }
+    })
+    .subscribe();
+}
+
+async function acquireAiLock() {
+  if (!sb || !projectId || !_isCollabProject) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    await sb.from('projects').update({
+      ai_lock_user_id: session.user.id,
+      ai_lock_at: new Date().toISOString(),
+      ai_lock_name: _myDisplayName || 'Someone'
+    }).eq('id', projectId);
+  } catch(e) {}
+}
+
+async function releaseAiLock() {
+  if (!sb || !projectId || !_isCollabProject) return;
+  try {
+    await sb.from('projects').update({ ai_lock_user_id: null, ai_lock_at: null, ai_lock_name: null }).eq('id', projectId);
+  } catch(e) {}
+}
+
+function subscribeToAiLock() {
+  if (!sb || !projectId) return;
+  sb.channel('lock:' + projectId)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'projects',
+      filter: 'id=eq.' + projectId
+    }, (payload) => {
+      const p = payload.new;
+      // Check if lock belongs to someone else
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (!session) return;
+        const lockedByOther = p.ai_lock_user_id && p.ai_lock_user_id !== session.user.id;
+        // Check lock isn't stale (>3 minutes)
+        const lockAge = p.ai_lock_at ? Date.now() - new Date(p.ai_lock_at).getTime() : 0;
+        const stale = lockAge > 180000;
+        showAiLockBanner(lockedByOther && !stale ? p.ai_lock_name : null);
+      });
+    })
+    .subscribe();
+}
+
+function showAiLockBanner(lockerName) {
+  const banner = document.getElementById('aiLockBanner');
+  if (!banner) return;
+  if (lockerName) {
+    document.getElementById('aiLockText').textContent = lockerName + ' is using AI…';
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function startPresence() {
+  if (!sb || !projectId) return;
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (!session) return;
+    const presenceCh = sb.channel('presence:' + projectId, { config: { presence: { key: session.user.id } } });
+    presenceCh.on('presence', { event: 'sync' }, () => {
+      const state = presenceCh.presenceState();
+      const others = Object.entries(state)
+        .filter(([k]) => k !== session.user.id)
+        .map(([, v]) => v[0])
+        .filter(Boolean)
+        .slice(0, 3);
+      const el = document.getElementById('tbPresence');
+      if (!el) return;
+      el.innerHTML = others.map(u => {
+        const name = u.name || '?';
+        const init = name.charAt(0).toUpperCase();
+        return `<div title="${escHtml(name)}" style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;border:2px solid var(--bg);margin-left:-6px">${escHtml(init)}</div>`;
+      }).join('');
+    });
+    presenceCh.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await presenceCh.track({ name: _myDisplayName, username: _myUsername });
+      }
+    });
+  });
+}
+
 async function aiSaveMsg(role, content, fileNames) {
   // localStorage is source of truth — always write here first, synchronously
   aiSaveMsgLocal(role, content, fileNames);
@@ -5062,7 +5283,9 @@ async function aiSaveMsg(role, content, fileNames) {
       user_id: s.data.session.user.id,
       role,
       content,
-      file_names: fileNames || []
+      file_names: fileNames || [],
+      sender_display_name: _myDisplayName || null,
+      sender_username: _myUsername || null,
     });
   } catch(e) { /* Supabase failure is fine — localStorage already has it */ }
 }
@@ -5070,9 +5293,21 @@ async function aiSaveMsg(role, content, fileNames) {
 async function aiLoadHistory() {
   const key = aiLocalKey();
 
-  // Always try localStorage first — it's always up to date
+  // For collab projects, always prefer Supabase (collaborators may have added messages)
   let rows = [];
-  if (key) {
+  if (_isCollabProject && sb && projectId) {
+    try {
+      const { data } = await sb.from('ai_messages')
+        .select('role,content,file_names,created_at,user_id,sender_display_name,sender_username')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true })
+        .limit(200);
+      if (data && data.length) rows = data;
+    } catch(e) {}
+  }
+
+  // For non-collab: try localStorage first — it's always up to date
+  if (!rows.length && key) {
     try {
       const local = JSON.parse(localStorage.getItem(key) || '[]');
       if (local.length) rows = local;
@@ -5083,7 +5318,7 @@ async function aiLoadHistory() {
   if (!rows.length && sb && projectId) {
     try {
       const { data } = await sb.from('ai_messages')
-        .select('role,content,file_names,created_at')
+        .select('role,content,file_names,created_at,user_id,sender_display_name,sender_username')
         .eq('project_id', projectId)
         .order('created_at', { ascending: true })
         .limit(200);
@@ -5155,14 +5390,14 @@ async function aiLoadHistory() {
       displayText = parsedUser.text || '';
       if ((!displayFiles || !displayFiles.length) && parsedUser.files.length) displayFiles = parsedUser.files;
     }
-    aiAllMessages.push({ role: row.role, text: displayText, files: displayFiles, time });
+    aiAllMessages.push({ role: row.role, text: displayText, files: displayFiles, time, senderId: row.user_id, senderName: row.sender_display_name || '', senderUsername: row.sender_username || '' });
   });
 
   aiTransitionToChat();
   const msgs = document.getElementById('aiMessages');
   msgs.innerHTML = '';
   aiAllMessages.forEach(m => {
-    if (m.role === 'user') aiAddUserRow(m.text, m.files || []);
+    if (m.role === 'user') aiAddUserRow(m.text, m.files || [], { senderId: m.senderId, senderName: m.senderName });
     else aiAddAI(m.text, m.files || []);
   });
   msgs.scrollTop = msgs.scrollHeight; // instant jump — no smooth scroll on load
@@ -5829,6 +6064,21 @@ async function aiSend(fromBottom) {
   if (!text || aiTyping) return;
   if (_usageLocked) { showPaywall(); return; }
 
+  // Check AI lock for collab projects
+  if (_isCollabProject) {
+    try {
+      const { data } = await sb.from('projects').select('ai_lock_user_id,ai_lock_at,ai_lock_name').eq('id', projectId).single();
+      if (data && data.ai_lock_user_id) {
+        const { data: { session } } = await sb.auth.getSession();
+        const lockAge = data.ai_lock_at ? Date.now() - new Date(data.ai_lock_at).getTime() : 0;
+        if (data.ai_lock_user_id !== session?.user?.id && lockAge < 180000) {
+          showToast('!', (data.ai_lock_name || 'Someone') + ' is using AI right now');
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
   input.value = '';
   input.style.height = '';
   _syncSendBtnState();
@@ -6484,6 +6734,7 @@ async function aiCallAPI() {
   msgs.addEventListener('scroll', onUserScroll);
 
   aiAbortController = new AbortController();
+  acquireAiLock();
 
   // Inject any preview JS errors as silent context so AI can fix them without being asked
   let _apiMessages = sliceAiHistoryForApi(aiHistory);
@@ -6766,6 +7017,7 @@ async function aiCallAPI() {
       aiHistory.push({ role: 'assistant', content: historyContent });
       aiAllMessages.push({ role: 'assistant', text: fullMessage, files: collectedFiles.map(f => f.name), time: aiNow() });
       aiSaveMsg('assistant', historyContent, collectedFiles.map(f => f.name));
+      releaseAiLock();
       completeBuildJob();
       _compactMode = false;
       scrollIfSticky();

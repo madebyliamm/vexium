@@ -6333,7 +6333,10 @@ function buildAiFilesPayload() {
   // Only pull in mentioned files when there's no _pages index (small/early projects)
   if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
 
-  const charLimit = _compactMode ? 8000 : (hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY);
+  // Primary files always get the full limit — reducing this causes the AI to miss
+  // the section it needs to edit and rewrite the whole file instead of patching.
+  // _pages only reduces non-primary files, not the file being actively edited.
+  const charLimit = _compactMode ? 10000 : AI_MAX_FILE_CHARS_PRIORITY;
 
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;

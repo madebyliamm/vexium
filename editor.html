@@ -1346,9 +1346,6 @@
     /* Streaming cursor */
     @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     .ai-stream-cursor::after { content: ''; display: inline-block; width: 2px; height: .85em; background: rgba(255,255,255,.55); margin-left: 2px; vertical-align: text-bottom; border-radius: 1px; animation: cursorBlink .9s step-end infinite; }
-    /* Stream text chunk fade-in */
-    @keyframes scFade { from { opacity: 0; } to { opacity: 1; } }
-    .sc { animation: scFade .18s ease forwards; }
     /* Typing dots */
     @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-5px); opacity: 1; } }
     .ai-typing-dots { display: inline-flex; gap: 4px; align-items: center; }
@@ -6769,10 +6766,7 @@ async function aiCallAPI() {
         if (eventType === 'delta' && data.text) {
           fullMessage += data.text;
           if (textEl) {
-            const chunk = document.createElement('span');
-            chunk.className = 'sc';
-            chunk.textContent = data.text;
-            textEl.appendChild(chunk);
+            textEl.innerHTML = formatChatText(fullMessage);
             if (_streamAvatar) requestAnimationFrame(() => {
               if (!_streamAvatar) return;
               let top;

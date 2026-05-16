@@ -3160,7 +3160,7 @@ async function init() {
   loadMonaco();
   loadUsageWarnPref();
   topbarLoaderDone();
-  // Auto-rebuild memory if project has files but no summary
+  // Silently generate memory files from existing code if they're missing
   _autoRebuildMemoryIfNeeded();
 
   // Only show the intro screen after load confirms no chat history
@@ -5840,14 +5840,12 @@ async function aiSend(fromBottom) {
   aiAttachments = [];
   aiRenderChips();
 
-  // Persist attachments to fileSystem so they survive across sessions and the AI can reference them by filename
+  // Only persist non-image attachments to fileSystem (text/code files the user explicitly shares)
+  // Images are NOT added automatically — the AI sees them once and that's enough
   let attachmentsSaved = false;
   attachSnapshot.forEach(att => {
     if (!att.name) return;
-    if (att.type === 'image' && att.dataUrl) {
-      fileSystem[att.name] = att.dataUrl;
-      attachmentsSaved = true;
-    } else if (att.text) {
+    if (att.type !== 'image' && att.text) {
       fileSystem[att.name] = att.text;
       attachmentsSaved = true;
     }
@@ -5877,9 +5875,16 @@ async function aiSend(fromBottom) {
   } else {
     apiContent = text;
   }
-  aiHistory.push({ role: 'user', content: apiContent });
+  // Store in history with image blocks replaced by tiny placeholders — prevents the full
+  // base64 image from being re-sent on every subsequent request (very expensive)
+  const historyContent = Array.isArray(apiContent)
+    ? apiContent.map(b => b.type === 'image'
+        ? { type: 'text', text: '[Image shared by user — seen this turn only]' }
+        : b)
+    : apiContent;
+  aiHistory.push({ role: 'user', content: historyContent });
   // Save user message immediately so DB order is guaranteed before assistant response arrives
-  aiSaveMsg('user', typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent), attachSnapshot.map(a => a.name));
+  aiSaveMsg('user', typeof historyContent === 'string' ? historyContent : JSON.stringify(historyContent), attachSnapshot.map(a => a.name));
   // Persist job so it can be resumed if page is closed mid-build
   startBuildJob(text);
   aiShowTyping();
@@ -6721,12 +6726,9 @@ async function aiCallAPI() {
 
       if (fromEarlyClose && hasMidStreamFile && _autoRecoverCount < 3) {
         _autoRecoverCount++;
-        // Save partial content so AI can continue from here
-        fileSystem[cutFile] = partialContent;
-        dirtyFiles.add(cutFile);
-        syncEditorModelIfViewing(cutFile, partialContent);
-        renderFileTree();
-        saveNow();
+        // Do NOT save the partial file — keep the original intact so the retry
+        // can write the complete version. Saving truncated content was destroying
+        // everything after the cutoff point.
         _aiCutFile = cutFile;
         setTimeout(() => _aiAutoComplete(), 1500);
       }
@@ -7036,33 +7038,52 @@ function _aiAutoRetry() {
   aiCallAPI();
 }
 
-async function aiRebuildMemory() {
-  if (aiTyping) return;
+// Generate memory files purely from the existing code — no AI call, no risk of rebuilding
+function _generateMemoryClientSide() {
   const htmlFiles = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_'));
   if (!htmlFiles.length) return;
 
-  const summaries = htmlFiles.map(name => {
+  // _pages: section map per file derived from id/class patterns
+  const pagesLines = htmlFiles.map(name => {
     const content = fileSystem[name] || '';
-    return _extractHtmlSummary(name, content) || `=== ${name} ===\n[no summary]`;
-  }).join('\n\n');
+    const lines = content.split('\n');
+    const seen = new Set();
+    const sections = [];
+    lines.forEach((line, i) => {
+      const m = line.match(/(?:id|class)="([^"]*(?:hero|nav|header|feature|pricing|testimonial|about|contact|faq|footer|cta|auth|signin|signup|dashboard|team|blog|service|portfolio|banner)[^"]*)"/i);
+      if (m) {
+        const key = m[1].split(/\s+/)[0];
+        if (!seen.has(key)) { seen.add(key); sections.push(key + '(' + (i+1) + ')'); }
+      }
+    });
+    return name + ': ' + (sections.slice(0, 12).join(', ') || 'content(1-' + lines.length + ')');
+  }).join('\n');
 
-  const instruction = `You have a project with ${htmlFiles.length} page(s). Below are compact summaries (CSS tokens + nav + section structure) of each file. Regenerate your memory files (_longterm, _shortterm, _pages) to reflect the current state accurately.\n\n${summaries}`;
+  // _longterm: extract design tokens from the main file's :root block
+  const mainContent = fileSystem[mainFile] || fileSystem[htmlFiles[0]] || '';
+  const rootMatch = mainContent.match(/:root\s*\{([^}]+)\}/);
+  const extract = varName => { const m = rootMatch && rootMatch[1].match(new RegExp('--' + varName + '\\s*:\\s*([^;\\n]+)')); return m ? m[1].trim() : undefined; };
+  const design = {};
+  ['bg','surface','accent','accent2','text','muted','border'].forEach(k => { const v = extract(k); if (v) design['--' + k] = v; });
+  const fontMatch = mainContent.match(/fonts\.googleapis\.com[^"']*family=([^&"':]+)/);
+  if (fontMatch) design.font = decodeURIComponent(fontMatch[1].replace(/\+/g, ' '));
+  const titleMatch = mainContent.match(/<title>([^<|·–-]+)/i);
+  const brandName = titleMatch ? titleMatch[1].trim() : '';
+  const longterm = JSON.stringify({ design, brand: { name: brandName }, decisions: [], never_change: [] });
 
-  aiHistory.push({ role: 'user', content: instruction });
-  aiTyping = true; aiSetGenerating(true); aiShowTyping();
-  await aiCallAPI();
+  fileSystem['_pages'] = pagesLines;
+  fileSystem['_longterm'] = longterm;
+  if (!fileSystem['_shortterm']) fileSystem['_shortterm'] = 'RECENT: [existing project scanned]\nTODO: [none]\nCONTEXT: [' + htmlFiles.length + ' page(s)]';
+  ['_pages','_longterm','_shortterm'].forEach(f => dirtyFiles.add(f));
+  saveNow();
 }
 
-// Called at load — silently rebuilds memory if project has files but no summary yet
-async function _autoRebuildMemoryIfNeeded() {
+// Called at load — silently generates memory from code if project has files but no summary
+function _autoRebuildMemoryIfNeeded() {
   const htmlFiles = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_') && (fileSystem[f] || '').length > 500);
   if (!htmlFiles.length) return;
-  const hasMemory = !!(fileSystem['_longterm'] || fileSystem['_pages']);
-  if (hasMemory) return; // already up to date
-  // Small delay so the page finishes rendering first
-  await new Promise(r => setTimeout(r, 1200));
-  if (aiTyping || aiStarted) return; // user already started chatting
-  await aiRebuildMemory();
+  if (fileSystem['_longterm'] || fileSystem['_pages']) return;
+  _generateMemoryClientSide();
 }
 
 function aiCompactChat() {

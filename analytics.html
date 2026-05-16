@@ -23,6 +23,8 @@
 
     /* TOPBAR */
     #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+    #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;width:0;opacity:.65;pointer-events:none;z-index:201;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
+    @keyframes tbLoad{0%{width:0%}15%{width:30%}50%{width:60%}100%{width:80%}}
     .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform 60ms ease-out}
     .tb-logo:hover img{transform:scale(1.08)}
     .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
@@ -91,8 +93,9 @@
     @keyframes chartAreaIn { from { opacity: 0; } to { opacity: 1; } }
     .chart-line-path { stroke-dasharray: var(--dash-len, 9999); stroke-dashoffset: var(--dash-len, 9999); animation: chartLineIn .7s cubic-bezier(.4,0,.2,1) forwards; }
     .chart-area-path { opacity: 0; animation: chartAreaIn .5s ease .3s forwards; }
-    .line-pt { opacity: 0; transition: opacity .12s, r .12s; pointer-events: all; cursor: default; }
-    .line-pt.visible { opacity: 1; }
+    .line-pt { opacity: 0; pointer-events: all; cursor: default; }
+    .line-cursor { opacity: 0; pointer-events: none; transition: opacity .1s ease; }
+    .line-cursor.active { opacity: 1; }
     .bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;width:100%}
     .bar{flex:1;border-radius:8px 8px 0 0;min-height:3px;transition:opacity .12s;cursor:default}
     .bar:hover{opacity:.7}
@@ -170,6 +173,7 @@
 <body>
 
 <div id="topbar">
+  <div id="topbarLoader"></div>
   <a href="home.html" class="tb-logo"><img src="vexium_logo.png" alt="Vexium"/></a>
   <div class="tb-right">
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
@@ -221,7 +225,7 @@
     <div class="stat-card" data-metric="sites" onclick="selectMetric('sites')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Public Projects
+        Projects
       </div>
       <div class="stat-value empty" id="statSites">—</div>
       <div class="stat-meta" id="statSitesMeta">—</div>
@@ -271,7 +275,7 @@
 
   let _projects    = [];
   let _views       = [];
-  let _days        = 30;      // default 30d — matches home page
+  let _days        = 7;
   let _metric      = 'visitors';
   let _selectedPid = 'all';
   let _mode        = 'daily'; // over time is default
@@ -377,9 +381,14 @@
     const gradId   = 'lg'+color.replace('#','');
     const r        = n > 60 ? 2.5 : 4;
     const showEvery = n<=7?1:n<=14?2:5;
-    const circles = pts.map((p,i)=>
-      `<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${color}" stroke="var(--s1)" stroke-width="2" data-tip-name="${esc(p.lbl)}" data-tip-val="${p.c} ${metricLabel}" data-pt-idx="${i}"/>`
-    ).join('');
+    // Invisible zone rects for continuous hover (same pattern as multi-line)
+    _chartZoneData = {};
+    const zoneW = n>1 ? W/(n-1) : W;
+    const zonesHtml = pts.map((p,i)=>{
+      const x = n>1?(i/(n-1))*W:W/2;
+      _chartZoneData[i] = { label:p.lbl, tipVal:`${p.c} ${metricLabel}`, pts:[{x:p.x,y:p.y}] };
+      return `<rect x="${Math.max(0,x-zoneW/2).toFixed(1)}" y="0" width="${zoneW.toFixed(1)}" height="${H}" fill="transparent" class="chart-hover-zone" data-idx="${i}" style="cursor:default"/>`;
+    }).join('');
     const labelHtml = pts.map((p,i)=>
       `<div class="bar-label">${i%showEvery===0||i===n-1?p.lbl:''}</div>`
     ).join('');
@@ -393,7 +402,8 @@
         </defs>
         <path class="chart-area-path" d="${areaPath}" fill="url(#${gradId})"/>
         <path class="chart-line-path" d="${linePath}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        ${circles}
+        <circle class="line-cursor" r="${r}" fill="${color}" stroke="var(--s1)" stroke-width="2"/>
+        ${zonesHtml}
       </svg>
       <div class="bar-labels">${labelHtml}</div>
     </div>`;
@@ -645,8 +655,16 @@
       ? Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`<div class="detail-bar-row"><div class="detail-bar-label">${esc(d)}</div><div class="detail-bar-track"><div class="detail-bar-fill" style="width:${Math.round(c/dcMax*100)}%;background:${color}"></div></div><div class="detail-bar-pct">${Math.round(c/tot*100)}%</div></div>`).join('')
       : '<div class="detail-empty">No device data yet</div>';
 
-    el.innerHTML=`
-      <div class="proj-tbl-card">
+    // Color key card
+    const colorKeyRows = _projects.filter(p=>byProjViews[p.id]||byProjSession[p.id]).map(p=>`
+      <div class="detail-row">
+        <div class="detail-row-name"><div class="detail-dot" style="background:${projectColor(p.id)}"></div><span>${esc(p.name||'Untitled')}</span></div>
+        <div class="detail-row-val" style="color:${projectColor(p.id)}">${fmt(_metric==='visitors'?(byProjSession[p.id]?.size||0):byProjViews[p.id]||0)}</div>
+      </div>`).join('');
+    const colorKeyHtml = colorKeyRows || '<div class="detail-empty">No data yet</div>';
+
+    if(_metric==='sites'){
+      el.innerHTML=`<div class="proj-tbl-card">
         <div class="detail-card-title">Projects</div>
         <div class="proj-tbl-head">
           <div class="proj-tbl-hcell">Project</div>
@@ -655,11 +673,18 @@
           <div class="proj-tbl-hcell proj-tbl-hide-mobile">Status</div>
         </div>
         ${tableRows}
-      </div>
-      <div class="detail-grid">
-        <div class="detail-card"><div class="detail-card-title">Top referrers</div>${refHtml}</div>
+      </div>`;
+    } else if(_metric==='visitors'){
+      el.innerHTML=`<div class="detail-grid">
+        <div class="detail-card"><div class="detail-card-title">Projects</div>${colorKeyHtml}</div>
         <div class="detail-card"><div class="detail-card-title">Devices</div>${devHtml}</div>
       </div>`;
+    } else {
+      el.innerHTML=`<div class="detail-grid">
+        <div class="detail-card"><div class="detail-card-title">Projects</div>${colorKeyHtml}</div>
+        <div class="detail-card"><div class="detail-card-title">Top referrers</div>${refHtml}</div>
+      </div>`;
+    }
   }
 
   // ── SVG multi-line graph for cumulative all-projects mode ─────────────────
@@ -685,6 +710,7 @@
       areasHtml += `<path class="chart-area-path" d="${area}" fill="url(#${id})"/>`;
       linesHtml += `<path class="chart-line-path" d="${path}" fill="none" stroke="${pl.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
       circlesHtml += pts.map((p,i)=>`<circle class="line-pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${pl.color}" stroke="var(--s1)" stroke-width="1.5" data-pt-idx="${i}"/>`).join('');
+      circlesHtml += `<circle class="line-cursor" r="${r}" fill="${pl.color}" stroke="var(--s1)" stroke-width="1.5"/>`;
     });
 
     // Vertical hover zones — one per day, show all projects' values
@@ -693,7 +719,8 @@
       const x = n>1?(i/(n-1))*W:W/2;
       _chartZoneData[i] = {
         label: labels[i],
-        stats: projectLines.map(pl=>({ name:pl.project.name||'Untitled', color:pl.color, count:pl.counts[i] })).filter(s=>s.count>0)
+        stats: projectLines.map(pl=>({ name:pl.project.name||'Untitled', color:pl.color, count:pl.counts[i] })).filter(s=>s.count>0),
+        pts: projectLines.map(pl=>({ x: n>1?(i/(n-1))*W:W/2, y: padT+(1-pl.counts[i]/max)*(H-padT) }))
       };
       return `<rect x="${Math.max(0,x-zoneW/2).toFixed(1)}" y="0" width="${zoneW.toFixed(1)}" height="${H}" fill="transparent" class="chart-hover-zone" data-idx="${i}" style="cursor:default"/>`;
     }).join('');
@@ -717,26 +744,68 @@
     tip.style.top  = (y<8 ? e.clientY+14 : y)+'px';
   }
 
+  const _cursorRafs = new WeakMap();
+  function moveCursor(cursor, tx, ty){
+    cursor.classList.add('active');
+    const prev = _cursorRafs.get(cursor);
+    if(prev) cancelAnimationFrame(prev);
+    const cxNow = cursor.getAttribute('cx');
+    if(!cxNow){ cursor.setAttribute('cx',tx); cursor.setAttribute('cy',ty); return; }
+    const sx = parseFloat(cxNow), sy = parseFloat(cursor.getAttribute('cy')||ty);
+    if(Math.abs(sx-tx)<0.5 && Math.abs(sy-ty)<0.5) return;
+    const t0 = performance.now(), dur = 120;
+    (function tick(now){
+      const p = Math.min(1,(now-t0)/dur);
+      const e = 1-Math.pow(1-p,3);
+      cursor.setAttribute('cx',(sx+(tx-sx)*e).toFixed(2));
+      cursor.setAttribute('cy',(sy+(ty-sy)*e).toFixed(2));
+      if(p<1) _cursorRafs.set(cursor, requestAnimationFrame(tick));
+    })(t0);
+  }
+
   function attachChartTooltips(){
     const tip    = document.getElementById('chartTip');
     const nameEl = document.getElementById('chartTipName');
     const valEl  = document.getElementById('chartTipVal');
     if(!tip) return;
 
-    // Single-line dots — show only the hovered dot
-    document.querySelectorAll('[data-tip-name].line-pt').forEach(el=>{
+    // All line charts (single + multi) use zone rects for continuous hover
+    document.querySelectorAll('.chart-hover-zone').forEach(el=>{
+      const idx  = parseInt(el.dataset.idx);
+      const data = _chartZoneData[idx];
+      if(!data) return;
+      const svg     = el.closest('svg');
+      const cursors = svg ? [...svg.querySelectorAll('.line-cursor')] : [];
       el.addEventListener('mouseenter', ()=>{
-        nameEl.textContent = el.dataset.tipName;
-        valEl.innerHTML = `<span style="color:var(--sub)">${esc(el.dataset.tipVal)}</span>`;
         tip.style.display = 'block';
-        el.classList.add('visible');
+        nameEl.textContent = data.label;
+        if(data.tipVal){
+          // Single-line
+          valEl.innerHTML = `<span style="color:var(--sub)">${esc(data.tipVal)}</span>`;
+        } else {
+          // Multi-line
+          valEl.innerHTML = (data.stats||[]).map(s=>
+            `<div style="display:flex;align-items:center;gap:7px;margin-top:5px">
+              <div style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+              <span style="color:rgba(255,255,255,.85);font-size:11px;font-weight:600">${esc(s.name)}</span>
+              <span style="color:var(--sub);font-size:11px;font-weight:700;margin-left:auto;padding-left:12px">${s.count}</span>
+            </div>`
+          ).join('');
+        }
+        (data.pts||[]).forEach((pt,li)=>{ if(cursors[li]) moveCursor(cursors[li], pt.x, pt.y); });
       });
       el.addEventListener('mousemove', e=>posTip(e,tip));
-      el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; el.classList.remove('visible'); });
+      el.addEventListener('mouseleave', e=>{
+        tip.style.display = 'none';
+        // Only hide dot when leaving the SVG entirely, not when sliding to next zone
+        if(svg && !svg.contains(e.relatedTarget)){
+          cursors.forEach(c=>c.classList.remove('active'));
+        }
+      });
     });
 
     // Bars and other non-line elements
-    document.querySelectorAll('[data-tip-name]:not(.line-pt)').forEach(el=>{
+    document.querySelectorAll('[data-tip-name]:not(.line-pt):not(.chart-hover-zone)').forEach(el=>{
       el.addEventListener('mouseenter', ()=>{
         nameEl.textContent = el.dataset.tipName;
         valEl.innerHTML = `<span style="color:var(--sub)">${esc(el.dataset.tipVal)}</span>`;
@@ -744,30 +813,6 @@
       });
       el.addEventListener('mousemove', e=>posTip(e,tip));
       el.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
-    });
-
-    // Multi-line hover zones — show dots for that column only
-    document.querySelectorAll('.chart-hover-zone').forEach(el=>{
-      const idx  = parseInt(el.dataset.idx);
-      const data = _chartZoneData[idx];
-      if(!data) return;
-      el.addEventListener('mouseenter', ()=>{
-        nameEl.textContent = data.label;
-        valEl.innerHTML = data.stats.map(s=>
-          `<div style="display:flex;align-items:center;gap:7px;margin-top:5px">
-            <div style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
-            <span style="color:rgba(255,255,255,.85);font-size:11px;font-weight:600">${esc(s.name)}</span>
-            <span style="color:var(--sub);font-size:11px;font-weight:700;margin-left:auto;padding-left:12px">${s.count}</span>
-          </div>`
-        ).join('');
-        tip.style.display = 'block';
-        document.querySelectorAll(`.line-pt[data-pt-idx="${idx}"]`).forEach(d=>d.classList.add('visible'));
-      });
-      el.addEventListener('mousemove', e=>posTip(e,tip));
-      el.addEventListener('mouseleave', ()=>{
-        tip.style.display='none';
-        document.querySelectorAll(`.line-pt[data-pt-idx="${idx}"]`).forEach(d=>d.classList.remove('visible'));
-      });
     });
   }
 
@@ -794,8 +839,7 @@
     const menu = document.getElementById('projDdMenu');
     // remove old project options, keep "All projects"
     menu.querySelectorAll('.proj-dd-opt:not([data-id="all"])').forEach(o=>o.remove());
-    const publicProjects = _projects.filter(p=>p.is_public);
-    publicProjects.forEach((p,i)=>{
+    _projects.forEach((p,i)=>{
       const opt=document.createElement('div');
       opt.className='proj-dd-opt';
       opt.dataset.id=p.id;
@@ -833,6 +877,8 @@
     }
 
     await loadData();
+    const _tbl=document.getElementById('topbarLoader');
+    if(_tbl){_tbl.style.animation='none';_tbl.style.transition='width .2s ease,opacity .3s ease .15s';_tbl.style.width='100%';setTimeout(()=>{_tbl.style.opacity='0';},50);}
   })();
 
 </script>

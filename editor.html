@@ -4723,9 +4723,9 @@ const _aiTypingPhases = ['Thinking…', 'Planning your build…', 'Writing your 
 /** Max chat turns sent to the edge (full history explodes input tokens / cost). */
 const AI_MAX_MESSAGES = 28;
 /** Full file content budget for main / active / recently mentioned paths. */
-// Inline HTML files contain CSS+JS+HTML — need more room than separate files did
 const AI_MAX_FILE_CHARS_PRIORITY = 20000;
 const AI_MAX_FILE_CHARS_OTHER    = 4000;
+let _compactMode = false; // set by aiCompactChat — forces minimal file payload on next request
 let aiTyping  = false;
 let aiStarted = false;
 // Only counts messages sent THIS session (not loaded from history) — used for readiness gate
@@ -6325,7 +6325,7 @@ function buildAiFilesPayload() {
   // Only pull in mentioned files when there's no _pages index (small/early projects)
   if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
 
-  const charLimit = hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY;
+  const charLimit = _compactMode ? 3000 : (hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY);
 
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;
@@ -6743,6 +6743,7 @@ async function aiCallAPI() {
       aiAllMessages.push({ role: 'assistant', text: fullMessage, files: collectedFiles.map(f => f.name), time: aiNow() });
       aiSaveMsg('assistant', historyContent, collectedFiles.map(f => f.name));
       completeBuildJob();
+      _compactMode = false;
       scrollIfSticky();
     };
 
@@ -6991,12 +6992,9 @@ async function aiCallAPI() {
         }
         // Genuine error — show it
         const isTooLong = /prompt is too long|too_long|context.*length|tokens.*maximum/i.test(err.message || '');
-        const errMsg = isTooLong
-          ? 'The conversation got too long for the AI to process. Click "Compact chat" to trim the history and try again.'
-          : err.message;
         const errHtml = isTooLong
-          ? `<p style="color:var(--err);font-size:12px;margin-bottom:8px">${escHtml(errMsg)}</p><button onclick="aiCompactChat()" style="padding:6px 14px;border-radius:8px;background:#fff;color:#000;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)">Compact chat</button>`
-          : `<p style="color:var(--err)">${escHtml(errMsg)}</p>`;
+          ? `<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border-radius:12px;padding:12px 14px;margin-top:4px"><div style="flex:1;font-size:12px;color:rgba(255,255,255,.55);line-height:1.5">The conversation got too long — compacting and retrying automatically…</div><button onclick="aiCompactChat()" style="padding:6px 16px;border-radius:99px;background:#fff;color:#000;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);flex-shrink:0;white-space:nowrap">Compact</button></div>`
+          : `<p style="color:var(--err)">${escHtml(err.message)}</p>`;
         if (textEl && streamFinalized) {
           const errP = document.createElement('div');
           errP.style.cssText = 'margin-top:10px';
@@ -7036,16 +7034,26 @@ function _aiAutoRetry() {
 }
 
 function aiCompactChat() {
-  // Keep only the last 2 exchanges (4 messages) and clear rendered history
-  if (aiHistory.length > 4) aiHistory = aiHistory.slice(-4);
+  // Trim history and enable compact file mode for the retry
+  if (aiHistory.length > 2) aiHistory = aiHistory.slice(-2);
+  _compactMode = true;
   const msgs = document.getElementById('aiMessages');
   if (msgs) {
-    // Remove all message rows except keep the last 2 pairs visually
     const rows = msgs.querySelectorAll('.ai-row');
-    const keep = 4;
-    rows.forEach((r, i) => { if (i < rows.length - keep) r.remove(); });
+    rows.forEach((r, i) => { if (i < rows.length - 2) r.remove(); });
   }
-  showToast('✓', 'Chat compacted — try again');
+  // Re-send the last user message automatically
+  const lastUser = [...aiHistory].reverse().find(m => m.role === 'user');
+  if (lastUser && !aiTyping) {
+    aiHistory = aiHistory.filter(m => m !== lastUser || m === aiHistory[aiHistory.length - 1]);
+    const text = typeof lastUser.content === 'string' ? lastUser.content : '';
+    if (text) {
+      aiTyping = true; aiSetGenerating(true); aiShowTyping();
+      aiCallAPI();
+      return;
+    }
+  }
+  showToast('✓', 'Compacted — try your message again');
 }
 
 function _aiAutoComplete() {

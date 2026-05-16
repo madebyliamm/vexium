@@ -4872,13 +4872,13 @@ function aiAddUserRow(text, attachments, senderInfo) {
   const msgs = document.getElementById('aiMessages');
   const row   = document.createElement('div');
   row.className = 'ai-row user';
-  if (_isCollabProject && senderInfo && senderInfo.senderName) {
+  if (_isCollabProject && senderInfo) {
+    const name = senderInfo.senderName || 'User';
     row.dataset.senderId = senderInfo.senderId || '';
-    // Add small avatar before bubble - shown for all collab messages
     const av = document.createElement('div');
     av.className = 'collab-msg-av';
-    av.textContent = (senderInfo.senderName || '?').charAt(0).toUpperCase();
-    av.title = senderInfo.senderName;
+    av.textContent = name.charAt(0).toUpperCase();
+    av.title = name;
     row.insertBefore(av, row.firstChild);
   }
   const bubble = document.createElement('div');
@@ -6105,7 +6105,7 @@ async function aiSend(fromBottom) {
     if (document.getElementById('editPanelFiles')?.classList.contains('active')) editLoadFiles();
   }
 
-  aiAddUserRow(text, attachSnapshot);
+  aiAddUserRow(text, attachSnapshot, _isCollabProject ? { senderName: _myDisplayName || 'You' } : null);
   aiSessionMessageCount++;
 
   // Build API content — only include vision for images attached in THIS message
@@ -7074,7 +7074,7 @@ async function aiCallAPI() {
 
         // ── FILE STREAMING ────────────────────────────────────────────────
         const fileKey = data.name || data.path || data.filename;
-        if ((eventType === 'file_start' || eventType === 'output_file_start') && fileKey) {
+        if ((eventType === 'file_start' || eventType === 'output_file_start' || eventType === 'patch_start') && fileKey) {
           currentStreamingFile = fileKey;
           _startWorkingOn(fileKey);
         }
@@ -7137,6 +7137,25 @@ async function aiCallAPI() {
             syncEditorModelIfViewing(data.name, content);
             renderFileTree();
             livePreviewUpdate(data.name.endsWith('.html'));
+          }
+        }
+
+        // ── PATCH APPLIED — save result to fileSystem ────────────────────
+        if (eventType === 'patch_done' && data.name) {
+          if (data.encoding === 'failed') {
+            aiRetryAsFullRewrite(data.name, fullMessage);
+          } else if (data.content !== undefined && data.content !== null) {
+            let content = data.content;
+            if (data.encoding === 'base64') {
+              try { content = decodeURIComponent(escape(atob(content))); } catch(e) { content = atob(content); }
+            }
+            fileSystem[data.name] = content;
+            dirtyFiles.add(data.name);
+            syncEditorModelIfViewing(data.name, content);
+            if (!collectedNames.has(data.name)) { collectedFiles.push({ name: data.name }); collectedNames.add(data.name); }
+            currentStreamingFile = null;
+            livePreviewUpdate(data.name.endsWith('.html'));
+            saveNow();
           }
         }
 

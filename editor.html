@@ -1786,19 +1786,17 @@
 
     /* Critique card */
     /* ── RESUME BANNER ── */
-    #aiResumeBanner{display:none;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;margin:0 auto 8px;width:var(--chat-w,min(820px,92%));flex-shrink:0}
+    #aiResumeBanner{display:none;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:none;border-radius:99px;padding:8px 8px 8px 18px;margin:0 auto 8px;width:min(500px,88%);flex-shrink:0}
     #aiResumeBanner.show{display:flex}
-    .resume-icon{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .resume-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
     .resume-body{flex:1;min-width:0}
-    .resume-title{font-size:12px;font-weight:700;margin-bottom:2px}
-    .resume-prompt{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .resume-actions{display:flex;gap:6px;flex-shrink:0}
-    .resume-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s}
+    .resume-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .resume-prompt{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .resume-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+    .resume-btn{padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:all .15s}
     .resume-btn.go{background:#fff;color:#000}
     .resume-btn.go:hover{opacity:.85}
-    .resume-btn.skip{background:transparent;color:var(--muted)}
-    .resume-btn.skip:hover{color:var(--text)}
+    .resume-btn.skip{background:transparent;color:var(--muted);font-size:16px;padding:2px 8px;line-height:1}
+    .resume-btn.skip:hover{color:#f87171}
     .ai-suggestions { margin: 14px 0 4px; display: flex; flex-direction: column; gap: 8px; }
     .ai-suggestions-label { font-size: 11px; font-weight: 700; color: var(--text); }
     .ai-suggestions-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -2803,18 +2801,6 @@
           <div class="ai-step-dropdown" id="aiStepDropdown"></div>
         </div>
 
-        <div id="aiResumeBanner">
-          <div class="resume-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-          <div class="resume-body">
-            <div class="resume-title">Looks like your last build got interrupted</div>
-            <div class="resume-prompt" id="resumePromptText"></div>
-          </div>
-          <div class="resume-actions">
-            <button class="resume-btn go" onclick="doResumeBuild()">Continue</button>
-            <button class="resume-btn skip" onclick="dismissResumeBanner()">Dismiss</button>
-          </div>
-        </div>
-
         <div id="aiMessages">
         </div>
           <button id="aiScrollBtn" onclick="aiScrollToBottom()" title="Scroll to bottom">
@@ -2827,6 +2813,17 @@
 
         <!-- Next step bar (renders above the input) -->
         <div id="aiNextStepBar"></div>
+
+        <div id="aiResumeBanner">
+          <div class="resume-body">
+            <div class="resume-title">Looks like your last build got interrupted</div>
+            <div class="resume-prompt" id="resumePromptText"></div>
+          </div>
+          <div class="resume-actions">
+            <button class="resume-btn go" onclick="doResumeBuild()">Continue</button>
+            <button class="resume-btn skip" onclick="dismissResumeBanner()" title="Dismiss">×</button>
+          </div>
+        </div>
 
         <!-- Bottom input bar -->
         <div id="aiBottom">
@@ -6317,25 +6314,30 @@ function buildAiFilesPayload() {
     if (fs[f] !== undefined) out[f] = fs[f];
   });
 
-  // ── 2. Primary HTML files — what the user is actively editing (full content) ──
+  // ── 2. Primary HTML files — only what's directly relevant ──
+  // When _pages index exists, it describes every section — we don't need to send all
+  // mentioned files in full. That was causing 200k+ token prompts on large projects.
+  const hasPageIndex = !!fs['_pages'];
   const primary = new Set();
   if (mainFile) primary.add(mainFile);
   if (activeFile) primary.add(activeFile);
-  gatherMentionedFilenames().forEach(f => primary.add(f));
+  // Only pull in mentioned files when there's no _pages index (small/early projects)
+  if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
+
+  const charLimit = hasPageIndex ? 10000 : AI_MAX_FILE_CHARS_PRIORITY;
 
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;
     if (isImageFile(name)) { out[name] = '[Image — reference by filename]'; return; }
     let s = typeof fs[name] === 'string' ? fs[name] : String(fs[name] ?? '');
     if (s.startsWith('data:image') || (s.startsWith('data:') && s.length > 8000)) { out[name] = '[Data URL omitted]'; return; }
-    if (s.length > AI_MAX_FILE_CHARS_PRIORITY) {
-      s = s.slice(0, AI_MAX_FILE_CHARS_PRIORITY) + '\n\n<!-- [COMPLETE FILE — ' + s.split('\n').length + ' lines total, first portion shown] -->';
+    if (s.length > charLimit) {
+      s = s.slice(0, charLimit) + '\n\n<!-- [COMPLETE FILE — ' + s.split('\n').length + ' lines total, first portion shown] -->';
     }
     out[name] = s;
   });
 
   // ── 3. Non-primary files — if _pages index exists, skip inactive HTML (edge fn uses index instead)
-  const hasPageIndex = !!fs['_pages'];
   keys.forEach(name => {
     if (out[name] !== undefined) return;
     if (['_longterm', '_shortterm', '_backend', '_pages'].includes(name)) return;
@@ -6987,15 +6989,23 @@ async function aiCallAPI() {
           return; // skip aiTyping=false so the retry can fire cleanly
         }
         // Genuine error — show it
+        const isTooLong = /prompt is too long|too_long|context.*length|tokens.*maximum/i.test(err.message || '');
+        const errMsg = isTooLong
+          ? 'The conversation got too long for the AI to process. Click "Compact chat" to trim the history and try again.'
+          : err.message;
+        const errHtml = isTooLong
+          ? `<p style="color:var(--err);font-size:12px;margin-bottom:8px">${escHtml(errMsg)}</p><button onclick="aiCompactChat()" style="padding:6px 14px;border-radius:8px;background:#fff;color:#000;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)">Compact chat</button>`
+          : `<p style="color:var(--err)">${escHtml(errMsg)}</p>`;
         if (textEl && streamFinalized) {
-          const errP = document.createElement('p');
-          errP.style.cssText = 'color:var(--err);margin-top:10px;font-size:12px';
-          errP.textContent = escHtml(err.message);
+          const errP = document.createElement('div');
+          errP.style.cssText = 'margin-top:10px';
+          errP.innerHTML = errHtml;
           (textEl.parentNode || textEl).appendChild(errP);
         } else if (textEl) {
-          textEl.innerHTML = '<p style="color:var(--err)">' + escHtml(err.message) + '</p>';
+          textEl.innerHTML = errHtml;
         } else {
-          aiAddAI(err.message, []);
+          const r = aiAddAI('', []);
+          if (r._contentWrap) r._contentWrap.querySelector('.ai-text').innerHTML = errHtml;
         }
       }
     }
@@ -7021,6 +7031,19 @@ function _aiAutoRetry() {
   }
   aiTyping = true; aiSetGenerating(true); aiShowTyping();
   aiCallAPI();
+}
+
+function aiCompactChat() {
+  // Keep only the last 2 exchanges (4 messages) and clear rendered history
+  if (aiHistory.length > 4) aiHistory = aiHistory.slice(-4);
+  const msgs = document.getElementById('aiMessages');
+  if (msgs) {
+    // Remove all message rows except keep the last 2 pairs visually
+    const rows = msgs.querySelectorAll('.ai-row');
+    const keep = 4;
+    rows.forEach((r, i) => { if (i < rows.length - keep) r.remove(); });
+  }
+  showToast('✓', 'Chat compacted — try again');
 }
 
 function _aiAutoComplete() {

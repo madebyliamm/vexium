@@ -1343,9 +1343,9 @@
     .ai-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
     .ai-text a:hover { color: var(--accent2); }
 
-    /* Streaming cursor */
-    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-    .ai-stream-cursor::after { content: ''; display: inline-block; width: 2px; height: .85em; background: rgba(255,255,255,.55); margin-left: 2px; vertical-align: text-bottom; border-radius: 1px; animation: cursorBlink .9s step-end infinite; }
+    /* Streaming fade-in */
+    @keyframes aiChunkFade { from { opacity: 0; } to { opacity: 1; } }
+    .ai-stream-chunk { animation: aiChunkFade .18s ease forwards; display: inline; }
     /* Typing dots */
     @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-5px); opacity: 1; } }
     .ai-typing-dots { display: inline-flex; gap: 4px; align-items: center; }
@@ -1657,6 +1657,33 @@
       transition: background .12s, color .12s;
     }
     .ai-rl-x:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+    #aiUsageWarn {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(245,158,11,0.1); border-radius: 999px;
+      padding: 7px 10px 7px 16px; margin-bottom: 8px;
+      font-size: 12px; font-weight: 500; color: rgba(245,158,11,0.85);
+      width: fit-content; align-self: center; margin-left: auto; margin-right: auto;
+    }
+    #aiUsageWarn a {
+      font-weight: 700; text-decoration: underline; color: inherit; cursor: pointer;
+    }
+    #aiUsageWarn button {
+      background: none; border: none; color: rgba(245,158,11,0.45);
+      cursor: pointer; font-size: 15px; line-height: 1; padding: 0 1px;
+      transition: color .15s; flex-shrink: 0;
+    }
+    #aiUsageWarn button:hover { color: rgba(245,158,11,0.9); }
+    #aiLockedBanner {
+      display: none; align-items: center; justify-content: center;
+      background: rgba(239,68,68,0.1); border-radius: 999px;
+      padding: 7px 16px; margin-bottom: 8px;
+      font-size: 12px; font-weight: 500; color: rgba(239,68,68,0.85);
+      width: fit-content; align-self: center; margin-left: auto; margin-right: auto;
+    }
+    #aiLockedBanner a { font-weight: 700; text-decoration: underline; color: inherit; cursor: pointer; }
+    .ai-input-locked #aiBottomInputArea { opacity: .35; pointer-events: none; }
+    .ai-input-locked #aiBottomSend { opacity: .35; pointer-events: none; }
+    .ai-input-locked .ai-attach-btn { opacity: .35; pointer-events: none; }
     #aiBottomBar { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
     #aiBottomInputArea {
       flex: 1;
@@ -2191,25 +2218,47 @@
     .ai-drop-ico svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .ai-drop-label { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
     .ai-drop-sub { font-size: 12px; color: var(--muted); }
-    #toast {
+    #toastContainer {
       position: fixed;
-      bottom: 18px;
-      left: 18px;
+      bottom: 20px;
+      left: 20px;
       z-index: var(--z-toast);
-      background: var(--surface);
-      border-radius: var(--r-sm);
-      padding: 9px 14px;
-      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+      pointer-events: none;
+    }
+    .ntf {
       display: flex;
       align-items: center;
-      gap: 8px;
-      transform: translateY(50px);
+      gap: 10px;
+      background: rgba(26,26,28,0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,.45), 0 1px 4px rgba(0,0,0,.25);
+      pointer-events: auto;
+      max-width: 280px;
+      transform: translateX(calc(-100% - 24px));
       opacity: 0;
-      transition: all .22s;
-      box-shadow: 0 8px 32px rgba(0,0,0,.6);
-      font-family: var(--mono);
+      transition: transform .28s cubic-bezier(.16,1,.3,1), opacity .2s ease;
+      will-change: transform, opacity;
     }
-    #toast.show { transform: translateY(0); opacity: 1; }
+    .ntf.ntf-in  { transform: translateX(0); opacity: 1; }
+    .ntf.ntf-out { transform: translateX(calc(-100% - 24px)); opacity: 0; transition: transform .22s ease-in, opacity .18s ease-in; }
+    .ntf-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ntf-dot-ok  { background: #34c759; }
+    .ntf-dot-err { background: #ff453a; }
+    .ntf-dot-warn { background: #ff9f0a; }
+    .ntf-dot-info { background: #636366; }
+    .ntf-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; }
 
     /* ─────────────────────────────────────────────
        USAGE WARNING MODAL
@@ -2874,6 +2923,14 @@
                 <button type="button" class="ai-rl-x" onclick="hideAiRateLimitCooldown()" title="Dismiss">×</button>
               </div>
             </div>
+            <div id="aiUsageWarn" style="display:none">
+              <span id="aiUsageWarnText"></span>
+              <button onclick="document.getElementById('aiUsageWarn').style.display='none'" title="Dismiss">×</button>
+            </div>
+            <div id="aiLockedBanner" style="display:none">
+              Out of usage — get more in&nbsp;<a href="settings.html?tab=billing" target="_blank">settings</a>
+            </div>
+
             <div id="aiBottomBar">
               <button class="ai-attach-btn" onclick="aiAttachClick()" title="Attach file">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2988,38 +3045,6 @@
 </div><!-- end #workspace -->
 
 <!-- ══ PAYWALL MODAL ══════════════════════════════════════════════════════ -->
-<div id="paywallOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
-  <div id="paywallCard" style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:540px;padding:32px 28px;position:relative">
-    <div id="paywallIcon" style="width:44px;height:44px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </div>
-    <h2 id="paywallTitle" style="text-align:center;font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px"></h2>
-    <p id="paywallSub" style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5"></p>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-      <div class="pw-plan" data-plan="starter" onclick="paywallUpgrade('starter')" style="border:1.5px solid var(--border);border-radius:10px;padding:16px 12px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center">
-        <div style="font-size:12px;font-weight:800;margin-bottom:4px">Starter</div>
-        <div style="font-size:20px;font-weight:800;letter-spacing:-.4px">$12<span style="font-size:10px;font-weight:600;color:var(--muted)">/mo</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">$15 AI budget/mo</div>
-        <div style="margin-top:12px;background:var(--border2);border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">Upgrade</div>
-      </div>
-      <div class="pw-plan" data-plan="pro" onclick="paywallUpgrade('pro')" style="border:1.5px solid #fff;border-radius:10px;padding:16px 12px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;background:rgba(255,255,255,.04)">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.05em;background:#fff;color:#000;border-radius:99px;padding:2px 8px;display:inline-block;margin-bottom:4px">POPULAR</div>
-        <div style="font-size:12px;font-weight:800;margin-bottom:4px">Pro</div>
-        <div style="font-size:20px;font-weight:800;letter-spacing:-.4px">$29<span style="font-size:10px;font-weight:600;color:var(--muted)">/mo</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">$40 AI budget/mo</div>
-        <div style="margin-top:12px;background:#fff;color:#000;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">Upgrade</div>
-      </div>
-      <div class="pw-plan" data-plan="max" onclick="paywallUpgrade('max')" style="border:1.5px solid var(--border);border-radius:10px;padding:16px 12px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center">
-        <div style="font-size:12px;font-weight:800;margin-bottom:4px">Max</div>
-        <div style="font-size:20px;font-weight:800;letter-spacing:-.4px">$79<span style="font-size:10px;font-weight:600;color:var(--muted)">/mo</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">$120 AI budget/mo</div>
-        <div style="margin-top:12px;background:var(--border2);border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">Upgrade</div>
-      </div>
-    </div>
-    <p style="text-align:center;font-size:10px;color:var(--border3)">Billing integration coming soon — upgrades are applied instantly and free during beta.</p>
-  </div>
-</div>
 
 <!-- ═══════════════════════════════════════════
      FILE MODAL
@@ -3065,7 +3090,7 @@
 </div>
 
 <!-- TOAST -->
-<div id="toast"><span id="toastIcon"></span><span id="toastMsg" style="margin-left:4px"></span></div>
+<div id="toastContainer"></div>
 
 <!-- USAGE WARNING MODAL -->
 <div id="usageWarnOverlay">
@@ -3182,12 +3207,43 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 function showToast(icon, msg) {
-  clearTimeout(window._toastT);
-  document.getElementById('toastIcon').textContent = icon;
-  document.getElementById('toastMsg').textContent = msg;
-  const t = document.getElementById('toast');
-  t.classList.add('show');
-  window._toastT = setTimeout(() => t.classList.remove('show'), 2000);
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const ntf = document.createElement('div');
+  ntf.className = 'ntf';
+
+  // Icon: map known icons to colored dots, pass others as emoji
+  const dotMap = { '✓': 'ok', '!': 'err', '⚠': 'warn', '…': 'info', '·': 'info' };
+  const dotType = dotMap[icon];
+  if (dotType) {
+    const dot = document.createElement('div');
+    dot.className = 'ntf-dot ntf-dot-' + dotType;
+    ntf.appendChild(dot);
+  } else {
+    const em = document.createElement('span');
+    em.className = 'ntf-emoji';
+    em.textContent = icon;
+    ntf.appendChild(em);
+  }
+
+  const txt = document.createElement('span');
+  txt.textContent = msg;
+  ntf.appendChild(txt);
+
+  container.appendChild(ntf);
+
+  // Slide in
+  requestAnimationFrame(() => requestAnimationFrame(() => ntf.classList.add('ntf-in')));
+
+  // Slide out then remove
+  const dismiss = () => {
+    ntf.classList.remove('ntf-in');
+    ntf.classList.add('ntf-out');
+    ntf.addEventListener('transitionend', () => ntf.remove(), { once: true });
+  };
+  const t = setTimeout(dismiss, 2000);
+  ntf.addEventListener('click', () => { clearTimeout(t); dismiss(); });
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
@@ -4811,8 +4867,9 @@ let _aiTypingStatusInterval = null;
 let _previewErrors = [];
 let _autoRecoverCount = 0;
 let _aiCutFile = null;
-let _maxTokensHit = false; // set when Anthropic signals stop_reason="max_tokens"
-const _aiTypingPhases = ['Thinking…', 'Planning your build…', 'Writing your files…', 'Almost done…'];
+let _maxTokensHit = false;
+let _preEditSnapshot = {}; // snapshot of files before each AI edit — used to restore on truncation
+const _aiTypingPhases = ['Thinking…', 'Analyzing…', 'Planning…', 'Strategizing…'];
 /** Max chat turns sent to the edge (full history explodes input tokens / cost). */
 const AI_MAX_MESSAGES = 28;
 /** Full file content budget for main / active / recently mentioned paths. */
@@ -4973,6 +5030,7 @@ function aiAddAI(text, files) {
 }
 
 function aiShowTyping() {
+  aiHideTyping();
   const nextStepBar = document.getElementById('aiNextStepBar');
   if (nextStepBar) nextStepBar.innerHTML = '';
   const msgs = document.getElementById('aiMessages');
@@ -5157,9 +5215,10 @@ async function checkCollabProject() {
     _isCollabProject = !!(data && data.length);
     if (_isCollabProject) {
       await loadMyProfile();
-      subscribeToCollabChat();
       subscribeToAiLock();
       startPresence();
+      // Shared chat removed — each collaborator has their own chat history.
+      // Shared project memory (_longterm, _pages) still syncs naturally via projects.files.
     }
   } catch(e) {}
 }
@@ -5886,6 +5945,26 @@ function livePreviewUpdate(isHtml) {
   }, 180);
 }
 
+// Resize an image dataUrl to max 1568px on longest side (Anthropic's recommended vision cap)
+function resizeForVision(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1568;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w <= MAX && h <= MAX) { resolve(dataUrl); return; }
+      if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+      else        { w = Math.round(w * MAX / h); h = MAX; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 // ── ATTACHMENTS ───────────────────────────────────────────────────────────────
 function aiAttachClick() { document.getElementById('aiAttachInput').click(); }
 
@@ -6014,15 +6093,17 @@ let _sessionVisionImages = new Set(); // images already sent as vision this brow
 const PLAN_CREDITS = { trial: 300, starter: 1500, pro: 4000, max: 12000 };
 let _userPlan = 'trial';
 let _userCreditsUsed = 0;
+let _userExtraCredits = 0;
 let _trialEndsAt = null;
 let _usageLocked = false;
 
-function _isUsageLocked(plan, creditsUsed, trialEndsAt) {
+function _isUsageLocked(plan, creditsUsed, trialEndsAt, extraCredits) {
   if (plan === 'trial') {
     const expired = trialEndsAt && new Date(trialEndsAt) < new Date();
     return expired || creditsUsed >= PLAN_CREDITS.trial;
   }
-  return creditsUsed >= (PLAN_CREDITS[plan] || 1500);
+  const limit = (PLAN_CREDITS[plan] || 1500) + (extraCredits || 0);
+  return creditsUsed >= limit;
 }
 
 async function loadUserPlan() {
@@ -6031,54 +6112,59 @@ async function loadUserPlan() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
     const { data } = await sb.from('profiles')
-      .select('plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start')
+      .select('plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,extra_credits_cents')
       .eq('id', session.user.id).single();
     if (!data) return;
     _userPlan        = data.plan || 'trial';
     _trialEndsAt     = data.trial_ends_at;
 
-    // Apply rolling 30-day reset client-side so the lock check is accurate
     const CYCLE_MS   = 30 * 24 * 60 * 60 * 1000;
     const cycleStart = new Date(data.plan_cycle_start || Date.now()).getTime();
     const cycleExpired = (Date.now() - cycleStart) >= CYCLE_MS;
     _userCreditsUsed = cycleExpired ? 0 : (data.credits_used_cents || 0);
 
-    _usageLocked = _isUsageLocked(_userPlan, _userCreditsUsed, _trialEndsAt);
-    if (_usageLocked) showPaywall();
+    // Treat very small extra credit balances as zero — not worth the UX complexity
+    const rawExtra = data.extra_credits_cents || 0;
+    _userExtraCredits = rawExtra < 10 ? 0 : rawExtra;
+
+    _usageLocked = _isUsageLocked(_userPlan, _userCreditsUsed, _trialEndsAt, _userExtraCredits);
+    if (_usageLocked) { showUsageLocked(); return; }
+    hideUsageLocked();
+
+    const planLimit  = PLAN_CREDITS[_userPlan] || 1500;
+    const totalLimit = planLimit + _userExtraCredits;
+    const remaining  = Math.max(0, totalLimit - _userCreditsUsed);
+    const warnEl  = document.getElementById('aiUsageWarn');
+    const warnTxt = document.getElementById('aiUsageWarnText');
+    if (warnEl && warnTxt) {
+      const extraRemaining = _userExtraCredits - Math.max(0, _userCreditsUsed - planLimit);
+      if (_userCreditsUsed >= planLimit && _userExtraCredits > 0 && extraRemaining < 100) {
+        warnTxt.innerHTML = `Extra usage is running low — add more in&nbsp;<a href="settings.html?tab=billing" target="_blank">settings</a>`;
+        warnEl.style.display = 'flex';
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
   } catch(e) {}
 }
 
-function showPaywall() {
-  const overlay = document.getElementById('paywallOverlay');
-  if (!overlay) return;
-  const expired = _userPlan === 'trial' && _trialEndsAt && new Date(_trialEndsAt) < new Date();
-  document.getElementById('paywallTitle').textContent = expired
-    ? 'Your free trial has ended'
-    : 'You\'ve used all your AI credits';
-  document.getElementById('paywallSub').textContent = expired
-    ? 'Your 7-day trial is over. Upgrade to keep building.'
-    : 'You\'ve hit your ' + (_userPlan === 'trial' ? 'trial' : _userPlan) + ' plan limit this month. Upgrade for more.';
-  overlay.style.display = 'flex';
+function showUsageLocked() {
+  const banner = document.getElementById('aiLockedBanner');
+  if (banner) banner.style.display = 'flex';
+  document.getElementById('aiUsageWarn')?.style && (document.getElementById('aiUsageWarn').style.display = 'none');
+  const bar = document.getElementById('aiBottomBar');
+  if (bar) bar.classList.add('ai-input-locked');
 }
 
-async function paywallUpgrade(plan) {
-  if (!sb) return;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) return;
-    const btn = document.querySelector(`.pw-plan[data-plan="${plan}"] div:last-child`);
-    if (btn) btn.textContent = '…';
-    await sb.from('profiles').update({
-      plan,
-      selected_plan: plan,
-    }).eq('id', session.user.id);
-    _userPlan = plan;
-    _usageLocked = _isUsageLocked(plan, _userCreditsUsed, _trialEndsAt);
-    if (!_usageLocked) document.getElementById('paywallOverlay').style.display = 'none';
-    document.getElementById('paywallOverlay').style.display = 'none';
-    if (btn) btn.textContent = 'Upgrade';
-  } catch(e) {}
+function hideUsageLocked() {
+  const banner = document.getElementById('aiLockedBanner');
+  if (banner) banner.style.display = 'none';
+  const bar = document.getElementById('aiBottomBar');
+  if (bar) bar.classList.remove('ai-input-locked');
 }
+
+// Keep showPaywall as alias so any remaining references don't break
+function showPaywall() { showUsageLocked(); }
 
 async function aiSend(fromBottom) {
   const input = fromBottom ? document.getElementById('aiBottomInput') : document.getElementById('aiInput');
@@ -6130,19 +6216,19 @@ async function aiSend(fromBottom) {
   aiAddUserRow(text, attachSnapshot, _isCollabProject ? { senderName: _myDisplayName || 'You' } : null);
   aiSessionMessageCount++;
 
-  // Build API content — only include vision for images attached in THIS message
+  // Build API content — resize images, then send as vision blocks for THIS message only
   let apiContent;
   if (attachSnapshot.length > 0) {
     apiContent = [];
-    attachSnapshot.forEach(att => {
+    for (const att of attachSnapshot) {
       if (att.type === 'image' && att.dataUrl) {
-        const b64  = att.dataUrl.split(',')[1];
-        const mime = att.dataUrl.split(';')[0].split(':')[1] || 'image/png';
-        apiContent.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } });
+        const resized = await resizeForVision(att.dataUrl);
+        const b64  = resized.split(',')[1];
+        apiContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
       } else if (att.text) {
         apiContent.push({ type: 'text', text: '[File: ' + att.name + ']\n' + att.text });
       }
-    });
+    }
     if (text) apiContent.push({ type: 'text', text });
   } else {
     apiContent = text;
@@ -6164,6 +6250,10 @@ async function aiSend(fromBottom) {
   _autoRecoverCount = 0;
   _aiCutFile = null;
   _maxTokensHit = false;
+  // Snapshot current files so truncated edits can be undone and retried
+  _preEditSnapshot = {};
+  const _INTERNAL = ['_longterm','_shortterm','_backend','_pages'];
+  Object.keys(fileSystem).forEach(f => { if (!_INTERNAL.includes(f)) _preEditSnapshot[f] = fileSystem[f]; });
   // If we're mid-steps, inject step context so edits target the right step
   _pendingBrief = null;
   _pendingSpec  = null;
@@ -6621,18 +6711,20 @@ function buildAiFilesPayload() {
   // Only pull in mentioned files when there's no _pages index (small/early projects)
   if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
 
-  // Primary files always get the full limit — reducing this causes the AI to miss
-  // the section it needs to edit and rewrite the whole file instead of patching.
-  // _pages only reduces non-primary files, not the file being actively edited.
-  const charLimit = _compactMode ? 10000 : AI_MAX_FILE_CHARS_PRIORITY;
-
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;
     if (isImageFile(name)) { out[name] = '[Image — reference by filename]'; return; }
     let s = typeof fs[name] === 'string' ? fs[name] : String(fs[name] ?? '');
     if (s.startsWith('data:image') || (s.startsWith('data:') && s.length > 8000)) { out[name] = '[Data URL omitted]'; return; }
-    if (s.length > charLimit) {
-      s = s.slice(0, charLimit) + '\n\n<!-- [COMPLETE FILE — ' + s.split('\n').length + ' lines total, first portion shown] -->';
+    // Never truncate with a marker — the AI reproduces the marker verbatim when it
+    // rewrites the file, which destroys everything below the cut point.
+    // For truly massive files (>150k chars) send a structural summary; the full content
+    // is available server-side via full_files for patch application.
+    // Compact mode still reduces payload but never inserts a recoverable-looking marker.
+    if (_compactMode && s.length > 30000) {
+      s = _extractHtmlSummary(name, s);
+    } else if (s.length > 150000) {
+      s = _extractHtmlSummary(name, s);
     }
     out[name] = s;
   });
@@ -6691,6 +6783,28 @@ function mergeStreamedAssistantText(prev, incoming) {
 // ── PATCH RETRY — full rewrite fallback when patch matching fails ─────────────
 async function aiRetryAsFullRewrite(fileName, originalInstruction) {
   if (!fileName || !fileSystem[fileName]) return;
+
+  // For large files, a full rewrite will always truncate — redirect to patch retry instead.
+  // Patch retry restores the original from snapshot and asks the AI to re-target its edit.
+  const fileSize = (fileSystem[fileName] || '').length;
+  if (fileSize > 15000) {
+    if (aiTyping) return;
+    if (_preEditSnapshot[fileName] !== undefined) {
+      fileSystem[fileName] = _preEditSnapshot[fileName];
+      dirtyFiles.add(fileName);
+      saveNow();
+      syncEditorModelIfViewing(fileName, fileSystem[fileName]);
+      livePreviewUpdate(fileName.endsWith('.html'));
+    }
+    if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') aiHistory.pop();
+    const msg = `Your patch didn't match the file. Look at the _pages section map to find the right lines, then write a corrected patch targeting the exact text. Do not write a full <file> block.`;
+    aiHistory.push({ role: 'user', content: msg });
+    aiSaveMsg('user', msg, []);
+    aiTyping = true; aiSetGenerating(true); aiShowTyping();
+    aiCallAPI();
+    return;
+  }
+
   aiAddEditingPill(fileName);
   try {
     const headers = await getEdgeHeaders(false);
@@ -6746,6 +6860,7 @@ async function aiCallAPI() {
   let _workingOnPage  = '';
   let fullMessage   = '';
   let userScrolled  = false;
+  let _gotAnyOutput = false; // tracks whether the stream produced anything visible
   const msgs        = document.getElementById('aiMessages');
   let row           = null;
   let streamFinalized = false;
@@ -6805,7 +6920,7 @@ async function aiCallAPI() {
     const streamContent = document.createElement('div');
     streamContent.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:0';
     textEl = document.createElement('div');
-    textEl.className = 'ai-text ai-stream-cursor';
+    textEl.className = 'ai-text';
     streamContent.appendChild(textEl);
     _workingOnEl = document.createElement('div');
     _workingOnEl.className = 'ai-working-on';
@@ -7005,7 +7120,7 @@ async function aiCallAPI() {
         target.appendChild(cardsEl);
       }
 
-      if (textEl) { textEl.classList.remove('ai-stream-cursor'); textEl.innerHTML = formatChatText(fullMessage); }
+      if (textEl) { textEl.innerHTML = formatChatText(fullMessage); }
       if (_streamAvatar) { _streamAvatar.style.opacity = '0'; setTimeout(() => _streamAvatar && _streamAvatar.remove(), 360); _streamAvatar = null; }
       _stopWorkingOn();
 
@@ -7066,9 +7181,19 @@ async function aiCallAPI() {
         if (eventType === 'start') aiHideTyping();
 
         if (eventType === 'delta' && data.text) {
+          _gotAnyOutput = true;
           fullMessage += data.text;
           if (textEl) {
-            textEl.innerHTML = formatChatText(fullMessage);
+            const parts = data.text.split('\n');
+            parts.forEach((part, i) => {
+              if (i > 0) textEl.appendChild(document.createElement('br'));
+              if (part) {
+                const s = document.createElement('span');
+                s.className = 'ai-stream-chunk';
+                s.textContent = part;
+                textEl.appendChild(s);
+              }
+            });
             if (_streamAvatar) requestAnimationFrame(() => {
               if (!_streamAvatar) return;
               let top;
@@ -7097,6 +7222,7 @@ async function aiCallAPI() {
         // ── FILE STREAMING ────────────────────────────────────────────────
         const fileKey = data.name || data.path || data.filename;
         if ((eventType === 'file_start' || eventType === 'output_file_start' || eventType === 'patch_start') && fileKey) {
+          _gotAnyOutput = true;
           currentStreamingFile = fileKey;
           _startWorkingOn(fileKey);
         }
@@ -7190,6 +7316,7 @@ async function aiCallAPI() {
 
         if (eventType === 'done') {
           const hitTokenLimit = _maxTokensHit;
+          const hadOutput = _gotAnyOutput;
           // Save currentStreamingFile BEFORE finalizeAssistantStream clears it
           const midStreamFile = currentStreamingFile;
           _maxTokensHit = false;
@@ -7197,6 +7324,10 @@ async function aiCallAPI() {
           // the limit, since the counter was always 0 when checked immediately after reset.
           // Counter is reset only when the user sends a new message (in aiSend).
           finalizeAssistantStream(false);
+          // If the stream completed but produced nothing at all, show a retry prompt
+          if (!hadOutput && !hitTokenLimit && textEl) {
+            textEl.innerHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic">No response — please try again.</p>';
+          }
           // Only recover if: (1) token limit hit, (2) a real user-visible file was cut off.
           // Skip recovery for internal memory files (_project_state/_session) — they
           // update themselves next build, and recovering them causes the AI to keep going.
@@ -7281,7 +7412,7 @@ async function aiCallAPI() {
   } catch(err) {
     if (err.name === 'AbortError') {
       if (textEl) {
-        textEl.classList.remove('ai-stream-cursor');
+        textEl.innerHTML = textEl.innerText;
         if (fullMessage) {
           const stopNote = document.createElement('p');
           stopNote.style.cssText = 'font-size:11px;color:var(--muted);margin-top:6px;font-style:italic';
@@ -7420,15 +7551,29 @@ function _aiAutoComplete() {
   if (aiTyping) return;
   const cutFile = _aiCutFile;
   _aiCutFile = null;
-  // Pop partial assistant message so history ends with user message
-  if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') {
-    aiHistory.pop();
+  if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') aiHistory.pop();
+
+  const INTERNAL = ['_longterm','_shortterm','_backend','_pages'];
+  const hasExistingFiles = Object.keys(fileSystem).some(f => !INTERNAL.includes(f));
+  const isEdit = hasExistingFiles && Object.keys(_preEditSnapshot).length > 0;
+
+  let msg;
+  if (isEdit && cutFile) {
+    // Restore the original file — the truncated rewrite is discarded
+    if (_preEditSnapshot[cutFile] !== undefined) {
+      fileSystem[cutFile] = _preEditSnapshot[cutFile];
+      dirtyFiles.add(cutFile);
+      saveNow();
+      syncEditorModelIfViewing(cutFile, fileSystem[cutFile]);
+      livePreviewUpdate(cutFile.endsWith('.html'));
+    }
+    msg = `Your last response tried to rewrite ${cutFile} as a full file and got cut off, which would have destroyed everything below the cutoff point. I've restored the original. This time you MUST use patch format — find the specific lines that need changing and output only those as <patch> blocks. Do not write a <file> block.`;
+  } else if (cutFile) {
+    msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} in full now as a <file> block. Do not use patches — write the entire file from top to bottom.`;
+  } else {
+    msg = `The output was cut off. Continue from where it stopped and complete all remaining files.`;
   }
-  // Always send a clear instruction — without this the AI doesn't know to continue
-  // and dumps patch content as raw text in the chat instead of proper XML blocks
-  const msg = cutFile
-    ? `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} in full now as a <file> block. Do not use patches — write the entire file from top to bottom.`
-    : `The output was cut off. Continue from where it stopped and complete all remaining files.`;
+
   aiHistory.push({ role: 'user', content: msg });
   aiSaveMsg('user', msg, []);
   aiTyping = true; aiSetGenerating(true); aiShowTyping();

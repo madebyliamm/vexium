@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -10,135 +10,127 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    a{color:inherit;text-decoration:none}
-    a:visited{color:inherit}
+    a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
       --bg:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;
-      --border:#262626;--border2:#333333;--border3:#444444;
-      --text:#ffffff;--muted:#666666;
+      --border:#262626;--border2:#333;--border3:#444;
+      --text:#fff;--muted:#666;
       --err:#f87171;--ok:#4ade80;
       --sans:'Plus Jakarta Sans',sans-serif;
       --r-sm:6px;--r-md:10px;--r-lg:14px;--r-full:999px;
     }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-x:hidden;min-height:100vh}
 
-    /* BACK */
-    .back{position:fixed;top:16px;left:16px;display:flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 11px;border-radius:var(--r-sm);transition:all .15s}
+    .back{position:fixed;top:16px;left:16px;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;font-weight:600;padding:6px 11px;border-radius:var(--r-sm);transition:all .15s}
     .back:hover{color:var(--text);background:rgba(255,255,255,.05)}
     .back svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
 
-    /* CARD */
     .card{
-      width:100%;max-width:360px;
-      background:var(--surface);
-      border-radius:var(--r-lg);
-      padding:32px 28px;
-      position:relative;z-index:1;
+      width:100%;max-width:400px;
+      background:var(--surface);border-radius:18px;
+      padding:32px 28px;position:relative;z-index:1;
       box-shadow:0 40px 80px rgba(0,0,0,.6);
+      transition:max-width .35s cubic-bezier(.16,1,.3,1);
     }
+    .card.wide{max-width:580px}
+    .card.payment-wide{max-width:440px}
 
-    /* LOGO */
-    .card-logo{display:flex;align-items:center;margin-bottom:26px;justify-content:center;text-decoration:none}
-    .card-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform 60ms ease-out}
-    .card-logo:hover img,.card-logo:focus-visible img{transform:scale(1.08)}
+    /* Logo */
+    .card-logo{display:flex;align-items:center;margin-bottom:24px;justify-content:center}
+    .card-logo img{width:28px;height:28px;border-radius:6px;display:block;transition:transform 60ms ease-out}
+    .card-logo:hover img{transform:scale(1.08)}
 
-    /* TABS */
+    /* Tabs */
     .tabs{display:flex;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:24px}
     .tab{flex:1;padding:7px;border-radius:5px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;color:var(--muted);transition:all .15s;user-select:none}
     .tab.on{background:var(--border2);color:var(--text)}
 
-    /* FORM */
+    /* Step indicator */
+    .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px}
+    .step-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);transition:color .2s}
+    .step-item.active{color:var(--text)}
+    .step-item.done{color:var(--ok)}
+    .step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;transition:all .2s}
+    .step-item.active .step-num{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .step-item.done .step-num{background:var(--ok);color:#000;border-color:var(--ok)}
+    .step-item.done .step-num::after{content:'✓'}
+    .step-item.done .step-num span{display:none}
+    .step-line{width:28px;height:1px;background:var(--border2);margin:0 4px;flex-shrink:0}
+
+    /* Form */
+    .step-head{margin-bottom:20px}
+    .step-head h2{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+    .step-head p{font-size:12px;color:var(--muted);line-height:1.5}
     .field{margin-bottom:12px}
     label{display:block;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
-    input{
-      width:100%;background:var(--surface2);border:none;border-radius:var(--r-sm);
-      padding:10px 13px;color:var(--text);font-size:13px;outline:none;
-      font-family:var(--sans);transition:background .15s;
-    }
+    input{width:100%;background:var(--surface2);border:none;border-radius:var(--r-sm);padding:10px 13px;color:var(--text);font-size:13px;outline:none;font-family:var(--sans);transition:background .15s}
     input:focus{background:var(--border)}
     input::placeholder{color:var(--muted)}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-    /* SUBMIT */
-    .submit{
-      width:100%;padding:11px;border-radius:var(--r-sm);
-      background:var(--text);
-      color:var(--bg);font-size:13px;font-weight:700;
-      border:none;cursor:pointer;font-family:var(--sans);
-      transition:opacity .15s;margin-top:6px;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-    }
+    /* Submit */
+    .submit{width:100%;padding:12px;border-radius:var(--r-sm);background:var(--text);color:var(--bg);font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);transition:opacity .15s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
     .submit:hover{opacity:.88}
     .submit:disabled{opacity:.4;cursor:not-allowed}
 
-    /* DIVIDER */
+    /* Divider */
     .div{display:flex;align-items:center;gap:12px;margin:18px 0}
     .div-line{flex:1;height:1px;background:var(--surface2)}
     .div-txt{font-size:10px;color:var(--muted);font-weight:600}
 
-    /* GUEST */
-    .guest{
-      width:100%;padding:10px;border-radius:var(--r-sm);
-      background:var(--surface2);border:none;
-      color:var(--muted);font-size:12px;font-weight:600;
-      cursor:pointer;font-family:var(--sans);transition:all .15s;
-    }
+    /* Guest */
+    .guest{width:100%;padding:10px;border-radius:var(--r-sm);background:var(--surface2);border:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
     .guest:hover{background:var(--border);color:var(--text)}
 
-    /* MSG */
+    /* Msg */
     .msg{font-size:11px;text-align:center;margin-top:12px;min-height:16px;line-height:1.5}
-    .msg.err{color:var(--err)}
-    .msg.ok{color:var(--ok)}
+    .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
 
-    /* SPINNER */
+    /* Spinner */
     @keyframes spin{to{transform:rotate(360deg)}}
     .spin{width:13px;height:13px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
 
-    /* NOTE */
     .note{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6}
+    .back-link{background:none;border:none;color:var(--muted);font-size:11px;font-family:var(--sans);cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;padding:4px}
+    .back-link:hover{color:var(--text)}
 
-    /* CARD EXPAND for plan step */
-    .card{transition:max-width .3s cubic-bezier(.16,1,.3,1)}
-    .card.wide{max-width:560px}
-
-    /* PLAN STEP */
-    .plan-step-head{text-align:center;margin-bottom:20px}
-    .plan-step-head h2{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
-    .plan-step-head p{font-size:12px;color:var(--muted)}
-    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-    .plan-card{
-      border:1.5px solid var(--border);border-radius:var(--r-md);
-      padding:16px 14px;cursor:pointer;position:relative;
-      transition:border-color .15s,background .15s;user-select:none;
-    }
-    .plan-card:hover{border-color:var(--border2);background:var(--surface2)}
-    .plan-card.selected{border-color:#fff;background:rgba(255,255,255,.04)}
-    .plan-card.popular::before{
-      content:'Most popular';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
-      background:#fff;color:#000;font-size:9px;font-weight:800;letter-spacing:.05em;
-      padding:2px 8px;border-radius:99px;white-space:nowrap;
-    }
-    .plan-name{font-size:13px;font-weight:800;margin-bottom:2px}
-    .plan-price{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
-    .plan-price span{font-size:11px;font-weight:600;color:var(--muted)}
-    .plan-desc{font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px}
-    .plan-check{
-      width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border2);
-      position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:center;
-    }
+    /* ── PLAN STEP ── */
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .plan-card{background:var(--surface2);border:none;border-radius:var(--r-md);padding:16px 14px;cursor:pointer;position:relative;transition:background .15s;user-select:none}
+    .plan-card:hover{background:var(--border)}
+    .plan-card.selected{background:rgba(255,255,255,.09)}
+    .plan-card.popular::before{content:'Suggested';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:800;letter-spacing:.05em;padding:2px 8px;border-radius:99px;white-space:nowrap}
+    .plan-name{font-size:12px;font-weight:800;margin-bottom:3px}
+    .plan-price{font-size:20px;font-weight:800;letter-spacing:-.5px}
+    .plan-price span{font-size:10px;font-weight:600;color:var(--muted)}
+    .plan-ai{font-size:9px;color:var(--muted);margin-top:3px;margin-bottom:10px}
+    .plan-features{list-style:none;display:flex;flex-direction:column;gap:4px}
+    .plan-features li{font-size:9px;color:var(--muted);display:flex;align-items:flex-start;gap:4px;line-height:1.4}
+    .plan-features li::before{content:'·';font-weight:900;flex-shrink:0;margin-top:0}
+    .plan-card.selected .plan-features li{color:rgba(255,255,255,.55)}
+    .plan-check{width:16px;height:16px;border-radius:50%;background:var(--border2);position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:center;transition:all .15s}
     .plan-card.selected .plan-check{background:#fff;border-color:#fff}
     .plan-card.selected .plan-check::after{content:'';width:6px;height:6px;background:#000;border-radius:50%;display:block}
-    .trial-note{
-      text-align:center;font-size:11px;color:var(--muted);
-      background:rgba(255,255,255,.04);border-radius:var(--r-sm);
-      padding:8px 12px;margin-bottom:14px;
-    }
-    .trial-note strong{color:var(--text)}
-    .back-link{
-      background:none;border:none;color:var(--muted);font-size:11px;font-family:var(--sans);
-      cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;padding:4px;
-    }
-    .back-link:hover{color:var(--text)}
+    .trial-banner{display:flex;align-items:center;gap:8px;background:rgba(74,222,128,.07);border:none;border-radius:var(--r-sm);padding:9px 12px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.7)}
+    .trial-banner svg{width:13px;height:13px;stroke:#4ade80;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+
+    /* ── PAYMENT STEP ── */
+    .pay-summary{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:var(--r-sm);padding:11px 14px;margin-bottom:18px}
+    .pay-summary-left{font-size:12px;font-weight:700}
+    .pay-summary-sub{font-size:10px;color:var(--muted);margin-top:1px}
+    .pay-summary-price{font-size:16px;font-weight:800;letter-spacing:-.3px}
+    .pay-summary-price span{font-size:10px;font-weight:600;color:var(--muted)}
+    .card-input-wrap{position:relative}
+    .card-input-wrap input{padding-right:50px}
+    .card-icons{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:flex;gap:4px;pointer-events:none}
+    .card-icon{width:28px;height:18px;border-radius:3px;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:var(--muted)}
+    .card-icon.visa{background:#1a1f71;color:#fff}
+    .card-icon.mc{background:#eb001b;color:#fff}
+    .secure-badge{display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;color:var(--muted);margin-top:12px}
+    .secure-badge svg{width:10px;height:10px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
+    .trial-charge-note{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;margin-top:10px}
+    .trial-charge-note strong{color:var(--text)}
   </style>
 </head>
 <body>
@@ -148,23 +140,44 @@
   Back
 </a>
 
-<div class="card">
-  <a href="index.html" class="card-logo" title="Vexium — Home">
+<div class="card" id="mainCard">
+  <a href="index.html" class="card-logo" title="Vexium">
     <img src="vexium_logo.png" alt="Vexium"/>
   </a>
 
-  <div class="tabs">
+  <!-- Tabs (hidden during signup steps 2/3) -->
+  <div class="tabs" id="authTabs">
     <div class="tab on" id="tabSignup" onclick="switchTab('signup')">Sign up</div>
     <div class="tab" id="tabSignin" onclick="switchTab('signin')">Sign in</div>
   </div>
 
-  <!-- Step 1: account details -->
+  <!-- Step indicator (shown during signup steps 2/3) -->
+  <div class="steps" id="stepIndicator" style="display:none">
+    <div class="step-item done" id="stepItem1">
+      <div class="step-num"><span>1</span></div>
+      <span>Account</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item active" id="stepItem2">
+      <div class="step-num"><span>2</span></div>
+      <span>Plan</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item" id="stepItem3">
+      <div class="step-num"><span>3</span></div>
+      <span>Payment</span>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Account ── -->
   <div id="formSignup">
+    <div class="step-head">
+      <h2>Create your account</h2>
+      <p>Start building in seconds.</p>
+    </div>
     <div class="field">
       <label>Username</label>
-      <div class="inp-wrap">
-        <input type="text" id="signupUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      </div>
+      <input type="text" id="signupUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
     </div>
     <div class="field">
       <label>Email</label>
@@ -172,52 +185,146 @@
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="signupPass" placeholder="••••••••"/>
+      <input type="password" id="signupPass" placeholder="6+ characters"/>
     </div>
-    <button type="button" class="submit" id="btnSignup" onclick="goToPlanStep()">
+    <button type="button" class="submit" id="btnContinue" onclick="goToPlanStep()">
       <span id="signupLabel">Continue →</span>
     </button>
   </div>
 
-  <!-- Step 2: plan selection -->
+  <!-- ── STEP 2: Plan ── -->
   <div id="formPlan" style="display:none">
-    <div class="plan-step-head">
+    <div class="step-head">
       <h2>Choose your plan</h2>
-      <p>All plans start with a 7-day free trial.</p>
+      <p>All plans include a 7-day free trial. No charge today.</p>
     </div>
     <div class="plans">
       <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
         <div class="plan-check"></div>
         <div class="plan-name">Starter</div>
         <div class="plan-price">$12<span>/mo</span></div>
-        <div class="plan-desc">Great for personal projects and getting started</div>
+        <div class="plan-ai">~$15 AI credits/mo</div>
+        <ul class="plan-features">
+          <li>5 published sites</li>
+          <li>Custom domain</li>
+          <li>Basic analytics</li>
+        </ul>
       </div>
       <div class="plan-card popular selected" data-plan="pro" onclick="selectPlan('pro')">
         <div class="plan-check"></div>
         <div class="plan-name">Pro</div>
         <div class="plan-price">$29<span>/mo</span></div>
-        <div class="plan-desc">For builders who ship regularly and need more AI</div>
+        <div class="plan-ai">~$40 AI credits/mo</div>
+        <ul class="plan-features">
+          <li>Unlimited sites</li>
+          <li>Custom domains</li>
+          <li>Collaborators</li>
+          <li>Priority support</li>
+        </ul>
       </div>
       <div class="plan-card" data-plan="max" onclick="selectPlan('max')">
         <div class="plan-check"></div>
         <div class="plan-name">Max</div>
         <div class="plan-price">$79<span>/mo</span></div>
-        <div class="plan-desc">Unlimited power for professionals and agencies</div>
+        <div class="plan-ai">~$120 AI credits/mo</div>
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>Team workspace</li>
+          <li>White-label option</li>
+          <li>Dedicated support</li>
+        </ul>
       </div>
     </div>
-    <div class="trial-note"><strong>7 days free</strong> — no charge until your trial ends. Cancel anytime.</div>
-    <button type="button" class="submit" id="btnCreateAccount" onclick="doSignup()">
-      <span id="createLabel">Start free trial →</span>
+    <div class="trial-banner">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>Your 7-day free trial starts today — cancel any time before it ends.</span>
+    </div>
+    <button type="button" class="submit" onclick="goToPaymentStep()">
+      <span>Continue →</span>
     </button>
-    <button type="button" class="back-link" onclick="backToForm()">← Back</button>
+    <button type="button" class="back-link" onclick="backToStep1()">← Back</button>
   </div>
 
+  <!-- ── STEP 3: Payment ── -->
+  <div id="formPayment" style="display:none">
+    <div class="step-head">
+      <h2>Payment details</h2>
+      <p>You won't be charged until your trial ends.</p>
+    </div>
+    <div class="pay-summary" id="paySummary">
+      <div>
+        <div class="pay-summary-left" id="payPlanName">Pro plan</div>
+        <div class="pay-summary-sub">Billed monthly after trial</div>
+      </div>
+      <div class="pay-summary-price" id="payPlanPrice">$29<span>/mo</span></div>
+    </div>
+    <div class="field">
+      <label>Card number</label>
+      <div class="card-input-wrap">
+        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)"/>
+        <div class="card-icons">
+          <div class="card-icon visa">VISA</div>
+          <div class="card-icon mc">MC</div>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field" style="margin-bottom:0">
+        <label>Expiry</label>
+        <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)"/>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>CVC</label>
+        <input type="text" id="cardCvc" placeholder="•••" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')"/>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Name on card</label>
+      <input type="text" id="cardName" placeholder="Full name"/>
+    </div>
+    <button type="button" class="submit" id="btnCreateAccount" onclick="doSignup()" style="margin-top:14px">
+      <span id="createLabel">Start free trial →</span>
+    </button>
+    <div class="secure-badge">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secured by Stripe — your card is never stored by us
+    </div>
+    <div class="trial-charge-note">
+      <strong>No charge today.</strong> Your trial ends in 7 days — you'll receive an email reminder before then.
+    </div>
+    <button type="button" class="back-link" onclick="backToStep2()">← Back</button>
+  </div>
+
+  <!-- ── STEP 4: Confirm email ── -->
+  <div id="formConfirm" style="display:none">
+    <div style="text-align:center;padding:4px 0 28px">
+      <div style="width:52px;height:52px;margin:0 auto 20px;background:var(--surface2);border-radius:14px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polyline points="2,4 12,13 22,4"/>
+        </svg>
+      </div>
+      <h2 id="confirmTitle" style="font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px">Check your inbox</h2>
+      <p id="confirmSubtitle" style="font-size:12px;color:var(--muted);line-height:1.7">
+        We sent a confirmation link to<br>
+        <span id="confirmEmailDisplay" style="color:var(--text);font-weight:600"></span>
+      </p>
+      <p id="confirmHint" style="font-size:11px;color:var(--muted);margin-top:10px">Can't find it? Check your junk folder.</p>
+    </div>
+    <button type="button" class="submit" id="btnConfirmed" onclick="tryConfirmedSignin()">
+      <span id="confirmedLabel">I've confirmed my email →</span>
+    </button>
+    <button type="button" class="back-link" id="resendBtn" onclick="resendConfirmation()" style="margin-top:6px">Resend confirmation email</button>
+  </div>
+
+  <!-- ── SIGN IN ── -->
   <div id="formSignin" style="display:none">
+    <div class="step-head">
+      <h2>Welcome back</h2>
+    </div>
     <div class="field">
       <label>Username</label>
-      <div class="inp-wrap">
-        <input type="text" id="signinUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      </div>
+      <input type="text" id="signinUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
     </div>
     <div class="field">
       <label>Password</label>
@@ -228,8 +335,6 @@
     </button>
   </div>
 
-  <div id="orDivider" class="div"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
-  <button type="button" id="guestBtn" class="guest" onclick="doGuest(event)">Continue without account</button>
 
   <div class="msg" id="msgBox"></div>
 </div>
@@ -246,49 +351,166 @@
   } catch(e) {}
 
   const FAKE_DOMAIN = '@vexium.ai';
+  const PLAN_PRICES = { starter: '$12', pro: '$29', max: '$79' };
+  const PLAN_LABELS = { starter: 'Starter plan', pro: 'Pro plan', max: 'Max plan' };
+  let _selectedPlan = 'pro';
+  let _pendingUser = '', _pendingEmail = '', _pendingPass = '';
 
-  // Check already logged in
   (async()=>{
     if (!sb) return;
     try {
       const { data } = await sb.auth.getSession();
-      if (data?.session) window.location.href = 'home.html';
+      if (data?.session) {
+        // Detect email confirmation redirect (Supabase puts type=signup in hash/query)
+        const isConfirmReturn = location.hash.includes('type=signup') || location.search.includes('type=signup');
+        if (isConfirmReturn || localStorage.getItem('_vx_awaiting_confirm')) {
+          localStorage.removeItem('_vx_awaiting_confirm');
+          _pendingUser = data.session.user.user_metadata?.username || '';
+          _pendingEmail = data.session.user.email || '';
+          showConfirmStep(true);
+          return;
+        }
+        window.location.href = 'home.html';
+      }
     } catch(e) {}
-    // check tab from URL
     const p = new URLSearchParams(location.search);
     if (p.get('tab') === 'signin') switchTab('signin');
   })();
 
-  let _selectedPlan = 'pro';
-
   function selectPlan(plan) {
     _selectedPlan = plan;
-    document.querySelectorAll('.plan-card').forEach(c => {
-      c.classList.toggle('selected', c.dataset.plan === plan);
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.toggle('selected', c.dataset.plan === plan));
+  }
+
+  function setStep(n) {
+    ['stepItem1','stepItem2','stepItem3'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'step-item' + (i + 1 < n ? ' done' : i + 1 === n ? ' active' : '');
     });
   }
 
-  function goToPlanStep() {
+  async function goToPlanStep() {
     const user = document.getElementById('signupUser').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const pass  = document.getElementById('signupPass').value;
     if (!user)  { setMsg('Enter a username.', 'err'); return; }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(user)) { setMsg('Username can only contain letters, numbers, _ . and -', 'err'); return; }
     if (!email || !email.includes('@')) { setMsg('Enter a valid email.', 'err'); return; }
     if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
+
+    if (sb) {
+      const btn = document.getElementById('btnContinue');
+      const lbl = document.getElementById('signupLabel');
+      btn.disabled = true;
+      lbl.innerHTML = '<div class="spin"></div>';
+      setMsg('', '');
+      const avail = await checkAvailability(user, email);
+      btn.disabled = false; lbl.textContent = 'Continue →';
+      if (avail === 'username') { setMsg('That username is already taken.', 'err'); return; }
+      if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); return; }
+      if (avail === 'error')    { setMsg('Could not verify availability. Try again.', 'err'); return; }
+    }
+
     setMsg('', '');
-    document.getElementById('formSignup').style.display  = 'none';
-    document.getElementById('formPlan').style.display    = '';
-    document.getElementById('orDivider').style.display   = 'none';
-    document.getElementById('guestBtn').style.display    = 'none';
-    document.querySelector('.card').classList.add('wide');
+    document.getElementById('formSignup').style.display = 'none';
+    document.getElementById('formPlan').style.display = '';
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('stepIndicator').style.display = 'flex';
+    document.getElementById('mainCard').classList.add('wide');
+    setStep(2);
   }
 
-  function backToForm() {
-    document.getElementById('formPlan').style.display    = 'none';
-    document.getElementById('formSignup').style.display  = '';
-    document.getElementById('orDivider').style.display   = '';
-    document.getElementById('guestBtn').style.display    = '';
-    document.querySelector('.card').classList.remove('wide');
+  function goToPaymentStep() {
+    document.getElementById('formPlan').style.display = 'none';
+    document.getElementById('formPayment').style.display = '';
+    document.getElementById('mainCard').classList.remove('wide');
+    document.getElementById('mainCard').classList.add('payment-wide');
+    document.getElementById('payPlanName').textContent = PLAN_LABELS[_selectedPlan];
+    document.getElementById('payPlanPrice').innerHTML = PLAN_PRICES[_selectedPlan] + '<span>/mo</span>';
+    setStep(3);
+  }
+
+  function backToStep1() {
+    document.getElementById('formPlan').style.display = 'none';
+    document.getElementById('formSignup').style.display = '';
+    document.getElementById('orDivider').style.display = '';
+    document.getElementById('guestBtn').style.display = '';
+    document.getElementById('authTabs').style.display = 'flex';
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('mainCard').classList.remove('wide','payment-wide');
+    setMsg('', '');
+  }
+
+  function showConfirmStep(alreadyConfirmed) {
+    ['formSignup','formPlan','formPayment','formSignin'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('mainCard').classList.remove('wide','payment-wide');
+    document.getElementById('confirmEmailDisplay').textContent = _pendingEmail;
+    document.getElementById('formConfirm').style.display = '';
+    if (alreadyConfirmed) {
+      document.getElementById('confirmTitle').textContent = "You're all set";
+      document.getElementById('confirmSubtitle').innerHTML = 'Your email has been confirmed.';
+      document.getElementById('confirmHint').style.display = 'none';
+      document.getElementById('confirmedLabel').textContent = 'Enter Vexium →';
+      document.getElementById('resendBtn').style.display = 'none';
+    }
+    setMsg('', '');
+  }
+
+  async function tryConfirmedSignin() {
+    const btn = document.getElementById('btnConfirmed');
+    const lbl = document.getElementById('confirmedLabel');
+    btn.disabled = true;
+    lbl.innerHTML = '<div class="spin"></div>';
+    setMsg('', '');
+    try {
+      let session = null;
+      const { data: s } = await sb.auth.getSession();
+      session = s?.session;
+      if (!session && _pendingEmail && _pendingPass) {
+        const { data, error } = await sb.auth.signInWithPassword({ email: _pendingEmail, password: _pendingPass });
+        if (error) {
+          const m = error.message.toLowerCase();
+          const notYet = m.includes('not confirmed') || m.includes('email not confirmed');
+          setMsg(notYet ? "You haven't confirmed your email yet." : error.message, 'err');
+          btn.disabled = false; lbl.textContent = "I've confirmed my email →";
+          return;
+        }
+        session = data.session;
+      }
+      if (session) {
+        await savePlanToProfile(session.user.id);
+        localStorage.removeItem('vexium_guest');
+        localStorage.setItem('vexium_username', _pendingUser || session.user.user_metadata?.username || '');
+        window.location.href = 'home.html';
+      }
+    } catch(e) {
+      setMsg('Something went wrong.', 'err');
+      btn.disabled = false; lbl.textContent = "I've confirmed my email →";
+    }
+  }
+
+  async function resendConfirmation() {
+    if (!_pendingEmail) return;
+    const btn = document.getElementById('resendBtn');
+    btn.disabled = true;
+    setMsg('', '');
+    try {
+      const { error } = await sb.auth.resend({ type: 'signup', email: _pendingEmail });
+      setMsg(error ? error.message : 'Confirmation email resent.', error ? 'err' : 'ok');
+    } catch(e) { setMsg('Something went wrong.', 'err'); }
+    btn.disabled = false;
+  }
+
+  function backToStep2() {
+    document.getElementById('formPayment').style.display = 'none';
+    document.getElementById('formPlan').style.display = '';
+    document.getElementById('mainCard').classList.add('wide');
+    document.getElementById('mainCard').classList.remove('payment-wide');
+    setStep(2);
     setMsg('', '');
   }
 
@@ -298,11 +520,33 @@
     document.getElementById('tabSignin').classList.toggle('on', !su);
     document.getElementById('formSignup').style.display  = su ? '' : 'none';
     document.getElementById('formPlan').style.display    = 'none';
+    document.getElementById('formPayment').style.display = 'none';
     document.getElementById('formSignin').style.display  = su ? 'none' : '';
-    document.getElementById('orDivider').style.display   = '';
-    document.getElementById('guestBtn').style.display    = '';
-    document.querySelector('.card').classList.remove('wide');
+    document.getElementById('authTabs').style.display    = 'flex';
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('mainCard').classList.remove('wide','payment-wide');
     setMsg('', '');
+  }
+
+  function formatCard(el) {
+    let v = el.value.replace(/\D/g,'').slice(0,16);
+    el.value = v.replace(/(.{4})/g,'$1 ').trim();
+  }
+
+  function formatExpiry(el) {
+    let v = el.value.replace(/\D/g,'').slice(0,4);
+    if (v.length >= 3) v = v.slice(0,2) + ' / ' + v.slice(2);
+    el.value = v;
+  }
+
+  async function checkAvailability(username, email) {
+    try {
+      const { data, error } = await sb.rpc('check_signup_availability', { p_username: username, p_email: email.toLowerCase() });
+      if (error) return 'error';
+      if (data?.username_taken) return 'username';
+      if (data?.email_taken)    return 'email';
+      return 'ok';
+    } catch(e) { return 'error'; }
   }
 
   function setMsg(txt, type) {
@@ -354,12 +598,9 @@
     const user      = document.getElementById('signupUser').value.trim();
     const realEmail = document.getElementById('signupEmail').value.trim();
     const pass      = document.getElementById('signupPass').value;
-    if (!user) { setMsg('Enter a username.', 'err'); return; }
-    if (!realEmail || !realEmail.includes('@')) { setMsg('Enter a valid email.', 'err'); return; }
-    if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
+    if (!user || !realEmail || pass.length < 6) { setMsg('Please go back and complete all fields.', 'err'); return; }
 
     if (!sb) {
-      // Offline guest mode with username saved
       localStorage.setItem('vexium_guest', 'true');
       localStorage.setItem('vexium_username', user);
       window.location.href = 'home.html';
@@ -367,51 +608,27 @@
     }
 
     setLoading('signup', true); setMsg('', '');
+    const avail = await checkAvailability(user, realEmail);
+    if (avail === 'username') { setMsg('That username is already taken.', 'err'); setLoading('signup', false); return; }
+    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); setLoading('signup', false); return; }
     try {
-      const email = toEmail(user);
       const { data, error } = await sb.auth.signUp({
-        email,
+        email: realEmail,
         password: pass,
         options: { data: { username: user, display_name: user } }
       });
-      if (error) {
-        // Database error means trigger failed but user may still exist — try signing in
-        if (error.message.toLowerCase().includes('database')) {
-          const { data: si } = await sb.auth.signInWithPassword({ email, password: pass });
-          if (si?.session) {
-            await saveRealEmail(si.session.user.id, realEmail);
-            await savePlanToProfile(si.session.user.id);
-            localStorage.removeItem('vexium_guest');
-            localStorage.setItem('vexium_username', user);
-            window.location.href = 'home.html';
-            return;
-          }
-        }
-        setMsg(error.message, 'err');
-        setLoading('signup', false);
-        return;
-      }
-      // Got a session immediately (email confirm disabled)
+      if (error) { setMsg(error.message, 'err'); setLoading('signup', false); return; }
       if (data.session) {
-        await saveRealEmail(data.session.user.id, realEmail);
         await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
-        window.location.href = 'home.html';
-        return;
+        window.location.href = 'home.html'; return;
       }
-      // No session yet — try signing in directly
-      const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pass });
-      if (si?.session) {
-        await saveRealEmail(si.session.user.id, realEmail);
-        await savePlanToProfile(si.session.user.id);
-        localStorage.removeItem('vexium_guest');
-        localStorage.setItem('vexium_username', user);
-        window.location.href = 'home.html';
-        return;
-      }
-      setMsg('Account created! Check your email to confirm, then sign in.', 'ok');
+      // Email confirmation required — show confirm screen
+      _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
+      localStorage.setItem('_vx_awaiting_confirm', '1');
       setLoading('signup', false);
+      showConfirmStep(false);
     } catch(e) { setMsg('Something went wrong.', 'err'); setLoading('signup', false); }
   }
 
@@ -420,19 +637,18 @@
     const pass = document.getElementById('signinPass').value;
     if (!user) { setMsg('Enter your username.', 'err'); return; }
     if (!pass) { setMsg('Enter your password.', 'err'); return; }
-
-    if (!sb) {
-      localStorage.setItem('vexium_guest', 'true');
-      localStorage.removeItem('vexium_guest');
-      localStorage.setItem('vexium_username', user);
-      window.location.href = 'home.html';
-      return;
-    }
-
+    if (!sb) { localStorage.setItem('vexium_guest', 'true'); localStorage.setItem('vexium_username', user); window.location.href = 'home.html'; return; }
     setLoading('signin', true); setMsg('', '');
     try {
-      const email = toEmail(user);
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      // Look up real email by username
+      let authEmail = null;
+      const { data: profile } = await sb.from('profiles').select('email').ilike('username', user).maybeSingle();
+      if (profile?.email) {
+        authEmail = profile.email;
+      } else {
+        authEmail = toEmail(user); // legacy fallback
+      }
+      const { data, error } = await sb.auth.signInWithPassword({ email: authEmail, password: pass });
       if (error) { setMsg('Wrong username or password.', 'err'); setLoading('signin', false); return; }
       localStorage.setItem('vexium_username', user);
       window.location.href = 'home.html';
@@ -440,20 +656,17 @@
   }
 
   function doGuest(event) {
-    if (event) event.preventDefault();
-    event && event.stopPropagation();
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     localStorage.setItem('vexium_guest', 'true');
     if (!localStorage.getItem('vexium_username')) localStorage.setItem('vexium_username', 'Guest');
     window.location.href = 'home.html';
   }
 
-  // Enter key
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
-    const onPlan   = document.getElementById('formPlan').style.display   !== 'none';
-    const onSignup = document.getElementById('formSignup').style.display !== 'none';
-    if (onPlan)   doSignup();
-    else if (onSignup) goToPlanStep();
+    if (document.getElementById('formPayment').style.display !== 'none') doSignup();
+    else if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
+    else if (document.getElementById('formSignup').style.display !== 'none') goToPlanStep();
     else doSignin();
   });
 </script>

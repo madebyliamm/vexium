@@ -640,11 +640,11 @@
     if (!sb) { localStorage.setItem('vexium_guest', 'true'); localStorage.setItem('vexium_username', user); window.location.href = 'home.html'; return; }
     setLoading('signin', true); setMsg('', '');
     try {
-      // Look up real email by username
+      // Look up real email by username via SECURITY DEFINER function (bypasses RLS)
       let authEmail = null;
-      const { data: profile } = await sb.from('profiles').select('email').ilike('username', user).maybeSingle();
-      if (profile?.email) {
-        authEmail = profile.email;
+      const { data: emailData } = await sb.rpc('get_email_by_username', { p_username: user });
+      if (emailData) {
+        authEmail = emailData;
       } else {
         authEmail = toEmail(user); // legacy fallback
       }

@@ -1343,9 +1343,6 @@
     .ai-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
     .ai-text a:hover { color: var(--accent2); }
 
-    /* Streaming fade-in */
-    @keyframes aiChunkFade { from { opacity: 0; } to { opacity: 1; } }
-    .ai-stream-chunk { animation: aiChunkFade .18s ease forwards; display: inline; }
     /* Typing dots */
     @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-5px); opacity: 1; } }
     .ai-typing-dots { display: inline-flex; gap: 4px; align-items: center; }
@@ -1926,7 +1923,8 @@
 
     /* Preview area */
     #previewInner { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #fff; }
-    #previewInner.device-phone, #previewInner.device-desktop { background: var(--bg); align-items: center; justify-content: center; padding: 16px; }
+    #previewInner.device-mode { background: #131315; align-items: center; justify-content: center; padding: 28px; overflow: auto; }
+    .device-wrap { position: relative; flex-shrink: 0; }
 
     /* ── iPhone — fixed 390:844 ratio, scaled to fit ─── */
     .device-shell-phone {
@@ -4637,93 +4635,139 @@ function setDeviceMode(mode) {
     if (opt) opt.classList.toggle('sel', m === mode);
   });
   applyDeviceMode();
-  refreshPreview();
 }
+
+// ── DEVICE SPECS ─────────────────────────────────────────────────────────────
+// Fixed pixel dimensions. logicalW = real device viewport width so responsive
+// CSS fires at the right breakpoints. Content is then CSS-scaled to fit the frame.
+const _DEVICE_SPECS = {
+  phone: {
+    frameW: 306, frameH: 650,
+    // Thin bezels — sy=28 puts the dynamic island right near the top
+    sx: 12, sy: 28, sw: 282, sh: 612, sr: 34,
+    logicalW: 393,
+  },
+  desktop: {
+    frameW: 764, frameH: 498,
+    sx: 20, sy: 14, sw: 724, sh: 454, sr: 3,
+    logicalW: 1280,
+  }
+};
+
+// ── SVG DEVICE FRAMES ─────────────────────────────────────────────────────────
+const _PHONE_SVG = `<svg viewBox="0 0 306 650" fill="none" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="pm">
+      <rect width="306" height="650" rx="44" fill="white"/>
+      <rect x="12" y="28" width="282" height="612" rx="34" fill="black"/>
+    </mask>
+    <linearGradient id="pg" x1="0" y1="0" x2="306" y2="650" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2e2e30"/><stop offset="100%" stop-color="#1c1c1e"/>
+    </linearGradient>
+  </defs>
+  <g mask="url(#pm)">
+    <rect width="306" height="650" fill="url(#pg)"/>
+    <rect x="0.5" y="0.5" width="305" height="649" rx="43.5" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+  </g>
+  <rect x="12" y="28" width="282" height="612" rx="34" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <rect x="-1" y="120" width="3" height="26" rx="1.5" fill="#3a3a3e"/>
+  <rect x="-1" y="158" width="3" height="50" rx="1.5" fill="#3a3a3e"/>
+  <rect x="-1" y="220" width="3" height="50" rx="1.5" fill="#3a3a3e"/>
+  <rect x="304" y="184" width="3" height="72" rx="1.5" fill="#3a3a3e"/>
+  <rect x="116" y="634" width="74" height="5" rx="2.5" fill="#3a3a3e"/>
+</svg>`;
+
+const _DESKTOP_SVG = `<svg viewBox="0 0 764 498" overflow="visible" fill="none" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="dm">
+      <rect width="764" height="482" rx="9" fill="white"/>
+      <rect x="20" y="14" width="724" height="454" rx="3" fill="black"/>
+    </mask>
+    <linearGradient id="dg" x1="0" y1="0" x2="0" y2="482" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2a2c"/><stop offset="100%" stop-color="#1c1c1e"/>
+    </linearGradient>
+  </defs>
+  <g mask="url(#dm)">
+    <rect width="764" height="482" fill="url(#dg)"/>
+    <rect x="0.5" y="0.5" width="763" height="481" rx="8.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  </g>
+  <rect x="20" y="14" width="724" height="454" rx="3" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+  <rect y="481" width="764" height="1" fill="rgba(0,0,0,0.6)"/>
+  <rect x="-26" y="482" width="816" height="16" rx="5" fill="#252527"/>
+  <rect x="-26" y="482" width="816" height="1" fill="rgba(255,255,255,0.08)"/>
+</svg>`;
 
 function applyDeviceMode() {
   const inner = document.getElementById('previewInner');
   const frame = document.getElementById('previewFrame');
   if (!inner || !frame) return;
 
-  // Pull frame out before removing old shell
-  if (!inner.contains(frame)) inner.appendChild(frame);
+  if (window._deviceRO) { window._deviceRO.disconnect(); window._deviceRO = null; }
   inner.querySelectorAll('.device-shell-phone,.device-shell-desktop').forEach(el => el.remove());
-  inner.className = '';
+
+  // Get or create the persistent wrapper — iframe lives here permanently so it never
+  // gets moved in the DOM (moving an iframe causes Chrome to reset its content to blank).
+  let wrap    = inner.querySelector('.device-wrap');
+  let screenEl = wrap ? wrap.querySelector('.device-screen') : null;
+  let svgDiv   = wrap ? wrap.querySelector('.device-svg')    : null;
+
+  if (!wrap) {
+    wrap     = document.createElement('div');    wrap.className = 'device-wrap';
+    screenEl = document.createElement('div');
+    screenEl.className = 'device-screen';
+    svgDiv   = document.createElement('div');
+    svgDiv.className = 'device-svg';
+    svgDiv.style.cssText = 'position:absolute;pointer-events:none;z-index:2;display:none';
+    wrap.appendChild(screenEl);
+    wrap.appendChild(svgDiv);
+    // Move iframe into persistent structure exactly once
+    inner.insertBefore(wrap, frame.parentNode === inner ? frame : null);
+    screenEl.appendChild(frame);
+  }
+
   frame.className = '';
-  frame.style.cssText = '';
+  frame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none';
 
   if (deviceMode === 'default') {
-    frame.style.flex = '1';
-    frame.style.width = '100%';
-    frame.style.border = 'none';
-    frame.style.background = '#fff';
-
-  } else if (deviceMode === 'phone') {
-    inner.classList.add('device-phone');
-    const shell = document.createElement('div');
-    shell.className = 'device-shell-phone';
-
-    // Screen wrapper (rounded inside bezel)
-    const screen = document.createElement('div');
-    screen.className = 'device-phone-screen';
-
-    // Dynamic Island
-    const island = document.createElement('div');
-    island.className = 'device-phone-island';
-    screen.appendChild(island);
-
-    // iframe
-    frame.className = 'device-frame-iframe';
-    screen.appendChild(frame);
-    shell.appendChild(screen);
-    inner.appendChild(shell);
-
-  } else if (deviceMode === 'desktop') {
-    inner.classList.add('device-desktop');
-    const shell = document.createElement('div');
-    shell.className = 'device-shell-desktop';
-
-    // Lid
-    const lid = document.createElement('div');
-    lid.className = 'device-laptop-lid';
-
-    // Screen area inside lid
-    const screen = document.createElement('div');
-    screen.className = 'device-laptop-screen';
-
-    // MacOS bar with dots
-    const bar = document.createElement('div');
-    bar.className = 'device-laptop-bar';
-    ['','',''].forEach(() => {
-      const dot = document.createElement('div');
-      dot.className = 'device-laptop-dot';
-      bar.appendChild(dot);
-    });
-    screen.appendChild(bar);
-
-    // iframe
-    frame.className = 'device-frame-iframe';
-    screen.appendChild(frame);
-    lid.appendChild(screen);
-    shell.appendChild(lid);
-
-    // Hinge
-    const hinge = document.createElement('div');
-    hinge.className = 'device-laptop-hinge';
-    shell.appendChild(hinge);
-
-    // Base
-    const base = document.createElement('div');
-    base.className = 'device-laptop-base';
-    shell.appendChild(base);
-
-    // Shadow
-    const shadow = document.createElement('div');
-    shadow.className = 'device-laptop-shadow';
-    shell.appendChild(shadow);
-
-    inner.appendChild(shell);
+    inner.className = '';
+    wrap.style.cssText    = 'position:absolute;inset:0';
+    screenEl.style.cssText = 'position:absolute;inset:0;overflow:hidden';
+    svgDiv.innerHTML = '';
+    svgDiv.style.display = 'none';
+    return;
   }
+
+  const isPhone = deviceMode === 'phone';
+  const sp = _DEVICE_SPECS[isPhone ? 'phone' : 'desktop'];
+  inner.classList.add('device-mode');
+
+  // SVG overlay — fills wrap, transparent screen area reveals iframe behind it
+  svgDiv.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:2${!isPhone ? ';overflow:visible' : ''}`;
+  svgDiv.innerHTML = isPhone ? _PHONE_SVG : _DESKTOP_SVG;
+
+  // Screen uses percentages — identical scaling to the SVG mask, pixel-perfect alignment
+  const slPct = (sp.sx / sp.frameW * 100).toFixed(6) + '%';
+  const stPct = (sp.sy / sp.frameH * 100).toFixed(6) + '%';
+  const swPct = (sp.sw / sp.frameW * 100).toFixed(6) + '%';
+  const shPct = (sp.sh / sp.frameH * 100).toFixed(6) + '%';
+  screenEl.style.cssText = `position:absolute;left:${slPct};top:${stPct};width:${swPct};height:${shPct};overflow:hidden;z-index:3`;
+
+  wrap.style.cssText = `position:relative;flex-shrink:0${!isPhone ? ';overflow:visible' : ''}`;
+
+  function sizeAll() {
+    const pad = 28;
+    const aw = inner.clientWidth - pad * 2;
+    const ah = inner.clientHeight - pad * 2;
+    if (!aw || !ah) return;
+    const s = Math.min(aw / sp.frameW, ah / sp.frameH);
+    wrap.style.width  = Math.round(sp.frameW * s) + 'px';
+    wrap.style.height = Math.round(sp.frameH * s) + 'px';
+    screenEl.style.borderRadius = (sp.sr * s).toFixed(2) + 'px';
+  }
+
+  window._deviceRO = new ResizeObserver(sizeAll);
+  window._deviceRO.observe(inner);
+  sizeAll();
 }
 
 // ── RESIZE ────────────────────────────────────────────────────────────────────
@@ -6138,8 +6182,14 @@ async function loadUserPlan() {
     const warnTxt = document.getElementById('aiUsageWarnText');
     if (warnEl && warnTxt) {
       const extraRemaining = _userExtraCredits - Math.max(0, _userCreditsUsed - planLimit);
+      const planRemaining  = planLimit - _userCreditsUsed;
       if (_userCreditsUsed >= planLimit && _userExtraCredits > 0 && extraRemaining < 100) {
+        // Monthly fully used, extra credits running low
         warnTxt.innerHTML = `Extra usage is running low — add more in&nbsp;<a href="settings.html?tab=billing" target="_blank">settings</a>`;
+        warnEl.style.display = 'flex';
+      } else if (_userCreditsUsed < planLimit && planRemaining <= 200) {
+        const pctLeft = Math.max(1, Math.round((planRemaining / planLimit) * 100));
+        warnTxt.innerHTML = `${pctLeft}% of monthly usage remaining — add extra usage in&nbsp;<a href="settings.html?tab=billing" target="_blank">settings</a>`;
         warnEl.style.display = 'flex';
       } else {
         warnEl.style.display = 'none';
@@ -7184,16 +7234,7 @@ async function aiCallAPI() {
           _gotAnyOutput = true;
           fullMessage += data.text;
           if (textEl) {
-            const parts = data.text.split('\n');
-            parts.forEach((part, i) => {
-              if (i > 0) textEl.appendChild(document.createElement('br'));
-              if (part) {
-                const s = document.createElement('span');
-                s.className = 'ai-stream-chunk';
-                s.textContent = part;
-                textEl.appendChild(s);
-              }
-            });
+            textEl.innerHTML = formatChatText(fullMessage);
             if (_streamAvatar) requestAnimationFrame(() => {
               if (!_streamAvatar) return;
               let top;

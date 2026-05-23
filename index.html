@@ -285,12 +285,12 @@
     }
     /* Positions */
     .c-card[data-pos="0"]  { transform:translate(-50%,-50%) scale(1) rotateY(0deg); filter:blur(0); opacity:1; z-index:6; box-shadow:0 40px 100px rgba(0,0,0,.55) }
-    .c-card[data-pos="1"]  { transform:translate(-50%,-50%) translateX(23vw) scale(.8) rotateY(-7deg); filter:blur(6px); opacity:.68; z-index:5 }
-    .c-card[data-pos="-1"] { transform:translate(-50%,-50%) translateX(-23vw) scale(.8) rotateY(7deg); filter:blur(6px); opacity:.68; z-index:5 }
-    .c-card[data-pos="2"]  { transform:translate(-50%,-50%) translateX(42vw) scale(.62) rotateY(-13deg); filter:blur(12px); opacity:.35; z-index:4 }
-    .c-card[data-pos="-2"] { transform:translate(-50%,-50%) translateX(-42vw) scale(.62) rotateY(13deg); filter:blur(12px); opacity:.35; z-index:4 }
-    .c-card[data-pos="3"]  { transform:translate(-50%,-50%) translateX(58vw) scale(.48) rotateY(-18deg); filter:blur(18px); opacity:0; z-index:3 }
-    .c-card[data-pos="-3"] { transform:translate(-50%,-50%) translateX(-58vw) scale(.48) rotateY(18deg); filter:blur(18px); opacity:0; z-index:3 }
+    .c-card[data-pos="1"]  { transform:translate(-50%,-50%) translateX(min(23vw,320px)) scale(.8) rotateY(-7deg); filter:blur(6px); opacity:.68; z-index:5 }
+    .c-card[data-pos="-1"] { transform:translate(-50%,-50%) translateX(max(-23vw,-320px)) scale(.8) rotateY(7deg); filter:blur(6px); opacity:.68; z-index:5 }
+    .c-card[data-pos="2"]  { transform:translate(-50%,-50%) translateX(min(42vw,580px)) scale(.62) rotateY(-13deg); filter:blur(12px); opacity:.35; z-index:4 }
+    .c-card[data-pos="-2"] { transform:translate(-50%,-50%) translateX(max(-42vw,-580px)) scale(.62) rotateY(13deg); filter:blur(12px); opacity:.35; z-index:4 }
+    .c-card[data-pos="3"]  { transform:translate(-50%,-50%) translateX(min(58vw,760px)) scale(.48) rotateY(-18deg); filter:blur(18px); opacity:0; z-index:3 }
+    .c-card[data-pos="-3"] { transform:translate(-50%,-50%) translateX(max(-58vw,-760px)) scale(.48) rotateY(18deg); filter:blur(18px); opacity:0; z-index:3 }
 
     /* Rainbow card gradients */
     .c-card[data-idx="0"] { background:linear-gradient(155deg,#7f1d1d,#f87171) }
@@ -389,8 +389,7 @@
     /* Progress bar */
     .cs-progress { padding:20px max(20px,calc(50vw - 580px)) 0 }
     .cs-prog-track { height:5px; background:rgba(255,255,255,.07); border-radius:99px }
-    .cs-prog-fill { height:100%; width:0%; border-radius:99px; background:rgba(255,255,255,.22); position:relative }
-    .cs-prog-fill::after { content:''; position:absolute; inset:0; border-radius:99px; background:var(--rainbow); background-size:300% auto; animation:rbShift 3s linear infinite; opacity:.75 }
+    .cs-prog-fill { height:100%; width:0%; border-radius:99px; position:relative; transition:background .4s ease }
 
     /* ─── PRICING ─── */
     .pricing-section { padding:clamp(80px,10vw,120px) max(20px,calc(50vw - 580px)) }
@@ -1147,6 +1146,7 @@
 
   // ── CAROUSEL ──
   const C_COUNT = 6, C_INTERVAL = 5000;
+  const C_COLORS = ['#f87171','#fb923c','#fbbf24','#34d399','#60a5fa','#a78bfa'];
   let _cIdx = 0, _cTimer = null, _cPaused = false;
 
   function _cUpdate() {
@@ -1161,6 +1161,7 @@
   function _cProgStart() {
     const f = document.getElementById('csProgFill');
     if (!f) return;
+    f.style.background = C_COLORS[_cIdx];
     f.style.transition = 'none'; f.style.width = '0%';
     void f.offsetWidth;
     f.style.transition = `width ${C_INTERVAL}ms linear`; f.style.width = '100%';

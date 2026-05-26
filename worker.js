@@ -15,7 +15,7 @@ const HEADERS = {
 export default {
   async fetch(request) {
     const url  = new URL(request.url);
-    const host = url.hostname;
+    const host = request.headers.get('host') || url.hostname;
 
     // Health check — used by the editor to confirm the Worker is live
     if (url.pathname === '/__vexium_ping') {
@@ -67,7 +67,8 @@ async function handleVexiumDomain(host, url) {
   const projects = await projRes.json();
   if (!Array.isArray(projects) || !projects.length) return notFound('Project not found or not published.');
 
-  return serveProject(projects[0], subpage);
+  // Pass the slug as base path so relative links resolve correctly under /slug/
+  return serveProject(projects[0], subpage, '/' + slug + '/');
 }
 
 // ── CUSTOM DOMAIN: www.theirdomain.com/page ──────────────────────────────────
@@ -82,11 +83,12 @@ async function handleCustomDomain(host, url) {
   const projects = await projRes.json();
   if (!Array.isArray(projects) || !projects.length) return notFound('No published project found for this domain.');
 
-  return serveProject(projects[0], subpage);
+  // Custom domains are at root — no base path needed, relative links work natively
+  return serveProject(projects[0], subpage, '/');
 }
 
 // ── SERVE ─────────────────────────────────────────────────────────────────────
-function serveProject(project, subpage) {
+function serveProject(project, subpage, baseHref) {
   const files     = project.published_files || project.files || {};
   const projectId = project.id;
   const mainFile  = project.main_file || 'index.html';
@@ -100,6 +102,17 @@ function serveProject(project, subpage) {
 
   let html = files[pageName] || '';
   if (projectId) html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
+
+  // Inject <base> so relative links (href="schedule.html") resolve correctly
+  // regardless of whether we're at root or under a /slug/ path
+  if (baseHref && baseHref !== '/') {
+    const baseTag = `<base href="${baseHref}">`;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, `$1${baseTag}`);
+    } else {
+      html = baseTag + html;
+    }
+  }
 
   const isImg = fn => /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i.test(fn);
 

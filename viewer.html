@@ -97,8 +97,11 @@
     const projectId = new URLSearchParams(location.search).get('project') || '';
     if (projectId) html = html.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
 
+    const isImgFile = fn => /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i.test(fn);
+
+    // Pass 1: inline CSS/JS so url() refs inside CSS are present before image substitution
     Object.entries(fileSystem).forEach(([fn, fc]) => {
-      if (!fc || fn === pageName) return;
+      if (!fc || fn === pageName || isImgFile(fn)) return;
       if (projectId && typeof fc === 'string') fc = fc.split('{{VEXIUM_PROJECT_ID}}').join(projectId);
       const safe = escRe(fn);
       if (fn.endsWith('.css')) {
@@ -116,25 +119,34 @@
       }
     });
 
-    const interceptor = `(function(){
-      document.addEventListener('click', function(e) {
-        var a = e.target.closest('a');
-        if (!a) return;
-        var href = a.getAttribute('href') || '';
-        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('tel')) return;
-        var page = href.split('?')[0].split('#')[0];
-        if (!page) return;
-        e.preventDefault();
-        window.parent.postMessage({ type: 'vexium_navigate', page: page }, '*');
-      });
-    })();`;
+    // Pass 2: substitute image data URLs (now also catches url() inside inlined CSS)
+    Object.entries(fileSystem).forEach(([fn, fc]) => {
+      if (!fc || fn === pageName || !isImgFile(fn)) return;
+      if (typeof fc !== 'string' || !fc.startsWith('data:')) return;
+      const safe = escRe(fn);
+      html = html.replace(new RegExp(`(src=["'])${safe}(["'])`, 'gi'), `$1${fc}$2`);
+      html = html.replace(new RegExp(`url\\(["']?${safe}["']?\\)`, 'gi'), `url(${fc})`);
+    });
 
+    // Rewrite anchor links to use hash navigation — same approach as editor preview
+    Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_') && f !== pageName).forEach(target => {
+      [target, './' + target].forEach(variant => {
+        const dq = 'href="' + variant + '"';
+        const sq = "href='" + variant + "'";
+        while (html.includes(dq)) html = html.replace(dq, 'href="#vexnav=' + target + '"');
+        while (html.includes(sq)) html = html.replace(sq, "href='#vexnav=" + target + "'");
+      });
+    });
+
+    // Inject JS nav interceptor for window.location.href = '...' navigation
+    const interceptor = `(function(){if(!location.href.startsWith('blob:'))return;function _nav(u){var s=String(u||'');if(!s||s.startsWith('http')||s.startsWith('//')||s.startsWith('#')||s.startsWith('blob:')||s.startsWith('javascript:'))return false;var p=s.split('?')[0].split('#')[0];while(p.startsWith('./'))p=p.slice(2);while(p.startsWith('/'))p=p.slice(1);if(!p)return false;if(p.indexOf('.')===-1)p=p+'.html';location.hash='vexnav='+p;return true;}try{var d=Object.getOwnPropertyDescriptor(Location.prototype,'href');if(d&&d.set)Object.defineProperty(Location.prototype,'href',{get:d.get,set:function(u){if(!_nav(u))d.set.call(this,u);}});}catch(e){}})();`;
     const bridge = '<script>' + interceptor + '<' + '/script>';
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
       html = bridge + html;
     }
+
     return html;
   }
 
@@ -149,6 +161,18 @@
     frame.src = burl;
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     if (titleMatch) document.title = titleMatch[1] || document.title;
+    // Re-attach hash navigation listener after each page load
+    frame.onload = function() {
+      try {
+        frame.contentWindow.addEventListener('hashchange', function() {
+          const h = frame.contentWindow.location.hash || '';
+          if (h.startsWith('#vexnav=')) {
+            const pg = decodeURIComponent(h.slice(8));
+            if (pg && fileSystem[pg]) renderPage(pg);
+          }
+        });
+      } catch(e) {}
+    };
   }
 
   window.addEventListener('message', function(e) {
@@ -181,6 +205,8 @@
     document.title = project.name || 'Vexium';
     fileSystem = project.files || {};
     const mainFile = project.main_file || 'index.html';
+    const requestedPage = params.get('page');
+    const startFile = (requestedPage && project.files?.[requestedPage]) ? requestedPage : mainFile;
 
     const frame = document.getElementById('frame');
     frame.addEventListener('load', function() {
@@ -188,7 +214,7 @@
       frame.style.display = 'block';
     }, { once: false });
 
-    renderPage(mainFile);
+    renderPage(startFile);
 
     // Track this site open
     (function(){

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="trialGuard.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
@@ -32,7 +33,11 @@
     }
     #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;opacity:.65;width:0;pointer-events:none;z-index:201;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
     @keyframes tbLoad{0%{width:0%}15%{width:30%}50%{width:60%}100%{width:80%}}
+    .tb-logo-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
     .tb-logo{display:flex;align-items:center;flex-shrink:0}
+    .beta-pill{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+      color:rgba(255,255,255,.45);background:rgba(255,255,255,.07);
+      padding:3px 7px;border-radius:99px;}
     .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transform:scale(1);transform-origin:center center;transition:transform 60ms ease-out}
     .tb-logo:hover img,.tb-logo:focus-visible img{transform:scale(1.08)}
 
@@ -65,8 +70,8 @@
     /* ── NOTIFICATION SIDEBAR ── */
     #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
     #notifBackdrop.show{display:block}
-    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--s1);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
-    #notifSidebar.show{transform:translateX(0)}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--s1);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    #notifSidebar.show{transform:translateX(0);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
     .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
     .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
     .notif-head-right{display:flex;align-items:center;gap:10px}
@@ -360,15 +365,61 @@
       .tb-name{display:none}
       .tb-search{max-width:none}
     }
+
+    /* ── FEEDBACK ── */
+    @keyframes fbSlideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .feedback-btn{
+      position:fixed;bottom:20px;right:20px;z-index:500;
+      display:flex;align-items:center;gap:7px;
+      background:var(--s1);color:var(--sub);
+      border:none;border-radius:99px;padding:9px 16px;
+      font-size:12px;font-weight:700;font-family:var(--sans);cursor:pointer;
+      box-shadow:0 4px 20px rgba(0,0,0,.4);
+      transition:background .15s,color .15s,transform .15s;
+    }
+    .feedback-btn:hover{background:var(--b1);color:var(--text);transform:translateY(-1px)}
+    .feedback-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .feedback-panel{
+      position:fixed;bottom:64px;right:20px;z-index:501;
+      width:300px;background:#161616;border-radius:16px;
+      padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+      display:none;flex-direction:column;gap:12px;
+      animation:fbSlideUp .2s ease both;
+    }
+    .feedback-panel.open{display:flex}
+    .fb-header{display:flex;align-items:center;justify-content:space-between}
+    .fb-title{font-size:13px;font-weight:800}
+    .fb-subtitle{font-size:11px;color:var(--sub);margin-top:1px}
+    .fb-close{background:none;border:none;cursor:pointer;color:var(--sub);padding:2px;line-height:1;font-size:18px;transition:color .15s}
+    .fb-close:hover{color:var(--text)}
+    .fb-textarea{
+      width:100%;background:var(--s1);border:none;border-radius:10px;
+      padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--sans);
+      resize:none;outline:none;min-height:90px;line-height:1.5;
+      transition:background .15s;
+    }
+    .fb-textarea:focus{background:var(--b1)}
+    .fb-textarea::placeholder{color:var(--sub)}
+    .fb-submit{
+      width:100%;background:var(--text);color:#000;border:none;border-radius:9px;
+      padding:10px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer;
+      transition:opacity .15s;
+    }
+    .fb-submit:hover{opacity:.88}
+    .fb-submit:disabled{opacity:.35;cursor:not-allowed}
+    .fb-sent{text-align:center;padding:12px 0;font-size:13px;color:var(--sub)}
   </style>
 </head>
 <body>
 
 <div id="topbar">
   <div id="topbarLoader"></div>
-  <a href="index.html" class="tb-logo" title="Vexium — Home">
-    <img src="vexium_logo.png" alt="Vexium"/>
-  </a>
+  <div class="tb-logo-wrap">
+    <a href="index.html" class="tb-logo" title="Vexium — Home">
+      <img src="vexium_logo.png" alt="Vexium"/>
+    </a>
+    <span class="beta-pill">Beta</span>
+  </div>
 
   <div class="tb-search" id="tbSearchWrap">
     <svg class="tb-search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -407,7 +458,7 @@
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Visitors
         </div>
-        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-value">0</div>
         <div class="analytics-card-change neutral">Last 30 days</div>
       </div>
       <div class="analytics-card" onclick="location.href='analytics.html?metric=views'">
@@ -415,7 +466,7 @@
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Visits
         </div>
-        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-value">0</div>
         <div class="analytics-card-change neutral">Last 30 days</div>
       </div>
       <div class="analytics-card" onclick="location.href='analytics.html?metric=sites'">
@@ -423,7 +474,7 @@
           <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Public Projects
         </div>
-        <div class="analytics-card-value analytics-card-placeholder" id="analyticsLiveSites">—</div>
+        <div class="analytics-card-value" id="analyticsLiveSites">0</div>
         <div class="analytics-card-change neutral">Published</div>
       </div>
       <div class="analytics-card" onclick="location.href='analytics.html?metric=revenue'">
@@ -431,7 +482,7 @@
           <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Revenue
         </div>
-        <div class="analytics-card-value analytics-card-placeholder">—</div>
+        <div class="analytics-card-value">0</div>
         <div class="analytics-card-change neutral">Coming soon</div>
       </div>
     </div>
@@ -528,19 +579,6 @@
         <div class="ps-label">Name</div>
         <input class="ps-input" id="psNameInput" placeholder="Project name" autocomplete="off"
           oninput="document.getElementById('psHeroName').textContent=this.value||'Project'"/>
-      </div>
-      <div class="ps-div"></div>
-      <div id="psVisSection">
-        <div class="ps-vis-row">
-          <div class="ps-vis-info">
-            <div class="ps-vis-label" id="psVisLabel">Private</div>
-            <div class="ps-vis-sub" id="psVisSub">Only you can see this project</div>
-          </div>
-          <button class="lock-btn" id="psLockBtn" onclick="togglePsPublic()">
-            <svg id="psLockIco" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span id="psLockTxt">Locked</span>
-          </button>
-        </div>
       </div>
       <div class="ps-div"></div>
       <div id="psCollabSection">
@@ -670,7 +708,7 @@
     }
   });
   let projects=[], selectedEmoji='💻';
-  let psProjectId=null, psCurPublic=false, psEmojiCur='💻', psIsOwner=true;
+  let psProjectId=null, psEmojiCur='💻', psIsOwner=true;
   let myFollowing=[], myFollowers=[];
   const EMOJIS=['💻','🤖','⚡','🌐','📱','🎨','🛒','📊','🔐','🎯','🚀','✨','🎬','🎵','📝','🔥','💡','🏆','💎','🌈','🎮','📸','🧠','🌿','🏠','💰','🎪','🧩','⚽','🎭'];
 
@@ -687,6 +725,7 @@
         const{data}=await sb.auth.getSession();
         session=data?.session;
         if(!session&&!localStorage.getItem('vexium_guest')){location.href='auth.html';return;}
+        if(session) await checkTrialGuard(sb, session.user.id);
       }catch(e){}
     }
     buildNewEmojiRow();
@@ -714,7 +753,7 @@
   async function loadMyProfile(){
     if(!sb||!session)return;
     try{
-      const{data}=await sb.from('profiles').select('id,username,display_name').eq('id',session.user.id).maybeSingle();
+      const{data}=await sb.from('profiles').select('id,username,display_name,plan').eq('id',session.user.id).maybeSingle();
       myProfile=data||null;
     }catch(e){}
   }
@@ -752,7 +791,7 @@
     document.getElementById('loadingState').style.display='none';
     document.getElementById('pageSubCount').textContent=projects.length+' project'+(projects.length!==1?'s':'');
     const liveSitesEl=document.getElementById('analyticsLiveSites');
-    if(liveSitesEl){const pub=projects.filter(p=>p.is_public).length;liveSitesEl.textContent=pub||'—';if(pub)liveSitesEl.classList.remove('analytics-card-placeholder');}
+    if(liveSitesEl){const pub=projects.filter(p=>p.published_slug).length;liveSitesEl.textContent=pub||'0';liveSitesEl.classList.remove('analytics-card-placeholder');}
     const strip=document.getElementById('analyticsStrip');
     if(strip)strip.style.display='';
     if(!projects.length){document.getElementById('emptyState').classList.add('show');return;}
@@ -777,14 +816,14 @@
       if(cards[0]){
         const val=cards[0].querySelector('.analytics-card-value');
         const sub=cards[0].querySelector('.analytics-card-change');
-        if(val){val.textContent=uniqueVisitors||'—';val.classList.toggle('analytics-card-placeholder',!uniqueVisitors);}
+        if(val){val.textContent=uniqueVisitors||'0';val.classList.remove('analytics-card-placeholder');}
         if(sub) sub.textContent=uniqueVisitors?'Last 30 days':'No data yet';
       }
       // card 1 = Site Opens
       if(cards[1]){
         const val=cards[1].querySelector('.analytics-card-value');
         const sub=cards[1].querySelector('.analytics-card-change');
-        if(val){val.textContent=visits||'—';val.classList.toggle('analytics-card-placeholder',!visits);}
+        if(val){val.textContent=visits||'0';val.classList.remove('analytics-card-placeholder');}
         if(sub) sub.textContent=visits?'Last 30 days':'No data yet';
       }
     }catch(e){}
@@ -900,7 +939,7 @@
     psIsOwner=isOwner;
     e.preventDefault();e.stopPropagation();
     psProjectId=id;
-    ['psVisSection','psDeleteSection','psDeleteDivider'].forEach(sid=>{
+    ['psDeleteSection','psDeleteDivider'].forEach(sid=>{
       const el=document.getElementById(sid);
       if(el)el.style.display=isOwner?'':'none';
     });
@@ -909,7 +948,6 @@
     const p=projects.find(x=>x.id===id)||
             (await sb?.from('projects').select('*').eq('id',id).single())?.data;
     if(!p)return;
-    psCurPublic=!!p.is_public;
     psEmojiCur=p.emoji||'💻';
     document.getElementById('psHeroEmoji').textContent=psEmojiCur;
     document.getElementById('psHeroName').textContent=p.name||'Untitled';
@@ -917,7 +955,6 @@
     document.getElementById('psHeroMeta').textContent=fc+' file'+(fc!==1?'s':'')+' · Updated '+relTime(new Date(p.updated_at||Date.now()));
     document.getElementById('psNameInput').value=p.name||'';
     buildPsEmojiStrip();
-    updateVisToggle();
     document.getElementById('psInviteMsg').textContent='';
     document.getElementById('psInviteMsg').className='invite-msg';
     document.getElementById('psInviteInput').value='';
@@ -943,30 +980,12 @@
     document.querySelectorAll('#psEmojiStrip .emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===em));
   }
 
-  function togglePsPublic(){psCurPublic=!psCurPublic;updateVisToggle();}
-
-  function updateVisToggle(){
-    const btn=document.getElementById('psLockBtn');
-    const ico=document.getElementById('psLockIco');
-    const txt=document.getElementById('psLockTxt');
-    document.getElementById('psVisLabel').textContent=psCurPublic?'Public':'Private';
-    document.getElementById('psVisSub').textContent=psCurPublic?'Anyone with the link can view this':'Only you can see this project';
-    if(psCurPublic){
-      btn.className='lock-btn unlocked';
-      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
-      txt.textContent='Public';
-    }else{
-      btn.className='lock-btn';
-      ico.innerHTML='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
-      txt.textContent='Private';
-    }
-  }
 
   async function psSave(){
     if(!psProjectId)return;
     const name=document.getElementById('psNameInput').value.trim();
     if(!name){document.getElementById('psNameInput').focus();return;}
-    const updates={name,emoji:psEmojiCur,is_public:psCurPublic,updated_at:new Date().toISOString()};
+    const updates={name,emoji:psEmojiCur,updated_at:new Date().toISOString()};
     if(session&&sb){
       const{error}=await sb.from('projects').update(updates).eq('id',psProjectId);
       if(error){showToast('Save failed — '+error.message);return;}
@@ -996,50 +1015,57 @@
   /* ── COLLABS ── */
   async function loadPsCollabs(){
     const list=document.getElementById('psCollabList');
-    if(!sb||!session){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
+    if(!sb||!session){list.innerHTML='<div class="cl-none">—</div>';return;}
     try{
+      // Always show the owner first
+      const proj=projects.find(x=>x.id===psProjectId);
+      const ownerId=proj?.user_id||session.user.id;
+      let ownerProf=myProfile;
+      if(ownerId!==session.user.id){
+        const{data:op}=await sb.from('profiles').select('id,username,display_name').eq('id',ownerId).single();
+        ownerProf=op||{};
+      }
+      const ownerName=ownerProf?.display_name||ownerProf?.username||'Owner';
+      const ownerHandle=ownerProf?.username||'';
+
+      let html=`<div class="cl-item">
+        <div class="cl-av">${ownerName.charAt(0).toUpperCase()}</div>
+        <div class="cl-info"><div class="cl-name">${esc(ownerName)}</div><div class="cl-handle">@${esc(ownerHandle)}</div></div>
+        <div class="cl-status joined">Owner</div>
+      </div>`;
+
+      // Then any collaborators
       const{data}=await sb.from('project_members')
         .select('user_id,role,status')
         .eq('project_id',psProjectId)
         .neq('status','declined');
-      if(!data||!data.length){list.innerHTML='<div class="cl-none">No collaborators yet</div>';return;}
-      const uids=data.map(m=>m.user_id);
-      const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
-      const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
-
-      const joined=data.filter(m=>m.status==='accepted'||!m.status); // backwards compat: no status = old accepted
-      const pending=data.filter(m=>m.status==='pending');
-
-      let html='';
-      if(joined.length){
-        html+='<div class="cl-section-label">Active</div>';
+      if(data&&data.length){
+        const uids=data.map(m=>m.user_id);
+        const{data:profiles}=await sb.from('profiles').select('id,username,display_name').in('id',uids);
+        const pm={};(profiles||[]).forEach(p=>{pm[p.id]=p;});
+        const joined=data.filter(m=>m.status==='accepted'||!m.status);
+        const pending=data.filter(m=>m.status==='pending');
         html+=joined.map(m=>{
-          const p=pm[m.user_id]||{};
-          const n=p.display_name||p.username||'Unknown';
+          const p=pm[m.user_id]||{};const n=p.display_name||p.username||'Unknown';
           return `<div class="cl-item">
             <div class="cl-av">${n.charAt(0).toUpperCase()}</div>
             <div class="cl-info"><div class="cl-name">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
             <div class="cl-status joined">Joined</div>
-${psIsOwner?`<button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
+            ${psIsOwner?`<button class="cl-rm" title="Remove" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
           </div>`;
         }).join('');
-      }
-      if(pending.length){
-        html+='<div class="cl-section-label" style="margin-top:${joined.length?\'8px\':\'0\'}">Invited</div>';
         html+=pending.map(m=>{
-          const p=pm[m.user_id]||{};
-          const n=p.display_name||p.username||'Unknown';
+          const p=pm[m.user_id]||{};const n=p.display_name||p.username||'Unknown';
           return `<div class="cl-item">
             <div class="cl-av" style="opacity:.6">${n.charAt(0).toUpperCase()}</div>
             <div class="cl-info"><div class="cl-name" style="opacity:.7">${esc(n)}</div><div class="cl-handle">@${esc(p.username||'')}</div></div>
             <div class="cl-status pending">Pending</div>
-${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
+            ${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab('${m.user_id}')">✕</button>`:''}
           </div>`;
         }).join('');
       }
-      if(!html)html='<div class="cl-none">No collaborators yet</div>';
       list.innerHTML=html;
-    }catch(e){list.innerHTML='<div class="cl-none">No collaborators yet</div>';}
+    }catch(e){list.innerHTML='<div class="cl-none">—</div>';}
   }
 
   async function psRemoveCollab(uid){
@@ -1109,12 +1135,25 @@ ${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab
   function renderInviteDrop(html){const drop=document.getElementById('inviteDrop');drop.innerHTML=html;drop.classList.add('show');}
   function hideInviteDrop(){document.getElementById('inviteDrop').classList.remove('show');}
 
+  const COLLAB_LIMITS={trial:0,starter:0,pro:3,max:Infinity};
   async function doInvite(uname){
     const msg=document.getElementById('psInviteMsg');
     hideInviteDrop();
     document.getElementById('psInviteInput').value='';
     if(!uname||!sb||!session)return;
     try{
+      // Enforce team member limits
+      const plan=myProfile?.plan||'trial';
+      const limit=COLLAB_LIMITS[plan]??0;
+      if(limit===0){
+        msg.textContent='Team members require a Pro or Max plan.';msg.className='invite-msg err';return;
+      }
+      if(limit!==Infinity){
+        const{data:existing}=await sb.from('project_members').select('id').eq('project_id',psProjectId).neq('status','declined');
+        if((existing||[]).length>=limit){
+          msg.textContent=`Pro plan is limited to ${limit} team members.`;msg.className='invite-msg err';return;
+        }
+      }
       const{data:uid}=await sb.rpc('get_user_id_by_username',{uname});
       if(!uid){msg.textContent='User not found.';msg.className='invite-msg err';return;}
       if(uid===session.user.id){msg.textContent="That's you!";msg.className='invite-msg err';return;}
@@ -1312,9 +1351,26 @@ ${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab
   function closeNewModal(){document.getElementById('newOverlay').classList.remove('show');}
   document.getElementById('projNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmNew();if(e.key==='Escape')closeNewModal();});
 
+  const PROJECT_LIMITS={trial:1,starter:3,pro:Infinity,max:Infinity};
   async function confirmNew(){
     const name=document.getElementById('projNameInput').value.trim();
     if(!name){document.getElementById('projNameInput').focus();return;}
+
+    // Enforce plan project limits
+    if(session&&sb&&myProfile){
+      const plan=myProfile.plan||'trial';
+      const limit=PROJECT_LIMITS[plan]??1;
+      const ownedCount=projects.filter(p=>p.user_id===session.user.id||!p.user_id).length;
+      if(ownedCount>=limit){
+        closeNewModal();
+        const planLabel = plan==='trial' ? 'Free trial' : plan.charAt(0).toUpperCase()+plan.slice(1);
+        const limitMsg  = plan==='trial'
+          ? 'Free trial is limited to 1 project. Upgrade to create more.'
+          : `The ${planLabel} plan is limited to ${limit} projects.`;
+        showToast(limitMsg);
+        return;
+      }
+    }
 
     // Block duplicate project names within the same account
     if(session&&sb){
@@ -1394,25 +1450,43 @@ ${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab
     const track = document.getElementById('friendsTrack');
     if(!section || !track) return;
 
-    const list = _sliderData[_sliderMode] || [];
-
-    // Always show section; hide only if all three lists are confirmed empty after load
     const isLoading = !_sliderLoaded;
-    const total = _sliderData.friends.length + _sliderData.following.length + _sliderData.followers.length;
+    const countMap = {friends:_sliderData.friends.length, following:_sliderData.following.length, followers:_sliderData.followers.length};
+    const total = countMap.friends + countMap.following + countMap.followers;
+
+    // Hide section entirely if nothing loaded yet is confirmed empty
     if(!isLoading && total === 0){ section.style.display='none'; return; }
     section.style.display = '';
 
-    // Update dropdown counts
-    const countMap = {friends:_sliderData.friends.length, following:_sliderData.following.length, followers:_sliderData.followers.length};
-    document.querySelectorAll('.friends-dd-opt').forEach(el=>{
-      const mode = el.dataset.mode;
-      el.querySelector('.friends-dd-count').textContent = countMap[mode];
-      el.classList.toggle('active', mode === _sliderMode);
-    });
-    // Update button label
-    const labels = {friends:'Friends', following:'Following', followers:'Followers'};
+    // If current mode is empty and something else has data, auto-switch
+    if(!isLoading && !countMap[_sliderMode]){
+      const first = ['friends','following','followers'].find(m => countMap[m] > 0);
+      if(first) _sliderMode = first;
+    }
+
+    const list = _sliderData[_sliderMode] || [];
+
+    // Non-empty categories
+    const nonEmpty = Object.keys(countMap).filter(m => countMap[m] > 0);
     const btn = document.getElementById('friendsDdBtn');
-    if(btn) btn.innerHTML = labels[_sliderMode] + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>';
+    const ddMenu = document.getElementById('friendsDdMenu');
+    const labels = {friends:'Friends', following:'Following', followers:'Followers'};
+
+    if(!isLoading && nonEmpty.length === 1){
+      // Only one category has data — show plain label, no dropdown
+      if(btn){ btn.innerHTML = labels[_sliderMode]; btn.style.pointerEvents='none'; btn.style.cursor='default'; }
+      if(ddMenu) ddMenu.style.display='none';
+    } else {
+      // Multiple categories — show dropdown normally, hide empty options
+      if(btn){ btn.innerHTML = labels[_sliderMode] + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'; btn.style.pointerEvents=''; btn.style.cursor=''; }
+      if(ddMenu) ddMenu.style.display='';
+      document.querySelectorAll('.friends-dd-opt').forEach(el=>{
+        const mode = el.dataset.mode;
+        el.querySelector('.friends-dd-count').textContent = countMap[mode];
+        el.classList.toggle('active', mode === _sliderMode);
+        el.style.display = (!isLoading && countMap[mode] === 0) ? 'none' : '';
+      });
+    }
 
     if(isLoading){
       track.innerHTML = [1,2,3,4].map(()=>`<div class="friend-card" style="opacity:.35;pointer-events:none">
@@ -1538,6 +1612,59 @@ ${psIsOwner?`<button class="cl-rm" title="Cancel invite" onclick="psRemoveCollab
   });
 
   window.addEventListener('load',init);
+</script>
+
+<!-- ── FEEDBACK WIDGET ── -->
+<button class="feedback-btn" onclick="toggleFeedback()">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  Feedback
+</button>
+
+<div class="feedback-panel" id="feedbackPanel">
+  <div class="fb-header">
+    <div>
+      <div class="fb-title">Share feedback</div>
+      <div class="fb-subtitle">Still in beta — the more feedback the better.</div>
+    </div>
+    <button class="fb-close" onclick="closeFeedback()">×</button>
+  </div>
+  <textarea class="fb-textarea" id="fbText" placeholder="What's on your mind?"></textarea>
+  <button class="fb-submit" id="fbSubmit" onclick="submitFeedback()">Send</button>
+</div>
+
+<script>
+  function toggleFeedback() {
+    const p = document.getElementById('feedbackPanel');
+    p.classList.contains('open') ? closeFeedback() : openFeedback();
+  }
+  function openFeedback() {
+    document.getElementById('feedbackPanel').classList.add('open');
+  }
+  function closeFeedback() {
+    document.getElementById('feedbackPanel').classList.remove('open');
+  }
+  async function submitFeedback() {
+    const msg = document.getElementById('fbText').value.trim();
+    if (!msg) return;
+    const btn = document.getElementById('fbSubmit');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const userId = (typeof session !== 'undefined' && session?.user?.id) || null;
+      await sb.from('feedback').insert({ user_id: userId, type: 'other', message: msg });
+      document.getElementById('feedbackPanel').innerHTML =
+        '<div class="fb-sent">Thanks — we really appreciate it 🙏</div>';
+      setTimeout(closeFeedback, 2200);
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Send';
+    }
+  }
+
+  // Close panel when clicking outside
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('feedbackPanel');
+    if (!panel.classList.contains('open')) return;
+    if (!panel.contains(e.target) && !e.target.closest('.feedback-btn')) closeFeedback();
+  });
 </script>
 </body>
 </html>

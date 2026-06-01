@@ -25,12 +25,10 @@
       position:fixed; top:0; left:0; right:0; z-index:200;
       height:64px; display:flex; align-items:center; justify-content:space-between;
       padding:0 clamp(20px,4vw,52px);
-      border-bottom:1px solid rgba(255,255,255,.055);
-      transition:background .4s, backdrop-filter .4s, border-color .4s;
+      transition:background .4s, backdrop-filter .4s;
     }
     nav.scrolled {
       background:rgba(10,10,10,.88); backdrop-filter:blur(24px);
-      border-bottom-color:rgba(255,255,255,.08);
     }
     .nav-logo img { width:30px; height:30px; border-radius:6px; display:block; transition:transform .06s ease-out }
     .nav-logo:hover img { transform:scale(1.08) }
@@ -38,10 +36,12 @@
     .nav-link { font-size:13px; font-weight:500; color:var(--muted2); padding:7px 13px; border-radius:8px; transition:color .15s, background .15s }
     .nav-link:hover { color:var(--text); background:rgba(255,255,255,.05) }
     .nav-r { display:flex; align-items:center; gap:6px }
-    .nav-ghost { font-size:13px; font-weight:500; color:var(--muted2); padding:8px 16px; border-radius:99px; transition:color .15s, background .15s }
-    .nav-ghost:hover { color:var(--text); background:rgba(255,255,255,.06) }
-    .nav-cta { font-size:13px; font-weight:700; padding:9px 20px; background:var(--text); color:var(--bg); border-radius:99px; transition:opacity .15s, transform .2s cubic-bezier(.16,1,.3,1); display:inline-block }
-    .nav-cta:hover { opacity:.9; transform:scale(1.03) }
+    .nav-ghost { font-size:13px; font-weight:500; color:var(--muted2); padding:8px 16px; border-radius:99px; background:rgba(255,255,255,.07); transition:color .15s, background .15s }
+    .nav-ghost:hover { color:var(--text); background:rgba(255,255,255,.11) }
+    .nav-cta { font-size:13px; font-weight:700; padding:9px 20px; background:var(--text); color:var(--bg); border-radius:99px; transition:opacity .15s, transform .2s cubic-bezier(.16,1,.3,1); display:inline-block; position:relative; overflow:hidden }
+    .nav-cta::after { content:''; position:absolute; inset:0; border-radius:99px; background:var(--rainbow); background-size:200% auto; animation:rbShift 3s linear infinite; opacity:0; transition:opacity .25s ease; pointer-events:none }
+    .nav-cta:hover { opacity:.92; transform:scale(1.03) }
+    .nav-cta:hover::after { opacity:.22 }
 
     /* ─── HERO ─── */
     @keyframes rbShift { to { background-position:200% center } }
@@ -88,7 +88,7 @@
     }
     .h-badge {
       display:inline-flex; align-items:center; gap:7px;
-      background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.07);
+      background:rgba(0,0,0,.55);
       border-radius:99px; padding:5px 14px;
       font-size:12px; font-weight:600; color:rgba(255,255,255,.45);
       margin-bottom:28px;
@@ -125,14 +125,18 @@
       font-size:15px; font-weight:700; font-family:var(--sans);
       padding:13px 28px; border-radius:99px; text-decoration:none;
       box-shadow:0 4px 24px rgba(255,255,255,.14);
+      position:relative; overflow:hidden;
       transition:opacity .15s, transform .2s cubic-bezier(.16,1,.3,1);
     }
-    .h-cta-main:hover { opacity:.9; transform:translateY(-2px) }
+    .h-cta-main::after { content:''; position:absolute; inset:0; border-radius:99px; background:var(--rainbow); background-size:200% auto; animation:rbShift 3s linear infinite; opacity:0; transition:opacity .25s ease; pointer-events:none }
+    .h-cta-main:hover { opacity:.92; transform:translateY(-2px) }
+    .h-cta-main:hover::after { opacity:.22 }
     .h-cta-ghost {
       font-size:14px; font-weight:500; color:var(--muted2); text-decoration:none;
-      transition:color .15s;
+      padding:13px 24px; border-radius:99px; background:rgba(255,255,255,.07);
+      transition:color .15s, background .15s;
     }
-    .h-cta-ghost:hover { color:var(--text) }
+    .h-cta-ghost:hover { color:var(--text); background:rgba(255,255,255,.11) }
     .h-proof {
       display:flex; align-items:center; gap:10px;
       animation:hUp .65s ease .32s both;
@@ -585,11 +589,16 @@
     .pvt-btn:hover { color:var(--text); background:rgba(255,255,255,.04) }
     .pvt-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; transition:transform .35s cubic-bezier(.16,1,.3,1) }
     .pvt-btn.open svg { transform:rotate(180deg) }
+    /* Compare slide wrapper */
+    #cmpWrap { display:grid; grid-template-rows:0fr; transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1) }
+    #cmpWrap.open { grid-template-rows:1fr }
+    #cmpWrap > div { overflow:hidden }
     /* Compare container */
-    .cmp-container { opacity:0; transform:translateY(14px); transition:opacity .35s ease, transform .4s cubic-bezier(.16,1,.3,1); margin-top:32px }
+    .cmp-container { opacity:0; transform:translateY(10px); transition:opacity .35s ease .1s, transform .4s cubic-bezier(.16,1,.3,1) .1s; margin-top:20px; padding-bottom:8px }
     .cmp-container.show { opacity:1; transform:translateY(0) }
-    /* Plan header cards */
-    .cmp-plans-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:12px }
+    /* Plan feats collapse */
+    .plan-feats { overflow:hidden; max-height:200px; opacity:1; transition:max-height .4s cubic-bezier(.16,1,.3,1), opacity .3s ease, margin-top .4s }
+    .pricing-compare-open .plan-feats { max-height:0; opacity:0; margin-top:0 }
     .cph {
       background:var(--surface); border-radius:16px;
       padding:clamp(22px,2.5vw,34px) clamp(18px,2vw,28px);
@@ -619,8 +628,8 @@
     .cfl { padding:13px 22px; font-size:13px; color:var(--muted2); background:var(--surface); display:flex; align-items:center }
     .cfv { padding:13px 12px; font-size:13px; background:var(--surface); display:flex; align-items:center; justify-content:center; text-align:center; font-weight:600; color:var(--text) }
     .cfv.pro { background:var(--surface2) }
-    .fyes { color:#22c55e; font-size:16px; line-height:1 }
-    .fno { color:rgba(255,255,255,.18); font-size:20px; font-weight:300; line-height:1 }
+    .fyes { display:inline-block; width:22px; height:22px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpolyline points='2.5,6 5,8.5 9.5,3.5' stroke='%2322c55e' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center/18px; font-size:0; flex-shrink:0; }
+    .fno { display:inline-block; width:22px; height:22px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cline x1='3' y1='3' x2='9' y2='9' stroke='%23ef4444' stroke-width='1.6' stroke-linecap='round'/%3E%3Cline x1='9' y1='3' x2='3' y2='9' stroke='%23ef4444' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/14px; font-size:0; flex-shrink:0; }
     .fdim { color:var(--muted2); font-weight:500; font-size:13px }
     /* Trial banner */
     .trial-banner {
@@ -638,7 +647,16 @@
     }
     .trial-banner-btn:hover { opacity:.88 }
     /* Cards */
-    .plans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:32px }
+    .plans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px }
+    .trial-note { display:flex; justify-content:center; margin-top:32px; margin-bottom:4px; }
+    .trial-note-inner { display:inline-flex; align-items:center; gap:0; background:var(--surface); border-radius:99px; padding:8px 8px 8px 28px; }
+    .trial-note-text { font-size:15px; color:rgba(255,255,255,.6); white-space:nowrap; margin-right:20px }
+    .trial-note-text strong { color:#4ade80; font-weight:800 }
+    .trial-note-btn { display:inline-block; background:var(--text); color:var(--bg); font-size:14px; font-weight:700; padding:12px 26px; border-radius:99px; white-space:nowrap; text-decoration:none; position:relative; overflow:hidden; transition:opacity .15s, transform .2s cubic-bezier(.16,1,.3,1); }
+    .trial-note-btn::after { content:''; position:absolute; inset:0; border-radius:99px; background:var(--rainbow); background-size:200% auto; animation:rbShift 3s linear infinite; opacity:0; transition:opacity .25s ease; pointer-events:none }
+    .trial-note-btn:hover { opacity:.92; transform:scale(1.03) }
+    .trial-note-btn:hover::after { opacity:.22 }
+    @media(max-width:600px){ .trial-note-text { display:none } .trial-note-inner { padding:6px } }
     .plan {
       background:var(--surface); border-radius:20px;
       padding:clamp(28px,3vw,44px); position:relative;
@@ -706,8 +724,8 @@
     .pc-solid { background:var(--text); color:var(--bg) }
     .pc-solid::before { background:linear-gradient(105deg,transparent 40%,rgba(0,0,0,.08),transparent 60%) }
     .plan-feats { display:flex; flex-direction:column; gap:11px; margin-top:28px; padding-top:24px; border-top:1px solid rgba(255,255,255,.06) }
-    .pf { font-size:13px; color:var(--muted2); display:flex; align-items:baseline; gap:10px; line-height:1.4 }
-    .pf::before { content:'—'; color:rgba(255,255,255,.18); flex-shrink:0 }
+    .pf { font-size:13px; color:var(--muted2); display:flex; align-items:center; gap:10px; line-height:1.4 }
+    .pf::before { content:''; flex-shrink:0; width:17px; height:17px; border-radius:50%; background:rgba(255,255,255,.08); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpolyline points='2.5,6 5,8.5 9.5,3.5' stroke='rgba(255,255,255,0.35)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:center; background-size:10px 10px; }
 
     /* ─── TESTIMONIALS ─── */
     /* ─── HOW IT WORKS ─── */
@@ -834,38 +852,23 @@
     /* ─── CLOSING CTA ─── */
     .closing {
       position:relative; overflow:hidden;
-      padding:clamp(100px,14vw,180px) max(20px,calc(50vw - 560px));
+      padding:clamp(80px,10vw,130px) max(20px,calc(50vw - 560px)) clamp(90px,11vw,140px);
       text-align:center;
-    }
-    .closing::before {
-      content:''; position:absolute; inset:0;
-      background:
-        radial-gradient(ellipse 800px 500px at 50% 60%, rgba(167,139,250,.09), transparent 70%),
-        radial-gradient(ellipse 500px 300px at 30% 80%, rgba(56,189,248,.05), transparent 65%),
-        radial-gradient(ellipse 500px 300px at 70% 80%, rgba(74,222,128,.05), transparent 65%);
-      pointer-events:none;
     }
     .closing::after {
       content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.06) 30%, rgba(255,255,255,.06) 70%, transparent);
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.13) 25%, rgba(255,255,255,.13) 75%, transparent);
     }
-    .closing-inner { position:relative; z-index:1; max-width:700px; margin:0 auto }
-    .closing-eyebrow {
-      display:inline-flex; align-items:center; gap:8px;
-      font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-      color:var(--muted); margin-bottom:32px;
+    #closingCanvas {
+      position:absolute; inset:0; width:100%; height:100%;
+      display:block; z-index:0; image-rendering:auto;
     }
-    .closing-eyebrow::before, .closing-eyebrow::after {
-      content:''; flex:1; width:32px; height:1px; background:rgba(255,255,255,.1);
-    }
+    .closing-inner { position:relative; z-index:1; max-width:640px; margin:0 auto }
     .closing h2 {
-      font-size:clamp(44px,6.5vw,90px); font-weight:800;
-      letter-spacing:-.045em; line-height:1.02; margin-bottom:20px;
+      font-size:clamp(42px,6vw,82px); font-weight:800;
+      letter-spacing:-.045em; line-height:1.05; margin-bottom:40px;
     }
-    .closing-sub {
-      font-size:clamp(15px,1.4vw,18px); color:var(--muted2);
-      line-height:1.7; margin-bottom:48px; max-width:480px; margin-left:auto; margin-right:auto;
-    }
+    .closing-sub { display:none }
     /* Big prompt-style CTA input */
     .closing-prompt-wrap {
       position:relative; padding:2px; border-radius:99px;
@@ -901,7 +904,7 @@
     }
     .closing-prompt-btn:hover { opacity:.88; transform:scale(1.02) }
     .closing-prompt-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round }
-    .closing-note { font-size:12px; color:var(--muted); }
+    .closing-note { font-size:12px; color:var(--muted); margin-top:18px; }
     .closing-note a { color:var(--muted2); text-decoration:underline; text-underline-offset:3px; transition:color .15s }
     .closing-note a:hover { color:var(--text) }
 
@@ -926,13 +929,19 @@
       .bc.wide{grid-column:1} .bc.tall{grid-row:auto}
       .hiw-stage { height:auto; min-height:440px }
       .hiw-card { grid-template-columns:1fr; grid-template-rows:auto 1fr }
-      .hiw-scene { height:200px; border-left:none; border-top:1px solid rgba(255,255,255,.05) }
+      .hiw-scene { height:260px; border-left:none; border-top:1px solid rgba(255,255,255,.05) }
+      .hiw-scene > * { transform:scale(0.85); transform-origin:center center }
       .hiw-body { order:-1 }
       .earn-stats { grid-template-columns:1fr 1fr }
       .earn-stat:nth-child(2n) { border-right:none }
       .earn-stat { border-bottom:1px solid rgba(255,255,255,.06) }
+      /* Remove fixed aspect ratio so card expands to fit content */
+      .earn-dash { aspect-ratio:unset !important; height:auto !important }
       .earn-lower { grid-template-columns:1fr }
-      .earn-chart-panel { border-right:none; border-bottom:1px solid rgba(255,255,255,.06) }
+      .earn-chart-panel { display:none !important }
+      .earn-pay-panel { padding:16px }
+      /* Show payment rows immediately on mobile (no scroll-triggered animation) */
+      .ep-row { opacity:1 !important; transform:none !important }
       .ed-btns { display:none }
       .plans-grid { grid-template-columns:1fr }
       .ft-top { flex-direction:column }
@@ -942,6 +951,57 @@
       .closing-prompt-inner { flex-direction:column; gap:10px; padding:16px 18px; border-radius:20px }
       .closing-prompt-text { text-align:center }
       .closing-prompt-btn { width:100%; justify-content:center }
+    }
+
+    /* ── MOBILE LANDING PAGE ── */
+    @media(max-width:700px){
+      /* Nav: hide links, keep logo + CTA only */
+      .nav-links { display:none }
+      .nav-ghost { display:none }
+      .nav-cta { font-size:12px; padding:8px 16px }
+
+      /* Hero: tighten up */
+      #hero { padding:clamp(80px,10vw,100px) 20px clamp(40px,6vw,60px) }
+      .h-cta-wrap { flex-direction:column; align-items:center; gap:10px }
+      .h-cta-ghost { width:100%; text-align:center }
+
+      /* Pricing: plan cards stack to 1 col */
+      .plans-grid { grid-template-columns:1fr !important }
+      .trial-note { margin-top:20px }
+
+      /* Comparison table: horizontally scrollable */
+      #cmpWrap > div { overflow-x:auto; -webkit-overflow-scrolling:touch }
+      .cmp-container { padding-bottom:4px }
+      .cmp-table {
+        grid-template-columns:140px 70px 80px 80px 80px;
+        min-width:450px;
+        font-size:11px;
+      }
+      .cmp-st { font-size:9px; padding:8px 12px }
+      .cfl { padding:10px 12px; font-size:11px }
+      .cfv { padding:10px 8px; font-size:11px }
+      .fyes { width:16px; height:16px; background-size:13px }
+      .fno  { width:16px; height:16px; background-size:10px }
+
+      /* Closing CTA: replace prompt box with simple button */
+      .closing-prompt-wrap { display:none !important }
+      .closing a[style*="display:block"] { display:none !important }
+      .closing-mobile-cta { display:flex !important }
+      .closing h2 { font-size:clamp(32px,9vw,52px) }
+      .closing-mobile-cta { display:flex; flex-direction:column; align-items:center; gap:14px }
+      .closing-mobile-btn {
+        display:inline-block; background:var(--text); color:var(--bg);
+        font-size:16px; font-weight:700; font-family:var(--sans);
+        padding:16px 40px; border-radius:99px; text-decoration:none;
+        position:relative; overflow:hidden;
+        transition:opacity .15s, transform .2s cubic-bezier(.16,1,.3,1);
+      }
+      .closing-mobile-btn::after { content:''; position:absolute; inset:0; border-radius:99px; background:var(--rainbow); background-size:200% auto; animation:rbShift 3s linear infinite; opacity:0; transition:opacity .25s ease; pointer-events:none }
+      .closing-mobile-btn:hover { opacity:.9; transform:scale(1.03) }
+      .closing-mobile-btn:hover::after { opacity:.22 }
+
+      /* Footer */
+      .ft-cols { grid-template-columns:repeat(2,1fr) }
     }
   </style>
 </head>
@@ -975,7 +1035,7 @@
     <p class="h-sub">Tell us what you sell. We build the site, wire up payments, and go live — in under 60 seconds.</p>
 
     <div class="h-cta-wrap">
-      <a href="auth.html" class="h-cta-main">Build my website free →</a>
+      <a href="auth.html" class="h-cta-main">Build free</a>
       <a href="#hiw" class="h-cta-ghost">See how it works</a>
     </div>
 
@@ -1425,24 +1485,15 @@
       <button class="btog-opt" id="bAnnual" onclick="setAnnual(true)">Annual <span class="btog-save">Save 20%</span></button>
     </div>
   </div>
-  <!-- ── Plans view ── -->
-  <div id="pPlansView">
+  <div>
 
-    <div class="plans-grid reveal">
-      <div class="plan">
-        <div class="plan-tag">&nbsp;</div>
-        <div class="plan-name">Trial</div>
-        <div class="plan-price">Free</div>
-        <div class="plan-period">14 days · no card needed</div>
-        <div class="plan-tagline">Try every feature risk-free. Auto-expires after 14 days.</div>
-        <a href="auth.html" class="plan-cta pc-ghost">Start free trial</a>
-        <div class="plan-feats">
-          <div class="pf">Full feature access</div>
-          <div class="pf">14-day window</div>
-          <div class="pf">No credit card</div>
-          <div class="pf">Auto-expires</div>
-        </div>
+    <div class="trial-note reveal">
+      <div class="trial-note-inner">
+        <span class="trial-note-text"><strong>Free</strong> — try every feature for 7 days, no credit card required.</span>
+        <a href="auth.html" class="trial-note-btn">Start free →</a>
       </div>
+    </div>
+    <div class="plans-grid reveal">
       <div class="plan">
         <div class="plan-tag">&nbsp;</div>
         <div class="plan-name">Starter</div>
@@ -1454,7 +1505,6 @@
           <div class="pf">3 websites</div>
           <div class="pf">Analytics</div>
           <div class="pf">Custom domain</div>
-          <div class="pf">Email support</div>
         </div>
       </div>
       <div class="plan featured">
@@ -1468,7 +1518,6 @@
           <div class="pf">Unlimited websites</div>
           <div class="pf">Team collaboration</div>
           <div class="pf">Everything in Starter</div>
-          <div class="pf">Priority support</div>
         </div>
       </div>
       <div class="plan">
@@ -1482,52 +1531,21 @@
           <div class="pf">Everything in Pro</div>
           <div class="pf">White-label option</div>
           <div class="pf">Client workspaces</div>
-          <div class="pf">Dedicated support</div>
         </div>
       </div>
     </div>
     <!-- Toggle button below cards -->
     <div class="pricing-view-toggle">
-      <button class="pvt-btn" id="pvtBtn" onclick="setPricingTab('compare')">
+      <button class="pvt-btn" id="pvtBtn" onclick="toggleCompare()">
         <span id="pvtLabel">See how plans compare</span>
         <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- ── Compare view ── -->
-  <div id="pCompareView" style="display:none">
+  <!-- ── Comparison table (slides in) ── -->
+  <div id="cmpWrap"><div>
     <div class="cmp-container" id="cmpContainer">
-
-      <!-- Mini plan headers -->
-      <div class="cmp-plans-row">
-        <div class="cph">
-          <div class="cph-name">Trial</div>
-          <div class="cph-price" style="font-size:clamp(22px,2.5vw,36px)">Free</div>
-          <div class="cph-period">14 days</div>
-          <a href="auth.html" class="cph-cta cph-ghost">Start trial</a>
-        </div>
-        <div class="cph">
-          <div class="cph-name">Starter</div>
-          <div class="cph-price">$<span data-m="12" data-a="10">12</span></div>
-          <div class="cph-period">/ month</div>
-          <a href="auth.html" class="cph-cta cph-ghost">Get Starter</a>
-        </div>
-        <div class="cph pro">
-          <div class="cph-tag">Suggested</div>
-          <div class="cph-name">Pro</div>
-          <div class="cph-price">$<span data-m="29" data-a="23">29</span></div>
-          <div class="cph-period">/ month</div>
-          <a href="auth.html" class="cph-cta cph-solid">Get Pro</a>
-        </div>
-        <div class="cph">
-          <div class="cph-name">Max</div>
-          <div class="cph-price">$<span data-m="79" data-a="63">79</span></div>
-          <div class="cph-period">/ month</div>
-          <a href="auth.html" class="cph-cta cph-ghost">Get Max</a>
-        </div>
-      </div>
-
       <!-- Feature comparison table -->
       <div class="cmp-table">
         <!-- Header row -->
@@ -1546,14 +1564,8 @@
         <div class="cfv">Unlimited</div>
 
         <div class="cfl">Custom domain</div>
-        <div class="cfv"><span class="fyes">✓</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
-        <div class="cfv pro"><span class="fyes">✓</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
-
-        <div class="cfl">Stripe payments</div>
         <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
+        <div class="cfv"><span class="fyes">✓</span></div>
         <div class="cfv pro"><span class="fyes">✓</span></div>
         <div class="cfv"><span class="fyes">✓</span></div>
 
@@ -1569,13 +1581,19 @@
         <div class="cfv pro"><span class="fyes">✓</span></div>
         <div class="cfv"><span class="fyes">✓</span></div>
 
+        <div class="cfl">Stripe payments</div>
+        <div class="cfv"><span class="fno">—</span></div>
+        <div class="cfv"><span class="fno">—</span></div>
+        <div class="cfv pro"><span class="fyes">✓</span></div>
+        <div class="cfv"><span class="fyes">✓</span></div>
+
         <!-- Growth -->
         <div class="cmp-st">Growth</div>
-        <div class="cfl">Team members</div>
+        <div class="cfl">Manual backups (3 slots)</div>
         <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv pro"><span class="fdim">Up to 3</span></div>
-        <div class="cfv">Unlimited</div>
+        <div class="cfv"><span class="fyes">✓</span></div>
+        <div class="cfv pro"><span class="fyes">✓</span></div>
+        <div class="cfv"><span class="fyes">✓</span></div>
 
         <div class="cfl">Role permissions</div>
         <div class="cfv"><span class="fno">—</span></div>
@@ -1583,74 +1601,31 @@
         <div class="cfv pro"><span class="fyes">✓</span></div>
         <div class="cfv"><span class="fyes">✓</span></div>
 
-        <div class="cfl">Manual backups (3 slots)</div>
+        <div class="cfl">Team members</div>
         <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
-        <div class="cfv pro"><span class="fyes">✓</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
+        <div class="cfv"><span class="fno">—</span></div>
+        <div class="cfv pro"><span class="fdim">Up to 3</span></div>
+        <div class="cfv">Unlimited</div>
 
-        <!-- Agency -->
-        <div class="cmp-st">Agency</div>
-        <div class="cfl">Client workspaces</div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv pro"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
 
-        <div class="cfl">White-label branding</div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv pro"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
 
-        <div class="cfl">Client handoff mode</div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv pro"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fyes">✓</span></div>
-
-        <!-- Support -->
-        <div class="cmp-st">Support</div>
-        <div class="cfl">Support tier</div>
-        <div class="cfv"><span class="fdim">Email</span></div>
-        <div class="cfv"><span class="fdim">Email</span></div>
-        <div class="cfv pro"><span class="fdim">Priority</span></div>
-        <div class="cfv">Dedicated</div>
-
-        <!-- Trial -->
-        <div class="cmp-st">Free trial</div>
-        <div class="cfl">Trial length</div>
-        <div class="cfv"><span class="fdim">14 days</span></div>
-        <div class="cfv"><span class="fdim">7 days</span></div>
-        <div class="cfv pro"><span class="fdim">14 days</span></div>
-        <div class="cfv"><span class="fdim">14 days</span></div>
-
-        <div class="cfl">Credit card required</div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
-        <div class="cfv pro"><span class="fno">—</span></div>
-        <div class="cfv"><span class="fno">—</span></div>
       </div>
 
     </div>
-    <!-- Back button -->
-    <div class="pricing-view-toggle" style="margin-top:28px">
-      <button class="pvt-btn open" id="pvtBackBtn" onclick="setPricingTab('plans')">
-        <span>Back to plans</span>
-        <svg viewBox="0 0 24 24" style="transform:rotate(180deg)"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
     </div>
-  </div>
+  </div></div>
 
 </section>
 
 <!-- TESTIMONIALS -->
 <!-- CLOSING CTA -->
 <section class="closing">
+  <canvas id="closingCanvas"></canvas>
   <div class="closing-inner reveal">
-    <div class="closing-eyebrow">Start building</div>
-    <h2>Your next website<br>starts with a <span class="rb">description.</span></h2>
-    <p class="closing-sub">No code. No designer. No back-and-forth. Just describe what you want and watch it become real.</p>
+    <h2>Let's build<br><span class="rb">something great.</span></h2>
+    <div class="closing-mobile-cta" style="display:none">
+      <a href="auth.html" class="closing-mobile-btn">Get started →</a>
+    </div>
     <a href="auth.html" style="display:block;text-decoration:none">
       <div class="closing-prompt-wrap">
         <div class="closing-prompt-inner">
@@ -1700,11 +1675,16 @@
   })();
 
   // ── PRICING ──
-  function setPricingTab(t) {
-    const isCompare = t === 'compare';
-    document.getElementById('pPlansView').style.display = isCompare ? 'none' : '';
-    document.getElementById('pCompareView').style.display = isCompare ? '' : 'none';
-    if (isCompare) {
+  let _compareOpen = false;
+  function toggleCompare() {
+    _compareOpen = !_compareOpen;
+    const wrap = document.getElementById('cmpWrap');
+    const btn  = document.getElementById('pvtBtn');
+    const section = document.querySelector('.pricing-section');
+    wrap.classList.toggle('open', _compareOpen);
+    btn.classList.toggle('open', _compareOpen);
+    section.classList.toggle('pricing-compare-open', _compareOpen);
+    if (_compareOpen) {
       const c = document.getElementById('cmpContainer');
       c.classList.remove('show');
       void c.offsetWidth;
@@ -2006,6 +1986,48 @@ void main(){
       else raf = requestAnimationFrame(draw);
     });
     raf = requestAnimationFrame(draw);
+  })();
+
+  // ── CLOSING AURORA ──
+  (() => {
+    const canvas = document.getElementById('closingCanvas');
+    if (!canvas) return;
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return;
+    const VERT = `attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
+    const FRAG = `
+precision mediump float;
+uniform float T;
+uniform vec2 R;
+vec3 hue(float h){return clamp(abs(fract(h+vec3(0.,.667,.333))*6.-3.)-1.,0.,1.);}
+void main(){
+  vec2 uv=gl_FragCoord.xy/R;
+  float t=T*.055;
+  float wy=sin(uv.x*2.4+t*1.1)*.13+sin(uv.x*5.3-t*.7)*.055;
+  float wx=cos(uv.y*1.8+t*.9)*.09+cos(uv.y*4.1-t*.6)*.038;
+  vec2 w=uv+vec2(wx,wy);
+  float h=w.x*.8+t*.18;
+  vec3 col=hue(h);
+  float env=pow(max(1.-w.y/.55,0.),1.6);
+  col*=env*.13;
+  gl_FragColor=vec4(vec3(0.039)+col,1.);
+}`;
+    function mkS(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return gl.getShaderParameter(s,gl.COMPILE_STATUS)?s:null;}
+    const vs=mkS(gl.VERTEX_SHADER,VERT),fs=mkS(gl.FRAGMENT_SHADER,FRAG);
+    if(!vs||!fs)return;
+    const prog=gl.createProgram();
+    gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);gl.useProgram(prog);
+    const buf=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    const pLoc=gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(pLoc);gl.vertexAttribPointer(pLoc,2,gl.FLOAT,false,0,0);
+    const uT=gl.getUniformLocation(prog,'T'),uR=gl.getUniformLocation(prog,'R');
+    let raf2,W=0,H=0;
+    function resize(){const w=Math.ceil(canvas.offsetWidth*.5)||400,h=Math.ceil(canvas.offsetHeight*.5)||400;if(w!==W||h!==H){canvas.width=W=w;canvas.height=H=h;gl.viewport(0,0,w,h);}}
+    function draw(ts){raf2=requestAnimationFrame(draw);resize();gl.uniform1f(uT,ts*.001);gl.uniform2f(uR,W,H);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAnimationFrame(raf2);else raf2=requestAnimationFrame(draw);});
+    raf2=requestAnimationFrame(draw);
   })();
 </script>
 <script>

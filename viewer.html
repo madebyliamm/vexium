@@ -11,6 +11,18 @@
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;background:#fff;overflow:hidden}
     #frame{width:100%;height:100%;border:none;display:none}
+    #bkBanner{display:none;position:fixed;top:0;left:0;right:0;height:44px;z-index:9999;background:rgba(10,10,10,.96);backdrop-filter:blur(14px);align-items:center;justify-content:center;font-family:system-ui,sans-serif;}
+    #bkBanner.show{display:flex}
+    #bkDropBtn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:none;border-radius:9px;color:rgba(255,255,255,.85);font-size:13px;font-family:system-ui,sans-serif;font-weight:500;padding:6px 12px 6px 14px;cursor:pointer;outline:none;transition:background .15s;}
+    #bkDropBtn:hover{background:rgba(255,255,255,.12)}
+    #bkDropBtn svg{width:13px;height:13px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .2s;}
+    #bkDropBtn.open svg{transform:rotate(180deg)}
+    #bkDropMenu{position:fixed;top:52px;left:50%;transform:translateX(-50%);min-width:180px;background:#1a1a1a;border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;flex-direction:column;gap:1px;z-index:10000;}
+    #bkDropMenu.show{display:flex}
+    .bk-drop-item{padding:8px 12px;border-radius:7px;font-size:13px;font-family:system-ui,sans-serif;color:rgba(255,255,255,.75);cursor:pointer;transition:background .12s;white-space:nowrap;}
+    .bk-drop-item:hover{background:rgba(255,255,255,.08);color:#fff}
+    .bk-drop-item.active{color:#fff;font-weight:600}
+    #frame.bk-mode{height:calc(100% - 44px);margin-top:44px}
 
     /* ── LOADING ── */
     #loading{
@@ -60,9 +72,17 @@
 </head>
 <body>
 
+<div id="bkBanner">
+  <button id="bkDropBtn" onclick="bkToggleDrop()">
+    <span id="bkDropLabel">Home page</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+  <div id="bkDropMenu"></div>
+</div>
+
 <div id="loading">
   <div class="ld-dots"><span></span><span></span><span></span></div>
-  <span>Loading project…</span>
+  <span>Loading…</span>
 </div>
 
 <div id="notFound">
@@ -82,6 +102,19 @@
   } catch(e) {}
 
   let fileSystem = {};
+
+  function bkHumanName(filename) {
+    const base = filename.split('/').pop();
+    const dot = base.lastIndexOf('.');
+    const raw = dot >= 0 ? base.slice(0, dot) : base;
+    const specials = { index:'Home', main:'Main', app:'App', style:'Styles', styles:'Styles',
+      global:'Global', about:'About', contact:'Contact', blog:'Blog', pricing:'Pricing',
+      dashboard:'Dashboard', login:'Login', signup:'Sign up', landing:'Landing',
+      portfolio:'Portfolio', shop:'Shop', store:'Store' };
+    const pretty = specials[raw.toLowerCase()] ||
+      raw.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return pretty + ' page';
+  }
 
   function escRe(s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
 
@@ -183,11 +216,37 @@
 
   async function init() {
     const params = new URLSearchParams(location.search);
+    const backupId = params.get('backup');
+    const frame = document.getElementById('frame');
+
+    frame.addEventListener('load', function() {
+      document.getElementById('loading').style.display = 'none';
+      frame.style.display = 'block';
+    }, { once: false });
+
+    // ── Backup preview mode ───────────────────────────────────────
+    if (backupId && sb) {
+      try {
+        const { data: bk } = await sb.from('project_backups').select('*').eq('id', backupId).single();
+        if (!bk) { showNotFound(); return; }
+        fileSystem = bk.files || {};
+        const pages = Object.keys(fileSystem).filter(f => f.endsWith('.html') && !f.startsWith('_')).sort((a,b) => a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b));
+        window._bkPages = pages;
+        window._bkCurrentPage = pages[0] || 'index.html';
+        bkBuildMenu();
+        document.getElementById('bkBanner').classList.add('show');
+        frame.classList.add('bk-mode');
+        document.title = 'Backup preview';
+        renderPage(window._bkCurrentPage);
+      } catch(e) { showNotFound(); }
+      return;
+    }
+
+    // ── Normal project mode ───────────────────────────────────────
     const projectId = params.get('project');
     if (!projectId) { showNotFound(); return; }
 
     let project = null;
-
     if (sb) {
       try {
         const { data } = await sb.from('projects').select('*').eq('id', projectId).single();
@@ -208,12 +267,6 @@
     const requestedPage = params.get('page');
     const startFile = (requestedPage && project.files?.[requestedPage]) ? requestedPage : mainFile;
 
-    const frame = document.getElementById('frame');
-    frame.addEventListener('load', function() {
-      document.getElementById('loading').style.display = 'none';
-      frame.style.display = 'block';
-    }, { once: false });
-
     renderPage(startFile);
 
     // Track this site open
@@ -231,6 +284,39 @@
       } catch(e) {}
     })();
   }
+
+  function bkBuildMenu() {
+    const pages = window._bkPages || [];
+    const menu = document.getElementById('bkDropMenu');
+    const label = document.getElementById('bkDropLabel');
+    if (label) label.textContent = bkHumanName(window._bkCurrentPage || pages[0] || 'index.html');
+    if (menu) menu.innerHTML = pages.map(p =>
+      `<div class="bk-drop-item${p === window._bkCurrentPage ? ' active' : ''}" onclick="bkNavTo('${p}')">${bkHumanName(p)}</div>`
+    ).join('');
+  }
+
+  function bkToggleDrop() {
+    const menu = document.getElementById('bkDropMenu');
+    const btn = document.getElementById('bkDropBtn');
+    const open = menu.classList.toggle('show');
+    btn.classList.toggle('open', open);
+  }
+
+  function bkNavTo(page) {
+    window._bkCurrentPage = page;
+    document.getElementById('bkDropMenu').classList.remove('show');
+    document.getElementById('bkDropBtn').classList.remove('open');
+    document.getElementById('bkDropLabel').textContent = bkHumanName(page);
+    document.querySelectorAll('.bk-drop-item').forEach(el => el.classList.toggle('active', el.textContent === bkHumanName(page)));
+    renderPage(page);
+  }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('bkDropBtn')?.contains(e.target) && !document.getElementById('bkDropMenu')?.contains(e.target)) {
+      document.getElementById('bkDropMenu')?.classList.remove('show');
+      document.getElementById('bkDropBtn')?.classList.remove('open');
+    }
+  });
 
   window.addEventListener('load', init);
 </script>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="trialGuard.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
@@ -57,7 +58,13 @@
 
     /* STAT CARDS */
     .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
-    @media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:700px){
+      .stat-grid{grid-template-columns:repeat(2,1fr)}
+      .chart-section{padding:16px 14px}
+      .chart-head{flex-direction:column;gap:10px}
+      .chart-controls{align-items:flex-start}
+      .chart-pill{padding:5px 9px;font-size:10px}
+    }
     .stat-card{border-radius:14px;padding:20px 22px;cursor:pointer;transition:opacity .15s,box-shadow .2s;user-select:none}
     .stat-card:nth-child(1){background:rgba(96,165,250,.08)}
     .stat-card:nth-child(2){background:rgba(167,139,250,.08)}
@@ -370,7 +377,8 @@
     const n = counts.length;
     if(!n) return '';
     const max  = Math.max(...counts, 1);
-    const W = 1000, H = 140, padT = 12;
+    const W = Math.max(300, document.querySelector('.chart-area')?.offsetWidth || 1000);
+    const H = 140, padT = 12;
     const pts = counts.map((c,i)=>({
       x: n > 1 ? (i/(n-1))*W : W/2,
       y: padT + (1 - c/max) * (H - padT),
@@ -449,17 +457,17 @@
 
     // Unique Visitors = distinct persistent device IDs (visitor_id from localStorage)
     const uniqueVisitors = new Set(av.map(v=>v.visitor_id).filter(Boolean)).size;
-    setVal('statVisitors', uniqueVisitors ? fmt(uniqueVisitors) : '—', !uniqueVisitors);
+    setVal('statVisitors', uniqueVisitors ? fmt(uniqueVisitors) : '0', false);
     document.getElementById('statVisitorsMeta').textContent = uniqueVisitors ? `Last ${rangeLabel}` : 'No data yet';
 
     // Visits = distinct sessions (session_id from sessionStorage — new each time site is opened)
     const visits = new Set(av.map(v=>v.session_id).filter(Boolean)).size;
-    setVal('statViews', visits ? fmt(visits) : '—', !visits);
+    setVal('statViews', visits ? fmt(visits) : '0', false);
     document.getElementById('statViewsMeta').textContent = visits ? `Last ${rangeLabel}` : 'No data yet';
 
     const projectsWithData = new Set(av.map(v=>v.project_id)).size;
-    const publicCount = _projects.filter(p=>p.is_public).length;
-    setVal('statSites', publicCount ? fmt(publicCount) : '—', !publicCount);
+    const publicCount = _projects.filter(p=>p.published_slug).length;
+    setVal('statSites', publicCount ? fmt(publicCount) : '0', false);
     document.getElementById('statSitesMeta').textContent = _projects.length
       ? `${projectsWithData} with traffic`
       : 'No projects yet';
@@ -501,7 +509,7 @@
         entries.map(e=>`<div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:12px;font-weight:600;color:var(--sub);width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</div>
           <div style="flex:1;height:8px;background:var(--s2);border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.max(2,Math.round(e.count/max*100))}%;background:${projectColor(e.id)};border-radius:99px"></div></div>
-          <div style="font-size:11px;font-weight:700;color:var(--sub);width:36px;text-align:right;flex-shrink:0">${e.count?fmt(e.count):'—'}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--sub);width:36px;text-align:right;flex-shrink:0">${e.count?fmt(e.count):'0'}</div>
         </div>`).join('')
       }</div>`;
       return;
@@ -626,8 +634,8 @@
           <span class="proj-tbl-emoji">${r.emoji}</span>
           <span class="proj-tbl-label">${esc(r.name)}</span>
         </div>
-        <div class="proj-tbl-cell${r.visitors?' hi':''}">${r.visitors?fmt(r.visitors):'—'}</div>
-        <div class="proj-tbl-cell${r.views?' hi':''}">${r.views?fmt(r.views):'—'}</div>
+        <div class="proj-tbl-cell${r.visitors?' hi':''}">${r.visitors?fmt(r.visitors):'0'}</div>
+        <div class="proj-tbl-cell${r.views?' hi':''}">${r.views?fmt(r.views):'0'}</div>
         <div class="proj-tbl-cell proj-tbl-hide-mobile"><span class="proj-tbl-badge ${r.live?'live':'draft'}">${r.live?'Published':'Not published'}</span></div>
       </div>`).join('')
     : `<div class="detail-empty">No projects yet</div>`;
@@ -691,7 +699,8 @@
   function buildMultiLineGraph(projectLines, keys, labels, metricLabel){
     const n = keys.length;
     if(!n) return '';
-    const W = 1000, H = 140, padT = 12;
+    const W = Math.max(300, document.querySelector('.chart-area')?.offsetWidth || 1000);
+    const H = 140, padT = 12;
     const allVals = projectLines.flatMap(pl=>pl.counts);
     const max = Math.max(...allVals, 1);
 
@@ -863,6 +872,7 @@
     const {data:{session}} = await sb.auth.getSession();
     if(!session){ window.location.href='index.html'; return; }
     _session = session;
+    await checkTrialGuard(sb, session.user.id);
     const u=session.user;
     const initials=(u.user_metadata?.display_name||u.email||'?').trim().slice(0,1).toUpperCase();
     const pfp=document.getElementById('tbPfp');

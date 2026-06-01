@@ -12,157 +12,224 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
-      --bg:#0a0a0a;--surface:#141414;--surface2:#1a1a1a;
-      --border:#262626;--border2:#2e2e2e;--border3:#3a3a3a;
-      --text:#fff;--muted:#555;--muted2:#888;
-      --err:#f87171;--ok:#4ade80;
+      --bg:#0a0a0a;--surface:#111;--surface2:#181818;--surface3:#1e1e1e;
+      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.1);
+      --text:#fff;--muted:#444;--muted2:#777;--muted3:#aaa;
+      --ok:#4ade80;--err:#f87171;
       --sans:'Plus Jakarta Sans',sans-serif;
-      --r-sm:8px;--r-md:11px;--r-lg:16px;--r-full:999px;
+      --r-sm:8px;--r-md:12px;--r-lg:18px;--r-full:999px;
       --rainbow:linear-gradient(90deg,#ff6b6b,#ffb347,#ffe066,#4ade80,#38bdf8,#a78bfa,#ff6b6b);
     }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow-x:hidden;min-height:100vh}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-x:hidden;min-height:100svh}
     body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 700px 500px at 50% 35%,rgba(167,139,250,.055),transparent 70%)}
+      background:radial-gradient(ellipse 800px 600px at 50% 0%,rgba(167,139,250,.05),transparent 65%)}
 
     @keyframes rbShift{to{background-position:200% center}}
     @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-    .back{position:fixed;top:16px;left:16px;z-index:10;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;font-weight:600;padding:7px 12px;border-radius:var(--r-sm);transition:all .15s}
+    /* ── Back ── */
+    .back{position:fixed;top:16px;left:16px;z-index:10;display:flex;align-items:center;gap:5px;
+      color:var(--muted2);font-size:12px;font-weight:600;padding:7px 12px;border-radius:var(--r-sm);transition:all .15s}
     .back:hover{color:var(--text);background:rgba(255,255,255,.05)}
     .back svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
 
     /* ── Card ── */
     .card{
       width:100%;max-width:420px;
-      background:var(--surface);border-radius:20px;
-      padding:36px 32px 30px;position:relative;z-index:1;
-      box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.06);
-      transition:max-width .4s cubic-bezier(.16,1,.3,1);
+      background:var(--surface);border-radius:22px;
+      padding:34px 30px 28px;position:relative;z-index:1;
+      box-shadow:0 32px 80px rgba(0,0,0,.6);
+      animation:fadeUp .35s ease both;
     }
-    .card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:20px 20px 0 0;
-      background:var(--rainbow);background-size:200% auto;animation:rbShift 3s linear infinite;
-    }
-    .card.wide{max-width:600px}
-    .card.payment-wide{max-width:460px}
+    .card.wide{max-width:540px}
 
-    /* Logo */
-    .card-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
-    .card-logo img{width:30px;height:30px;border-radius:7px;display:block;transition:transform 80ms ease-out}
-    .card-logo:hover img{transform:scale(1.08)}
-    .card-logo-name{font-size:15px;font-weight:800;letter-spacing:-.02em}
+    /* ── Logo ── */
+    .card-logo{display:flex;align-items:center;justify-content:center;margin-bottom:26px}
+    .card-logo img{width:30px;height:30px;border-radius:7px;display:block}
 
-    /* Step indicator */
-    .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px}
-    .step-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);transition:color .2s}
-    .step-item.active{color:var(--text)}
+    /* ── Step indicator ── */
+    .steps{display:flex;align-items:center;margin-bottom:24px}
+    .step-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted);transition:color .2s}
+    .step-item.active{color:var(--muted3)}
     .step-item.done{color:var(--ok)}
-    .step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;transition:all .2s}
-    .step-item.active .step-num{background:var(--text);color:var(--bg);border-color:var(--text)}
-    .step-item.done .step-num{background:var(--ok);color:#000;border-color:var(--ok)}
-    .step-item.done .step-num::after{content:'✓'}
-    .step-item.done .step-num span{display:none}
-    .step-line{width:28px;height:1px;background:var(--border2);margin:0 4px;flex-shrink:0}
+    .step-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;
+      display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;transition:all .2s}
+    .step-item.active .step-dot{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .step-item.done .step-dot{background:var(--ok);color:#000;border-color:var(--ok);font-size:10px}
+    .step-item.done .step-dot::after{content:'✓'}
+    .step-item.done .step-dot span{display:none}
+    .step-line{flex:1;height:1px;background:var(--border2);margin:0 8px;opacity:.5}
 
-    /* Form heads */
-    .step-head{margin-bottom:22px}
-    .step-head h2{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:5px;line-height:1.2}
-    .step-head p{font-size:13px;color:var(--muted2);line-height:1.55}
+    /* ── Headings ── */
+    .form-head{margin-bottom:24px}
+    .form-head h2{font-size:21px;font-weight:800;letter-spacing:-.4px;line-height:1.2;margin-bottom:5px}
+    .form-head p{font-size:13px;color:var(--muted2);line-height:1.5}
 
-    /* Fields */
-    .field{margin-bottom:14px}
-    label{display:block;font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+    /* ── Fields ── */
+    .field{margin-bottom:12px}
+    label{display:block;font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
     input{
       width:100%;background:var(--surface2);
-      border:1.5px solid transparent;border-radius:var(--r-sm);
-      padding:13px 15px;color:var(--text);font-size:14px;
+      border:1.5px solid transparent;border-radius:var(--r-md);
+      padding:12px 14px;color:var(--text);font-size:14px;
       outline:none;font-family:var(--sans);
       transition:background .15s,border-color .15s;
     }
-    input:focus{background:var(--border);border-color:rgba(255,255,255,.12)}
+    input:focus{background:var(--surface3)}
     input::placeholder{color:var(--muted)}
+    input.err-input{border-color:rgba(248,113,113,.5)!important;background:rgba(248,113,113,.04)!important}
+    .field-err{font-size:11px;color:var(--err);margin-top:5px;display:none}
+    .field-err.show{display:block}
     .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-    /* Submit */
+    /* ── Buttons ── */
     .submit{
-      width:100%;padding:14px;border-radius:var(--r-md);
+      width:100%;padding:13px;border-radius:var(--r-md);
       background:var(--text);color:var(--bg);
       font-size:14px;font-weight:700;border:none;cursor:pointer;
-      font-family:var(--sans);margin-top:8px;
+      font-family:var(--sans);margin-top:6px;
       display:flex;align-items:center;justify-content:center;gap:8px;
-      position:relative;overflow:hidden;
-      transition:opacity .15s,transform .2s cubic-bezier(.16,1,.3,1);
+      transition:opacity .15s,transform .18s cubic-bezier(.16,1,.3,1);
     }
-    .submit::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(0,0,0,.08),transparent 60%);transform:translateX(-100%);transition:transform .5s ease}
-    .submit:hover::before{transform:translateX(100%)}
-    .submit:hover{opacity:.9}
+    .submit:hover{opacity:.88}
     .submit:active{transform:scale(.98)}
-    .submit:disabled{opacity:.35;cursor:not-allowed}
-
-    /* Msg */
-    .msg{font-size:12px;text-align:center;margin-top:14px;min-height:18px;line-height:1.5}
-    .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
-
-    /* Spinner */
-    .spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
-
-    /* Back step link */
-    .back-link{background:none;border:none;color:var(--muted);font-size:12px;font-family:var(--sans);cursor:pointer;display:block;width:100%;text-align:center;margin-top:12px;padding:5px;transition:color .15s}
+    .submit:disabled{opacity:.3;cursor:not-allowed}
+    .back-link{background:none;border:none;color:var(--muted2);font-size:12px;font-family:var(--sans);
+      cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;padding:5px;transition:color .15s}
     .back-link:hover{color:var(--text)}
 
-    /* Auth switch (below card) */
+    /* ── Msg / Spinner ── */
+    .msg{font-size:12px;text-align:center;margin-top:12px;line-height:1.5}
+    .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
+    .spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
+
+    /* ── Auth switch ── */
     .auth-switch{
-      margin-top:20px;text-align:center;position:relative;z-index:1;
+      margin-top:20px;text-align:center;
       font-size:13px;color:var(--muted2);
     }
     .auth-switch button{
       background:none;border:none;cursor:pointer;font-family:var(--sans);
-      font-size:13px;font-weight:700;color:var(--text);
-      padding:2px 4px;border-radius:4px;
-      transition:opacity .15s;
+      font-size:13px;font-weight:700;color:var(--muted3);
+      padding:2px 4px;border-radius:4px;transition:color .15s;
     }
-    .auth-switch button:hover{opacity:.7}
-
-    /* Terms note */
-    .auth-terms{margin-top:14px;text-align:center;position:relative;z-index:1;font-size:11px;color:var(--muted)}
+    .auth-switch button:hover{color:var(--text)}
+    .auth-terms{margin-top:12px;text-align:center;position:relative;z-index:1;font-size:11px;color:var(--muted)}
+    .auth-terms a{color:var(--muted2);text-decoration:underline;text-underline-offset:3px}
 
     /* ── PLAN STEP ── */
-    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-    .plan-card{background:var(--surface2);border:1.5px solid transparent;border-radius:var(--r-md);padding:16px 14px;cursor:pointer;position:relative;transition:background .15s,border-color .15s;user-select:none}
-    .plan-card:hover{background:var(--border)}
-    .plan-card.selected{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14)}
-    .plan-card.popular::before{content:'Suggested';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:800;letter-spacing:.05em;padding:2px 8px;border-radius:99px;white-space:nowrap}
-    .plan-name{font-size:12px;font-weight:800;margin-bottom:3px}
-    .plan-price{font-size:20px;font-weight:800;letter-spacing:-.5px}
-    .plan-price span{font-size:10px;font-weight:600;color:var(--muted)}
-    .plan-ai{font-size:9px;color:var(--muted);margin-top:3px;margin-bottom:10px}
-    .plan-features{list-style:none;display:flex;flex-direction:column;gap:4px}
-    .plan-features li{font-size:9px;color:var(--muted);display:flex;align-items:flex-start;gap:4px;line-height:1.4}
-    .plan-features li::before{content:'·';font-weight:900;flex-shrink:0;margin-top:0}
-    .plan-card.selected .plan-features li{color:rgba(255,255,255,.55)}
-    .plan-check{width:16px;height:16px;border-radius:50%;background:var(--border2);position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-    .plan-card.selected .plan-check{background:#fff}
-    .plan-card.selected .plan-check::after{content:'';width:6px;height:6px;background:#000;border-radius:50%;display:block}
-    .trial-banner{display:flex;align-items:center;gap:8px;background:rgba(74,222,128,.07);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.65)}
-    .trial-banner svg{width:13px;height:13px;stroke:#4ade80;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+    .trial-card{
+      width:100%;background:rgba(74,222,128,.05);
+      border-radius:var(--r-lg);padding:16px 18px;
+      cursor:pointer;display:flex;align-items:center;gap:14px;
+      transition:background .15s,border-color .15s;
+      margin-bottom:16px;user-select:none;
+    }
+    .trial-card:hover{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.22)}
+    .trial-card.selected{background:rgba(74,222,128,.09);border-color:rgba(74,222,128,.28)}
+    .trial-icon{
+      width:40px;height:40px;background:rgba(74,222,128,.1);border-radius:11px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .trial-icon svg{width:18px;height:18px;stroke:#4ade80;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .trial-body{flex:1;min-width:0}
+    .trial-name{font-size:14px;font-weight:800;margin-bottom:2px}
+    .trial-desc{font-size:12px;color:var(--muted2)}
+    .trial-check{
+      width:20px;height:20px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;
+    }
+    .trial-card.selected .trial-check{background:#4ade80;border-color:#4ade80}
+    .trial-card.selected .trial-check::after{content:'';width:7px;height:7px;background:#000;border-radius:50%}
+
+    .auth-billing-toggle{display:flex;justify-content:center;margin-bottom:14px}
+    .auth-billing-toggle .billing-inner{display:inline-flex;background:rgba(255,255,255,.06);border-radius:99px;padding:3px}
+    .abtog{padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted2);background:transparent;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px;transition:background .2s,color .2s}
+    .abtog.on{background:var(--text);color:var(--bg)}
+    .abtog-save{font-size:9px;font-weight:700;background:rgba(74,222,128,.18);color:#4ade80;padding:2px 7px;border-radius:4px}
+    .abtog.on .abtog-save{background:rgba(20,180,80,.18);color:#16a34a}
+    .plans-divider{
+      display:flex;align-items:center;gap:10px;
+      font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+      margin-bottom:14px;
+    }
+    .plans-divider::before,.plans-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+    .plan-card{
+      background:var(--surface2);
+      border-radius:var(--r-md);padding:14px 12px 16px;
+      cursor:pointer;position:relative;
+      transition:background .15s,border-color .15s,opacity .15s;user-select:none;
+    }
+    .plan-card:hover{background:var(--surface3)}
+    .plan-card.selected{background:rgba(255,255,255,.06)}
+
+    .plan-card.popular::before{
+      content:'Best';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+      background:#fff;color:#000;font-size:8px;font-weight:800;letter-spacing:.05em;
+      padding:2px 8px;border-radius:99px;white-space:nowrap;
+    }
+    .plan-dot{
+      width:16px;height:16px;border-radius:50%;background:var(--surface3);
+      position:absolute;top:12px;right:12px;
+      display:flex;align-items:center;justify-content:center;transition:all .15s;
+    }
+    .plan-card.selected .plan-dot{background:#fff}
+    .plan-card.selected .plan-dot::after{content:'';width:6px;height:6px;background:#000;border-radius:50%}
+    .plan-name{font-size:11px;font-weight:800;margin-bottom:6px;color:var(--muted3)}
+    .plan-card.selected .plan-name{color:var(--text)}
+    .plan-price{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1}
+    .plan-price .mo{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
+    .plan-tag{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4}
+    .plan-card.selected .plan-tag{color:rgba(255,255,255,.4)}
 
     /* ── PAYMENT STEP ── */
-    .pay-summary{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:var(--r-sm);padding:13px 16px;margin-bottom:20px;border:1.5px solid rgba(255,255,255,.05)}
-    .pay-summary-left{font-size:13px;font-weight:700}
-    .pay-summary-sub{font-size:10px;color:var(--muted2);margin-top:2px}
-    .pay-summary-price{font-size:17px;font-weight:800;letter-spacing:-.3px}
-    .pay-summary-price span{font-size:10px;font-weight:600;color:var(--muted)}
+    .pay-summary{
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--surface2);border-radius:var(--r-md);padding:14px 16px;
+      margin-bottom:22px;
+    }
+    .pay-summary-name{font-size:13px;font-weight:700}
+    .pay-summary-sub{font-size:11px;color:var(--muted2);margin-top:2px}
+    .pay-summary-price{font-size:18px;font-weight:800;letter-spacing:-.3px}
+    .pay-summary-price span{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
     .card-input-wrap{position:relative}
-    .card-input-wrap input{padding-right:52px}
+    .card-input-wrap input{padding-right:56px}
     .card-icons{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:4px;pointer-events:none}
-    .card-icon{width:28px;height:18px;border-radius:3px;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:var(--muted)}
+    .card-icon{width:28px;height:18px;border-radius:3px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:var(--muted)}
     .card-icon.visa{background:#1a1f71;color:#fff}
     .card-icon.mc{background:#eb001b;color:#fff}
-    .secure-badge{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);margin-top:14px}
-    .secure-badge svg{width:11px;height:11px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
-    .trial-charge-note{font-size:11px;color:var(--muted2);text-align:center;line-height:1.65;margin-top:11px}
-    .trial-charge-note strong{color:var(--text)}
+    .secure-note{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:var(--muted);margin-top:14px}
+    .secure-note svg{width:11px;height:11px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
+    .charge-note{font-size:11px;color:var(--muted2);text-align:center;line-height:1.6;margin-top:10px}
+    .charge-note strong{color:var(--text)}
+
+    /* ── CONFIRM ── */
+    .confirm-wrap{text-align:center;padding:4px 0 24px}
+    .confirm-icon{
+      width:52px;height:52px;margin:0 auto 20px;
+      background:var(--surface2);border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .confirm-wrap h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px}
+    .confirm-wrap p{font-size:13px;color:var(--muted2);line-height:1.7}
+    .confirm-email{color:var(--text);font-weight:700}
+    .confirm-hint{font-size:12px;color:var(--muted);margin-top:10px}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:420px){
+      body{padding:16px}
+      .card{padding:26px 20px 22px;border-radius:18px}
+      .plans{grid-template-columns:1fr}
+      .plan-card.popular::before{display:none}
+      .field-row{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:560px){
+      .card.wide{max-width:100%}
+    }
   </style>
 </head>
 <body>
@@ -175,98 +242,108 @@
 <div class="card" id="mainCard">
   <a href="index.html" class="card-logo" title="Vexium">
     <img src="vexium_logo.png" alt="Vexium"/>
-    <span class="card-logo-name">Vexium</span>
   </a>
 
-  <!-- Step indicator (steps 2/3 only) -->
+  <!-- Step indicator -->
   <div class="steps" id="stepIndicator" style="display:none">
-    <div class="step-item done" id="stepItem1"><div class="step-num"><span>1</span></div><span>Account</span></div>
+    <div class="step-item done" id="stepItem1"><div class="step-dot"><span>1</span></div><span>Account</span></div>
     <div class="step-line"></div>
-    <div class="step-item active" id="stepItem2"><div class="step-num"><span>2</span></div><span>Plan</span></div>
-    <div class="step-line"></div>
-    <div class="step-item" id="stepItem3"><div class="step-num"><span>3</span></div><span>Payment</span></div>
+    <div class="step-item active" id="stepItem2"><div class="step-dot"><span>2</span></div><span>Plan</span></div>
+    <div class="step-line" id="stepLine2"></div>
+    <div class="step-item" id="stepItem3"><div class="step-dot"><span>3</span></div><span>Payment</span></div>
   </div>
 
   <!-- ── STEP 1: Account ── -->
   <div id="formSignup">
-    <div class="step-head">
+    <div class="form-head">
       <h2>Create your account</h2>
       <p>Your first site is minutes away.</p>
     </div>
+    <form id="signupForm" autocomplete="on" onsubmit="return false">
     <div class="field">
       <label>Username</label>
-      <input type="text" id="signupUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <input type="text" id="signupUser" name="username" placeholder="yourname" autocomplete="username" autocorrect="off" spellcheck="false"/>
+      <div class="field-err" id="errUser"></div>
     </div>
     <div class="field">
       <label>Email</label>
-      <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"/>
+      <input type="email" id="signupEmail" name="email" placeholder="you@example.com" autocomplete="email"/>
+      <div class="field-err" id="errEmail"></div>
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="signupPass" placeholder="6+ characters"/>
+      <input type="password" id="signupPass" name="new-password" placeholder="6+ characters" autocomplete="new-password"/>
+      <div class="field-err" id="errPass"></div>
     </div>
-    <button type="button" class="submit" id="btnContinue" onclick="goToPlanStep()">
+    <button type="submit" class="submit" id="btnContinue" onclick="goToPlanStep()">
       <span id="signupLabel">Continue</span>
     </button>
+    </form>
   </div>
 
   <!-- ── STEP 2: Plan ── -->
   <div id="formPlan" style="display:none">
-    <div class="step-head">
-      <h2>Choose your plan</h2>
-      <p>Change or cancel any time.</p>
+    <div class="form-head">
+      <h2>How do you want to start?</h2>
+      <p>You can upgrade or change your plan any time.</p>
     </div>
+
+    <!-- Free Trial -->
+    <div class="trial-card" id="trialCard" onclick="selectPlan('trial')">
+      <div class="trial-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="trial-body">
+        <div class="trial-name">Free Trial (7 days)</div>
+        <div class="trial-desc">Full access · No credit card required</div>
+      </div>
+      <div class="trial-check" id="trialCheck"></div>
+    </div>
+
+    <div class="auth-billing-toggle">
+      <div class="billing-inner">
+        <button class="abtog on" id="aBillingMonthly" onclick="setAuthBilling(false)">Monthly</button>
+        <button class="abtog" id="aBillingAnnual" onclick="setAuthBilling(true)">Annual <span class="abtog-save">Save 20%</span></button>
+      </div>
+    </div>
+
+    <div class="plans-divider">or choose a plan</div>
+
+    <!-- Paid plans -->
     <div class="plans">
       <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
-        <div class="plan-check"></div>
+        <div class="plan-dot"></div>
         <div class="plan-name">Starter</div>
-        <div class="plan-price">$12<span>/mo</span></div>
-        <ul class="plan-features" style="margin-top:10px">
-          <li>3 published sites</li>
-          <li>Custom domain</li>
-          <li>Analytics</li>
-        </ul>
+        <div class="plan-price">$<span id="aPriceStarter">12</span><span class="mo">/mo</span></div>
+        <div class="plan-tag">3 sites · Custom domain</div>
       </div>
       <div class="plan-card popular selected" data-plan="pro" onclick="selectPlan('pro')">
-        <div class="plan-check"></div>
+        <div class="plan-dot"></div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price">$29<span>/mo</span></div>
-        <ul class="plan-features" style="margin-top:10px">
-          <li>Unlimited sites</li>
-          <li>Payments</li>
-          <li>Team members</li>
-          <li>Priority support</li>
-        </ul>
+        <div class="plan-price">$<span id="aPricePro">29</span><span class="mo">/mo</span></div>
+        <div class="plan-tag">Unlimited · Payments</div>
       </div>
       <div class="plan-card" data-plan="max" onclick="selectPlan('max')">
-        <div class="plan-check"></div>
+        <div class="plan-dot"></div>
         <div class="plan-name">Max</div>
-        <div class="plan-price">$79<span>/mo</span></div>
-        <ul class="plan-features" style="margin-top:10px">
-          <li>Everything in Pro</li>
-          <li>White-label</li>
-          <li>Client workspaces</li>
-          <li>Dedicated support</li>
-        </ul>
+        <div class="plan-price">$<span id="aPriceMax">79</span><span class="mo">/mo</span></div>
+        <div class="plan-tag">White-label · Clients</div>
       </div>
     </div>
-    <div class="trial-banner">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      <span>A free trial is available — try Vexium before committing.</span>
-    </div>
-    <button type="button" class="submit" onclick="goToPaymentStep()"><span>Continue</span></button>
+
+    <button type="button" class="submit" id="btnPlanContinue" onclick="goToPaymentStep()"><span>Continue</span></button>
     <button type="button" class="back-link" onclick="backToStep1()">← Back</button>
   </div>
 
   <!-- ── STEP 3: Payment ── -->
   <div id="formPayment" style="display:none">
-    <div class="step-head">
+    <div class="form-head">
       <h2>Payment details</h2>
       <p>You won't be charged until your trial ends.</p>
     </div>
     <div class="pay-summary" id="paySummary">
       <div>
-        <div class="pay-summary-left" id="payPlanName">Pro plan</div>
+        <div class="pay-summary-name" id="payPlanName">Pro plan</div>
         <div class="pay-summary-sub">Billed monthly after trial</div>
       </div>
       <div class="pay-summary-price" id="payPlanPrice">$29<span>/mo</span></div>
@@ -274,7 +351,7 @@
     <div class="field">
       <label>Card number</label>
       <div class="card-input-wrap">
-        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)"/>
+        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" inputmode="numeric"/>
         <div class="card-icons">
           <div class="card-icon visa">VISA</div>
           <div class="card-icon mc">MC</div>
@@ -284,45 +361,42 @@
     <div class="field-row">
       <div class="field" style="margin-bottom:0">
         <label>Expiry</label>
-        <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)"/>
+        <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" inputmode="numeric"/>
       </div>
       <div class="field" style="margin-bottom:0">
         <label>CVC</label>
-        <input type="text" id="cardCvc" placeholder="•••" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')"/>
+        <input type="text" id="cardCvc" placeholder="•••" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')" inputmode="numeric"/>
       </div>
     </div>
     <div class="field" style="margin-top:12px">
       <label>Name on card</label>
-      <input type="text" id="cardName" placeholder="Full name"/>
+      <input type="text" id="cardName" placeholder="Full name" autocomplete="cc-name"/>
     </div>
     <button type="button" class="submit" id="btnCreateAccount" onclick="doSignup()" style="margin-top:14px">
       <span id="createLabel">Start free trial</span>
     </button>
-    <div class="secure-badge">
+    <div class="secure-note">
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       Secured by Stripe — your card is never stored by us
     </div>
-    <div class="trial-charge-note">
-      <strong>No charge today.</strong> You'll receive a reminder before your trial ends.
-    </div>
+    <div class="charge-note"><strong>No charge today.</strong> We'll remind you before your trial ends.</div>
     <button type="button" class="back-link" onclick="backToStep2()">← Back</button>
   </div>
 
   <!-- ── STEP 4: Confirm email ── -->
   <div id="formConfirm" style="display:none">
-    <div style="text-align:center;padding:8px 0 28px">
-      <div style="width:54px;height:54px;margin:0 auto 22px;background:var(--surface2);border-radius:14px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.06)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <div class="confirm-wrap">
+      <div class="confirm-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"/>
           <polyline points="2,4 12,13 22,4"/>
         </svg>
       </div>
-      <h2 id="confirmTitle" style="font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px">Check your inbox</h2>
-      <p id="confirmSubtitle" style="font-size:13px;color:var(--muted2);line-height:1.7">
-        We sent a confirmation link to<br>
-        <span id="confirmEmailDisplay" style="color:var(--text);font-weight:700"></span>
+      <h2 id="confirmTitle">Check your inbox</h2>
+      <p id="confirmSubtitle">We sent a confirmation link to<br>
+        <span id="confirmEmailDisplay" class="confirm-email"></span>
       </p>
-      <p id="confirmHint" style="font-size:12px;color:var(--muted);margin-top:10px">Can't find it? Check your junk folder.</p>
+      <p id="confirmHint" class="confirm-hint">Can't find it? Check your junk folder.</p>
     </div>
     <button type="button" class="submit" id="btnConfirmed" onclick="tryConfirmedSignin()">
       <span id="confirmedLabel">I've confirmed my email</span>
@@ -332,17 +406,20 @@
 
   <!-- ── SIGN IN ── -->
   <div id="formSignin" style="display:none">
-    <div class="step-head">
+    <div class="form-head">
       <h2>Welcome back</h2>
       <p>Good to see you again.</p>
     </div>
     <div class="field">
-      <label>Username</label>
-      <input type="text" id="signinUser" placeholder="yourname" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <label>Username or email</label>
+      <div style="position:relative">
+        <input type="text" id="signinUser" placeholder="" autocomplete="username" autocorrect="off" spellcheck="false"/>
+        <span id="signinPlaceholder" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;transition:opacity .4s ease;user-select:none">yourname</span>
+      </div>
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="signinPass" placeholder="••••••••"/>
+      <input type="password" id="signinPass" placeholder="••••••••" autocomplete="current-password"/>
     </div>
     <button type="button" class="submit" id="btnSignin" onclick="doSignin()">
       <span id="signinLabel">Sign in</span>
@@ -350,14 +427,13 @@
   </div>
 
   <div class="msg" id="msgBox"></div>
+  <div class="auth-switch" id="authSwitch">
+    <span id="authSwitchText">Already have an account?</span>
+    <button id="authSwitchBtn" onclick="switchTab('signin')">Sign in</button>
+  </div>
 </div>
 
-<!-- Switch link (below card) -->
-<div class="auth-switch" id="authSwitch">
-  <span id="authSwitchText">Already have an account?</span>
-  <button id="authSwitchBtn" onclick="switchTab('signin')">Sign in</button>
-</div>
-<p class="auth-terms">By signing up you agree to our <a href="#" style="color:var(--muted2);text-decoration:underline;text-underline-offset:3px">terms</a>.</p>
+<p class="auth-terms">By signing up you agree to our <a href="#">terms</a>.</p>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
@@ -369,8 +445,21 @@
   } catch(e) {}
 
   const FAKE_DOMAIN = '@vexium.ai';
-  const PLAN_PRICES = { starter: '$12', pro: '$29', max: '$79' };
-  const PLAN_LABELS = { starter: 'Starter plan', pro: 'Pro plan', max: 'Max plan' };
+  const PLAN_PRICES_M = { starter: '$12', pro: '$29', max: '$79' };
+  const PLAN_PRICES_A = { starter: '$10', pro: '$23', max: '$63' };
+  const PLAN_LABELS   = { starter: 'Starter plan', pro: 'Pro plan', max: 'Max plan' };
+  let _isAnnual = false;
+
+  const A_PRICES = { monthly:{starter:12,pro:29,max:79}, annual:{starter:10,pro:23,max:63} };
+  function setAuthBilling(annual) {
+    _isAnnual = annual;
+    document.getElementById('aBillingMonthly').classList.toggle('on', !annual);
+    document.getElementById('aBillingAnnual').classList.toggle('on', annual);
+    const p = annual ? A_PRICES.annual : A_PRICES.monthly;
+    document.getElementById('aPriceStarter').textContent = p.starter;
+    document.getElementById('aPricePro').textContent     = p.pro;
+    document.getElementById('aPriceMax').textContent     = p.max;
+  }
   let _selectedPlan = 'pro';
   let _pendingUser = '', _pendingEmail = '', _pendingPass = '';
 
@@ -379,7 +468,6 @@
     try {
       const { data } = await sb.auth.getSession();
       if (data?.session) {
-        // Detect email confirmation redirect (Supabase puts type=signup in hash/query)
         const isConfirmReturn = location.hash.includes('type=signup') || location.search.includes('type=signup');
         if (isConfirmReturn || localStorage.getItem('_vx_awaiting_confirm')) {
           localStorage.removeItem('_vx_awaiting_confirm');
@@ -395,15 +483,51 @@
     if (p.get('tab') === 'signin') switchTab('signin');
   })();
 
+  function setFieldErr(inputId, errId, msg) {
+    const inp = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (!inp || !err) return;
+    if (msg) {
+      inp.classList.add('err-input');
+      err.textContent = msg;
+      err.classList.add('show');
+    } else {
+      inp.classList.remove('err-input');
+      err.textContent = '';
+      err.classList.remove('show');
+    }
+  }
+
+  function clearFieldErrs() {
+    ['signupUser','signupEmail','signupPass'].forEach(id => {
+      const inp = document.getElementById(id);
+      if (inp) inp.classList.remove('err-input');
+    });
+    ['errUser','errEmail','errPass'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.classList.remove('show'); }
+    });
+  }
+
   function selectPlan(plan) {
     _selectedPlan = plan;
-    document.querySelectorAll('.plan-card').forEach(c => c.classList.toggle('selected', c.dataset.plan === plan));
+    const isTrial = plan === 'trial';
+
+    document.getElementById('trialCard').classList.toggle('selected', isTrial);
+    document.querySelectorAll('.plan-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.plan === plan);
+    });
+
+    // Show/hide payment step indicator
+    document.getElementById('stepItem3').style.display = isTrial ? 'none' : '';
+    document.getElementById('stepLine2').style.display = isTrial ? 'none' : '';
   }
 
   function setStep(n) {
     ['stepItem1','stepItem2','stepItem3'].forEach((id, i) => {
       const el = document.getElementById(id);
-      el.className = 'step-item' + (i + 1 < n ? ' done' : i + 1 === n ? ' active' : '');
+      if (!el) return;
+      el.className = 'step-item' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
     });
   }
 
@@ -425,24 +549,25 @@
   }
 
   async function goToPlanStep() {
-    const user = document.getElementById('signupUser').value.trim();
+    const user  = document.getElementById('signupUser').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const pass  = document.getElementById('signupPass').value;
-    if (!user)  { setMsg('Enter a username.', 'err'); return; }
-    if (!/^[a-zA-Z0-9_.-]+$/.test(user)) { setMsg('Username can only contain letters, numbers, _ . and -', 'err'); return; }
-    if (!email || !email.includes('@')) { setMsg('Enter a valid email.', 'err'); return; }
-    if (pass.length < 6) { setMsg('Password must be 6+ characters.', 'err'); return; }
+    clearFieldErrs(); setMsg('', '');
+    let hasErr = false;
+    if (!user) { setFieldErr('signupUser','errUser','Enter a username.'); hasErr=true; }
+    else if (!/^[a-zA-Z0-9_.-]+$/.test(user)) { setFieldErr('signupUser','errUser','Letters, numbers, _ . and - only.'); hasErr=true; }
+    if (!email || !email.includes('@')) { setFieldErr('signupEmail','errEmail','Enter a valid email address.'); hasErr=true; }
+    if (pass.length < 6) { setFieldErr('signupPass','errPass','Password must be at least 6 characters.'); hasErr=true; }
+    if (hasErr) return;
 
     if (sb) {
       const btn = document.getElementById('btnContinue');
       const lbl = document.getElementById('signupLabel');
-      btn.disabled = true;
-      lbl.innerHTML = '<div class="spin"></div>';
-      setMsg('', '');
+      btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>';
       const avail = await checkAvailability(user, email);
       btn.disabled = false; lbl.textContent = 'Continue';
-      if (avail === 'username') { setMsg('That username is already taken.', 'err'); return; }
-      if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); return; }
+      if (avail === 'username') { setFieldErr('signupUser','errUser','That username is already taken.'); return; }
+      if (avail === 'email')    { setFieldErr('signupEmail','errEmail','An account with that email already exists.'); return; }
       if (avail === 'error')    { setMsg('Could not verify availability. Try again.', 'err'); return; }
     }
 
@@ -452,16 +577,31 @@
     document.getElementById('stepIndicator').style.display = 'flex';
     document.getElementById('mainCard').classList.add('wide');
     document.getElementById('authSwitch').style.display = 'none';
+    // Hide payment step indicator if trial selected
+    const isTrial = _selectedPlan === 'trial';
+    document.getElementById('stepItem3').style.display = isTrial ? 'none' : '';
+    document.getElementById('stepLine2').style.display = isTrial ? 'none' : '';
     setStep(2);
   }
 
-  function goToPaymentStep() {
+  async function goToPaymentStep() {
+    if (_selectedPlan === 'trial') {
+      // Skip payment — go straight to account creation
+      const lbl = document.querySelector('#btnPlanContinue span');
+      const btn = document.getElementById('btnPlanContinue');
+      btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>';
+      setMsg('', '');
+      await doSignup();
+      btn.disabled = false; lbl.textContent = 'Continue';
+      return;
+    }
     document.getElementById('formPlan').style.display = 'none';
     document.getElementById('formPayment').style.display = '';
     document.getElementById('mainCard').classList.remove('wide');
-    document.getElementById('mainCard').classList.add('payment-wide');
-    document.getElementById('payPlanName').textContent = PLAN_LABELS[_selectedPlan];
-    document.getElementById('payPlanPrice').innerHTML = PLAN_PRICES[_selectedPlan] + '<span>/mo</span>';
+    const prices = _isAnnual ? PLAN_PRICES_A : PLAN_PRICES_M;
+    document.getElementById('payPlanName').textContent = PLAN_LABELS[_selectedPlan] + (_isAnnual ? ' · Annual' : '');
+    document.getElementById('payPlanPrice').innerHTML = prices[_selectedPlan] + '<span>/mo</span>';
+    document.querySelector('#paySummary .pay-summary-sub').textContent = _isAnnual ? 'Billed annually after trial' : 'Billed monthly after trial';
     setStep(3);
   }
 
@@ -469,8 +609,16 @@
     document.getElementById('formPlan').style.display = 'none';
     document.getElementById('formSignup').style.display = '';
     document.getElementById('stepIndicator').style.display = 'none';
-    document.getElementById('mainCard').classList.remove('wide','payment-wide');
+    document.getElementById('mainCard').classList.remove('wide');
     setAuthSwitch('signup');
+    setMsg('', '');
+  }
+
+  function backToStep2() {
+    document.getElementById('formPayment').style.display = 'none';
+    document.getElementById('formPlan').style.display = '';
+    document.getElementById('mainCard').classList.add('wide');
+    setStep(2);
     setMsg('', '');
   }
 
@@ -479,7 +627,7 @@
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('stepIndicator').style.display = 'none';
-    document.getElementById('mainCard').classList.remove('wide','payment-wide');
+    document.getElementById('mainCard').classList.remove('wide');
     document.getElementById('authSwitch').style.display = 'none';
     document.getElementById('confirmEmailDisplay').textContent = _pendingEmail;
     document.getElementById('formConfirm').style.display = '';
@@ -496,8 +644,7 @@
   async function tryConfirmedSignin() {
     const btn = document.getElementById('btnConfirmed');
     const lbl = document.getElementById('confirmedLabel');
-    btn.disabled = true;
-    lbl.innerHTML = '<div class="spin"></div>';
+    btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>';
     setMsg('', '');
     try {
       let session = null;
@@ -507,8 +654,7 @@
         const { data, error } = await sb.auth.signInWithPassword({ email: _pendingEmail, password: _pendingPass });
         if (error) {
           const m = error.message.toLowerCase();
-          const notYet = m.includes('not confirmed') || m.includes('email not confirmed');
-          setMsg(notYet ? "You haven't confirmed your email yet." : error.message, 'err');
+          setMsg(m.includes('not confirmed') || m.includes('email not confirmed') ? "You haven't confirmed your email yet." : error.message, 'err');
           btn.disabled = false; lbl.textContent = "I've confirmed my email";
           return;
         }
@@ -529,22 +675,12 @@
   async function resendConfirmation() {
     if (!_pendingEmail) return;
     const btn = document.getElementById('resendBtn');
-    btn.disabled = true;
-    setMsg('', '');
+    btn.disabled = true; setMsg('', '');
     try {
       const { error } = await sb.auth.resend({ type: 'signup', email: _pendingEmail });
       setMsg(error ? error.message : 'Confirmation email resent.', error ? 'err' : 'ok');
     } catch(e) { setMsg('Something went wrong.', 'err'); }
     btn.disabled = false;
-  }
-
-  function backToStep2() {
-    document.getElementById('formPayment').style.display = 'none';
-    document.getElementById('formPlan').style.display = '';
-    document.getElementById('mainCard').classList.add('wide');
-    document.getElementById('mainCard').classList.remove('payment-wide');
-    setStep(2);
-    setMsg('', '');
   }
 
   function switchTab(tab) {
@@ -554,7 +690,7 @@
     document.getElementById('formPayment').style.display = 'none';
     document.getElementById('formSignin').style.display  = su ? 'none' : '';
     document.getElementById('stepIndicator').style.display = 'none';
-    document.getElementById('mainCard').classList.remove('wide','payment-wide');
+    document.getElementById('mainCard').classList.remove('wide');
     setAuthSwitch(su ? 'signup' : 'signin');
     setMsg('', '');
   }
@@ -586,27 +722,13 @@
     el.className = 'msg' + (type ? ' ' + type : '');
   }
 
-  function setLoading(form, loading) {
-    if (form === 'signup') {
-      const btn = document.getElementById('btnCreateAccount');
-      const lbl = document.getElementById('createLabel');
-      if (btn) btn.disabled = loading;
-      if (lbl) lbl.innerHTML = loading ? '<div class="spin"></div>' : 'Start free trial';
-    } else {
-      const btn = document.getElementById('btnSignin');
-      const lbl = document.getElementById('signinLabel');
-      if (btn) btn.disabled = loading;
-      if (lbl) lbl.textContent = loading ? '' : 'Sign in';
-    }
-  }
-
   async function savePlanToProfile(userId) {
     if (!sb || !userId) return;
     const trialEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     try {
       await sb.from('profiles').update({
-        plan: 'trial',
-        selected_plan: _selectedPlan,
+        plan: _selectedPlan === 'trial' ? 'trial' : _selectedPlan,
+        selected_plan: _selectedPlan === 'trial' ? null : _selectedPlan,
         trial_ends_at: trialEnds,
         credits_used_cents: 0,
         usage_month: new Date().toISOString().slice(0, 7),
@@ -616,13 +738,6 @@
 
   function toEmail(username) {
     return username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '') + FAKE_DOMAIN;
-  }
-
-  async function saveRealEmail(userId, realEmail) {
-    if (!sb || !userId || !realEmail) return;
-    try {
-      await sb.from('profiles').update({ email: realEmail.trim().toLowerCase() }).eq('id', userId);
-    } catch(e) {}
   }
 
   async function doSignup() {
@@ -638,67 +753,91 @@
       return;
     }
 
-    setLoading('signup', true); setMsg('', '');
+    // Loading state for payment step button (if shown)
+    const createBtn = document.getElementById('btnCreateAccount');
+    const createLbl = document.getElementById('createLabel');
+    if (createBtn) { createBtn.disabled = true; createLbl.innerHTML = '<div class="spin"></div>'; }
+    setMsg('', '');
+
     const avail = await checkAvailability(user, realEmail);
-    if (avail === 'username') { setMsg('That username is already taken.', 'err'); setLoading('signup', false); return; }
-    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); setLoading('signup', false); return; }
+    if (avail === 'username') { setMsg('That username is already taken.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
+    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
+
     try {
       const { data, error } = await sb.auth.signUp({
         email: realEmail,
         password: pass,
         options: { data: { username: user, display_name: user } }
       });
-      if (error) { setMsg(error.message, 'err'); setLoading('signup', false); return; }
+      if (error) { setMsg(error.message, 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
+      _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       if (data.session) {
+        // Email already confirmed (e.g. confirmation disabled in Supabase settings)
         await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         window.location.href = 'home.html'; return;
       }
-      // Email confirmation required — show confirm screen
-      _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       localStorage.setItem('_vx_awaiting_confirm', '1');
-      setLoading('signup', false);
+      if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; }
       showConfirmStep(false);
-    } catch(e) { setMsg('Something went wrong.', 'err'); setLoading('signup', false); }
+    } catch(e) { setMsg('Something went wrong.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } }
   }
 
   async function doSignin() {
-    const user = document.getElementById('signinUser').value.trim();
-    const pass = document.getElementById('signinPass').value;
-    if (!user) { setMsg('Enter your username.', 'err'); return; }
-    if (!pass) { setMsg('Enter your password.', 'err'); return; }
-    if (!sb) { localStorage.setItem('vexium_guest', 'true'); localStorage.setItem('vexium_username', user); window.location.href = 'home.html'; return; }
-    setLoading('signin', true); setMsg('', '');
+    const input = document.getElementById('signinUser').value.trim();
+    const pass  = document.getElementById('signinPass').value;
+    if (!input) { setMsg('Enter your username or email.', 'err'); return; }
+    if (!pass)  { setMsg('Enter your password.', 'err'); return; }
+    if (!sb) { localStorage.setItem('vexium_guest','true'); localStorage.setItem('vexium_username',input); window.location.href='home.html'; return; }
+    const btn = document.getElementById('btnSignin');
+    const lbl = document.getElementById('signinLabel');
+    btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>'; setMsg('', '');
     try {
-      // Look up real email by username via SECURITY DEFINER function (bypasses RLS)
-      let authEmail = null;
-      const { data: emailData } = await sb.rpc('get_email_by_username', { p_username: user });
-      if (emailData) {
-        authEmail = emailData;
+      let authEmail, username;
+      if (input.includes('@')) {
+        authEmail = input;
+        username  = input;
       } else {
-        authEmail = toEmail(user); // legacy fallback
+        const { data: emailData } = await sb.rpc('get_email_by_username', { p_username: input });
+        authEmail = emailData || toEmail(input);
+        username  = input;
       }
       const { data, error } = await sb.auth.signInWithPassword({ email: authEmail, password: pass });
-      if (error) { setMsg('Wrong username or password.', 'err'); setLoading('signin', false); return; }
-      localStorage.setItem('vexium_username', user);
+      if (error) { setMsg('Wrong username or password.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; return; }
+      localStorage.setItem('vexium_username', data.user?.user_metadata?.username || username);
       window.location.href = 'home.html';
-    } catch(e) { setMsg('Something went wrong.', 'err'); setLoading('signin', false); }
+    } catch(e) { setMsg('Something went wrong.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; }
   }
 
-  function doGuest(event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); }
-    localStorage.setItem('vexium_guest', 'true');
-    if (!localStorage.getItem('vexium_username')) localStorage.setItem('vexium_username', 'Guest');
-    window.location.href = 'home.html';
-  }
+  // ── Animated sign-in placeholder ──
+  (function(){
+    const input = document.getElementById('signinUser');
+    const ph    = document.getElementById('signinPlaceholder');
+    if (!input || !ph) return;
+    const texts = ['yourname', 'you@example.com'];
+    let idx = 0;
+    function cycle() {
+      if (document.activeElement === input || input.value) return;
+      ph.style.opacity = '0';
+      setTimeout(() => {
+        idx = (idx + 1) % texts.length;
+        ph.textContent = texts[idx];
+        ph.style.opacity = '1';
+      }, 400);
+    }
+    setInterval(cycle, 3000);
+    input.addEventListener('focus', () => { ph.style.opacity = '0'; });
+    input.addEventListener('blur',  () => { if (!input.value) ph.style.opacity = '1'; });
+    input.addEventListener('input', () => { ph.style.opacity = input.value ? '0' : '1'; });
+  })();
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
     if (document.getElementById('formPayment').style.display !== 'none') doSignup();
     else if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
     else if (document.getElementById('formSignup').style.display !== 'none') goToPlanStep();
-    else doSignin();
+    else if (document.getElementById('formSignin').style.display !== 'none') doSignin();
   });
 </script>
 </body>

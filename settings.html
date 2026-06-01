@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="trialGuard.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -37,8 +38,8 @@
     /* notification sidebar */
     #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
     #notifBackdrop.show{display:block}
-    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid rgba(255,255,255,.08);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
-    #notifSidebar.show{transform:translateX(0)}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid rgba(255,255,255,.08);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    #notifSidebar.show{transform:translateX(0);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
     .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
     .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
     .notif-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
@@ -71,6 +72,63 @@
 
     /* ── CONTENT ── */
     .content{flex:1;min-width:0;padding:0 0 0 32px}
+
+    /* ── MOBILE ── */
+    @media(max-width:700px){
+      .page{flex-direction:column;padding:16px 16px 80px;gap:0}
+
+      /* Sidebar becomes a sticky top tab bar */
+      .sidebar{
+        width:100%;position:sticky;top:48px;z-index:10;
+        padding:0;margin-bottom:24px;
+        background:var(--bg);
+        border-bottom:1px solid rgba(255,255,255,.06);
+        padding-bottom:12px;
+      }
+      .sidebar-title{display:none}
+      .back-btn{display:inline-flex;margin-bottom:12px;padding:4px 8px}
+
+      /* Nav items become horizontal pill tabs */
+      .sidebar-nav-row{display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:99px;padding:3px;width:fit-content}
+      .nav-item{
+        display:inline-block !important;
+        width:auto !important;
+        padding:7px 18px;
+        border-radius:99px;
+        font-size:13px;
+        text-align:center;
+      }
+      .nav-item.active{background:rgba(255,255,255,.12);color:var(--text)}
+
+      /* Content: no left padding */
+      .content{padding:0}
+
+      /* Keep rows side-by-side, shrink inputs to fit */
+      .row{gap:12px}
+      .row-label{min-width:0;flex:1}
+      .row-control{flex-shrink:0;max-width:48vw}
+      .inp{width:100%;min-width:0;max-width:48vw;box-sizing:border-box}
+
+      /* Stack rows that have full-width inputs */
+      .row-stack .inp-block{width:100%}
+
+      /* Plan cards + toggle: already responsive, just ensure full width */
+      .plans-grid{grid-template-columns:repeat(3,1fr)}
+      .billing-toggle-wrap{display:flex;justify-content:flex-start}
+
+      /* Groups */
+      .group{margin-bottom:32px}
+      .group-title{font-size:15px;margin-bottom:16px}
+
+      /* Extra usage panel */
+      .extra-top-row{flex-wrap:wrap;gap:12px}
+      .extra-custom-row{flex-direction:column}
+      .extra-custom-row .inp{width:100%}
+      .extra-presets{flex-wrap:wrap}
+
+      /* Billing history */
+      #billingHistory .bh-row{flex-wrap:wrap;gap:4px}
+    }
 
     /* ── SECTIONS ── */
     .section{display:none}
@@ -168,18 +226,27 @@
     .trial-days{font-weight:600;color:#facc15}
 
     .plans-wrap{padding-top:28px}
+    .billing-toggle{display:inline-flex;background:rgba(255,255,255,.06);border-radius:99px;padding:4px;margin-bottom:16px;align-self:center}
+    .billing-toggle-wrap{display:flex;justify-content:center;margin-bottom:0}
+    .btog-opt{padding:7px 18px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:7px;transition:background .2s,color .2s}
+    .btog-opt.on{background:var(--text);color:var(--bg)}
+    .btog-save{font-size:9px;font-weight:700;background:rgba(74,222,128,.18);color:#4ade80;padding:2px 7px;border-radius:4px}
+    .btog-opt.on .btog-save{background:rgba(20,180,80,.18);color:#16a34a}
     .plans-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
     .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
     .plan-card{border-radius:12px;padding:18px 16px;background:var(--surface);position:relative;transition:background .15s}
-    .plan-card.current{background:var(--surface2);outline:1.5px solid rgba(255,255,255,.15)}
+    .plan-card.current{background:rgba(255,255,255,.12)}
     .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
     .plan-card-name{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px}
     .plan-card-price{font-size:22px;font-weight:800;letter-spacing:-.5px}
-    .plan-card-price span{font-size:11px;font-weight:500;color:var(--muted)}
+    .plan-card-price .mo{font-size:11px;font-weight:500;color:var(--muted)}
     .plan-card-budget{font-size:10px;color:var(--muted);margin-top:6px}
     .plan-card-btn{margin-top:14px;width:100%;padding:7px 0;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s;background:rgba(255,255,255,.1);color:var(--text)}
     .plan-card-btn:hover:not(:disabled){opacity:.75}
-    .plan-card-btn.upgrade{background:#fff;color:#000}
+    .plan-card-btn.upgrade{background:#fff;color:#000;position:relative;overflow:hidden}
+    @keyframes rbShift{to{background-position:200% center}}
+    .plan-card-btn.upgrade::after{content:'';position:absolute;inset:0;border-radius:6px;background:linear-gradient(90deg,#ff6b6b,#ffb347,#ffe066,#4ade80,#38bdf8,#a78bfa,#ff6b6b);background-size:200% auto;animation:rbShift 3s linear infinite;opacity:0;transition:opacity .25s ease;pointer-events:none}
+    .plan-card-btn.upgrade:hover::after{opacity:.22}
     .plan-card-btn.current-btn{background:rgba(255,255,255,.06);color:var(--muted);cursor:default}
     .beta-note{font-size:11px;color:var(--muted);text-align:center}
 
@@ -229,9 +296,11 @@
       Profile
     </a>
     <div class="sidebar-title">Settings</div>
-    <button class="nav-item active" id="navGeneral"  onclick="switchTab('general')">General</button>
-    <button class="nav-item"        id="navPrivacy"  onclick="switchTab('privacy')">Privacy</button>
-    <button class="nav-item"        id="navBilling"  onclick="switchTab('billing')">Billing</button>
+    <div class="sidebar-nav-row">
+      <button class="nav-item active" id="navGeneral"  onclick="switchTab('general')">General</button>
+      <button class="nav-item"        id="navPrivacy"  onclick="switchTab('privacy')">Privacy</button>
+      <button class="nav-item"        id="navBilling"  onclick="switchTab('billing')">Billing</button>
+    </div>
   </nav>
 
   <div class="content">
@@ -363,21 +432,26 @@
 
       <!-- 3. Change plan -->
       <div class="plans-wrap" style="padding-top:0">
-        <div class="plans-label">Change plan</div>
+        <div class="billing-toggle-wrap">
+          <div class="billing-toggle">
+            <button class="btog-opt on" id="sBillingMonthly" onclick="setSettingsBilling(false)">Monthly</button>
+            <button class="btog-opt" id="sBillingAnnual" onclick="setSettingsBilling(true)">Annual <span class="btog-save">Save 20%</span></button>
+          </div>
+        </div>
         <div class="plans-grid">
           <div class="plan-card" id="planCardStarter">
             <div class="plan-card-name">Starter</div>
-            <div class="plan-card-price">$12<span>/mo</span></div>
+            <div class="plan-card-price">$<span id="sPriceStarter">12</span><span class="mo">/mo</span></div>
             <button class="plan-card-btn upgrade" id="btnStarter" onclick="changePlan('starter')">Upgrade</button>
           </div>
           <div class="plan-card" id="planCardPro">
             <div class="plan-card-name">Pro</div>
-            <div class="plan-card-price">$29<span>/mo</span></div>
+            <div class="plan-card-price">$<span id="sPricePro">29</span><span class="mo">/mo</span></div>
             <button class="plan-card-btn upgrade" id="btnPro" onclick="changePlan('pro')">Upgrade</button>
           </div>
           <div class="plan-card" id="planCardMax">
             <div class="plan-card-name">Max</div>
-            <div class="plan-card-price">$79<span>/mo</span></div>
+            <div class="plan-card-price">$<span id="sPriceMax">79</span><span class="mo">/mo</span></div>
             <button class="plan-card-btn upgrade" id="btnMax" onclick="changePlan('max')">Upgrade</button>
           </div>
         </div>
@@ -407,9 +481,10 @@
           </div>
           <div class="extra-panel" id="extraPanel">
             <div class="extra-custom-row">
-              <input class="inp" type="number" id="customExtraAmt" placeholder="Custom amount ($)" min="1" step="1"/>
+              <input class="inp" type="number" id="customExtraAmt" placeholder="Custom amount ($5 min)" min="5" step="1" oninput="document.getElementById('extraAmtErr').style.display='none'"/>
               <button class="btn btn-primary" onclick="buyCustomExtra()"><span id="buyCustomLabel">Buy</span></button>
             </div>
+            <div id="extraAmtErr" style="display:none;font-size:11px;color:#f87171;margin:-6px 0 6px">Minimum purchase is $5.</div>
             <div class="extra-presets">
               <button class="preset-btn" onclick="buyExtra(500)">$5</button>
               <button class="preset-btn" onclick="buyExtra(1000)">$10</button>
@@ -439,7 +514,7 @@
     }
   } catch(e) {}
 
-  const PLAN_CREDITS  = { trial: 300, starter: 1500, pro: 4000, max: 12000 };
+  const PLAN_CREDITS  = { trial: 300, starter: 1100, pro: 2500, max: 7000 };
   const PLAN_LABELS   = { trial: 'Free Trial', starter: 'Starter', pro: 'Pro', max: 'Max' };
   const PLAN_DOT_CLS  = { trial: 'trial-dot', starter: 'starter-dot', pro: 'pro-dot', max: 'max-dot' };
   const PLAN_RANK     = { trial: 0, starter: 1, pro: 2, max: 3 };
@@ -473,7 +548,7 @@
     myId = session.user.id;
 
     const { data } = await sb.from('profiles')
-      .select('username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents')
+      .select('username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents')
       .eq('id', myId).single();
     loaderDone();
     if (!data) return;
@@ -521,7 +596,7 @@
     const credits     = Number(data.credits_used_cents || 0);
     const limit       = PLAN_CREDITS[plan] || 300;
     const extraCents      = Number(data.extra_credits_cents || 0);
-    const extraPurchased  = Number(data.extra_credits_purchased_cents || extraCents || 1);
+    const extraPurchased  = Number(data.extra_credits_purchased_cents || extraCents || 0);
     const trialEnds   = data.trial_ends_at ? new Date(data.trial_ends_at) : null;
     const now         = new Date();
     const pct         = Math.min(100, Math.round((credits / limit) * 100));
@@ -547,16 +622,14 @@
     const cycleStart  = new Date(data.plan_cycle_start || now);
     const resetDate   = new Date(cycleStart.getTime() + 30 * 24 * 60 * 60 * 1000)
       .toLocaleDateString(undefined, { month:'long', day:'numeric' });
-    // TODO remove dollar amounts before release — for internal debugging only
-    document.getElementById('usageSub').textContent =
-      `$${(credits/100).toFixed(2)} / $${(limit/100).toFixed(2)} · resets ${resetDate}`;
+    document.getElementById('usageSub').textContent = `Resets ${resetDate}`;
 
     // Extra usage donut
     const donutWrap = document.getElementById('donutWrap');
     if (extraCents > 0) {
       donutWrap.style.display = '';
       const circ   = 175.93;
-      const frac   = Math.min(extraCents / extraPurchased, 1);
+      const frac   = Math.min(extraCents / (extraPurchased || extraCents), 1);
       const offset = circ * (1 - frac);
       document.getElementById('donutArc').setAttribute('stroke-dashoffset', offset.toFixed(1));
       const extraDisplay = (extraCents * 1.5 / 100).toFixed(2);
@@ -566,23 +639,25 @@
       donutWrap.style.display = 'none';
       document.getElementById('extraSub').textContent   = 'Top up anytime';
     }
-    document.getElementById('extraInfoSub').textContent = extraPurchased > 0
+    document.getElementById('extraInfoSub').textContent = extraPurchased > 1
       ? `Out of $${(extraPurchased * 1.5 / 100).toFixed(2)} extra usage this month`
-      : '';
+      : 'No extra usage this month';
 
-    // Plan cards
-    const currentRank = PLAN_RANK[plan] || 0;
+    // Plan cards — only mark current if BOTH plan AND billing period match
+    const currentRank    = PLAN_RANK[plan] || 0;
+    const currentPeriod  = data.billing_period || 'monthly';
     ['starter','pro','max'].forEach(p => {
       const card = document.getElementById('planCard' + cap(p));
       const btn  = document.getElementById('btn'      + cap(p));
-      const isCurrent = plan === p;
+      const selectedPeriod = _sBillingAnnual ? 'annual' : 'monthly';
+      const isCurrent = plan === p && currentPeriod === selectedPeriod;
       card.classList.toggle('current', isCurrent);
       if (isCurrent) {
         btn.textContent = 'Current plan';
         btn.className   = 'plan-card-btn current-btn';
         btn.disabled    = true;
       } else {
-        const isUpgrade = PLAN_RANK[p] > currentRank;
+        const isUpgrade = PLAN_RANK[p] > currentRank || (plan === p && currentPeriod !== selectedPeriod);
         btn.textContent = isUpgrade ? 'Upgrade' : 'Switch';
         btn.className   = 'plan-card-btn ' + (isUpgrade ? 'upgrade' : '');
         btn.disabled    = false;
@@ -602,7 +677,7 @@
 
   async function buyCustomExtra() {
     const val = parseFloat(document.getElementById('customExtraAmt').value);
-    if (!val || val < 1) return;
+    if (!val || val < 5) { document.getElementById('extraAmtErr').style.display = 'block'; return; }
     await buyExtra(Math.round(val * 100));
     document.getElementById('customExtraAmt').value = '';
   }
@@ -658,6 +733,19 @@
     }
   }
 
+  let _sBillingAnnual = false;
+  const S_PRICES = { monthly:{starter:12,pro:29,max:79}, annual:{starter:10,pro:23,max:63} };
+  function setSettingsBilling(annual) {
+    _sBillingAnnual = annual;
+    document.getElementById('sBillingMonthly').classList.toggle('on', !annual);
+    document.getElementById('sBillingAnnual').classList.toggle('on', annual);
+    const p = annual ? S_PRICES.annual : S_PRICES.monthly;
+    document.getElementById('sPriceStarter').textContent = p.starter;
+    document.getElementById('sPricePro').textContent     = p.pro;
+    document.getElementById('sPriceMax').textContent     = p.max;
+    if (myProfile) renderBilling(myProfile);
+  }
+
   async function changePlan(plan) {
     if (!sb || !myId) return;
     const btn = document.getElementById('btn' + cap(plan));
@@ -665,11 +753,16 @@
     btn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
     btn.disabled  = true;
     try {
+      const cycleStart = new Date().toISOString();
+      const billingPeriod = _sBillingAnnual ? 'annual' : 'monthly';
       await sb.from('profiles').update({
         plan,
         selected_plan: plan,
+        plan_cycle_start: cycleStart,
+        billing_period: billingPeriod,
+        credits_used_cents: 0,
       }).eq('id', myId);
-      myProfile = { ...myProfile, plan, selected_plan: plan };
+      myProfile = { ...myProfile, plan, selected_plan: plan, plan_cycle_start: cycleStart, billing_period: billingPeriod, credits_used_cents: 0 };
       renderBilling(myProfile);
     } catch(e) {
       btn.textContent = orig;

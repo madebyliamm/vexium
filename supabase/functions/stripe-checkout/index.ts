@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const userId = userIdFromJwt(req.headers.get("Authorization"));
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
-    const { plan, period, success_url, cancel_url } = await req.json();
+    const { plan, period, return_url } = await req.json();
     const priceId = PRICE_IDS[plan]?.[period as "monthly" | "annual"];
     if (!priceId) return json({ error: "Invalid plan or billing period" }, 400);
 
@@ -43,18 +43,18 @@ Deno.serve(async (req) => {
     }
 
     const session = await stripe.checkout.sessions.create({
+      ui_mode: "embedded",
       mode: "subscription",
       customer: customerId,
       client_reference_id: userId,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
-      success_url: success_url || "https://vexium.ai/settings.html?billing=success",
-      cancel_url: cancel_url || "https://vexium.ai/settings.html?billing=cancel",
+      return_url: return_url || "https://vexium.ai/settings.html?tab=billing&billing=success",
       subscription_data: { metadata: { user_id: userId, plan, period } },
       metadata: { user_id: userId, plan, period },
     });
 
-    return json({ url: session.url });
+    return json({ client_secret: session.client_secret });
   } catch (e) {
     console.error("[stripe-checkout]", e);
     return json({ error: e instanceof Error ? e.message : String(e) }, 500);

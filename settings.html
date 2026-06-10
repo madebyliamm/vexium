@@ -510,6 +510,7 @@
 </div>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <script>
   let sb = null;
   try {
@@ -529,6 +530,12 @@
     : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1';
   const STRIPE_CHECKOUT_URL = SUPABASE_FN_BASE + '/stripe-checkout';
   const STRIPE_PORTAL_URL   = SUPABASE_FN_BASE + '/stripe-portal';
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TgVYhDRd56Cnoi3jUdQ1l5bhCJZD9fFveU0gP3WWxha6vWxcwmEVjXHmYlcMX9xb8RUQ9WQc6Mw8mBJgjANlnL100VBCgiS54';
+  let _stripeJs = null;
+  function getStripeJs() {
+    if (!_stripeJs && typeof Stripe !== 'undefined') _stripeJs = Stripe(STRIPE_PUBLISHABLE_KEY);
+    return _stripeJs;
+  }
 
   async function getEdgeAuthHeaders() {
     const { data: { session } } = await sb.auth.getSession();
@@ -800,6 +807,8 @@
     btn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
     btn.disabled  = true;
     try {
+      const stripeJs = getStripeJs();
+      if (!stripeJs) throw new Error('Payment system unavailable. Please refresh and try again.');
       const period = _sBillingAnnual ? 'annual' : 'monthly';
       const headers = await getEdgeAuthHeaders();
       const returnBase = location.origin + location.pathname;
@@ -808,18 +817,35 @@
         headers,
         body: JSON.stringify({
           plan, period,
-          success_url: returnBase + '?tab=billing&billing=success',
-          cancel_url:  returnBase + '?tab=billing&billing=cancel',
+          return_url: returnBase + '?tab=billing&billing=success',
         }),
       });
       const out = await res.json();
-      if (!res.ok || !out.url) throw new Error(out.error || 'Could not start checkout');
-      window.location.href = out.url;
+      if (!res.ok || !out.client_secret) throw new Error(out.error || 'Could not start checkout');
+      await openCheckoutModal(stripeJs, out.client_secret);
+      btn.textContent = orig;
+      btn.disabled    = false;
     } catch(e) {
       btn.textContent = orig;
       btn.disabled    = false;
       alert(e.message || 'Could not start checkout. Please try again.');
     }
+  }
+
+  let _embeddedCheckout = null;
+  async function openCheckoutModal(stripeJs, clientSecret) {
+    const overlay   = document.getElementById('checkoutOverlay');
+    const container = document.getElementById('checkoutContainer');
+    if (_embeddedCheckout) { _embeddedCheckout.destroy(); _embeddedCheckout = null; }
+    container.innerHTML = '';
+    overlay.style.display = 'flex';
+    _embeddedCheckout = await stripeJs.initEmbeddedCheckout({ clientSecret });
+    _embeddedCheckout.mount('#checkoutContainer');
+  }
+  function closeCheckoutModal() {
+    document.getElementById('checkoutOverlay').style.display = 'none';
+    document.getElementById('checkoutContainer').innerHTML = '';
+    if (_embeddedCheckout) { _embeddedCheckout.destroy(); _embeddedCheckout = null; }
   }
 
   async function manageBilling() {
@@ -1083,6 +1109,17 @@
     localStorage.clear();
     window.location.href = 'auth.html';
   }
+</script>
+
+<!-- Stripe embedded checkout modal -->
+<div id="checkoutOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto;position:relative">
+    <button onclick="closeCheckoutModal()" aria-label="Close" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.06);color:#000;font-size:16px;line-height:1;cursor:pointer;z-index:1;display:flex;align-items:center;justify-content:center">&times;</button>
+    <div id="checkoutContainer"></div>
+  </div>
+</div>
+<script>
+  document.getElementById('checkoutOverlay').addEventListener('click', e => { if (e.target === document.getElementById('checkoutOverlay')) closeCheckoutModal(); });
 </script>
 </body>
 </html>

@@ -412,6 +412,10 @@
             </div>
           </div>
         </div>
+        <div class="row" id="manageBillingRow" style="display:none">
+          <div class="row-label"><div class="row-label-text">Subscription</div></div>
+          <div class="row-control"><button class="btn btn-ghost" id="btnManageBilling" onclick="manageBilling()">Manage billing</button></div>
+        </div>
         <div class="trial-note-row" id="trialNoteRow" style="display:none">
           <span id="trialNoteText"></span>
         </div>
@@ -518,6 +522,23 @@
   const PLAN_LABELS   = { trial: 'Free Trial', starter: 'Starter', pro: 'Pro', max: 'Max' };
   const PLAN_DOT_CLS  = { trial: 'trial-dot', starter: 'starter-dot', pro: 'pro-dot', max: 'max-dot' };
   const PLAN_RANK     = { trial: 0, starter: 1, pro: 2, max: 3 };
+  const PROFILE_SELECT = 'username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents,stripe_customer_id,stripe_subscription_id';
+
+  const SUPABASE_FN_BASE = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
+    ? SUPABASE_URL.trim().replace(/\/+$/, '')
+    : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1';
+  const STRIPE_CHECKOUT_URL = SUPABASE_FN_BASE + '/stripe-checkout';
+  const STRIPE_PORTAL_URL   = SUPABASE_FN_BASE + '/stripe-portal';
+
+  async function getEdgeAuthHeaders() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('Session expired. Please sign in again.');
+    return {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + session.access_token,
+    };
+  }
 
   let myId = null, myProfile = null;
 
@@ -548,7 +569,7 @@
     myId = session.user.id;
 
     const { data } = await sb.from('profiles')
-      .select('username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents')
+      .select(PROFILE_SELECT)
       .eq('id', myId).single();
     loaderDone();
     if (!data) return;
@@ -560,9 +581,32 @@
     document.getElementById('toggleShowEmail').checked  = !!data.show_email;
     document.getElementById('toggleAdvanced').checked   = !!data.advanced_mode;
 
-    const tab = new URLSearchParams(location.search).get('tab');
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
     if (tab && ['general','privacy','billing'].includes(tab)) switchTab(tab);
+
+    const billingResult = params.get('billing');
+    if (billingResult === 'success') {
+      await pollForPlanUpdate();
+      history.replaceState(null, '', '?tab=billing');
+    } else if (billingResult === 'cancel') {
+      history.replaceState(null, '', '?tab=billing');
+    }
   })();
+
+  // After Stripe Checkout success, the webhook may take a moment to land —
+  // poll briefly so the new plan shows up without a manual refresh.
+  async function pollForPlanUpdate(maxTries = 6) {
+    for (let i = 0; i < maxTries; i++) {
+      const { data } = await sb.from('profiles').select(PROFILE_SELECT).eq('id', myId).single();
+      if (data) {
+        myProfile = data;
+        if (data.stripe_subscription_id) { renderBilling(myProfile); return; }
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (myProfile) renderBilling(myProfile);
+  }
 
   function switchTab(tab) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -604,6 +648,9 @@
     // Plan badge
     document.getElementById('planName').textContent = PLAN_LABELS[plan] || plan;
     document.getElementById('planDot').className = 'plan-dot ' + (PLAN_DOT_CLS[plan] || 'trial-dot');
+
+    // Manage billing (only once a Stripe subscription exists)
+    document.getElementById('manageBillingRow').style.display = data.stripe_subscription_id ? '' : 'none';
 
     // Trial note
     if (plan === 'trial' && trialEnds) {
@@ -753,20 +800,48 @@
     btn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
     btn.disabled  = true;
     try {
-      const cycleStart = new Date().toISOString();
-      const billingPeriod = _sBillingAnnual ? 'annual' : 'monthly';
-      await sb.from('profiles').update({
-        plan,
-        selected_plan: plan,
-        plan_cycle_start: cycleStart,
-        billing_period: billingPeriod,
-        credits_used_cents: 0,
-      }).eq('id', myId);
-      myProfile = { ...myProfile, plan, selected_plan: plan, plan_cycle_start: cycleStart, billing_period: billingPeriod, credits_used_cents: 0 };
-      renderBilling(myProfile);
+      const period = _sBillingAnnual ? 'annual' : 'monthly';
+      const headers = await getEdgeAuthHeaders();
+      const returnBase = location.origin + location.pathname;
+      const res = await fetch(STRIPE_CHECKOUT_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          plan, period,
+          success_url: returnBase + '?tab=billing&billing=success',
+          cancel_url:  returnBase + '?tab=billing&billing=cancel',
+        }),
+      });
+      const out = await res.json();
+      if (!res.ok || !out.url) throw new Error(out.error || 'Could not start checkout');
+      window.location.href = out.url;
     } catch(e) {
       btn.textContent = orig;
       btn.disabled    = false;
+      alert(e.message || 'Could not start checkout. Please try again.');
+    }
+  }
+
+  async function manageBilling() {
+    if (!sb || !myId) return;
+    const btn = document.getElementById('btnManageBilling');
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="spin"></span>';
+    btn.disabled  = true;
+    try {
+      const headers = await getEdgeAuthHeaders();
+      const res = await fetch(STRIPE_PORTAL_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ return_url: location.origin + location.pathname + '?tab=billing' }),
+      });
+      const out = await res.json();
+      if (!res.ok || !out.url) throw new Error(out.error || 'Could not open billing portal');
+      window.location.href = out.url;
+    } catch(e) {
+      btn.textContent = orig;
+      btn.disabled    = false;
+      alert(e.message || 'Could not open billing portal. Please try again.');
     }
   }
 

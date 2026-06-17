@@ -328,8 +328,8 @@
   <!-- ── STEP 3: Payment ── -->
   <div id="formPayment" style="display:none">
     <div class="form-head">
-      <h2>Complete your subscription</h2>
-      <p>Secure checkout powered by Stripe.</p>
+      <h2>Almost there</h2>
+      <p>After verifying your email you'll complete secure payment to activate your plan.</p>
     </div>
     <div class="pay-summary" id="paySummary">
       <div>
@@ -338,10 +338,9 @@
       </div>
       <div class="pay-summary-price" id="payPlanPrice">$29<span>/mo</span></div>
     </div>
-    <div id="paymentStatusRow" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:var(--muted2);font-size:13px">
-      <div class="spin" style="border-top-color:var(--text)"></div>
-      <span id="paymentStatus">Setting up your account…</span>
-    </div>
+    <button type="button" class="submit" id="btnPayContinue" onclick="doSignup()" style="margin-top:8px">
+      <span id="payLabel">Send verification email</span>
+    </button>
     <div class="secure-note">
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       Your card is never stored by us
@@ -590,12 +589,8 @@
     document.getElementById('payPlanName').textContent = PLAN_LABELS[_selectedPlan] + (_isAnnual ? ' · Annual' : '');
     document.getElementById('payPlanPrice').innerHTML = prices[_selectedPlan] + '<span>/mo</span>';
     document.getElementById('payPlanSub').textContent = _isAnnual ? 'Billed annually' : 'Billed monthly';
-    document.getElementById('paymentStatusRow').style.display = 'flex';
-    document.getElementById('paymentStatus').textContent = 'Setting up your account…';
     setStep(3);
     btn.disabled = false; lbl.textContent = 'Continue';
-
-    await doSignup();
   }
 
   function backToStep1() {
@@ -737,11 +732,14 @@
       return;
     }
 
+    const payBtn = document.getElementById('btnPayContinue');
+    const payLbl = document.getElementById('payLabel');
+    if (payBtn) { payBtn.disabled = true; payLbl.innerHTML = '<div class="spin"></div>'; }
     setMsg('', '');
 
     const avail = await checkAvailability(user, realEmail);
-    if (avail === 'username') { setMsg('That username is already taken.', 'err'); showPaymentError(); return; }
-    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); showPaymentError(); return; }
+    if (avail === 'username') { setMsg('That username is already taken.', 'err'); if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; } return; }
+    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; } return; }
 
     try {
       const { data, error } = await sb.auth.signUp({
@@ -749,10 +747,10 @@
         password: pass,
         options: { data: { username: user, display_name: user } }
       });
-      if (error) { setMsg(error.message, 'err'); showPaymentError(); return; }
+      if (error) { setMsg(error.message, 'err'); if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; } return; }
       _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       if (data.session) {
-        // Email already confirmed (e.g. confirmation disabled in Supabase settings)
+        // Email already confirmed (confirmation disabled in Supabase settings)
         await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
@@ -760,17 +758,9 @@
         return;
       }
       localStorage.setItem('_vx_awaiting_confirm', '1');
+      if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; }
       showConfirmStep(false);
-    } catch(e) { setMsg('Something went wrong.', 'err'); showPaymentError(); }
-  }
-
-  // Hides the "setting up your account" status row so an error message
-  // (shown via setMsg) is the focus on the payment step.
-  function showPaymentError() {
-    const row = document.getElementById('paymentStatusRow');
-    if (row && document.getElementById('formPayment').style.display !== 'none') {
-      row.style.display = 'none';
-    }
+    } catch(e) { setMsg('Something went wrong.', 'err'); if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; } }
   }
 
   // For paid-plan signups: charge the selected plan immediately via
@@ -872,7 +862,8 @@
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
-    if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
+    if (document.getElementById('formPayment').style.display !== 'none') doSignup();
+    else if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
     else if (document.getElementById('formSignup').style.display !== 'none') goToPlanStep();
     else if (document.getElementById('formSignin').style.display !== 'none') doSignin();
   });

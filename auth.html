@@ -82,7 +82,6 @@
     input.err-input{border-color:rgba(248,113,113,.5)!important;background:rgba(248,113,113,.04)!important}
     .field-err{font-size:11px;color:var(--err);margin-top:5px;display:none}
     .field-err.show{display:block}
-    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
     /* ── Buttons ── */
     .submit{
@@ -196,16 +195,8 @@
     .pay-summary-sub{font-size:11px;color:var(--muted2);margin-top:2px}
     .pay-summary-price{font-size:18px;font-weight:800;letter-spacing:-.3px}
     .pay-summary-price span{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
-    .card-input-wrap{position:relative}
-    .card-input-wrap input{padding-right:56px}
-    .card-icons{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:4px;pointer-events:none}
-    .card-icon{width:28px;height:18px;border-radius:3px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:var(--muted)}
-    .card-icon.visa{background:#1a1f71;color:#fff}
-    .card-icon.mc{background:#eb001b;color:#fff}
     .secure-note{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:var(--muted);margin-top:14px}
     .secure-note svg{width:11px;height:11px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
-    .charge-note{font-size:11px;color:var(--muted2);text-align:center;line-height:1.6;margin-top:10px}
-    .charge-note strong{color:var(--text)}
 
     /* ── CONFIRM ── */
     .confirm-wrap{text-align:center;padding:4px 0 24px}
@@ -225,7 +216,6 @@
       .card{padding:26px 20px 22px;border-radius:18px}
       .plans{grid-template-columns:1fr}
       .plan-card.popular::before{display:none}
-      .field-row{grid-template-columns:1fr 1fr}
     }
     @media(max-width:560px){
       .card.wide{max-width:100%}
@@ -338,48 +328,24 @@
   <!-- ── STEP 3: Payment ── -->
   <div id="formPayment" style="display:none">
     <div class="form-head">
-      <h2>Payment details</h2>
-      <p>You won't be charged until your trial ends.</p>
+      <h2>Complete your subscription</h2>
+      <p>Secure checkout powered by Stripe.</p>
     </div>
     <div class="pay-summary" id="paySummary">
       <div>
         <div class="pay-summary-name" id="payPlanName">Pro plan</div>
-        <div class="pay-summary-sub">Billed monthly after trial</div>
+        <div class="pay-summary-sub" id="payPlanSub">Billed monthly</div>
       </div>
       <div class="pay-summary-price" id="payPlanPrice">$29<span>/mo</span></div>
     </div>
-    <div class="field">
-      <label>Card number</label>
-      <div class="card-input-wrap">
-        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" inputmode="numeric"/>
-        <div class="card-icons">
-          <div class="card-icon visa">VISA</div>
-          <div class="card-icon mc">MC</div>
-        </div>
-      </div>
+    <div id="paymentStatusRow" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:var(--muted2);font-size:13px">
+      <div class="spin" style="border-top-color:var(--text)"></div>
+      <span id="paymentStatus">Setting up your account…</span>
     </div>
-    <div class="field-row">
-      <div class="field" style="margin-bottom:0">
-        <label>Expiry</label>
-        <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" inputmode="numeric"/>
-      </div>
-      <div class="field" style="margin-bottom:0">
-        <label>CVC</label>
-        <input type="text" id="cardCvc" placeholder="•••" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')" inputmode="numeric"/>
-      </div>
-    </div>
-    <div class="field" style="margin-top:12px">
-      <label>Name on card</label>
-      <input type="text" id="cardName" placeholder="Full name" autocomplete="cc-name"/>
-    </div>
-    <button type="button" class="submit" id="btnCreateAccount" onclick="doSignup()" style="margin-top:14px">
-      <span id="createLabel">Start free trial</span>
-    </button>
     <div class="secure-note">
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Secured by Stripe — your card is never stored by us
+      Your card is never stored by us
     </div>
-    <div class="charge-note"><strong>No charge today.</strong> We'll remind you before your trial ends.</div>
     <button type="button" class="back-link" onclick="backToStep2()">← Back</button>
   </div>
 
@@ -436,6 +402,7 @@
 <p class="auth-terms">By signing up you agree to our <a href="#">terms</a>.</p>
 
 <script src="config.js" onerror="window._noConfig=true"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <script>
   let sb = null;
   try {
@@ -453,6 +420,7 @@
   const A_PRICES = { monthly:{starter:12,pro:29,max:79}, annual:{starter:10,pro:23,max:63} };
   function setAuthBilling(annual) {
     _isAnnual = annual;
+    localStorage.setItem('_vx_billing_annual', annual ? '1' : '0');
     document.getElementById('aBillingMonthly').classList.toggle('on', !annual);
     document.getElementById('aBillingAnnual').classList.toggle('on', annual);
     const p = annual ? A_PRICES.annual : A_PRICES.monthly;
@@ -462,6 +430,18 @@
   }
   let _selectedPlan = 'pro';
   let _pendingUser = '', _pendingEmail = '', _pendingPass = '';
+
+  // ── Stripe (paid-plan signups) ──
+  const SUPABASE_FN_BASE = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
+    ? SUPABASE_URL.trim().replace(/\/+$/, '')
+    : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1';
+  const STRIPE_CHECKOUT_URL = SUPABASE_FN_BASE + '/stripe-checkout';
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TgVYhDRd56Cnoi3jUdQ1l5bhCJZD9fFveU0gP3WWxha6vWxcwmEVjXHmYlcMX9xb8RUQ9WQc6Mw8mBJgjANlnL100VBCgiS54';
+  let _stripeJs = null;
+  function getStripeJs() {
+    if (!_stripeJs && typeof Stripe !== 'undefined') _stripeJs = Stripe(STRIPE_PUBLISHABLE_KEY);
+    return _stripeJs;
+  }
 
   (async()=>{
     if (!sb) return;
@@ -473,6 +453,11 @@
           localStorage.removeItem('_vx_awaiting_confirm');
           _pendingUser = data.session.user.user_metadata?.username || '';
           _pendingEmail = data.session.user.email || '';
+          const savedPlan = localStorage.getItem('_vx_selected_plan');
+          if (savedPlan) _selectedPlan = savedPlan;
+          _isAnnual = localStorage.getItem('_vx_billing_annual') === '1';
+          localStorage.removeItem('_vx_selected_plan');
+          localStorage.removeItem('_vx_billing_annual');
           showConfirmStep(true);
           return;
         }
@@ -511,6 +496,7 @@
 
   function selectPlan(plan) {
     _selectedPlan = plan;
+    localStorage.setItem('_vx_selected_plan', plan);
     const isTrial = plan === 'trial';
 
     document.getElementById('trialCard').classList.toggle('selected', isTrial);
@@ -585,24 +571,31 @@
   }
 
   async function goToPaymentStep() {
+    const lbl = document.querySelector('#btnPlanContinue span');
+    const btn = document.getElementById('btnPlanContinue');
+    btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>';
+    setMsg('', '');
+
     if (_selectedPlan === 'trial') {
       // Skip payment — go straight to account creation
-      const lbl = document.querySelector('#btnPlanContinue span');
-      const btn = document.getElementById('btnPlanContinue');
-      btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>';
-      setMsg('', '');
       await doSignup();
       btn.disabled = false; lbl.textContent = 'Continue';
       return;
     }
+
     document.getElementById('formPlan').style.display = 'none';
     document.getElementById('formPayment').style.display = '';
     document.getElementById('mainCard').classList.remove('wide');
     const prices = _isAnnual ? PLAN_PRICES_A : PLAN_PRICES_M;
     document.getElementById('payPlanName').textContent = PLAN_LABELS[_selectedPlan] + (_isAnnual ? ' · Annual' : '');
     document.getElementById('payPlanPrice').innerHTML = prices[_selectedPlan] + '<span>/mo</span>';
-    document.querySelector('#paySummary .pay-summary-sub').textContent = _isAnnual ? 'Billed annually after trial' : 'Billed monthly after trial';
+    document.getElementById('payPlanSub').textContent = _isAnnual ? 'Billed annually' : 'Billed monthly';
+    document.getElementById('paymentStatusRow').style.display = 'flex';
+    document.getElementById('paymentStatus').textContent = 'Setting up your account…';
     setStep(3);
+    btn.disabled = false; lbl.textContent = 'Continue';
+
+    await doSignup();
   }
 
   function backToStep1() {
@@ -664,7 +657,7 @@
         await savePlanToProfile(session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', _pendingUser || session.user.user_metadata?.username || '');
-        window.location.href = 'home.html';
+        await startPlanCheckout(session);
       }
     } catch(e) {
       setMsg('Something went wrong.', 'err');
@@ -695,17 +688,6 @@
     setMsg('', '');
   }
 
-  function formatCard(el) {
-    let v = el.value.replace(/\D/g,'').slice(0,16);
-    el.value = v.replace(/(.{4})/g,'$1 ').trim();
-  }
-
-  function formatExpiry(el) {
-    let v = el.value.replace(/\D/g,'').slice(0,4);
-    if (v.length >= 3) v = v.slice(0,2) + ' / ' + v.slice(2);
-    el.value = v;
-  }
-
   async function checkAvailability(username, email) {
     try {
       const { data, error } = await sb.rpc('check_signup_availability', { p_username: username, p_email: email.toLowerCase() });
@@ -727,7 +709,9 @@
     const trialEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     try {
       await sb.from('profiles').update({
-        plan: _selectedPlan === 'trial' ? 'trial' : _selectedPlan,
+        // Paid plans only take effect once Stripe checkout completes (webhook
+        // flips this to the chosen plan) — start everyone on the free trial.
+        plan: 'trial',
         selected_plan: _selectedPlan === 'trial' ? null : _selectedPlan,
         trial_ends_at: trialEnds,
         credits_used_cents: 0,
@@ -753,15 +737,11 @@
       return;
     }
 
-    // Loading state for payment step button (if shown)
-    const createBtn = document.getElementById('btnCreateAccount');
-    const createLbl = document.getElementById('createLabel');
-    if (createBtn) { createBtn.disabled = true; createLbl.innerHTML = '<div class="spin"></div>'; }
     setMsg('', '');
 
     const avail = await checkAvailability(user, realEmail);
-    if (avail === 'username') { setMsg('That username is already taken.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
-    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
+    if (avail === 'username') { setMsg('That username is already taken.', 'err'); showPaymentError(); return; }
+    if (avail === 'email')    { setMsg('An account with that email already exists.', 'err'); showPaymentError(); return; }
 
     try {
       const { data, error } = await sb.auth.signUp({
@@ -769,19 +749,77 @@
         password: pass,
         options: { data: { username: user, display_name: user } }
       });
-      if (error) { setMsg(error.message, 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } return; }
+      if (error) { setMsg(error.message, 'err'); showPaymentError(); return; }
       _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       if (data.session) {
         // Email already confirmed (e.g. confirmation disabled in Supabase settings)
         await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
-        window.location.href = 'home.html'; return;
+        await startPlanCheckout(data.session);
+        return;
       }
       localStorage.setItem('_vx_awaiting_confirm', '1');
-      if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; }
       showConfirmStep(false);
-    } catch(e) { setMsg('Something went wrong.', 'err'); if (createBtn) { createBtn.disabled = false; createLbl.textContent = 'Start free trial'; } }
+    } catch(e) { setMsg('Something went wrong.', 'err'); showPaymentError(); }
+  }
+
+  // Hides the "setting up your account" status row so an error message
+  // (shown via setMsg) is the focus on the payment step.
+  function showPaymentError() {
+    const row = document.getElementById('paymentStatusRow');
+    if (row && document.getElementById('formPayment').style.display !== 'none') {
+      row.style.display = 'none';
+    }
+  }
+
+  // For paid-plan signups: charge the selected plan immediately via
+  // Stripe's embedded checkout. Trial signups skip straight to home.html.
+  async function startPlanCheckout(session) {
+    if (_selectedPlan === 'trial') { window.location.href = 'home.html'; return; }
+    const status = document.getElementById('paymentStatus');
+    if (status) status.textContent = 'Redirecting to secure checkout…';
+    try {
+      const stripeJs = getStripeJs();
+      if (!stripeJs) throw new Error('Payment system unavailable');
+      const period = _isAnnual ? 'annual' : 'monthly';
+      const res = await fetch(STRIPE_CHECKOUT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({
+          plan: _selectedPlan, period,
+          return_url: location.origin + '/home.html?billing=success',
+        }),
+      });
+      const out = await res.json();
+      if (!res.ok || !out.client_secret) throw new Error(out.error || 'Could not start checkout');
+      await openCheckoutModal(stripeJs, out.client_secret);
+    } catch(e) {
+      // Account exists on the free trial — let them in and they can
+      // upgrade from Settings → Billing.
+      window.location.href = 'home.html';
+    }
+  }
+
+  let _embeddedCheckout = null;
+  async function openCheckoutModal(stripeJs, clientSecret) {
+    const overlay   = document.getElementById('checkoutOverlay');
+    const container = document.getElementById('checkoutContainer');
+    if (_embeddedCheckout) { _embeddedCheckout.destroy(); _embeddedCheckout = null; }
+    container.innerHTML = '';
+    overlay.style.display = 'flex';
+    _embeddedCheckout = await stripeJs.initEmbeddedCheckout({ clientSecret });
+    _embeddedCheckout.mount('#checkoutContainer');
+  }
+  function closeCheckoutModal() {
+    document.getElementById('checkoutOverlay').style.display = 'none';
+    document.getElementById('checkoutContainer').innerHTML = '';
+    if (_embeddedCheckout) { _embeddedCheckout.destroy(); _embeddedCheckout = null; }
+    window.location.href = 'home.html';
   }
 
   async function doSignin() {
@@ -834,11 +872,21 @@
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
-    if (document.getElementById('formPayment').style.display !== 'none') doSignup();
-    else if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
+    if (document.getElementById('formPlan').style.display !== 'none') goToPaymentStep();
     else if (document.getElementById('formSignup').style.display !== 'none') goToPlanStep();
     else if (document.getElementById('formSignin').style.display !== 'none') doSignin();
   });
+</script>
+
+<!-- Stripe embedded checkout modal -->
+<div id="checkoutOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto;position:relative">
+    <button onclick="closeCheckoutModal()" aria-label="Close" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.06);color:#000;font-size:16px;line-height:1;cursor:pointer;z-index:1;display:flex;align-items:center;justify-content:center">&times;</button>
+    <div id="checkoutContainer"></div>
+  </div>
+</div>
+<script>
+  document.getElementById('checkoutOverlay').addEventListener('click', e => { if (e.target === document.getElementById('checkoutOverlay')) closeCheckoutModal(); });
 </script>
 </body>
 </html>

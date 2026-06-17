@@ -649,6 +649,7 @@
         session = data.session;
       }
       if (session) {
+        _currentSession = session;
         await savePlanToProfile(session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', _pendingUser || session.user.user_metadata?.username || '');
@@ -751,6 +752,7 @@
       _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       if (data.session) {
         // Email already confirmed (confirmation disabled in Supabase settings)
+        _currentSession = data.session;
         await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
@@ -767,8 +769,6 @@
   // Stripe's embedded checkout. Trial signups skip straight to home.html.
   async function startPlanCheckout(session) {
     if (_selectedPlan === 'trial') { window.location.href = 'home.html'; return; }
-    const status = document.getElementById('paymentStatus');
-    if (status) status.textContent = 'Redirecting to secure checkout…';
     try {
       const stripeJs = getStripeJs();
       if (!stripeJs) throw new Error('Payment system unavailable');
@@ -796,6 +796,8 @@
   }
 
   let _embeddedCheckout = null;
+  let _currentSession = null;
+
   async function openCheckoutModal(stripeJs, clientSecret) {
     const overlay   = document.getElementById('checkoutOverlay');
     const container = document.getElementById('checkoutContainer');
@@ -805,11 +807,27 @@
     _embeddedCheckout = await stripeJs.initEmbeddedCheckout({ clientSecret });
     _embeddedCheckout.mount('#checkoutContainer');
   }
+
   function closeCheckoutModal() {
     document.getElementById('checkoutOverlay').style.display = 'none';
     document.getElementById('checkoutContainer').innerHTML = '';
     if (_embeddedCheckout) { _embeddedCheckout.destroy(); _embeddedCheckout = null; }
-    window.location.href = 'home.html';
+
+    // Show "retry or skip" UI — don't silently let them into the app unpaid.
+    const planLabel = { starter: 'Starter', pro: 'Pro', max: 'Max' }[_selectedPlan] || 'your';
+    document.getElementById('confirmTitle').textContent = 'Payment required';
+    document.getElementById('confirmSubtitle').innerHTML =
+      `Your email is verified. Complete payment to activate your <strong>${planLabel} plan</strong>.`;
+    document.getElementById('confirmHint').style.display = 'none';
+    const btn = document.getElementById('btnConfirmed');
+    btn.disabled = false;
+    document.getElementById('confirmedLabel').textContent = 'Complete payment';
+    btn.onclick = () => tryConfirmedSignin();
+    const resend = document.getElementById('resendBtn');
+    resend.style.display = '';
+    resend.textContent = 'Continue with free trial instead';
+    resend.onclick = () => { window.location.href = 'home.html'; };
+    document.getElementById('formConfirm').style.display = '';
   }
 
   async function doSignin() {

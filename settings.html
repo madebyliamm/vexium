@@ -530,6 +530,7 @@
     : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1';
   const STRIPE_CHECKOUT_URL = SUPABASE_FN_BASE + '/stripe-checkout';
   const STRIPE_PORTAL_URL   = SUPABASE_FN_BASE + '/stripe-portal';
+  const STRIPE_EXTRA_URL    = SUPABASE_FN_BASE + '/stripe-extra-usage';
   const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TgVYhDRd56Cnoi3jUdQ1l5bhCJZD9fFveU0gP3WWxha6vWxcwmEVjXHmYlcMX9xb8RUQ9WQc6Mw8mBJgjANlnL100VBCgiS54';
   let _stripeJs = null;
   function getStripeJs() {
@@ -596,6 +597,9 @@
     if (billingResult === 'success') {
       await pollForPlanUpdate();
       history.replaceState(null, '', '?tab=billing');
+    } else if (billingResult === 'extra_success') {
+      await pollForExtraUpdate();
+      history.replaceState(null, '', '?tab=billing');
     } else if (billingResult === 'cancel') {
       history.replaceState(null, '', '?tab=billing');
     }
@@ -609,6 +613,19 @@
       if (data) {
         myProfile = data;
         if (data.stripe_subscription_id) { renderBilling(myProfile); return; }
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (myProfile) renderBilling(myProfile);
+  }
+
+  async function pollForExtraUpdate(maxTries = 6) {
+    const prev = Number(myProfile?.extra_credits_purchased_cents || 0);
+    for (let i = 0; i < maxTries; i++) {
+      const { data } = await sb.from('profiles').select(PROFILE_SELECT).eq('id', myId).single();
+      if (data) {
+        myProfile = data;
+        if (Number(data.extra_credits_purchased_cents || 0) > prev) { renderBilling(myProfile); return; }
       }
       await new Promise(r => setTimeout(r, 1000));
     }
@@ -738,25 +755,32 @@
 
   async function buyExtra(amountPaidCents) {
     if (!sb || !myId) return;
-    // $1.50 paid → $1.00 of AI credits (100 cents)
-    const aiCentsAdded  = Math.round(amountPaidCents / 1.5);
-    const newExtra      = (myProfile?.extra_credits_cents || 0) + aiCentsAdded;
-    const newPurchased  = (myProfile?.extra_credits_purchased_cents || 0) + aiCentsAdded;
-    const desc = `Extra usage — $${(amountPaidCents/100).toFixed(0)} top-up`;
+    const presets = document.querySelectorAll('.preset-btn');
+    const buyBtn  = document.getElementById('buyCustomLabel');
+    presets.forEach(b => b.disabled = true);
+    if (buyBtn) buyBtn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
     try {
-      await Promise.all([
-        sb.from('profiles').update({ extra_credits_cents: newExtra, extra_credits_purchased_cents: newPurchased }).eq('id', myId),
-        sb.from('billing_history').insert({ user_id: myId, type: 'extra_usage', description: desc, amount_paid_cents: amountPaidCents }),
-      ]);
-      myProfile = { ...myProfile, extra_credits_cents: newExtra, extra_credits_purchased_cents: newPurchased };
-      renderBilling(myProfile);
-      const panel = document.getElementById('extraPanel');
-      if (panel?.classList.contains('open')) {
-        panel.classList.remove('open');
-        const btn = document.getElementById('extraToggleBtn');
-        if (btn) btn.textContent = 'Get extra usage';
-      }
-    } catch(e) {}
+      const stripeJs = getStripeJs();
+      if (!stripeJs) throw new Error('Payment system unavailable. Please refresh and try again.');
+      const headers = await getEdgeAuthHeaders();
+      const returnBase = location.origin + location.pathname;
+      const res = await fetch(STRIPE_EXTRA_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          amount_cents: amountPaidCents,
+          return_url: returnBase + '?tab=billing&billing=extra_success',
+        }),
+      });
+      const out = await res.json();
+      if (!res.ok || !out.client_secret) throw new Error(out.error || 'Could not start checkout');
+      await openCheckoutModal(stripeJs, out.client_secret);
+    } catch(e) {
+      alert(e.message || 'Could not start checkout. Please try again.');
+    } finally {
+      presets.forEach(b => b.disabled = false);
+      if (buyBtn) buyBtn.textContent = 'Buy';
+    }
   }
 
   async function loadBillingHistory() {

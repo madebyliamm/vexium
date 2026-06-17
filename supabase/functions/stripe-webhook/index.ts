@@ -2,7 +2,7 @@
 // Deploy: supabase functions deploy stripe-webhook --no-verify-jwt
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
-import { getProfileByCustomerId, updateProfile, insertBillingHistory } from "../_shared/db.ts";
+import { getProfile, getProfileByCustomerId, updateProfile, insertBillingHistory } from "../_shared/db.ts";
 import { PRICE_TO_PLAN, PLAN_LABEL } from "../_shared/stripe-plans.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -29,9 +29,27 @@ Deno.serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.client_reference_id || session.metadata?.user_id;
-        const plan = session.metadata?.plan;
-        const period = session.metadata?.period as "monthly" | "annual" | undefined;
-        if (userId && plan && period) {
+        const meta = session.metadata || {};
+
+        if (userId && meta.type === "extra_usage") {
+          const amountPaidCents = Number(meta.amount_paid_cents || 0);
+          const aiCentsAdded = Math.round(amountPaidCents / 1.5);
+          const profile = await getProfile(userId);
+          const currentExtra     = Number(profile?.extra_credits_cents || 0);
+          const currentPurchased = Number(profile?.extra_credits_purchased_cents || 0);
+          await updateProfile(userId, {
+            extra_credits_cents:           currentExtra     + aiCentsAdded,
+            extra_credits_purchased_cents: currentPurchased + aiCentsAdded,
+          });
+          await insertBillingHistory(
+            userId,
+            "extra_usage",
+            `Extra usage — $${(amountPaidCents / 100).toFixed(0)} top-up`,
+            amountPaidCents,
+          );
+        } else if (userId && meta.plan && meta.period) {
+          const plan   = meta.plan;
+          const period = meta.period as "monthly" | "annual";
           await updateProfile(userId, {
             plan,
             selected_plan: plan,

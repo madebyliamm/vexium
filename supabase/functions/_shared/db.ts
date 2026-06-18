@@ -51,3 +51,37 @@ export async function insertBillingHistory(userId: string, type: string, descrip
     console.error("[db] insertBillingHistory failed", res.status, await res.text().catch(() => ""));
   }
 }
+
+export async function getProjectById(projectId: string): Promise<Record<string, any> | null> {
+  const res = await fetch(`${REST}/projects?id=eq.${encodeURIComponent(projectId)}&select=id,user_id,stripe_connect_account_id,stripe_connect_charges_enabled&limit=1`, { headers: HEADERS });
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
+export async function updateProject(projectId: string, fields: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${REST}/projects?id=eq.${encodeURIComponent(projectId)}`, {
+    method: "PATCH",
+    headers: { ...HEADERS, "Prefer": "return=minimal" },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) {
+    console.error("[db] updateProject failed", res.status, await res.text().catch(() => ""));
+  }
+}
+
+export async function getProjectByConnectAccount(accountId: string): Promise<Record<string, any> | null> {
+  const res = await fetch(`${REST}/projects?stripe_connect_account_id=eq.${encodeURIComponent(accountId)}&select=id,user_id&limit=1`, { headers: HEADERS });
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
+export async function insertSiteData(projectId: string, collection: string, data: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${REST}/site_data`, {
+    method: "POST",
+    headers: { ...HEADERS, "Prefer": "return=minimal" },
+    body: JSON.stringify({ project_id: projectId, collection, data }),
+  });
+  if (!res.ok) {
+    console.error("[db] insertSiteData failed", res.status, await res.text().catch(() => ""));
+  }
+}

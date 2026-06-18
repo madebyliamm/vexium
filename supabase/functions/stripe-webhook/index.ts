@@ -2,7 +2,7 @@
 // Deploy: supabase functions deploy stripe-webhook --no-verify-jwt
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
-import { getProfile, getProfileByCustomerId, updateProfile, insertBillingHistory } from "../_shared/db.ts";
+import { getProfile, getProfileByCustomerId, updateProfile, insertBillingHistory, getProjectByConnectAccount, insertSiteData } from "../_shared/db.ts";
 import { PRICE_TO_PLAN, PLAN_LABEL } from "../_shared/stripe-plans.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -28,6 +28,23 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+
+        // Connect account event — buyer paid on a Vexium-built site
+        if (event.account) {
+          const projectId = session.metadata?.project_id;
+          if (projectId) {
+            await insertSiteData(projectId, "transactions", {
+              amount: (session.amount_total ?? 0) / 100,
+              currency: session.currency,
+              status: session.payment_status,
+              customer_email: session.customer_details?.email ?? null,
+              description: session.metadata?.product_name ?? "Purchase",
+              stripe_session_id: session.id,
+            });
+          }
+          break;
+        }
+
         const userId = session.client_reference_id || session.metadata?.user_id;
         const meta = session.metadata || {};
 

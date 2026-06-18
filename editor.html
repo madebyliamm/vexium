@@ -863,6 +863,25 @@
     #commerceMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
     .commerce-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
     .commerce-panel.active { display:flex; }
+    #commerceStripeBar { flex-shrink:0; padding:12px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); background:var(--surface); }
+    #commerceStripeBar.csb-hidden { display:none; }
+    .csb-left { flex:1; min-width:0; }
+    .csb-title { font-size:13px; font-weight:700; color:var(--text); }
+    .csb-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .csb-connect-btn { flex-shrink:0; padding:6px 14px; background:var(--text); color:var(--bg); border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .csb-connect-btn:hover { opacity:.85; }
+    .csb-connect-btn:disabled { opacity:.5; cursor:default; }
+    .csb-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#4ade80; margin-right:7px; vertical-align:middle; }
+    .csb-status { font-size:13px; font-weight:700; color:#4ade80; }
+    .csb-account { font-family:var(--mono); font-size:11px; color:var(--muted); }
+    .csb-snippet-btn { flex-shrink:0; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; }
+    .csb-snippet-btn:hover { color:var(--text); border-color:rgba(255,255,255,.25); }
+    #commerceSnippet { flex-shrink:0; padding:14px 20px; background:rgba(255,255,255,.02); border-bottom:1px solid var(--border); display:none; }
+    #commerceSnippet.open { display:block; }
+    .csb-snippet-label { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .csb-snippet-code { font-family:var(--mono); font-size:11px; color:var(--text); background:var(--surface); padding:10px 14px; border-radius:6px; white-space:pre; overflow-x:auto; line-height:1.6; }
+    .csb-copy-btn { margin-top:8px; padding:4px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; letter-spacing:.04em; }
+    .csb-copy-btn:hover { color:var(--text); }
     #editNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; border-right:1px solid var(--border); }
     #editMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
     .edit-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
@@ -1174,20 +1193,27 @@
     /* Center input area */
     #aiCenterInput { width: min(92%, 800px); pointer-events: all; }
     #aiCenterInputBox {
-      border-radius: var(--r-lg);
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    #aiCenterInputField {
+      flex: 1;
+      min-width: 0;
+      border-radius: var(--r-full);
       border: none;
       background: #222222;
-      padding: 9px 9px 9px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background var(--t-fast);
+      padding: 11px 18px;
+      transition: background var(--t-fast), border-radius var(--t-fast);
     }
-    #aiCenterInputBox:focus-within {
+    #aiCenterInputField:focus-within {
       background: #282828;
     }
+    #aiCenterInputField.multiline {
+      border-radius: var(--r-lg);
+    }
     #aiInput {
-      flex: 1;
+      width: 100%;
       background: transparent;
       border: none;
       font-size: clamp(14px, 1.1vw, 16px);
@@ -1209,6 +1235,7 @@
       background: var(--border2);
       border: none;
       border-radius: 50%;
+      margin-bottom: 4px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -2945,6 +2972,8 @@
           </div>
         </div>
         <div id="commerceMain">
+          <div id="commerceStripeBar" class="csb-hidden"></div>
+          <div id="commerceSnippet"></div>
           <div class="commerce-panel active" id="commercePanelTransactions"></div>
           <div class="commerce-panel" id="commercePanelCustomers"></div>
           <div class="commerce-panel" id="commercePanelOrders"></div>
@@ -3009,7 +3038,9 @@
                   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
               </div>
-              <textarea id="aiInput" placeholder="Ask me to build something…" rows="1"></textarea>
+              <div id="aiCenterInputField">
+                <textarea id="aiInput" placeholder="Ask me to build something…" rows="1"></textarea>
+              </div>
               <button id="aiSend" onclick="aiSend()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
@@ -3574,6 +3605,12 @@ async function loadProject() {
   await checkInterruptedJob(); // resume any build that was interrupted by a refresh
   renderTemplates();
   startPlaceholderRotator();
+
+  // Detect return from Stripe Connect onboarding
+  const _scParam = new URLSearchParams(location.search).get('stripe_connect');
+  if (_scParam === 'return' || _scParam === 'refresh') {
+    setTimeout(() => commerceCheckConnectReturn(), 300);
+  }
 }
 
 async function saveNow() {
@@ -5306,11 +5343,17 @@ let aiAttachments = [];
 let _aiTypingStatusInterval = null;
 let _previewErrors = [];
 let _autoRecoverCount = 0;
+let _transientRetryCount = 0;
 let _aiCutFile = null;
 let _maxTokensHit = false;
 let _aiUserStopped = false;
 let _aiStreamCleanup = null;
 let _continuationBase = null; // { file, content } — set by _aiAutoComplete, used to append tail
+// Frozen at the moment a build starts (before the AI writes anything) and replayed on every
+// continuation request for that build. The server needs this to keep the system prompt's
+// fresh-build-vs-edit shape identical across rounds — otherwise it drifts as files fill in,
+// busting Anthropic's prompt cache and forcing a full-price rewrite on every continuation call.
+let _buildIsFreshSession = null;
 let _preEditSnapshot = {}; // snapshot of files before each AI edit — used to restore on truncation
 const _aiTypingPhases = ['Thinking…', 'Analyzing…', 'Planning…', 'Strategizing…'];
 /** Max chat turns sent to the edge (full history explodes input tokens / cost). */
@@ -6758,6 +6801,8 @@ async function aiSend(fromBottom) {
   aiShowTyping();
 
   _autoRecoverCount = 0;
+  _transientRetryCount = 0;
+  _buildIsFreshSession = isDefaultCode(fileSystem);
   _aiCutFile = null;
   _maxTokensHit = false;
   _aiUserStopped = false;
@@ -7532,6 +7577,7 @@ async function aiCallAPI() {
         project_has_real_files: !isDefaultCode(fileSystem),
         project_id: projectId || undefined,
         continuation_mode: !!_continuationBase || undefined,
+        fresh_build_session: _buildIsFreshSession === null ? undefined : _buildIsFreshSession,
       }),
       signal: aiAbortController.signal
     });
@@ -7797,7 +7843,7 @@ async function aiCallAPI() {
       const partialContent = (cutFile && _partialContent[cutFile]) || '';
       const hasMidStreamFile = !!(cutFile && partialContent.length >= 500);
 
-      if (fromEarlyClose && hasMidStreamFile && _autoRecoverCount < 3) {
+      if (fromEarlyClose && hasMidStreamFile) {
         _autoRecoverCount++;
         _aiCutFile = cutFile;
         // Save partial content now so _aiAutoComplete can read the tail for patch continuation.
@@ -7981,9 +8027,9 @@ async function aiCallAPI() {
           // Save currentStreamingFile BEFORE finalizeAssistantStream clears it
           const midStreamFile = currentStreamingFile;
           _maxTokensHit = false;
-          // Do NOT reset _autoRecoverCount here — resetting on every done event defeats
-          // the limit, since the counter was always 0 when checked immediately after reset.
-          // Counter is reset only when the user sends a new message (in aiSend).
+          // Counter is reset only when the user sends a new message (in aiSend) —
+          // it's purely informational now since continuation has no cap (each
+          // continuation makes real forward progress on the file).
           finalizeAssistantStream(false);
           // If the stream completed but produced nothing at all, show a retry prompt
           if (!hadOutput && !hitTokenLimit && textEl) {
@@ -7993,7 +8039,7 @@ async function aiCallAPI() {
           // Skip recovery for internal memory files (_project_state/_session) — they
           // update themselves next build, and recovering them causes the AI to keep going.
           const INTERNAL = ['_longterm', '_shortterm', '_backend', '_pages'];
-          if (hitTokenLimit && midStreamFile && !INTERNAL.includes(midStreamFile) && _autoRecoverCount < 3) {
+          if (hitTokenLimit && midStreamFile && !INTERNAL.includes(midStreamFile)) {
             _autoRecoverCount++;
             _aiCutFile = midStreamFile;
             setTimeout(() => _aiAutoComplete(), 800);
@@ -8082,11 +8128,13 @@ async function aiCallAPI() {
       } else {
         // 503 / transient server error — silently retry, leave generating state for the retry
         const isTransient = /503|502|unavailable|overloaded|network/i.test(err.message || '');
-        if (isTransient && _autoRecoverCount < 3 && !_gotAnyOutput) {
+        if (isTransient && _transientRetryCount < 6 && !_gotAnyOutput) {
           // Only retry from scratch when nothing was generated at all.
           // If we got output, finalizeAssistantStream already saved it and
           // may have scheduled _aiAutoComplete for mid-file recovery.
-          _autoRecoverCount++;
+          // Capped (unlike continuation) since these retries make no forward
+          // progress — an uncapped loop here would spin forever on a real outage.
+          _transientRetryCount++;
           msgs.removeEventListener('scroll', onUserScroll);
           aiAbortController = null;
           setTimeout(() => _aiAutoRetry(), 3000);
@@ -8211,6 +8259,12 @@ function _aiAutoComplete() {
   _continuationBase = null;
   if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') aiHistory.pop();
 
+  // Suffix applied to every continuation prompt — keeps the chat from showing what
+  // looks like a restart. Without this the model tends to open its continuation with
+  // a fresh "Building X — here we go" intro, which reads as if generation restarted
+  // even though the file itself is being appended to correctly.
+  const noIntroNote = `\n\nDo not write a new intro, summary, or "here we go" message — the user already saw that. Either omit the chat message entirely or, if you must say something, make it a single short phrase like "continuing…".`;
+
   let msg;
   if (cutFile && fileSystem[cutFile]) {
     const partialContent = fileSystem[cutFile];
@@ -8218,11 +8272,11 @@ function _aiAutoComplete() {
     const tail = partLines.slice(-6).join('\n');
     // Store base so the file handler can concatenate base + tail on arrival
     _continuationBase = { file: cutFile, content: partialContent };
-    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines so far). Do NOT start over. Write ONLY the HTML that comes immediately after this last section:\n\n${tail}\n\nWrap just the remaining tail in <file name="${cutFile}">. Do not repeat anything already written.`;
+    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines so far). Do NOT start over. Write ONLY the HTML that comes immediately after this last section:\n\n${tail}\n\nWrap just the remaining tail in <file name="${cutFile}">. Do not repeat anything already written.${noIntroNote}`;
   } else if (cutFile) {
-    msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} as a <file> block.`;
+    msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} as a <file> block.${noIntroNote}`;
   } else {
-    msg = `The output was cut off. Continue and complete all remaining files.`;
+    msg = `The output was cut off. Continue and complete all remaining files.${noIntroNote}`;
   }
 
   aiHistory.push({ role: 'user', content: msg }); // in-memory only — never saved to DB or shown in UI
@@ -8353,10 +8407,16 @@ function _syncSendBtnState() {
   if (bs) { bs.classList.toggle('has-text', !!bv.trim()); bs.disabled = !bv.trim(); }
 }
 
+function _aiSyncCenterInputShape(input) {
+  const field = document.getElementById('aiCenterInputField');
+  if (!field) return;
+  field.classList.toggle('multiline', input.scrollHeight > 34);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const centerInput = document.getElementById('aiInput');
   if (centerInput) {
-    centerInput.addEventListener('input', () => { aiAutoResize(centerInput); _syncSendBtnState(); });
+    centerInput.addEventListener('input', () => { aiAutoResize(centerInput); _aiSyncCenterInputShape(centerInput); _syncSendBtnState(); });
     centerInput.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(false); }
     });
@@ -8753,6 +8813,7 @@ function commerceSetTab(tab) {
   _commerceTab = tab;
   document.querySelectorAll('#commerceNav .bk-nav-item').forEach(el => el.classList.toggle('active', el.dataset.commerce === tab));
   document.querySelectorAll('.commerce-panel').forEach(el => el.classList.toggle('active', el.id === 'commercePanel' + tab.charAt(0).toUpperCase() + tab.slice(1)));
+  commerceLoadStripeStatus();
   if (tab === 'customers')          commerceLoadCustomers();
   else if (tab === 'transactions')  commerceLoadTransactions();
   else                              commerceLoadSiteData(tab);
@@ -8811,6 +8872,125 @@ async function commerceLoadSiteData(collection) {
 
 async function commerceDeleteRecord(id, btn) { if (!sb) return; await sb.from('site_data').delete().eq('id', id); btn.closest('tr').remove(); }
 async function commerceDeleteUser(id, btn)   { if (!sb) return; await sb.from('site_users').delete().eq('id', id); btn.closest('tr').remove(); }
+
+// ── Stripe Connect ────────────────────────────────────────────────────────────
+function commerceLoadStripeStatus() {
+  const bar = document.getElementById('commerceStripeBar');
+  if (!bar || !project) return;
+
+  const accountId = project.stripe_connect_account_id;
+  const chargesEnabled = project.stripe_connect_charges_enabled;
+
+  if (chargesEnabled && accountId) {
+    bar.className = '';
+    bar.innerHTML = `
+      <div class="csb-status"><span class="csb-dot"></span>Stripe Connected</div>
+      <div class="csb-account">${accountId}</div>
+      <button class="csb-snippet-btn" onclick="commerceToggleSnippet()">Buy button code</button>`;
+    commerceRenderSnippet(accountId);
+  } else if (accountId) {
+    bar.className = '';
+    bar.innerHTML = `
+      <div class="csb-left">
+        <div class="csb-title">Complete Stripe setup</div>
+        <div class="csb-sub">Your Stripe account needs more information before it can accept payments.</div>
+      </div>
+      <button id="commerceConnectBtn" class="csb-connect-btn" onclick="commerceConnectStripe()">Complete setup →</button>`;
+  } else {
+    bar.className = '';
+    bar.innerHTML = `
+      <div class="csb-left">
+        <div class="csb-title">Connect Stripe to accept payments</div>
+        <div class="csb-sub">Customers can pay directly on your site. Vexium takes 1% per transaction.</div>
+      </div>
+      <button id="commerceConnectBtn" class="csb-connect-btn" onclick="commerceConnectStripe()">Connect Stripe →</button>`;
+  }
+}
+
+function commerceRenderSnippet(accountId) {
+  const snippet = document.getElementById('commerceSnippet');
+  if (!snippet || !project) return;
+  const fnBase = `${BK_URL}/functions/v1`;
+  const code = `<button onclick="vxBuy(2999, 'My Product')">Buy — $29.99</button>
+
+<script>
+async function vxBuy(amountCents, name) {
+  const res = await fetch('${fnBase}/stripe-site-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      project_id: '${project.id}',
+      amount_cents: amountCents,
+      name: name,
+      success_url: location.href + '?paid=1',
+      cancel_url: location.href
+    })
+  });
+  const { url } = await res.json();
+  if (url) window.location.href = url;
+}
+<\/script>`;
+  snippet.innerHTML = `
+    <div class="csb-snippet-label">Add a buy button to your site</div>
+    <div class="csb-snippet-code" id="csbCodeEl">${escHtml(code)}</div>
+    <button class="csb-copy-btn" onclick="commerceCopySnippet()">Copy code</button>`;
+}
+
+function commerceToggleSnippet() {
+  const el = document.getElementById('commerceSnippet');
+  if (el) el.classList.toggle('open');
+}
+
+async function commerceCopySnippet() {
+  const el = document.getElementById('csbCodeEl');
+  if (!el) return;
+  try {
+    await navigator.clipboard.writeText(el.textContent || '');
+    const btn = el.parentElement?.querySelector('.csb-copy-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy code', 2000); }
+  } catch(e) {}
+}
+
+async function commerceConnectStripe() {
+  if (!project?.id) return;
+  const btn = document.getElementById('commerceConnectBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
+    const returnUrl  = `https://vexium.ai/editor.html?project=${project.id}&stripe_connect=return`;
+    const refreshUrl = `https://vexium.ai/editor.html?project=${project.id}&stripe_connect=refresh`;
+    const res = await fetch(`${BK_URL}/functions/v1/stripe-connect-start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ project_id: project.id, return_url: returnUrl, refresh_url: refreshUrl })
+    });
+    const { url, error } = await res.json();
+    if (error) throw new Error(error);
+    window.location.href = url;
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = project?.stripe_connect_account_id ? 'Complete setup →' : 'Connect Stripe →'; }
+    alert('Could not start Stripe Connect: ' + (e.message || e));
+  }
+}
+
+async function commerceCheckConnectReturn() {
+  if (!project?.id || !sb) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
+    const res = await fetch(`${BK_URL}/functions/v1/stripe-connect-status?project_id=${project.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const { charges_enabled, account_id, error } = await res.json();
+    if (error) return;
+    if (account_id) project.stripe_connect_account_id = account_id;
+    if (charges_enabled) project.stripe_connect_charges_enabled = true;
+    commerceLoadStripeStatus();
+    // Open commerce pane to show the result
+    if (typeof setPaneMode === 'function') setPaneMode('commerce');
+  } catch(e) { console.warn('[commerceCheckConnectReturn]', e); }
+}
 
 // ── Config helpers ────────────────────────────────────────────────────────────
 function getBackendConfig() {

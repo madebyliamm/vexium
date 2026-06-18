@@ -3821,7 +3821,10 @@ function toggleEditorDock(forceOpen) {
   _editorDockOpen = forceOpen !== undefined ? !!forceOpen : !_editorDockOpen;
   try { localStorage.setItem('vexium_editor_dock', _editorDockOpen ? '1' : '0'); } catch(e) {}
   _syncEditorDock();
-  if (_editorDockOpen) setPaneMode(_paneMode);
+  if (_editorDockOpen) {
+    const targetPane = document.body.classList.contains('advanced-mode') ? _paneMode : 'data';
+    setPaneMode(targetPane);
+  }
 }
 
 // ── DOCK RESIZER DRAG ────────────────────────────────────────────────────────

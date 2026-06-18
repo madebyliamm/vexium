@@ -9,7 +9,8 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-11-20.acacia",
   httpClient: Stripe.createFetchHttpClient(),
 });
-const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
+const WEBHOOK_SECRET         = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
+const CONNECT_WEBHOOK_SECRET = Deno.env.get("STRIPE_CONNECT_WEBHOOK_SECRET") || "";
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 Deno.serve(async (req) => {
@@ -19,9 +20,14 @@ Deno.serve(async (req) => {
   let event: Stripe.Event;
   try {
     event = await stripe.webhooks.constructEventAsync(body, signature!, WEBHOOK_SECRET, undefined, cryptoProvider);
-  } catch (err) {
-    console.error("[stripe-webhook] signature verification failed", err);
-    return new Response(`Webhook Error: ${err instanceof Error ? err.message : err}`, { status: 400 });
+  } catch {
+    // Platform secret failed — try Connect secret
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature!, CONNECT_WEBHOOK_SECRET, undefined, cryptoProvider);
+    } catch (err) {
+      console.error("[stripe-webhook] signature verification failed", err);
+      return new Response(`Webhook Error: ${err instanceof Error ? err.message : err}`, { status: 400 });
+    }
   }
 
   try {

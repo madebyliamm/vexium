@@ -769,8 +769,80 @@
     #mainPanel { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
     #editorArea { flex: 1; display: flex; min-height: 0; overflow: hidden; }
     #editorLeft { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
-    #editorArea.dock-right #editorLeft { flex: 0 0 380px; min-width: 240px; }
+    #editorLeft.dev-hidden { display: none; }
     #editorInner { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    /* ── DEV PANEL ── */
+    #devPanel { display:none; flex:1; flex-direction:row; min-height:0; overflow:hidden; min-width:0; background:var(--bg); }
+    #devPanel.show { display:flex; }
+    #devNav { width:162px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 6px; gap:1px; overflow:hidden auto; border-right:1px solid var(--border); }
+    .dev-nav-section { padding:14px 8px 4px; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--border3); }
+    .dev-nav-item { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; color:var(--muted); transition:background var(--t-fast),color var(--t-fast); user-select:none; }
+    .dev-nav-item svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; opacity:.7; }
+    .dev-nav-item:hover { background:var(--surface2); color:var(--text); }
+    .dev-nav-item:hover svg { opacity:1; }
+    .dev-nav-item.active { background:rgba(255,255,255,.07); color:var(--text); }
+    .dev-nav-item.active svg { opacity:1; }
+    #devContent { flex:1; display:flex; min-height:0; overflow:hidden; position:relative; }
+    .dev-section { flex:1; display:none; flex-direction:row; overflow:hidden; min-width:0; }
+    .dev-section.active { display:flex; }
+    #devSectionCode { flex-direction:row; }
+    .dev-code-main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    #devSectionBackend { flex-direction:row; }
+    #devSectionData { flex-direction:row; }
+    #devSectionCommerce { flex-direction:row; }
+    #devSectionOverview { flex-direction:column; overflow-y:auto; }
+    /* Dev overview content */
+    .dev-ov-body { padding:20px 22px; display:flex; flex-direction:column; gap:18px; max-width:420px; }
+    .dev-ov-header { font-size:13px; font-weight:700; color:var(--text); }
+    .dev-ov-stats-row { display:flex; gap:2px; cursor:pointer; border-radius:8px; overflow:hidden; }
+    .dev-ov-num { display:flex; flex-direction:column; gap:2px; flex:1; background:var(--surface); padding:12px 14px; transition:background var(--t-fast); }
+    .dev-ov-num:hover { background:var(--surface2); }
+    .dev-ov-num:first-child { border-radius:8px 0 0 8px; }
+    .dev-ov-num:last-child  { border-radius:0 8px 8px 0; }
+    .dev-ov-num-val { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-.5px; line-height:1; }
+    .dev-ov-num-lbl { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; margin-top:2px; }
+    .dev-ov-section { display:flex; flex-direction:column; gap:3px; }
+    .dev-ov-section-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:3px; }
+    .dev-ov-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); padding:7px 10px; background:var(--surface); border-radius:6px; cursor:pointer; transition:background var(--t-fast); }
+    .dev-ov-item:hover { background:var(--surface2); }
+    .dev-ov-empty-line { font-size:11px; color:var(--muted); padding:6px 2px; cursor:pointer; }
+    .dev-ov-empty-line:hover { color:var(--text); }
+    .dev-ov-stripe-btn { background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; margin-top:2px; width:fit-content; transition:border-color var(--t-fast),background var(--t-fast); }
+    .dev-ov-stripe-btn:hover { border-color:var(--border2); background:var(--surface); }
+    /* Old cards kept for any references */
+    .dev-ov-card-btn { padding:5px 12px; background:var(--border); border:none; border-radius:6px; font-size:11px; font-weight:700; color:var(--text); cursor:pointer; }
+    /* Dev button in topbar */
+    #btnDev { display:none; align-items:center; gap:6px; padding:0 11px; height:30px; background:var(--surface); border:none; border-radius:8px; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; letter-spacing:-.01em; transition:background var(--t-fast); }
+    body.advanced-mode #btnDev { display:flex; }
+    #btnDev:hover { background:var(--surface2); border-color:var(--border2); }
+    #btnDev.active { background:rgba(255,255,255,.08); border-color:var(--border2); }
+    #btnDev svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+
+
+    /* ── DATA ANALYTICS ────────────────────────────────────────────────── */
+    #dataAnalytics { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+    .da-wrap { padding:24px 28px; max-width:720px; }
+    .da-loading, .da-empty { padding:28px; color:var(--muted); font-size:12px; }
+    .da-section { padding:0 0 28px; margin-bottom:28px; border-bottom:1px solid var(--border); }
+    .da-section:last-child { border-bottom:none; margin-bottom:0; }
+    .da-section-hdr { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:var(--text); margin-bottom:16px; letter-spacing:-.2px; }
+    .da-section-hdr svg { color:var(--muted); flex-shrink:0; }
+    .da-graph { width:100%; border-radius:8px; overflow:hidden; background:var(--surface); margin-bottom:16px; }
+    .da-graph-mini { margin-bottom:10px; border-radius:6px; }
+    .da-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-bottom:14px; }
+    .da-stat { background:var(--surface); border-radius:8px; padding:10px 14px; }
+    .da-stat-val { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.5px; line-height:1; margin-bottom:3px; }
+    .da-stat-lbl { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+    .da-rows { background:var(--surface); border-radius:8px; overflow:hidden; margin-bottom:8px; }
+    .da-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--border); font-size:12px; }
+    .da-row:last-child { border-bottom:none; }
+    .da-row-label { color:var(--text); font-weight:500; }
+    .da-row-val { color:var(--muted); font-weight:700; }
+    .da-subsection { margin-bottom:20px; }
+    .da-subsection-hdr { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+    .da-subsection-count { background:var(--border2); color:var(--text); border-radius:4px; padding:1px 7px; font-size:10px; }
+    .da-empty-inner { color:var(--muted); font-size:11px; padding:8px 0 14px; }
+
 
     /* ── EDITOR DOCK ── */
     #editorDock { display:none; flex-direction:column; overflow:hidden; flex-shrink:0; }
@@ -802,7 +874,7 @@
       position: relative;
     }
     .pane-tabs {
-      display: none !important;
+      display: flex;
       height: 34px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -2443,23 +2515,12 @@
       }
       #rightPanel.hidden > .right-panel-slide { transform: none !important; }
 
-      /* editorLeft + dock share the bottom */
-      #editorLeft { width: 100% !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+      /* editorLeft + devPanel share the bottom */
+      #editorLeft:not(.dev-hidden) { width: 100% !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; flex: 1 !important; min-height: 0 !important; }
+      #editorLeft.dev-hidden { display: none !important; }
       #editorInner { flex: 1 !important; min-height: 0 !important; display: flex !important; overflow: hidden !important; }
-      #editorDock { border-left: none !important; width: 100% !important; min-width: 0 !important; }
-
-      /* STATE 1: dock closed → AI chat fills bottom */
-      #editorLeft { flex: 1 !important; min-height: 0 !important; }
       #aiPanel { flex: 1 !important; display: flex !important; min-width: 0 !important; background: var(--bg) !important; }
-
-      /* STATE 2a: dock-right (preview closed) → dock is sibling of editorLeft, collapse editorLeft */
-      #editorArea:has(#editorDock.dock-right) #editorLeft {
-        flex: 0 0 0 !important; min-height: 0 !important; overflow: hidden !important;
-      }
-      #editorDock.dock-right { flex: 1 !important; min-height: 0 !important; }
-
-      /* STATE 2b: dock-full (preview open) → dock is inside editorLeft, editorLeft fills bottom */
-      #editorDock.dock-full { flex: 1 !important; min-height: 0 !important; }
+      #devPanel.show { flex: 1 !important; min-height: 0 !important; width: 100% !important; }
 
       /* STATE 3: preview closed → hide preview, chat fills full screen */
       #editorArea:has(#rightPanel.hidden) #rightPanel {
@@ -2482,19 +2543,13 @@
   <span class="tb-proj" id="tbProj">Loading…</span>
   <span class="tb-saving" id="tbSaving">saving…</span>
 
-  <div class="tb-modes" id="tbModes" style="display:none">
-    <button class="tb-mode" id="tbPaneOverview" onclick="setPaneMode('data')" style="display:none"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Overview</button>
-    <button class="tb-mode" id="tbPaneCode" onclick="setPaneMode('code')" style="display:none"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Code</button>
-    <button class="tb-mode" id="tbPaneBackend" onclick="setPaneMode('backend')" style="display:none"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Backend</button>
-    <button class="tb-mode" id="tbPaneMoney" onclick="setPaneMode('commerce')" style="display:none"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Money</button>
-  </div>
-
   <div class="tb-right">
     <div id="tbPresence" style="display:flex;align-items:center;gap:-4px;margin-right:4px"></div>
-    <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
-    <button class="tb-icon-btn" id="btnEditToggle" onclick="toggleEditPane()" title="Edit data" style="display:none">
-      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <button id="btnDev" onclick="toggleDevPanel()" title="Dev Panel">
+      <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Adv
     </button>
+    <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
     <button class="tb-icon-btn" onclick="openEditorSettings()" title="Project settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -2718,269 +2773,9 @@
   <div id="mainPanel">
     <div id="editorArea">
 
-      <!-- LEFT COLUMN: AI chat (always visible) -->
+      <!-- LEFT COLUMN: AI chat -->
       <div id="editorLeft">
         <div id="editorInner">
-
-      <!-- SIDEBAR -->
-      <div id="sidebar">
-        <div class="sb-head">
-          <span class="sb-title">Files</span>
-          <div class="sb-add-wrap">
-            <button class="sb-add" id="sbAddBtn" onclick="toggleAddDD(event)" title="New file">
-              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-            <div class="add-dd" id="addDD">
-              <div class="ctx-item" onclick="closeAddDD();promptNewFile()">
-                <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                New file
-              </div>
-              <div class="ctx-item" onclick="closeAddDD();document.getElementById('uploadFileInput').click()">
-                <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                Upload file
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="fileTree"></div>
-        <input type="file" id="uploadFileInput" accept="image/*,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico" style="display:none" onchange="handleFileUpload(event)"/>
-      </div>
-
-      <!-- EDITOR PANE -->
-      <div class="editor-pane" id="editorPane">
-
-        <!-- Code view -->
-        <div class="pane-tabs" id="paneTabs"></div>
-        <div class="monaco-wrap" id="monacoWrap"></div>
-        <div id="imgPreviewPane">
-          <img id="imgPreviewImg" src="" alt=""/>
-          <div class="img-name" id="imgPreviewName"></div>
-        </div>
-
-        <!-- Backend view -->
-        <div id="backendPane">
-
-          <!-- Left nav sidebar -->
-          <div id="bkNav">
-            <div class="bk-nav-section">Tables</div>
-            <div class="bk-nav-item active" data-bk="data" onclick="bkSetTab('data')">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
-              Data
-            </div>
-            <div class="bk-nav-item" data-bk="auth" onclick="bkSetTab('auth')">
-              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Auth
-            </div>
-            <div class="bk-nav-section">Developer</div>
-            <div class="bk-nav-item" data-bk="sql" onclick="bkSetTab('sql')">
-              <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-              SQL Editor
-            </div>
-            <div class="bk-nav-section">Project</div>
-            <div class="bk-nav-item" data-bk="schema" onclick="bkSetTab('schema')">
-              <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-              Schema
-            </div>
-            <div class="bk-nav-item" data-bk="api" onclick="bkSetTab('api')">
-              <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              API
-            </div>
-          </div>
-
-          <!-- Main content -->
-          <div id="bkMain">
-
-            <!-- DATA tab -->
-            <div class="bk-panel active" id="bkPanelData">
-              <!-- Picker: shown when no collection selected -->
-              <div id="bkPicker">
-                <div id="bkPickerBar">
-                  <div id="bkPickerTitle">Data</div>
-                  <input class="bk-input" id="bkPickerSearch" placeholder="Search collections…" oninput="bkFilterPicker(this.value)"/>
-                  <button class="bk-btn bk-btn-primary" onclick="bkShowAddColl()">+ New</button>
-                </div>
-                <div id="bkPickerGrid"></div>
-              </div>
-              <!-- Table: shown when collection is selected -->
-              <div id="bkTableView">
-                <div id="bkTableBar">
-                  <button class="bk-btn-back" onclick="bkBack()">
-                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    Collections
-                  </button>
-                  <div id="bkDataName"></div>
-                  <div id="bkDataRowCount"></div>
-                  <input class="bk-input" id="bkDataSearch" placeholder="Search rows…" oninput="bkFilterRows(this.value)" style="margin-left:auto;width:200px"/>
-                  <button class="bk-btn bk-btn-ghost" onclick="bkExportCSV()" title="Export CSV">
-                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Export
-                  </button>
-                  <button class="bk-btn bk-btn-ghost" onclick="bkLoadCurrentData()" title="Refresh">
-                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                  </button>
-                </div>
-                <div id="bkDataTableWrap" class="bk-table-wrap"></div>
-              </div>
-
-            </div>
-
-            <!-- AUTH tab -->
-            <div class="bk-panel" id="bkPanelAuth">
-              <div id="bkAuthBar">
-                <div id="bkAuthTitle">Auth</div>
-                <div id="bkAuthSubtitle" style="font-size:11px;color:var(--muted)"></div>
-                <input class="bk-input" id="bkAuthSearch" placeholder="Search by email…" oninput="bkAuthFilter(this.value)" style="margin-left:auto;width:200px"/>
-                <button class="bk-btn bk-btn-ghost" onclick="bkLoadAuth()">
-                  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                </button>
-              </div>
-              <div id="bkAuthTableWrap" class="bk-table-wrap">
-                <div class="bk-empty">
-                  <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-                  <div class="bk-empty-t">No users yet</div>
-                  <div class="bk-empty-s">Users who sign up on your site will appear here.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- SQL tab -->
-            <div class="bk-panel" id="bkPanelSql">
-              <div id="bkSqlPane">
-                <div id="bkSqlTop">
-                  <div id="bkSqlTopBar">
-                    <span id="bkSqlLabel">SQL Editor</span>
-                    <span id="bkSqlHint">site_data · site_users · your collection names</span>
-                    <button id="bkRunBtn" onclick="bkRunSQL()">
-                      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                      Run
-                    </button>
-                  </div>
-                  <textarea id="bkSqlTextarea" placeholder="SELECT data->>'email' as email, created_at FROM site_data WHERE collection = 'waitlist' ORDER BY created_at DESC" spellcheck="false"></textarea>
-                </div>
-                <div id="bkSqlBottom">
-                  <div id="bkSqlResultsBar" style="display:none">
-                    <span id="bkSqlResultCount"></span>
-                    <button class="bk-copy-btn" onclick="bkExportSQLCSV()">Export CSV</button>
-                  </div>
-                  <div id="bkSqlResultsBody">
-                    <div class="bk-empty">
-                      <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
-                      <div class="bk-empty-t">Run a query</div>
-                      <div class="bk-empty-s">Press Cmd+Enter or click Run</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- SCHEMA tab -->
-            <div class="bk-panel" id="bkPanelSchema">
-              <div class="bk-toolbar">
-                <div class="bk-toolbar-title">Schema</div>
-                <button class="bk-btn bk-btn-primary" style="margin-left:auto" onclick="bkSchemaShowAdd()">+ New collection</button>
-              </div>
-              <div id="bkSchemaScroll">
-                <div id="bkSchemaList" style="display:contents"></div>
-                <div id="bkSchemaAuthCard">
-                  <div class="bk-auth-toggle-label">
-                    <div class="bk-auth-toggle-title">User Auth</div>
-                    <div class="bk-auth-toggle-sub">Allow users to create accounts on your site</div>
-                  </div>
-                  <label class="bk-toggle">
-                    <input type="checkbox" id="bkAuthToggle" onchange="bkToggleAuth(this.checked)"/>
-                    <span class="bk-toggle-track"></span>
-                    <span class="bk-toggle-thumb"></span>
-                  </label>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- API tab -->
-            <div class="bk-panel" id="bkPanelApi">
-              <div class="bk-toolbar">
-                <div class="bk-toolbar-title">API Reference</div>
-                <div class="bk-toolbar-sub" style="margin-left:8px">Copy-paste ready snippets</div>
-              </div>
-              <div id="bkApiScroll"><div id="bkApiContent" style="display:contents"></div></div>
-            </div>
-
-          </div><!-- end #bkMain -->
-        </div><!-- end #backendPane -->
-
-      </div>
-
-      <!-- EDIT PANE (sibling of editorPane, not child) -->
-      <div id="editPane">
-        <div id="editNav">
-          <div class="bk-nav-section">SITE DATA</div>
-          <div class="bk-nav-item active" data-edit="users" onclick="editSetTab('users')">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Users
-          </div>
-          <div class="bk-nav-item" data-edit="collections" onclick="editSetTab('collections')">
-            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-            Collections
-          </div>
-          <div class="bk-nav-section">COMMERCE</div>
-          <div class="bk-nav-item" data-edit="orders" onclick="editSetTab('orders')">
-            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            Orders
-          </div>
-          <div class="bk-nav-item" data-edit="products" onclick="editSetTab('products')">
-            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-            Products
-          </div>
-          <div class="bk-nav-item" data-edit="subscriptions" onclick="editSetTab('subscriptions')">
-            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            Subscriptions
-          </div>
-        </div>
-        <div id="editMain">
-          <div class="edit-panel active" id="editPanelUsers"></div>
-          <div class="edit-panel" id="editPanelCollections"></div>
-          <div class="edit-panel" id="editPanelOrders"></div>
-          <div class="edit-panel" id="editPanelProducts"></div>
-          <div class="edit-panel" id="editPanelSubscriptions"></div>
-        </div>
-      </div><!-- end #editPane -->
-
-      <!-- COMMERCE PANE -->
-      <div id="commercePane">
-        <div id="commerceNav">
-          <div class="bk-nav-section">PAYMENTS</div>
-          <div class="bk-nav-item active" data-commerce="transactions" onclick="commerceSetTab('transactions')">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-1 2-2.5 2.5S9.5 15 9.5 16a2.5 2.5 0 0 0 5 0"/></svg>
-            Transactions
-          </div>
-          <div class="bk-nav-item" data-commerce="customers" onclick="commerceSetTab('customers')">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Customers
-          </div>
-          <div class="bk-nav-section">CATALOG</div>
-          <div class="bk-nav-item" data-commerce="orders" onclick="commerceSetTab('orders')">
-            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            Orders
-          </div>
-          <div class="bk-nav-item" data-commerce="products" onclick="commerceSetTab('products')">
-            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-            Products
-          </div>
-          <div class="bk-nav-item" data-commerce="subscriptions" onclick="commerceSetTab('subscriptions')">
-            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            Subscriptions
-          </div>
-        </div>
-        <div id="commerceMain">
-          <div id="commerceStripeBar" class="csb-hidden"></div>
-          <div id="commerceSnippet"></div>
-          <div class="commerce-panel active" id="commercePanelTransactions"></div>
-          <div class="commerce-panel" id="commercePanelCustomers"></div>
-          <div class="commerce-panel" id="commercePanelOrders"></div>
-          <div class="commerce-panel" id="commercePanelProducts"></div>
-          <div class="commerce-panel" id="commercePanelSubscriptions"></div>
-        </div>
-      </div><!-- end #commercePane -->
 
       <!-- AI PANEL -->
       <div id="aiPanel">
@@ -3188,28 +2983,270 @@
         </div><!-- end #editorInner -->
       </div><!-- end #editorLeft -->
 
-      <!-- EDITOR DOCK — moved by JS between right-of-left (no preview) and bottom-of-left (preview open) -->
-      <div id="editorDock">
-        <div id="editorDockBar">
-          <button class="dock-tab on" data-pane="data" onclick="setPaneMode('data')">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Overview
-          </button>
-          <button class="dock-tab" data-pane="code" onclick="setPaneMode('code')">
-            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Code
-          </button>
-          <button class="dock-tab" data-pane="backend" onclick="setPaneMode('backend')">
-            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Backend
-          </button>
-          <button class="dock-tab" data-pane="commerce" onclick="setPaneMode('commerce')">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Money
-          </button>
-          <div style="flex:1"></div>
-          <button class="dock-close" onclick="toggleEditorDock()" title="Close editor">
-            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+      <!-- DEV PANEL -->
+      <div id="devPanel">
+        <div id="devNav">
+          <div class="dev-nav-section">PROJECT</div>
+          <div class="dev-nav-item active" data-dev="overview" onclick="setDevTab('overview')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Overview
+          </div>
+          <div class="dev-nav-section">DEVELOP</div>
+          <div class="dev-nav-item" data-dev="data" onclick="setDevTab('data')">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Data
+          </div>
+          <div class="dev-nav-item" data-dev="code" onclick="setDevTab('code')">
+            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Code
+          </div>
+          <div class="dev-nav-item" data-dev="backend" onclick="setDevTab('backend')">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            Backend
+          </div>
+          <div class="dev-nav-section">MONETIZE</div>
+          <div class="dev-nav-item" data-dev="commerce" onclick="setDevTab('commerce')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Commerce
+          </div>
+        </div><!-- end #devNav -->
+
+        <div id="devContent">
+
+          <!-- OVERVIEW SECTION -->
+          <div class="dev-section" id="devSectionOverview"></div>
+
+          <!-- DATA SECTION -->
+          <div class="dev-section" id="devSectionData">
+            <div id="dataAnalytics"><div class="da-wrap"><div class="da-loading">Loading…</div></div></div>
+          </div><!-- end devSectionData -->
+
+          <!-- CODE SECTION -->
+          <div class="dev-section" id="devSectionCode">
+      <!-- SIDEBAR -->
+      <div id="sidebar">
+        <div class="sb-head">
+          <span class="sb-title">Files</span>
+          <div class="sb-add-wrap">
+            <button class="sb-add" id="sbAddBtn" onclick="toggleAddDD(event)" title="New file">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <div class="add-dd" id="addDD">
+              <div class="ctx-item" onclick="closeAddDD();promptNewFile()">
+                <svg class="ctx-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                New file
+              </div>
+              <div class="ctx-item" onclick="closeAddDD();document.getElementById('uploadFileInput').click()">
+                <svg class="ctx-ico" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                Upload file
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="editorDockBody"></div>
+        <div id="fileTree"></div>
+        <input type="file" id="uploadFileInput" accept="image/*,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico" style="display:none" onchange="handleFileUpload(event)"/>
       </div>
+
+            <div class="dev-code-main">
+        <!-- Code view -->
+        <div class="pane-tabs" id="paneTabs"></div>
+        <div class="monaco-wrap" id="monacoWrap"></div>
+        <div id="imgPreviewPane">
+          <img id="imgPreviewImg" src="" alt=""/>
+          <div class="img-name" id="imgPreviewName"></div>
+        </div>
+
+            </div><!-- end dev-code-main -->
+          </div><!-- end devSectionCode -->
+
+          <!-- BACKEND SECTION -->
+          <div class="dev-section" id="devSectionBackend">
+          <div id="bkNav">
+            <div class="bk-nav-section">Tables</div>
+            <div class="bk-nav-item active" data-bk="data" onclick="bkSetTab('data')">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+              Data
+            </div>
+            <div class="bk-nav-item" data-bk="auth" onclick="bkSetTab('auth')">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Auth
+            </div>
+            <div class="bk-nav-section">Developer</div>
+            <div class="bk-nav-item" data-bk="sql" onclick="bkSetTab('sql')">
+              <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              SQL Editor
+            </div>
+            <div class="bk-nav-section">Project</div>
+            <div class="bk-nav-item" data-bk="schema" onclick="bkSetTab('schema')">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              Schema
+            </div>
+            <div class="bk-nav-item" data-bk="api" onclick="bkSetTab('api')">
+              <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              API
+            </div>
+          </div>
+
+          <!-- Main content -->
+          <div id="bkMain">
+
+            <!-- DATA tab -->
+            <div class="bk-panel active" id="bkPanelData">
+              <!-- Picker: shown when no collection selected -->
+              <div id="bkPicker">
+                <div id="bkPickerBar">
+                  <div id="bkPickerTitle">Data</div>
+                  <input class="bk-input" id="bkPickerSearch" placeholder="Search collections…" oninput="bkFilterPicker(this.value)"/>
+                  <button class="bk-btn bk-btn-primary" onclick="bkShowAddColl()">+ New</button>
+                </div>
+                <div id="bkPickerGrid"></div>
+              </div>
+              <!-- Table: shown when collection is selected -->
+              <div id="bkTableView">
+                <div id="bkTableBar">
+                  <button class="bk-btn-back" onclick="bkBack()">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Collections
+                  </button>
+                  <div id="bkDataName"></div>
+                  <div id="bkDataRowCount"></div>
+                  <input class="bk-input" id="bkDataSearch" placeholder="Search rows…" oninput="bkFilterRows(this.value)" style="margin-left:auto;width:200px"/>
+                  <button class="bk-btn bk-btn-ghost" onclick="bkExportCSV()" title="Export CSV">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export
+                  </button>
+                  <button class="bk-btn bk-btn-ghost" onclick="bkLoadCurrentData()" title="Refresh">
+                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                </div>
+                <div id="bkDataTableWrap" class="bk-table-wrap"></div>
+              </div>
+
+            </div>
+
+            <!-- AUTH tab -->
+            <div class="bk-panel" id="bkPanelAuth">
+              <div id="bkAuthBar">
+                <div id="bkAuthTitle">Auth</div>
+                <div id="bkAuthSubtitle" style="font-size:11px;color:var(--muted)"></div>
+                <input class="bk-input" id="bkAuthSearch" placeholder="Search by email…" oninput="bkAuthFilter(this.value)" style="margin-left:auto;width:200px"/>
+                <button class="bk-btn bk-btn-ghost" onclick="bkLoadAuth()">
+                  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+              </div>
+              <div id="bkAuthTableWrap" class="bk-table-wrap">
+                <div class="bk-empty">
+                  <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                  <div class="bk-empty-t">No users yet</div>
+                  <div class="bk-empty-s">Users who sign up on your site will appear here.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SQL tab -->
+            <div class="bk-panel" id="bkPanelSql">
+              <div id="bkSqlPane">
+                <div id="bkSqlTop">
+                  <div id="bkSqlTopBar">
+                    <span id="bkSqlLabel">SQL Editor</span>
+                    <span id="bkSqlHint">site_data · site_users · your collection names</span>
+                    <button id="bkRunBtn" onclick="bkRunSQL()">
+                      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      Run
+                    </button>
+                  </div>
+                  <textarea id="bkSqlTextarea" placeholder="SELECT data->>'email' as email, created_at FROM site_data WHERE collection = 'waitlist' ORDER BY created_at DESC" spellcheck="false"></textarea>
+                </div>
+                <div id="bkSqlBottom">
+                  <div id="bkSqlResultsBar" style="display:none">
+                    <span id="bkSqlResultCount"></span>
+                    <button class="bk-copy-btn" onclick="bkExportSQLCSV()">Export CSV</button>
+                  </div>
+                  <div id="bkSqlResultsBody">
+                    <div class="bk-empty">
+                      <div class="bk-empty-icon"><svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+                      <div class="bk-empty-t">Run a query</div>
+                      <div class="bk-empty-s">Press Cmd+Enter or click Run</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCHEMA tab -->
+            <div class="bk-panel" id="bkPanelSchema">
+              <div class="bk-toolbar">
+                <div class="bk-toolbar-title">Schema</div>
+                <button class="bk-btn bk-btn-primary" style="margin-left:auto" onclick="bkSchemaShowAdd()">+ New collection</button>
+              </div>
+              <div id="bkSchemaScroll">
+                <div id="bkSchemaList" style="display:contents"></div>
+                <div id="bkSchemaAuthCard">
+                  <div class="bk-auth-toggle-label">
+                    <div class="bk-auth-toggle-title">User Auth</div>
+                    <div class="bk-auth-toggle-sub">Allow users to create accounts on your site</div>
+                  </div>
+                  <label class="bk-toggle">
+                    <input type="checkbox" id="bkAuthToggle" onchange="bkToggleAuth(this.checked)"/>
+                    <span class="bk-toggle-track"></span>
+                    <span class="bk-toggle-thumb"></span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- API tab -->
+            <div class="bk-panel" id="bkPanelApi">
+              <div class="bk-toolbar">
+                <div class="bk-toolbar-title">API Reference</div>
+                <div class="bk-toolbar-sub" style="margin-left:8px">Copy-paste ready snippets</div>
+              </div>
+              <div id="bkApiScroll"><div id="bkApiContent" style="display:contents"></div></div>
+            </div>
+
+          </div><!-- end #bkMain -->
+          </div><!-- end devSectionBackend -->
+
+          <!-- COMMERCE SECTION -->
+          <div class="dev-section" id="devSectionCommerce">
+        <div id="commerceNav">
+          <div class="bk-nav-section">PAYMENTS</div>
+          <div class="bk-nav-item active" data-commerce="transactions" onclick="commerceSetTab('transactions')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-1 2-2.5 2.5S9.5 15 9.5 16a2.5 2.5 0 0 0 5 0"/></svg>
+            Transactions
+          </div>
+          <div class="bk-nav-item" data-commerce="customers" onclick="commerceSetTab('customers')">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Customers
+          </div>
+          <div class="bk-nav-section">CATALOG</div>
+          <div class="bk-nav-item" data-commerce="orders" onclick="commerceSetTab('orders')">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Orders
+          </div>
+          <div class="bk-nav-item" data-commerce="products" onclick="commerceSetTab('products')">
+            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Products
+          </div>
+          <div class="bk-nav-item" data-commerce="subscriptions" onclick="commerceSetTab('subscriptions')">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Subscriptions
+          </div>
+        </div>
+        <div id="commerceMain">
+          <div id="commerceStripeBar" class="csb-hidden"></div>
+          <div id="commerceSnippet"></div>
+          <div class="commerce-panel active" id="commercePanelTransactions"></div>
+          <div class="commerce-panel" id="commercePanelCustomers"></div>
+          <div class="commerce-panel" id="commercePanelOrders"></div>
+          <div class="commerce-panel" id="commercePanelProducts"></div>
+          <div class="commerce-panel" id="commercePanelSubscriptions"></div>
+        </div>
+          </div><!-- end devSectionCommerce -->
+
+        </div><!-- end #devContent -->
+      </div><!-- end #devPanel -->
 
       <!-- RESIZER -->
       <div id="rightResizer" class="hidden"></div>
@@ -3373,15 +3410,6 @@ let _realtimeChannel = null;
 let fileSystem = {}, mainFile = 'index.html';
 let openTabs = [], activeFile = null;
 let previewVisible = false;
-// Move editor panes from #editorInner into #editorDockBody before Monaco init
-(function() {
-  const body = document.getElementById('editorDockBody');
-  if (!body) return;
-  ['sidebar','editorPane','backendPane','editPane','commercePane'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) body.appendChild(el);
-  });
-})();
 
 let editor = null, monacoReady = false;
 let dirtyFiles = new Set();
@@ -3577,28 +3605,7 @@ async function loadProject() {
   }
   renderTabs();
 
-  // Read advanced_mode from profile (source of truth), fall back to localStorage cache
-  let _advancedMode = (() => { try { return localStorage.getItem('vexium_advanced_mode') === '1'; } catch(e) { return false; } })();
-  document.body.classList.toggle('advanced-mode', _advancedMode);
-  if (sb) {
-    try {
-      const { data: { session: _amSession } } = await sb.auth.getSession();
-      if (_amSession) {
-        const { data: _amProfile } = await sb.from('profiles').select('advanced_mode').eq('id', _amSession.user.id).single();
-        if (_amProfile && typeof _amProfile.advanced_mode === 'boolean') {
-          _advancedMode = _amProfile.advanced_mode;
-          document.body.classList.toggle('advanced-mode', _advancedMode);
-          try { localStorage.setItem('vexium_advanced_mode', _advancedMode ? '1' : '0'); } catch(e) {}
-        }
-      }
-    } catch(e) {}
-  }
-  // Edit toggle button shows for both modes; tbModes is managed by toggleEditPane
-  const tog = document.getElementById('btnEditToggle');
-  if (tog) tog.style.display = '';
-
   setMode('ai');
-  _syncEditorDock(); // restore dock open/closed state from localStorage
   loadUserPlan();    // check plan/usage, show paywall if needed
   await aiLoadHistory();
   await checkCollabProject();
@@ -3611,6 +3618,19 @@ async function loadProject() {
   if (_scParam === 'return' || _scParam === 'refresh') {
     setTimeout(() => commerceCheckConnectReturn(), 300);
   }
+
+  // Fetch advanced_mode from profile
+  if (sb) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const { data: prof } = await sb.from('profiles').select('advanced_mode').eq('id', session.user.id).single();
+        if (prof?.advanced_mode) document.body.classList.add('advanced-mode');
+      }
+    } catch(e) {}
+  }
+
+  _restoreDevState();
 }
 
 async function saveNow() {
@@ -3706,36 +3726,13 @@ function loadMonaco() {
       document.getElementById('stCol').textContent = e.position.column;
     });
     openFile(mainFile);
-    if (_editorDockOpen) {
-      if (_paneMode === 'code') {
-        setPaneMode('data');
-        requestAnimationFrame(() => { setPaneMode('code'); openFile(activeFile || mainFile); });
-      } else {
-        const _tpMode = _paneMode;
-        setPaneMode('code');
-        requestAnimationFrame(() => setPaneMode(_tpMode));
-      }
-    }
     renderTabs();
-    document.getElementById('editorPane').style.display = 'none';
     if (previewVisible) setTimeout(refreshPreview, 400);
   });
 }
 
 // ── MODE ─────────────────────────────────────────────────────────────────────
 function handleModeClick(m) { setMode(m); }
-
-function toggleEditPane() {
-  toggleEditorDock();
-}
-
-function _syncTbPaneTabs() {
-  // Keep topbar pane tab active states in sync with _paneMode
-  const map = { data:'tbPaneOverview', code:'tbPaneCode', backend:'tbPaneBackend', commerce:'tbPaneMoney' };
-  Object.entries(map).forEach(([mode, id]) => {
-    document.getElementById(id)?.classList.toggle('on', _paneMode === mode);
-  });
-}
 
 function triggerIntroEntrance(id) {
   const el = document.getElementById(id);
@@ -3745,86 +3742,9 @@ function triggerIntroEntrance(id) {
   el.classList.add('entering');
 }
 
-function _syncDockTabActive() {
-  const map = { data:'data', code:'code', backend:'backend', commerce:'commerce' };
-  document.querySelectorAll('#editorDockBar .dock-tab').forEach(btn => {
-    btn.classList.toggle('on', btn.dataset.pane === _paneMode);
-  });
-}
-
-function _syncEditorDock() {
-  const dock     = document.getElementById('editorDock');
-  const area     = document.getElementById('editorArea');
-  const left     = document.getElementById('editorLeft');
-  const previewResizer = document.getElementById('rightResizer');
-  if (!dock || !area || !left) return;
-
-  // Get or create the dock resizer
-  let dr = document.getElementById('dockResizer');
-  if (!dr) {
-    dr = document.createElement('div');
-    dr.id = 'dockResizer';
-  }
-
-  const newPos = !_editorDockOpen ? null : (previewVisible ? 'full' : 'right');
-  const inner  = document.getElementById('editorInner');
-
-  // Reset sizes whenever position changes (including open/close)
-  if (newPos !== _dockPos) {
-    dock.style.flex = '';
-    left.style.flex = '';
-    if (inner) { inner.style.display = ''; inner.style.flex = ''; }
-    if (newPos === 'right') {
-      const areaW = area.getBoundingClientRect().width;
-      if (areaW > 0) left.style.flex = '0 0 ' + Math.floor(areaW / 2) + 'px';
-    }
-    _dockPos = newPos;
-  }
-
-  if (!_editorDockOpen) {
-    dock.style.display = 'none';
-    dock.classList.remove('dock-right', 'dock-full');
-    area.classList.remove('dock-right');
-    dr.remove();
-    document.getElementById('btnEditToggle')?.classList.remove('active');
-    if (editor) setTimeout(() => editor.layout(), 50);
-    return;
-  }
-
-  dock.style.display = 'flex';
-  document.getElementById('btnEditToggle')?.classList.add('active');
-
-  if (previewVisible) {
-    // Dock fills the entire left column — chat is hidden
-    if (dock.parentElement !== left) left.appendChild(dock);
-    dock.classList.remove('dock-right');
-    dock.classList.add('dock-full');
-    area.classList.remove('dock-right');
-    dr.remove();
-    if (inner) inner.style.display = 'none';
-    dock.style.flex = '1';
-  } else {
-    // Dock on the right side with resizer
-    if (inner) inner.style.display = '';
-    if (dock.parentElement !== area) area.insertBefore(dock, previewResizer || null);
-    if (dr.parentElement !== area) area.insertBefore(dr, dock);
-    dock.classList.remove('dock-full');
-    dock.classList.add('dock-right');
-    area.classList.add('dock-right');
-  }
-
-  _syncDockTabActive();
-  if (editor) setTimeout(() => editor.layout(), 50);
-}
-
 function toggleEditorDock(forceOpen) {
-  _editorDockOpen = forceOpen !== undefined ? !!forceOpen : !_editorDockOpen;
-  try { localStorage.setItem('vexium_editor_dock', _editorDockOpen ? '1' : '0'); } catch(e) {}
-  _syncEditorDock();
-  if (_editorDockOpen) {
-    const targetPane = document.body.classList.contains('advanced-mode') ? _paneMode : 'data';
-    setPaneMode(targetPane);
-  }
+  // Legacy — route to dev panel
+  if (forceOpen === true || forceOpen === undefined) toggleDevPanel(true);
 }
 
 // ── DOCK RESIZER DRAG ────────────────────────────────────────────────────────
@@ -3901,60 +3821,24 @@ function doResumeBuild() {
   aiCallAPI();
 }
 
-let _dockDrag = null;
-document.addEventListener('mousedown', e => {
-  if (e.target.id !== 'dockResizer') return;
-  _dockDrag = {
-    startX    : e.clientX,
-    startLeftW: document.getElementById('editorLeft').getBoundingClientRect().width,
-  };
-  e.target.classList.add('dragging');
-  document.body.style.userSelect = 'none';
-  disableFrame();
-  e.preventDefault();
-});
-document.addEventListener('mousemove', e => {
-  if (!_dockDrag) return;
-  const left  = document.getElementById('editorLeft');
-  const areaW = document.getElementById('editorArea').getBoundingClientRect().width;
-  const minLeftW = Math.max(220, Math.ceil(areaW * 0.30));
-  const delta    = _dockDrag.startX - e.clientX;
-  left.style.flex = '0 0 ' + Math.max(minLeftW, _dockDrag.startLeftW - delta) + 'px';
-  document.getElementById('editorDock').style.flex = '';
-  if (editor) editor.layout();
-});
-document.addEventListener('mouseup', () => {
-  if (!_dockDrag) return;
-  _dockDrag = null;
-  document.getElementById('dockResizer')?.classList.remove('dragging');
-  document.body.style.userSelect = '';
-  enableFrame();
-  if (editor) editor.layout();
-});
 
 function setMode(m) {
   _mode = m || 'ai';
-  // aiPanel is always visible — dock is independently toggled
-  const aiPanel = document.getElementById('aiPanel');
-  if (aiPanel) { aiPanel.style.display = 'flex'; aiPanel.classList.add('show'); }
   document.getElementById('statusbar')?.classList.add('hidden');
 
-  if (m === 'editor' || m === 'data') {
-    toggleEditorDock(true);
-    if (m === 'data') setPaneMode('data');
-    else setPaneMode(_paneMode);
-    if (m === 'editor') {
-      if (!activeFile || !fileSystem[activeFile]) {
-        const fallback = mainFile || Object.keys(fileSystem).find(f => !isImageFile(f));
-        if (fallback) openFile(fallback);
-      }
-      if (mainFile && fileSystem[mainFile] && !openTabs.includes(mainFile)) openTabs.unshift(mainFile);
-      renderTabs();
+  if (m === 'editor') {
+    setDevTab('code');
+    if (!activeFile || !fileSystem[activeFile]) {
+      const fallback = mainFile || Object.keys(fileSystem).find(f => !isImageFile(f));
+      if (fallback) openFile(fallback);
     }
+    if (mainFile && fileSystem[mainFile] && !openTabs.includes(mainFile)) openTabs.unshift(mainFile);
+    renderTabs();
   }
-  if (m === 'ai') {
-    // Intro entrance is deferred to after loadProject so it never flashes when history exists
+  if (m === 'data') {
+    setDevTab('data');
   }
+  // 'ai' mode: just show AI panel (devPanel stays closed unless user opens it)
 }
 
 // ── FILE TREE ─────────────────────────────────────────────────────────────────
@@ -3999,16 +3883,8 @@ function openFile(f) {
 
   const imgPane    = document.getElementById('imgPreviewPane');
   const monacoWrap = document.getElementById('monacoWrap');
-  const edPane     = document.getElementById('editorPane');
-  const currentMode = _mode;
 
   if (isImageFile(f)) {
-    if (currentMode === 'editor' && edPane && _paneMode !== 'commerce') edPane.style.display = 'flex';
-    // Hide backend pane and switch to code layout so image fills the editor area cleanly
-    const bkPane = document.getElementById('backendPane');
-    if (bkPane) bkPane.classList.remove('show');
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.remove('backend-hidden');
     if (monacoWrap) monacoWrap.style.display = 'none';
     if (imgPane) {
       imgPane.classList.add('show');
@@ -4020,13 +3896,12 @@ function openFile(f) {
   }
 
   if (imgPane) imgPane.classList.remove('show');
-  if (monacoWrap) monacoWrap.style.display = _paneMode === 'backend' ? 'none' : '';
-  if (currentMode === 'editor' && edPane && _paneMode !== 'commerce') edPane.style.display = 'flex';
+  if (monacoWrap) monacoWrap.style.display = '';
 
   const lang = getLang(f);
   const model = monaco.editor.createModel(fileSystem[f] || '', lang);
   editor.setModel(model);
-  if (currentMode === 'editor') editor.focus();
+  editor.focus();
   model.onDidChangeContent(() => {
     if (activeFile !== f) return;
     fileSystem[f] = editor.getValue();
@@ -5031,8 +4906,8 @@ function showPreviewDock(show) {
   if (panel) panel.classList.toggle('hidden', !show);
   if (rz) rz.classList.toggle('hidden', !show);
   if (btn) btn.classList.toggle('active', show);
-  _syncEditorDock();
   if (show) refreshPreview(); // always rebuild so link rewrites are applied
+  if (_devOpen) _syncDevPanel();
   if (editor) {
     if (show) editor.layout();
     else setTimeout(() => editor.layout(), 380);
@@ -5352,6 +5227,8 @@ let _maxTokensHit = false;
 let _aiUserStopped = false;
 let _aiStreamCleanup = null;
 let _continuationBase = null; // { file, content } — set by _aiAutoComplete, used to append tail
+let _continuationExcludeFile = null; // file excluded from payload during continuation so Claude writes only the tail
+let _seamlessContinuation = null; // { row, textEl, workingOnEl, streamAvatar, collectedFiles, collectedNames } — kept alive across continuation calls so the UI never visibly restarts
 // Frozen at the moment a build starts (before the AI writes anything) and replayed on every
 // continuation request for that build. The server needs this to keep the system prompt's
 // fresh-build-vs-edit shape identical across rounds — otherwise it drifts as files fill in,
@@ -6384,7 +6261,6 @@ function buildEditedSummary(files, contentWrap) {
   if (!visible.length) return;
   const n = visible.length;
   const label = n === 1 ? '1 file updated' : n + ' files updated';
-  const isAdv = document.body.classList.contains('advanced-mode');
   const summary = document.createElement('div');
   summary.className = 'ai-edited-summary';
   const btn = document.createElement('button');
@@ -6395,9 +6271,9 @@ function buildEditedSummary(files, contentWrap) {
   list.className = 'ai-edited-list';
   visible.forEach(name => {
     const item = document.createElement('div');
-    item.className = 'ai-edited-item' + (isAdv ? ' clickable' : '');
+    item.className = 'ai-edited-item clickable';
     item.textContent = pillFriendlyName(name);
-    if (isAdv) item.onclick = () => { setMode('editor'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); summary.classList.remove('open'); };
+    item.onclick = () => { setDevTab('code'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); summary.classList.remove('open'); };
     list.appendChild(item);
   });
   summary.appendChild(btn);
@@ -7321,6 +7197,9 @@ function buildAiFilesPayload() {
 
   primary.forEach(name => {
     if (out[name] !== undefined || !fs.hasOwnProperty(name)) return;
+    // During continuation, exclude the cut file — Claude only sees the tail context in the message
+    // and is forced to write just the remaining lines, which _continuationBase then prepends to.
+    if (name === _continuationExcludeFile) return;
     if (isImageFile(name)) { out[name] = '[Image — reference by filename]'; return; }
     let s = typeof fs[name] === 'string' ? fs[name] : String(fs[name] ?? '');
     if (s.startsWith('data:image') || (s.startsWith('data:') && s.length > 8000)) { out[name] = '[Data URL omitted]'; return; }
@@ -7589,29 +7468,41 @@ async function aiCallAPI() {
 
     aiHideTyping();
 
-    // Create the AI response row
-    row = document.createElement('div');
-    row.className = 'ai-row ai';
-    const _rowInner = document.createElement('div');
-    _rowInner.style.cssText = 'position:relative;width:100%';
-    _streamAvatar = document.createElement('div');
-    _streamAvatar.className = 'ai-avatar';
-    _streamAvatar.style.cssText = 'position:absolute;left:-30px;top:0;';
-    _rowInner.appendChild(_streamAvatar);
-    const streamContent = document.createElement('div');
-    streamContent.style.cssText = 'width:100%;display:flex;flex-direction:column;gap:0';
-    textEl = document.createElement('div');
-    textEl.className = 'ai-text';
-    streamContent.appendChild(textEl);
-    _workingOnEl = document.createElement('div');
-    _workingOnEl.className = 'ai-working-on';
-    _workingOnEl.style.display = 'none';
-    _workingOnEl.innerHTML = '<div class="ai-wo-spinner"></div><div class="ai-wo-text"><span class="ai-wo-page"></span><span class="ai-wo-sep">—</span><span class="ai-wo-action"></span><span class="ai-wo-lines" style="color:rgba(255,255,255,.3);font-size:10px;margin-left:8px"></span></div>';
-    streamContent.appendChild(_workingOnEl);
-    _rowInner.appendChild(streamContent);
-    row.appendChild(_rowInner);
-    msgs.appendChild(row);
-    row._contentWrap = streamContent;
+    // Consume any pending seamless-continuation context (set when max_tokens or early-close fired)
+    const _scPrev = _seamlessContinuation;
+    _seamlessContinuation = null;
+
+    if (_scPrev) {
+      // Seamless continuation: reuse the existing row/spinner so the UI never appears to restart
+      row = _scPrev.row;
+      textEl = null;               // leave the old chat text intact — don't overwrite it
+      _workingOnEl = _scPrev.workingOnEl;
+      _streamAvatar = _scPrev.streamAvatar;
+    } else {
+      // Create the AI response row fresh
+      row = document.createElement('div');
+      row.className = 'ai-row ai';
+      const _rowInner = document.createElement('div');
+      _rowInner.style.cssText = 'position:relative;width:100%';
+      _streamAvatar = document.createElement('div');
+      _streamAvatar.className = 'ai-avatar';
+      _streamAvatar.style.cssText = 'position:absolute;left:-30px;top:0;';
+      _rowInner.appendChild(_streamAvatar);
+      const streamContent = document.createElement('div');
+      streamContent.style.cssText = 'width:100%;display:flex;flex-direction:column;gap:0';
+      textEl = document.createElement('div');
+      textEl.className = 'ai-text';
+      streamContent.appendChild(textEl);
+      _workingOnEl = document.createElement('div');
+      _workingOnEl.className = 'ai-working-on';
+      _workingOnEl.style.display = 'none';
+      _workingOnEl.innerHTML = '<div class="ai-wo-spinner"></div><div class="ai-wo-text"><span class="ai-wo-page"></span><span class="ai-wo-sep">—</span><span class="ai-wo-action"></span><span class="ai-wo-lines" style="color:rgba(255,255,255,.3);font-size:10px;margin-left:8px"></span></div>';
+      streamContent.appendChild(_workingOnEl);
+      _rowInner.appendChild(streamContent);
+      row.appendChild(_rowInner);
+      msgs.appendChild(row);
+      row._contentWrap = streamContent;
+    }
 
     // Per-frame renderer — re-renders formatChatText at most once per animation frame
     let _streamRaf = null;
@@ -7737,14 +7628,14 @@ async function aiCallAPI() {
     const reader  = response.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
-    const collectedFiles = [];
-    const collectedNames = new Set();
+    const collectedFiles = _scPrev ? [..._scPrev.collectedFiles] : [];
+    const collectedNames = _scPrev ? new Set(_scPrev.collectedFiles.map(f => f.name)) : new Set();
     let currentStreamingFile = null;
     // Accumulate raw file_delta chunks so we can recover partial files on early close
     const _partialContent = {};
 
     /** When the edge drops the SSE (Deno: connection closed before message completed), `event: done` never fires — still apply fences + history. */
-    finalizeAssistantStream = function(fromEarlyClose) {
+    finalizeAssistantStream = function(fromEarlyClose, keepUI) {
       if (streamFinalized) return;
       streamFinalized = true;
 
@@ -7834,28 +7725,45 @@ async function aiCallAPI() {
         buildEditedSummary(collectedFiles, target);
       }
 
-      if (textEl) { _revealLen = fullMessage.length; if (_streamRaf) { cancelAnimationFrame(_streamRaf); _streamRaf = null; } textEl.removeAttribute('data-streaming'); textEl.innerHTML = formatChatText(fullMessage); textEl.className = 'ai-text settling'; requestAnimationFrame(() => requestAnimationFrame(() => { if (textEl) textEl.classList.remove('settling'); })); }
-      _stopStarLerp();
-      if (_streamAvatar) { _streamAvatar.style.opacity = '0'; setTimeout(() => _streamAvatar && _streamAvatar.remove(), 360); _streamAvatar = null; }
-      _stopWorkingOn();
+      if (textEl) { _revealLen = fullMessage.length; if (_streamRaf) { cancelAnimationFrame(_streamRaf); _streamRaf = null; } textEl.removeAttribute('data-streaming'); if (fullMessage) { textEl.innerHTML = formatChatText(fullMessage); textEl.className = 'ai-text settling'; requestAnimationFrame(() => requestAnimationFrame(() => { if (textEl) textEl.classList.remove('settling'); })); } }
+
+      // Early-close recovery check (must run before UI cleanup so we can keep UI alive)
+      const cutFile = currentStreamingFile;
+      const partialContent = (cutFile && _partialContent[cutFile]) || '';
+      const hasMidStreamFile = !!(cutFile && partialContent.length >= 500);
+      const _willKeepUI = keepUI || (fromEarlyClose && hasMidStreamFile);
+
+      if (_willKeepUI) {
+        // Keep the working-on spinner and avatar alive — continuation is coming shortly
+        if (_workingOnEl) {
+          const _woAct = _workingOnEl.querySelector('.ai-wo-action');
+          if (_woAct) _woAct.textContent = 'continuing…';
+          const _woLines = _workingOnEl.querySelector('.ai-wo-lines');
+          if (_woLines) _woLines.textContent = '';
+          clearInterval(_workingOnTimer); _workingOnTimer = null;
+        }
+        // Store UI refs so the next aiCallAPI() can reuse them seamlessly
+        if (!_seamlessContinuation) {
+          _seamlessContinuation = { row, textEl, workingOnEl: _workingOnEl, streamAvatar: _streamAvatar, collectedFiles, collectedNames };
+        }
+      } else {
+        _stopStarLerp();
+        if (_streamAvatar) { _streamAvatar.style.opacity = '0'; setTimeout(() => _streamAvatar && _streamAvatar.remove(), 360); _streamAvatar = null; }
+        _stopWorkingOn();
+      }
 
       // Only auto-recover if a file was actually mid-stream when the connection dropped.
       // Never retry on bare early-close with no content — that's usually a clean finish
       // that arrived before the `done` event, not a real truncation.
-      const cutFile = currentStreamingFile;
-      const partialContent = (cutFile && _partialContent[cutFile]) || '';
-      const hasMidStreamFile = !!(cutFile && partialContent.length >= 500);
-
       if (fromEarlyClose && hasMidStreamFile) {
         _autoRecoverCount++;
         _aiCutFile = cutFile;
         // Save partial content now so _aiAutoComplete can read the tail for patch continuation.
-        // Without this, fileSystem[cutFile] is empty and the AI would rewrite the whole file.
         if (partialContent && !_preEditSnapshot[cutFile]) {
           fileSystem[cutFile] = partialContent;
           dirtyFiles.add(cutFile);
         }
-        setTimeout(() => _aiAutoComplete(), 1500);
+        setTimeout(() => _aiAutoComplete(), 350);
       }
 
       const meta = document.createElement('div');
@@ -7936,6 +7844,13 @@ async function aiCallAPI() {
           if (lineEl) lineEl.textContent = _woLineCount + ' lines';
           // Accumulate for recovery — if stream drops mid-file we can save what we got
           _partialContent[currentStreamingFile] = (_partialContent[currentStreamingFile] || '') + data.text;
+          // Checkpoint: persist progress to fileSystem every 50 lines so a drop never loses much.
+          // Include base content so chained continuations always see the full accumulated file.
+          if (_woLineCount > 0 && _woLineCount % 50 === 0 && !_preEditSnapshot[currentStreamingFile]) {
+            const _ckBase = (_continuationBase && _continuationBase.file === currentStreamingFile) ? _continuationBase.content : '';
+            fileSystem[currentStreamingFile] = _ckBase + _partialContent[currentStreamingFile];
+            dirtyFiles.add(currentStreamingFile);
+          }
         }
 
         if ((eventType === 'file' || eventType === 'output_file' || eventType === 'write_file') && fileKey) {
@@ -7959,7 +7874,7 @@ async function aiCallAPI() {
             aiMarkPillDone(fileKey);
             currentStreamingFile = null;
             delete _partialContent[fileKey]; // file complete — no longer partial
-            if (fileKey === '_backend' && _paneMode === 'backend') { bkRenderCollSidebar(); bkRenderSchema(); bkRenderAPI(); }
+            if (fileKey === '_backend' && _devTab === 'backend') { bkRenderCollSidebar(); bkRenderSchema(); bkRenderAPI(); }
             livePreviewUpdate(fileKey.endsWith('.html'));
           }
         }
@@ -8030,22 +7945,20 @@ async function aiCallAPI() {
           // Save currentStreamingFile BEFORE finalizeAssistantStream clears it
           const midStreamFile = currentStreamingFile;
           _maxTokensHit = false;
-          // Counter is reset only when the user sends a new message (in aiSend) —
-          // it's purely informational now since continuation has no cap (each
-          // continuation makes real forward progress on the file).
-          finalizeAssistantStream(false);
+          // Detect whether we're about to do a seamless continuation so finalize can keep the UI alive
+          const INTERNAL = ['_longterm', '_shortterm', '_backend', '_pages'];
+          const _willContinue = hitTokenLimit && midStreamFile && !INTERNAL.includes(midStreamFile);
+          finalizeAssistantStream(false, _willContinue);
           // If the stream completed but produced nothing at all, show a retry prompt
           if (!hadOutput && !hitTokenLimit && textEl) {
             textEl.innerHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic">No response — please try again.</p>';
           }
           // Only recover if: (1) token limit hit, (2) a real user-visible file was cut off.
-          // Skip recovery for internal memory files (_project_state/_session) — they
-          // update themselves next build, and recovering them causes the AI to keep going.
-          const INTERNAL = ['_longterm', '_shortterm', '_backend', '_pages'];
-          if (hitTokenLimit && midStreamFile && !INTERNAL.includes(midStreamFile)) {
+          // Skip recovery for internal memory files — they update themselves next build.
+          if (_willContinue) {
             _autoRecoverCount++;
             _aiCutFile = midStreamFile;
-            setTimeout(() => _aiAutoComplete(), 800);
+            setTimeout(() => _aiAutoComplete(), 350);
           }
         }
 
@@ -8259,23 +8172,23 @@ function _aiAutoComplete() {
   if (_aiUserStopped) { _aiUserStopped = false; return; }
   const cutFile = _aiCutFile;
   _aiCutFile = null;
+  _continuationExcludeFile = null; // reset from previous iteration
   _continuationBase = null;
   if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') aiHistory.pop();
 
-  // Suffix applied to every continuation prompt — keeps the chat from showing what
-  // looks like a restart. Without this the model tends to open its continuation with
-  // a fresh "Building X — here we go" intro, which reads as if generation restarted
-  // even though the file itself is being appended to correctly.
   const noIntroNote = `\n\nDo not write a new intro, summary, or "here we go" message — the user already saw that. Either omit the chat message entirely or, if you must say something, make it a single short phrase like "continuing…".`;
 
   let msg;
   if (cutFile && fileSystem[cutFile]) {
     const partialContent = fileSystem[cutFile];
     const partLines = partialContent.split('\n');
-    const tail = partLines.slice(-6).join('\n');
-    // Store base so the file handler can concatenate base + tail on arrival
+    // 30-line tail gives Claude enough context to continue without seeing the full file
+    const tail = partLines.slice(-30).join('\n');
+    // Exclude the partial file from the payload — Claude can't rewrite what it can't see,
+    // so it will write ONLY the continuation tail. _continuationBase prepends on arrival.
+    _continuationExcludeFile = cutFile;
     _continuationBase = { file: cutFile, content: partialContent };
-    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines so far). Do NOT start over. Write ONLY the HTML that comes immediately after this last section:\n\n${tail}\n\nWrap just the remaining tail in <file name="${cutFile}">. Do not repeat anything already written.${noIntroNote}`;
+    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines written so far). Continue writing it from exactly where it stopped — do NOT restart from line 1. Here are the last lines already written:\n\n${tail}\n\nWrite ONLY what comes after those lines, wrapped in <file name="${cutFile}">. Do not repeat anything above.${noIntroNote}`;
   } else if (cutFile) {
     msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} as a <file> block.${noIntroNote}`;
   } else {
@@ -8489,44 +8402,317 @@ function _bkModalConfirmClick() {
 // ── BACKEND PANE ─────────────────────────────────────────────────────────────
 
 let _mode     = 'ai';
-let _paneMode = (() => { try { return localStorage.getItem('vexium_last_pane_mode') || 'code'; } catch(e) { return 'code'; } })();
-let _editorDockOpen = (() => { try { return localStorage.getItem('vexium_editor_dock') === '1'; } catch(e) { return false; } })();
-let _dockPos = null; // 'right' | 'bottom' | null — tracks last rendered position
-let _bkTab    = 'data';
+let _devOpen = false;
+let _devTab  = 'overview';
+let _bkTab   = 'data';
 const BK_URL  = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
 const BK_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MDkxOTUsImV4cCI6MjA2MDA4NTE5NX0.ZKHdTLSEsQYKmVnM3T9gJ59l8U6V6DYxHFrcrOmXMM4';
 
-// ── Pane mode (code vs backend) ───────────────────────────────────────────────
-function setPaneMode(mode) {
-  _paneMode = mode;
-  try { localStorage.setItem('vexium_last_pane_mode', mode); } catch(e) {}
-  _syncTbPaneTabs();
-  _syncDockTabActive();
-  ['paneTabs','monacoWrap','imgPreviewPane'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = mode === 'code' ? '' : 'none';
-  });
-  document.getElementById('backendPane').classList.toggle('show', mode === 'backend');
-  document.getElementById('editPane')?.classList.toggle('show', mode === 'data');
-  document.getElementById('commercePane')?.classList.toggle('show', mode === 'commerce');
-  const edPane = document.getElementById('editorPane');
-  if (edPane) edPane.style.display = (mode === 'data' || mode === 'commerce' || mode === 'backend') ? 'none' : 'flex';
-  const sb2 = document.getElementById('sidebar');
-  if (sb2) sb2.classList.toggle('backend-hidden', mode === 'backend' || mode === 'data' || mode === 'commerce');
-  document.getElementById('editorDock')?.classList.remove('pane-data');
-  if (mode === 'backend') {
-    requestAnimationFrame(() => bkSetTab(_bkTab));
-    if (typeof editor !== 'undefined' && editor) setTimeout(() => editor.layout(), 50);
+// ── Dev Panel ─────────────────────────────────────────────────────────────────
+function toggleDevPanel(forceOpen) {
+  _devOpen = forceOpen !== undefined ? !!forceOpen : !_devOpen;
+  document.getElementById('devPanel').classList.toggle('show', _devOpen);
+  document.getElementById('btnDev')?.classList.toggle('active', _devOpen);
+  _syncDevPanel();
+  if (_devOpen) {
+    // Activate the correct nav item and section before loading data
+    const t = _devTab;
+    document.querySelectorAll('.dev-nav-item').forEach(el => el.classList.toggle('active', el.dataset.dev === t));
+    document.querySelectorAll('.dev-section').forEach(el => el.classList.toggle('active', el.id === 'devSection' + t.charAt(0).toUpperCase() + t.slice(1)));
+    _triggerDevTabLoad(t);
   }
-  if (mode === 'data') editSetTab(_editTab);
-  if (mode === 'commerce') commerceSetTab(_commerceTab);
-  if (mode === 'code' && typeof editor !== 'undefined' && editor) {
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+  _saveDevState();
+  if (typeof editor !== 'undefined' && editor) setTimeout(() => editor.layout(), 50);
+}
+
+function setDevTab(tab) {
+  if (!_devOpen) toggleDevPanel(true);
+  _devTab = tab;
+  document.querySelectorAll('.dev-nav-item').forEach(el => el.classList.toggle('active', el.dataset.dev === tab));
+  document.querySelectorAll('.dev-section').forEach(el => el.classList.toggle('active', el.id === 'devSection' + tab.charAt(0).toUpperCase() + tab.slice(1)));
+  _triggerDevTabLoad(tab);
+  _saveDevState();
+}
+
+function _triggerDevTabLoad(tab) {
+  if (tab === 'overview') devLoadOverview();
+  if (tab === 'data')     dataLoadAnalytics();
+  if (tab === 'backend')  requestAnimationFrame(() => bkSetTab(_bkTab));
+  if (tab === 'commerce') commerceSetTab(_commerceTab);
+  if (tab === 'code' && typeof editor !== 'undefined' && editor) {
+    setTimeout(() => {
       editor.layout();
       const f = activeFile || mainFile;
       if (f && fileSystem[f] !== undefined && (!editor.getModel() || editor.getValue() === '')) openFile(f);
-    }));
+    }, 50);
   }
+}
+
+async function devLoadOverview() {
+  const sec = document.getElementById('devSectionOverview');
+  if (!sec) return;
+  sec.innerHTML = '<div class="dev-ov-body"><div style="color:var(--muted);font-size:12px">Loading…</div></div>';
+
+  let userCount = 0, revenueMonth = 0, txCount = 0, bkCollections = [];
+
+  try {
+    const bk = JSON.parse(fileSystem['_backend'] || '{}');
+    bkCollections = (bk.collections || []).map(c => typeof c === 'string' ? {name:c} : c);
+  } catch(e) {}
+
+  if (sb && project?.id) {
+    try {
+      const [uRes, txRes] = await Promise.all([
+        sb.from('site_users').select('id', {count:'exact', head:true}).eq('project_id', project.id),
+        sb.from('site_data').select('data,created_at').eq('project_id', project.id).eq('collection','transactions'),
+      ]);
+      userCount = uRes.count || 0;
+      const txRows = txRes.data || [];
+      txCount = txRows.length;
+      const ms = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      revenueMonth = txRows.filter(r => r.created_at >= ms)
+        .reduce((s,r) => { const n=parseFloat(r.data?.amount||r.data?.amount_total||0); return s+(isNaN(n)?0:n); }, 0);
+    } catch(e) {}
+  }
+
+  const stripeOk   = project?.stripe_connect_charges_enabled;
+  const stripeConn = !!project?.stripe_connect_account_id;
+  const name  = project?.name  || 'Untitled';
+  const emoji = project?.emoji || '\u{1F4BB}';
+
+  const colItems = bkCollections.length
+    ? bkCollections.map(c => `<div class="dev-ov-item" onclick="setDevTab('backend')">
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        ${esc(c.name||c)}</div>`).join('')
+    : `<div class="dev-ov-empty-line" onclick="setDevTab('backend')">No collections — configure in Backend →</div>`;
+
+  const stripeDot = stripeOk ? '#4ade80' : stripeConn ? '#fbbf24' : 'var(--muted)';
+  const stripeLabel = stripeOk ? 'Connected' : stripeConn ? 'Setup incomplete' : 'Not connected';
+
+  sec.innerHTML = `<div class="dev-ov-body">
+    <div class="dev-ov-header">${emoji} ${esc(name)}</div>
+
+    <div class="dev-ov-stats-row">
+      <div class="dev-ov-num" onclick="setDevTab('data')" title="View users">
+        <span class="dev-ov-num-val">${userCount.toLocaleString()}</span>
+        <span class="dev-ov-num-lbl">users</span>
+      </div>
+      <div class="dev-ov-num" onclick="setDevTab('data')" title="View revenue">
+        <span class="dev-ov-num-val">${revenueMonth > 0 || txCount ? '$'+revenueMonth.toFixed(2) : '—'}</span>
+        <span class="dev-ov-num-lbl">this month</span>
+      </div>
+    </div>
+
+    <div class="dev-ov-section">
+      <div class="dev-ov-section-lbl">Backend</div>
+      ${colItems}
+    </div>
+
+    <div class="dev-ov-section">
+      <div class="dev-ov-section-lbl">Commerce</div>
+      <div class="dev-ov-item" onclick="setDevTab('commerce')">
+        <span style="color:${stripeDot}">●</span> ${stripeLabel}
+      </div>
+      ${!stripeConn ? '<button class="dev-ov-stripe-btn" onclick="setDevTab(\'commerce\')">Set up Stripe →</button>' : ''}
+    </div>
+  </div>`;
+}
+
+
+function _syncDevPanel() {
+  const left = document.getElementById('editorLeft');
+  if (!left) return;
+  if (_devOpen && typeof previewVisible !== 'undefined' && previewVisible) {
+    left.classList.add('dev-hidden');
+  } else {
+    left.classList.remove('dev-hidden');
+  }
+}
+
+function _saveDevState() {
+  if (!project?.id) return;
+  try { localStorage.setItem('vexium_dev_' + project.id, JSON.stringify({open: _devOpen, tab: _devTab})); } catch(e) {}
+}
+
+function _restoreDevState() {
+  if (!project?.id) return;
+  try {
+    const st = JSON.parse(localStorage.getItem('vexium_dev_' + project.id) || 'null');
+    if (!st) return;
+    if (st.tab) _devTab = st.tab;
+    if (st.open) toggleDevPanel(true);
+  } catch(e) {}
+}
+
+// ── Data Analytics ─────────────────────────────────────────────────────────────
+
+async function dataLoadAnalytics() {
+  const el = document.getElementById('dataAnalytics');
+  if (!el) return;
+  if (!sb || !project?.id) {
+    el.innerHTML = '<div class="da-wrap"><div class="da-empty">Connect to a project to view analytics.</div></div>';
+    return;
+  }
+  el.innerHTML = '<div class="da-wrap"><div class="da-loading">Loading…</div></div>';
+  try {
+    const [uRes, dRes] = await Promise.all([
+      sb.from('site_users').select('id,email,created_at').eq('project_id', project.id).order('created_at', {ascending:true}),
+      sb.from('site_data').select('id,collection,data,created_at').eq('project_id', project.id).order('created_at', {ascending:true}),
+    ]);
+    const users    = uRes.data || [];
+    const siteData = dRes.data || [];
+    const txRows   = siteData.filter(r => r.collection === 'transactions');
+    const collNames = [...new Set(siteData.filter(r => r.collection !== 'transactions').map(r => r.collection))];
+    el.innerHTML = '<div class="da-wrap">' +
+      _daRenderUsers(users) +
+      _daRenderRevenue(txRows) +
+      _daRenderCollections(siteData, collNames) +
+    '</div>';
+  } catch(e) {
+    el.innerHTML = `<div class="da-wrap"><div class="da-empty">Could not load data.</div></div>`;
+  }
+}
+
+function _daFmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+}
+
+function _daGroupByDay(rows, keyFn, cumulative) {
+  const dayMap = {};
+  rows.forEach(r => {
+    const d = new Date(r.created_at);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    if (!dayMap[key]) dayMap[key] = 0;
+    dayMap[key] += keyFn ? keyFn(r) : 1;
+  });
+  const sorted = Object.keys(dayMap).sort();
+  let cum = 0;
+  return sorted.map(k => {
+    cum += dayMap[k];
+    return {x: new Date(k).getTime(), y: cumulative ? cum : dayMap[k]};
+  });
+}
+
+function _daLineGraph(points, color, opts) {
+  opts = opts || {};
+  const W = opts.w || 600, H = opts.h || 80;
+  if (!points || points.length < 2) {
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block"><line x1="0" y1="${H-1}" x2="${W}" y2="${H-1}" stroke="var(--border)" stroke-width="1"/><text x="${W/2}" y="${H/2+4}" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="var(--sans)">Not enough data</text></svg>`;
+  }
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = 0, maxY = Math.max(...ys) || 1;
+  const PAD = 8;
+  const sx = x => PAD + ((x - minX) / (maxX - minX || 1)) * (W - PAD*2);
+  const sy = y => (H - PAD) - ((y - minY) / (maxY - minY)) * (H - PAD*2);
+  const pathD = points.map((p,i) => (i?'L':'M') + sx(p.x).toFixed(1) + ',' + sy(p.y).toFixed(1)).join(' ');
+  const areaD = pathD + ' L' + sx(xs[xs.length-1]).toFixed(1) + ',' + (H-1) + ' L' + sx(xs[0]).toFixed(1) + ',' + (H-1) + ' Z';
+  const gid = 'dag' + Math.random().toString(36).slice(2,7);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block" preserveAspectRatio="none">
+  <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.22"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+  <path d="${areaD}" fill="url(#${gid})"/>
+  <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="${sx(xs[xs.length-1]).toFixed(1)}" cy="${sy(ys[ys.length-1]).toFixed(1)}" r="3.5" fill="${color}"/>
+</svg>`;
+}
+
+function _daRenderUsers(users) {
+  const total = users.length;
+  const now = new Date();
+  const weekAgo   = new Date(now - 7*86400000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const newWeek  = users.filter(u => new Date(u.created_at) >= weekAgo).length;
+  const newMonth = users.filter(u => new Date(u.created_at) >= monthStart).length;
+  const last = users[users.length-1];
+  const points = _daGroupByDay(users, null, true);
+  const graph = points.length >= 2 ? _daLineGraph(points, '#a78bfa') : null;
+
+  const domains = {};
+  users.forEach(u => { const d=(u.email||'').split('@')[1]; if(d) domains[d]=(domains[d]||0)+1; });
+  const topDomains = Object.entries(domains).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+  const domainRows = topDomains.length
+    ? topDomains.map(([d,c]) => `<div class="da-row"><span class="da-row-label">${esc(d)}</span><span class="da-row-val">${c} user${c!==1?'s':''}</span></div>`).join('')
+    : '';
+
+  return `<div class="da-section">
+    <div class="da-section-hdr">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Users
+    </div>
+    ${graph ? `<div class="da-graph">${graph}</div>` : ''}
+    <div class="da-stats">
+      <div class="da-stat"><div class="da-stat-val">${total.toLocaleString()}</div><div class="da-stat-lbl">Total</div></div>
+      <div class="da-stat"><div class="da-stat-val">${newMonth.toLocaleString()}</div><div class="da-stat-lbl">This month</div></div>
+      <div class="da-stat"><div class="da-stat-val">${newWeek.toLocaleString()}</div><div class="da-stat-lbl">This week</div></div>
+      <div class="da-stat"><div class="da-stat-val">${last ? _daFmtDate(last.created_at) : '—'}</div><div class="da-stat-lbl">Last signup</div></div>
+    </div>
+    ${topDomains.length ? `<div class="da-rows"><div style="padding:8px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Top domains</div>${domainRows}</div>` : ''}
+  </div>`;
+}
+
+function _daRenderRevenue(txRows) {
+  const total = txRows.reduce((s,r) => { const n=parseFloat(r.data?.amount||r.data?.amount_total||0); return s+(isNaN(n)?0:n); }, 0);
+  const now = new Date(), monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonthRevenue = txRows.filter(r => new Date(r.created_at) >= monthStart)
+    .reduce((s,r) => { const n=parseFloat(r.data?.amount||r.data?.amount_total||0); return s+(isNaN(n)?0:n); }, 0);
+  const avg = txRows.length ? total/txRows.length : 0;
+
+  const points = _daGroupByDay(txRows, r => { const n=parseFloat(r.data?.amount||r.data?.amount_total||0); return isNaN(n)?0:n; }, false);
+  const graph = points.length >= 2 ? `<div class="da-graph">${_daLineGraph(points, '#34d399')}</div>` : '<div class="da-empty-inner">Not enough transaction data for a graph</div>';
+
+  return `<div class="da-section">
+    <div class="da-section-hdr">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Revenue
+    </div>
+    ${graph}
+    <div class="da-stats">
+      <div class="da-stat"><div class="da-stat-val">$${total.toFixed(2)}</div><div class="da-stat-lbl">Total</div></div>
+      <div class="da-stat"><div class="da-stat-val">$${thisMonthRevenue.toFixed(2)}</div><div class="da-stat-lbl">This month</div></div>
+      <div class="da-stat"><div class="da-stat-val">${txRows.length}</div><div class="da-stat-lbl">Transactions</div></div>
+      <div class="da-stat"><div class="da-stat-val">${txRows.length ? '$'+avg.toFixed(2) : '—'}</div><div class="da-stat-lbl">Avg order</div></div>
+    </div>
+  </div>`;
+}
+
+function _daRenderCollections(siteData, names) {
+  const hdr = `<div class="da-section-hdr">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Collections
+    </div>`;
+  if (!names.length) return `<div class="da-section">${hdr}<div class="da-empty-inner">No collection data yet</div></div>`;
+
+  const sections = names.map(name => {
+    const rows = siteData.filter(r => r.collection === name);
+    const total = rows.length;
+    const sorted = [...rows].sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
+    const points = _daGroupByDay(sorted, null, true);
+    const miniGraph = points.length >= 2 ? `<div class="da-graph da-graph-mini">${_daLineGraph(points, '#60a5fa', {w:400,h:50})}</div>` : '';
+
+    // Field stats: count filled values per key
+    const fieldCounts = {};
+    rows.forEach(r => { Object.entries(r.data||{}).forEach(([k,v]) => { if(v!==null&&v!==undefined&&v!=='') fieldCounts[k]=(fieldCounts[k]||0)+1; }); });
+    const topFields = Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const fieldRows = topFields.map(([k,c]) => `<div class="da-row"><span class="da-row-label">${esc(k)}</span><span class="da-row-val">${c} entr${c!==1?'ies':'y'}</span></div>`).join('');
+
+    return `<div class="da-subsection">
+      <div class="da-subsection-hdr">${esc(name)}<span class="da-subsection-count">${total}</span></div>
+      ${miniGraph}
+      ${topFields.length ? `<div class="da-rows">${fieldRows}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div class="da-section">${hdr}${sections}</div>`;
+}
+
+
+// Legacy shims — called from older paths, route to setDevTab
+function setPaneMode(mode) {
+  const map = { code:'code', backend:'backend', data:'data', commerce:'commerce' };
+  if (map[mode]) setDevTab(map[mode]);
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
@@ -8970,7 +9156,7 @@ async function commerceConnectStripe() {
     });
     const { url, error } = await res.json();
     if (error) throw new Error(error);
-    window.location.href = url;
+    window.open(url, '_blank');
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = project?.stripe_connect_account_id ? 'Complete setup →' : 'Connect Stripe →'; }
     alert('Could not start Stripe Connect: ' + (e.message || e));
@@ -8990,8 +9176,7 @@ async function commerceCheckConnectReturn() {
     if (account_id) project.stripe_connect_account_id = account_id;
     if (charges_enabled) project.stripe_connect_charges_enabled = true;
     commerceLoadStripeStatus();
-    // Open commerce pane to show the result
-    if (typeof setPaneMode === 'function') setPaneMode('commerce');
+    setDevTab('commerce');
   } catch(e) { console.warn('[commerceCheckConnectReturn]', e); }
 }
 
@@ -9275,7 +9460,7 @@ function bkExportSQLCSV() {
 
 // Keyboard shortcut: Ctrl/Cmd+Enter to run SQL
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey||e.metaKey) && e.key==='Enter' && _paneMode==='backend' && _bkTab==='sql') { e.preventDefault(); bkRunSQL(); }
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter' && _devTab==='backend' && _bkTab==='sql') { e.preventDefault(); bkRunSQL(); }
 });
 
 // ── SCHEMA TAB ────────────────────────────────────────────────────────────────

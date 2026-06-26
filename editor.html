@@ -72,7 +72,6 @@
     #topbar {
       height: 48px;
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       padding: 0 clamp(12px, 2vw, 24px);
@@ -110,12 +109,26 @@
       flex-shrink: 0;
     }
 
-    /* Project name */
+    /* Project name — centered */
+    .tb-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .tb-proj-emoji {
+      font-size: 15px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
     .tb-proj {
       font-size: 12px;
       font-weight: 700;
       color: var(--muted);
-      max-width: 160px;
+      max-width: 200px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -249,169 +262,112 @@
        PROJECT SETTINGS MODAL
     ───────────────────────────────────────────── */
     .pw-plan:hover { border-color:var(--border2) !important; background:rgba(255,255,255,.06) !important; }
-    .overlay-backdrop {
-      display: flex;
-      position: fixed;
-      inset: 0;
-      z-index: var(--z-overlay);
-      background: rgba(0, 0, 0, 0);
-      align-items: stretch;
-      justify-content: flex-end;
-      padding: 0;
-      pointer-events: none;
-      transition: background .25s ease;
+    /* ── SETTINGS SIDEBAR ─────────────────────────────────── */
+    #settingsSidebar {
+      position: fixed; top: 48px; right: 0; width: 300px;
+      height: calc(100vh - 48px); background: var(--surface);
+      border-left: none;
+      border-radius: 14px 0 0 14px;
+      box-shadow: none;
+      display: flex; flex-direction: column; z-index: 510;
+      transform: translateX(105%); transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s cubic-bezier(.16,1,.3,1); overflow: hidden;
     }
-    .overlay-backdrop.show { pointer-events: auto; background: rgba(0, 0, 0, .6); backdrop-filter: blur(6px); }
-
-    .settings-modal {
-      background: var(--surface);
-      border: none;
-      border-radius: var(--r-xl) 0 0 var(--r-xl);
-      width: 420px;
-      max-width: 92vw;
-      height: 100%;
-      max-height: 100%;
-      overflow-y: auto;
-      box-shadow: -20px 0 60px rgba(0, 0, 0, .8);
-      display: flex;
-      flex-direction: column;
-      transform: translateX(110%);
-      transition: transform .38s cubic-bezier(.16, 1, .3, 1);
+    #settingsSidebar.show { transform: translateX(0); box-shadow: -8px 0 40px rgba(0,0,0,.55); }
+    .ss-pages { display: flex; width: 200%; height: 100%; transition: transform .32s cubic-bezier(.16,1,.3,1); }
+    #settingsSidebar.ss-pub-open .ss-pages { transform: translateX(-50%); }
+    .ss-page { width: 50%; height: 100%; overflow-y: auto; display: flex; flex-direction: column; flex-shrink: 0; }
+    .ss-topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; flex-shrink: 0; }
+    .ss-topbar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    .ss-close {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--border); border: none; color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background var(--t-fast), color var(--t-fast); flex-shrink: 0; outline: none;
     }
-    .overlay-backdrop.show .settings-modal { transform: translateX(0); }
-    .settings-header {
-      padding: 20px 22px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
+    .ss-close:hover { background: rgba(239,68,68,.15); color: var(--err); }
+    .ss-close svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .ss-back { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; padding: 4px 6px 4px 0; border-radius: var(--r-sm); transition: color var(--t-fast); outline: none; }
+    .ss-back:hover { color: var(--text); }
+    .ss-back svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    /* identity row: emoji left, name right */
+    .ss-identity { display: flex; flex-direction: row; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+    .ss-emoji-wrap {
+      position: relative; display: inline-flex; align-items: center; justify-content: center;
+      padding: 6px; border-radius: 12px; border: 1.5px dashed transparent; flex-shrink: 0;
+      cursor: pointer; transition: border-color var(--t-fast); font-size: 26px; line-height: 1; user-select: none;
     }
-    .settings-title { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
-    .settings-close {
-      width: 28px;
-      height: 28px;
-      border-radius: var(--r-sm);
-      background: var(--border2);
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--t-fast);
-      outline: none;
+    .ss-emoji-wrap:hover { border-color: rgba(255,255,255,.3); }
+    #epNameInput {
+      background: transparent; border: none; border-bottom: 1.5px dashed transparent;
+      color: var(--text); font-size: 14px; font-weight: 700; font-family: var(--sans);
+      text-align: left; width: 100%; padding: 2px 2px 3px; outline: none;
+      transition: border-color var(--t-fast); min-width: 0;
     }
-    .settings-close:hover { background: var(--border3); color: var(--text); }
-    .settings-close svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-
-    .settings-body { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 20px; }
-    .settings-section-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .settings-divider { height: 1px; background: var(--border2); margin: 0 -22px; }
-    .settings-divider + div { padding-top: 18px; }
-
-    /* Emoji + name row */
-    .ep-name-row { display: flex; align-items: center; gap: 12px; }
-    .ep-emoji-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--r-md);
-      background: var(--border);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-      cursor: pointer;
-      transition: all var(--t-fast);
-      outline: none;
-    }
-    .ep-emoji-btn:hover { background: rgba(79, 110, 247, .06); }
-    .ep-name-input {
-      flex: 1;
-      background: var(--border);
-      border: none;
-      border-radius: var(--r-md);
-      padding: 11px 14px;
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 700;
-      outline: none;
-      font-family: var(--sans);
-      transition: background var(--t-fast);
-    }
-    .ep-name-input:focus { background: var(--border2); }
-    .ep-name-input::placeholder { color: var(--muted); }
-
-    /* Emoji picker */
-    .ep-emoji-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-    .ep-emoji-opt {
-      font-size: 20px;
-      width: 34px;
-      height: 34px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      border: none;
-      transition: all 120ms ease;
-      user-select: none;
-    }
+    #epNameInput:hover { border-bottom-color: rgba(255,255,255,.25); }
+    #epNameInput:focus { border-bottom-color: rgba(255,255,255,.5); }
+    #epNameInput::placeholder { color: var(--muted); font-weight: 500; }
+    .ep-emoji-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 8px 0 2px; }
+    .ep-emoji-opt { font-size: 18px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; border: none; transition: background 120ms ease; user-select: none; }
     .ep-emoji-opt:hover { background: var(--border2); }
-    .ep-emoji-opt.sel { background: rgba(79, 110, 247, .12); }
-
-    /* Visibility toggle */
-    .ep-vis-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .ep-vis-label { font-size: 13px; font-weight: 700; }
-    .ep-vis-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .ep-lock-btn {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 14px;
-      border-radius: var(--r-md);
-      background: var(--border2);
-      border: none;
-      cursor: pointer;
-      font-family: var(--sans);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      transition: all var(--t-fast);
-      flex-shrink: 0;
-      outline: none;
+    .ep-emoji-opt.sel { background: rgba(79,110,247,.15); }
+    .ss-section { padding: 0 16px; }
+    .ss-section-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 7px; }
+    .ss-divider { height: 1px; background: rgba(255,255,255,.06); margin: 12px 0; }
+    .ss-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background var(--t-fast); border-radius: 8px; margin: 0 6px; }
+    .ss-row:hover { background: rgba(255,255,255,.04); }
+    .ss-row-text { flex: 1; min-width: 0; }
+    .ss-row-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .ss-row-sub { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .ss-circle-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--border); border: none; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background var(--t-fast), color var(--t-fast); outline: none; cursor: pointer; pointer-events: none;
     }
-    .ep-lock-btn:hover { background: var(--border3); color: var(--text); }
-    .ep-lock-btn.unlocked { background: rgba(34, 197, 94, .12); border: none; color: #4ade80; }
-    .ep-lock-btn svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-
+    .ss-row:hover .ss-circle-btn { background: var(--border2); color: var(--text); }
+    .ss-circle-btn.active { background: #fff !important; color: #000 !important; }
+    .ss-circle-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     /* Collaborators */
-    .ep-collab-list { display: flex; flex-direction: column; gap: 6px; }
-    .ep-collab-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--border); border: none; border-radius: var(--r-md); }
-    .ep-collab-av { width: 26px; height: 26px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #000 !important; flex-shrink: 0; }
+    .ep-collab-item { display: flex; align-items: center; gap: 9px; padding: 7px 0; }
+    .ep-collab-av { width: 28px; height: 28px; border-radius: 50%; background: var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text); flex-shrink: 0; }
     .ep-collab-info { flex: 1; min-width: 0; }
-    .ep-collab-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ep-collab-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ep-collab-handle { font-size: 10px; color: var(--muted); }
-    .ep-collab-role { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(79, 110, 247, .1); color: #818cf8; flex-shrink: 0; }
-    .ep-collab-rm { width: 22px; height: 22px; border-radius: 5px; background: transparent; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); flex-shrink: 0; outline: none; }
-    .ep-collab-rm:hover { background: rgba(239, 68, 68, .1); color: var(--err); }
+    .ep-collab-role { font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 99px; flex-shrink: 0; }
+    .ep-collab-rm { width: 20px; height: 20px; border-radius: 50%; background: none; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--t-fast), color var(--t-fast); flex-shrink: 0; outline: none; }
+    .ep-collab-rm:hover { background: rgba(239,68,68,.12); color: var(--err); }
     .ep-collab-rm svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    .ep-collab-none { font-size: 11px; color: var(--muted); }
-
-    /* Settings footer */
-    .settings-footer { padding: 0 22px 18px; display: flex; justify-content: center; flex-shrink: 0; }
-    .settings-btn { padding: 8px 28px; border: none; border-radius: var(--r-full); cursor: pointer; font-size: 12px; font-weight: 700; font-family: var(--sans); transition: all var(--t-fast); outline: none; }
-    .settings-btn.cancel { display: none; }
-    .settings-btn.save { background: #fff; color: #000; }
-    .settings-btn.save:hover { background: #e8e8e8; }
+    .ep-collab-none { font-size: 12px; color: var(--muted); padding: 6px 0; }
+    /* Backups */
+    .ss-backup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 0 16px; }
+    .ss-bk-slot {
+      aspect-ratio: 1; border-radius: 12px; background: var(--border);
+      border: none;
+      cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; transition: background var(--t-fast);
+    }
+    .ss-bk-slot.empty { color: rgba(255,255,255,.2); font-size: 18px; font-weight: 300; }
+    .ss-bk-slot.empty:hover { color: rgba(255,255,255,.55); background: var(--border2); }
+    .ss-bk-slot.filled { background: var(--border2); }
+    .ss-bk-date { font-size: 9px; font-weight: 600; color: var(--muted); text-align: center; padding: 6px 4px; line-height: 1.4; pointer-events: none; }
+    .ss-bk-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .18s ease; font-size: 18px; font-weight: 700; color: var(--text);
+      letter-spacing: .05em; pointer-events: none;
+    }
+    .ss-bk-slot.filled:hover .ss-bk-overlay { opacity: 1; }
+    #ssBkDropdown {
+      position: fixed; z-index: 9999; background: #1c1c1c; border: none;
+      border-radius: 10px; padding: 4px; min-width: 140px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.7); display: none;
+    }
+    #ssBkDropdown.show { display: block; }
+    .ss-bk-dd-item { padding: 7px 11px; font-size: 12px; font-weight: 600; color: var(--text); border-radius: 7px; cursor: pointer; transition: background var(--t-fast); }
+    .ss-bk-dd-item:hover { background: rgba(255,255,255,.06); }
+    .ss-bk-dd-item.danger { color: var(--err); }
+    .ss-bk-dd-item.danger:hover { background: rgba(239,68,68,.08); }
+    .ss-pub-content { padding: 0 16px 28px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
     /* ── BACKUPS SECTION ─────────────────────────────────────── */
     .ep-backup-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
@@ -513,79 +469,52 @@
     .ep-pub-action-btn.pub-settings:hover { background: rgba(255,255,255,.12); }
     .ep-pub-action-btn.pub-settings svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* ── PUBLISH SETTINGS OVERLAY ─────────────────────────────── */
-    #pubSettingsOverlay {
-      display: flex; position: fixed; inset: 0; z-index: 620;
-      background: rgba(0,0,0,0); align-items: stretch; justify-content: flex-end;
-      padding: 0; pointer-events: none; transition: background .25s ease;
-    }
-    #pubSettingsOverlay.show { pointer-events: auto; }
-    .pub-settings-modal {
-      background: var(--surface); border-radius: var(--r-xl) 0 0 var(--r-xl);
-      width: 420px; max-width: 92vw; height: 100%; overflow-y: auto;
-      box-shadow: none; display: flex; flex-direction: column;
-      transform: translateX(110%); transition: transform .38s cubic-bezier(.16,1,.3,1);
-    }
-    #pubSettingsOverlay.show .pub-settings-modal { transform: translateX(0); }
-    .pub-settings-header { padding: 20px 22px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .pub-settings-title { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
-    .pub-settings-body { padding: 18px 22px 28px; display: flex; flex-direction: column; gap: 20px; }
-    .pub-settings-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
-    .pub-settings-divider { height: 1px; background: var(--border2); margin: 0 -22px; }
-    .pub-url-display { display: flex; align-items: center; gap: 6px; background: var(--border); border-radius: var(--r-md); padding: 10px 12px; }
-    .pub-url-text { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); font-family: 'SF Mono','Fira Code',monospace; word-break: break-all; text-decoration: none; }
-    .pub-url-text:hover { color: #818cf8; }
-    .pub-domain-row { display: flex; gap: 6px; }
-    .pub-domain-input {
-      flex: 1; background: var(--border); border: none; border-radius: var(--r-md);
-      padding: 10px 12px; color: var(--text); font-size: 13px; font-weight: 600;
-      outline: none; font-family: var(--sans); transition: background var(--t-fast);
-    }
-    .pub-domain-input:focus { background: var(--border2); }
-    .pub-domain-input::placeholder { color: var(--muted); font-weight: 500; }
-    .pub-domain-btn {
-      padding: 10px 16px; border: none; border-radius: var(--r-md);
-      background: #fff; color: #000; font-size: 12px; font-weight: 700;
-      font-family: var(--sans); cursor: pointer; transition: all var(--t-fast); outline: none; flex-shrink: 0;
-    }
-    .pub-domain-btn:hover { background: #e8e8e8; }
-    .pub-domain-hint { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 8px; }
-    .pub-domain-connected-row { display: flex; align-items: center; gap: 8px; background: var(--border); border-radius: var(--r-md); padding: 9px 12px; }
-    .pub-domain-dot { width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; flex-shrink: 0; }
-    .pub-domain-name-text { flex: 1; font-size: 12px; font-weight: 600; font-family: 'SF Mono','Fira Code',monospace; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pub-domain-action-btn { font-size: 11px; font-weight: 700; background: var(--border2); border: none; border-radius: 5px; padding: 4px 10px; color: var(--text); cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); flex-shrink: 0; outline: none; }
-    .pub-domain-action-btn:hover { background: var(--border3); }
-    .pub-domain-remove-btn { font-size: 11px; font-weight: 700; background: transparent; border: none; color: var(--muted); cursor: pointer; font-family: var(--sans); padding: 4px 4px; transition: color var(--t-fast); flex-shrink: 0; outline: none; }
-    .pub-domain-remove-btn:hover { color: var(--err); }
-    .pub-domain-status { font-size: 11px; font-weight: 600; }
-    .pub-dns-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
-    .pub-dns-table { background: var(--border); border-radius: var(--r-sm); overflow: hidden; margin-top: 6px; }
-    .pub-dns-head { display: grid; grid-template-columns: 52px 1fr 1fr; padding: 7px 12px; border-bottom: 1px solid var(--border2); font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-    .pub-dns-row { display: grid; grid-template-columns: 52px 1fr 1fr; padding: 9px 12px; border-bottom: 1px solid var(--border2); font-size: 11px; align-items: start; }
-    .pub-dns-row:last-child { border-bottom: none; }
-    .pub-dns-type { color: var(--muted); font-weight: 700; padding-top: 1px; }
-    .pub-dns-mono { font-family: 'SF Mono','Fira Code',monospace; color: var(--text); word-break: break-all; }
-    .pub-dns-tutorial { font-size: 11px; color: var(--muted); }
-    .pub-dns-tutorial-link { background: var(--border2); border: none; padding: 5px 13px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text); cursor: pointer; font-family: var(--sans); text-decoration: none; transition: background 120ms ease, transform 120ms ease; }
-    .pub-dns-tutorial-link:hover { background: var(--border3); transform: scale(1.05); }
-    #domainTutorialModal { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,.85); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 20px; }
-    #domainTutorialModal.show { display: flex; }
-    .domain-tutorial-inner { background: var(--surface); border-radius: var(--r-xl); width: 680px; max-width: 100%; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.9); display: flex; flex-direction: column; }
-    .domain-tutorial-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; flex-shrink: 0; }
-    .domain-tutorial-title { font-size: 13px; font-weight: 700; }
-    .domain-tutorial-video { width: 100%; aspect-ratio: 16/9; background: #000; border: none; display: block; }
-    .pub-settings-back { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--muted); font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; padding: 4px 2px; border-radius: var(--r-sm); transition: color var(--t-fast); outline: none; }
-    .pub-settings-back:hover { color: var(--text); }
-    .pub-settings-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    /* pubSettingsOverlay CSS removed — publish panel inside #settingsSidebar */
     .pub-danger-btn { width: 100%; padding: 11px; border: none; border-radius: var(--r-md); background: rgba(239,68,68,.06); color: var(--err); font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; transition: all var(--t-fast); outline: none; }
     .pub-danger-btn:hover { background: rgba(239,68,68,.12); }
+    /* Custom domain inside publish tab */
+    .pub-domain-row { display: flex; gap: 6px; }
+    .pub-domain-input {
+      flex: 1; background: var(--border); border: none; border-radius: var(--r-sm);
+      color: var(--text); font-size: 12px; font-family: var(--sans); padding: 7px 10px; outline: none;
+    }
+    .pub-domain-input:focus { background: var(--border2); }
+    .pub-domain-input::placeholder { color: var(--muted); }
+    .pub-domain-btn { padding: 7px 13px; border: none; border-radius: var(--r-sm); background: #fff; color: #000; font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; transition: background var(--t-fast); outline: none; flex-shrink: 0; }
+    .pub-domain-btn:hover { background: #e8e8e8; }
+    .pub-domain-btn:disabled { opacity: .5; cursor: default; }
+    .pub-domain-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .pub-dns-tutorial-link { background: none; border: none; color: var(--muted); font-size: 11px; font-family: var(--sans); cursor: pointer; text-decoration: underline; padding: 0; }
+    .pub-dns-tutorial-link:hover { color: var(--text); }
+    .pub-domain-connected-row { display: flex; align-items: center; gap: 7px; }
+    .pub-domain-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+    .pub-domain-name-text { font-size: 12px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pub-domain-action-btn { padding: 5px 10px; border: none; border-radius: var(--r-sm); background: var(--border2); color: var(--muted); font-size: 11px; font-weight: 700; font-family: var(--sans); cursor: pointer; transition: all var(--t-fast); outline: none; flex-shrink: 0; }
+    .pub-domain-action-btn:hover { background: var(--border3); color: var(--text); }
+    .pub-domain-remove-btn { padding: 5px 10px; border: none; border-radius: var(--r-sm); background: rgba(239,68,68,.08); color: var(--err); font-size: 11px; font-weight: 700; font-family: var(--sans); cursor: pointer; transition: all var(--t-fast); outline: none; flex-shrink: 0; }
+    .pub-domain-remove-btn:hover { background: rgba(239,68,68,.16); }
+    .pub-domain-status { font-size: 11px; color: var(--muted); }
+    .pub-dns-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .pub-dns-table { background: var(--border); border-radius: var(--r-sm); overflow: hidden; }
+    .pub-dns-head { display: grid; grid-template-columns: 60px 1fr 1fr; padding: 6px 10px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--border2); }
+    .pub-dns-row { display: grid; grid-template-columns: 60px 1fr 1fr; padding: 8px 10px; font-size: 11px; }
+    .pub-dns-row + .pub-dns-row { border-top: 1px solid var(--border2); }
+    .pub-dns-type { font-size: 9px; font-weight: 700; color: #60a5fa; }
+    .pub-dns-mono { font-family: 'SF Mono','Fira Code',monospace; font-size: 10px; color: var(--text); word-break: break-all; }
     /* Update button active / inactive */
     .ep-pub-action-btn.republish { background: #fff; color: #000; }
     .ep-pub-action-btn.republish:hover { background: #e8e8e8; }
     .ep-pub-action-btn.republish.inactive { background: var(--border2); color: var(--muted); pointer-events: none; opacity: .45; }
-    /* Custom confirm popup */
-    #pubConfirmOverlay { display: none; position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px; }
-    #pubConfirmOverlay.show { display: flex; }
+    /* Domain tutorial modal */
+    #domainTutorialModal { display: none; position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(0,0,0,.7); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px; }
+    #domainTutorialModal.show { display: flex; }
+    .domain-tutorial-inner { background: var(--surface); border-radius: var(--r-xl); width: min(560px, 92vw); overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.8); }
+    .domain-tutorial-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .domain-tutorial-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .domain-tutorial-video { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+    /* Confirm popups */
+    #pubConfirmOverlay, #updateConfirmOverlay { display: none; position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px; }
+    #pubConfirmOverlay.show, #updateConfirmOverlay.show { display: flex; }
     .pub-confirm-modal { background: var(--surface); border-radius: var(--r-xl); width: 340px; max-width: 100%; padding: 26px 24px 20px; box-shadow: 0 32px 80px rgba(0,0,0,.9); }
     .pub-confirm-title { font-size: 15px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 8px; }
     .pub-confirm-sub { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; }
@@ -595,6 +524,10 @@
     .pub-confirm-btn.cancel:hover { background: var(--border3); color: var(--text); }
     .pub-confirm-btn.danger { background: rgba(239,68,68,.15); color: var(--err); }
     .pub-confirm-btn.danger:hover { background: rgba(239,68,68,.25); }
+    .pub-confirm-btn.confirm { background: #fff; color: #000; }
+    .pub-confirm-btn.confirm:hover { background: #e8e8e8; }
+    /* Stripe circle btn connected state */
+    .ss-circle-btn.stripe-ok { background: rgba(74,222,128,.15) !important; color: #4ade80 !important; }
 
     /* ─────────────────────────────────────────────
        LAYOUT
@@ -612,14 +545,12 @@
       min-width: 120px;
       max-width: 300px;
       background: var(--surface);
-      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
     }
     .sb-head {
       padding: 8px 10px 8px 14px;
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -655,7 +586,7 @@
       top: 30px;
       right: 0;
       background: #1c1c1c;
-      border: 1px solid var(--border2);
+      border: none;
       border-radius: var(--r-md);
       padding: 4px;
       min-width: 140px;
@@ -738,7 +669,7 @@
     .ctx-menu {
       position: fixed;
       background: #1c1c1c;
-      border: 1px solid var(--border2);
+      border: none;
       border-radius: var(--r-md);
       padding: 4px;
       min-width: 148px;
@@ -775,6 +706,9 @@
     #devPanel { display:none; flex:1; flex-direction:row; min-height:0; overflow:hidden; min-width:0; background:var(--bg); }
     #devPanel.show { display:flex; }
     #devNav { width:162px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 6px; gap:1px; overflow:hidden auto; border-right:1px solid var(--border); }
+    .dev-nav-close { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--border); border:none; color:var(--muted); cursor:pointer; flex-shrink:0; margin:4px 0 6px 4px; transition:background var(--t-fast),color var(--t-fast); outline:none; }
+    .dev-nav-close:hover { background:rgba(239,68,68,.15); color:var(--err); }
+    .dev-nav-close svg { width:10px; height:10px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; }
     .dev-nav-section { padding:14px 8px 4px; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--border3); }
     .dev-nav-item { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; color:var(--muted); transition:background var(--t-fast),color var(--t-fast); user-select:none; }
     .dev-nav-item svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; opacity:.7; }
@@ -807,23 +741,18 @@
     .dev-ov-item:hover { background:var(--surface2); }
     .dev-ov-empty-line { font-size:11px; color:var(--muted); padding:6px 2px; cursor:pointer; }
     .dev-ov-empty-line:hover { color:var(--text); }
-    .dev-ov-stripe-btn { background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; margin-top:2px; width:fit-content; transition:border-color var(--t-fast),background var(--t-fast); }
-    .dev-ov-stripe-btn:hover { border-color:var(--border2); background:var(--surface); }
+    .dev-ov-stripe-btn { background:var(--border); border:none; border-radius:6px; color:var(--text); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; margin-top:2px; width:fit-content; transition:background var(--t-fast); }
+    .dev-ov-stripe-btn:hover { background:var(--border2); }
     /* Old cards kept for any references */
     .dev-ov-card-btn { padding:5px 12px; background:var(--border); border:none; border-radius:6px; font-size:11px; font-weight:700; color:var(--text); cursor:pointer; }
     /* Dev button in topbar */
-    #btnDev { display:none; align-items:center; gap:6px; padding:0 11px; height:30px; background:var(--surface); border:none; border-radius:8px; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; letter-spacing:-.01em; transition:background var(--t-fast); }
-    body.advanced-mode #btnDev { display:flex; }
-    #btnDev:hover { background:var(--surface2); border-color:var(--border2); }
-    #btnDev.active { background:rgba(255,255,255,.08); border-color:var(--border2); }
-    #btnDev svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
 
 
     /* ── DATA ANALYTICS ────────────────────────────────────────────────── */
     #dataAnalytics { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
     .da-wrap { padding:24px 28px; max-width:720px; }
     .da-loading, .da-empty { padding:28px; color:var(--muted); font-size:12px; }
-    .da-section { padding:0 0 28px; margin-bottom:28px; border-bottom:1px solid var(--border); }
+    .da-section { padding:0 0 28px; margin-bottom:28px; }
     .da-section:last-child { border-bottom:none; margin-bottom:0; }
     .da-section-hdr { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:var(--text); margin-bottom:16px; letter-spacing:-.2px; }
     .da-section-hdr svg { color:var(--muted); flex-shrink:0; }
@@ -834,7 +763,7 @@
     .da-stat-val { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.5px; line-height:1; margin-bottom:3px; }
     .da-stat-lbl { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
     .da-rows { background:var(--surface); border-radius:8px; overflow:hidden; margin-bottom:8px; }
-    .da-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--border); font-size:12px; }
+    .da-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; font-size:12px; }
     .da-row:last-child { border-bottom:none; }
     .da-row-label { color:var(--text); font-weight:500; }
     .da-row-val { color:var(--muted); font-weight:700; }
@@ -851,8 +780,7 @@
     /* ── DOCK RESIZER (only used in dock-right) ── */
     #dockResizer { background:transparent; flex-shrink:0; width:4px; height:100%; cursor:col-resize; transition:background .15s; z-index:10; }
     #dockResizer:hover, #dockResizer.dragging { background:var(--accent); }
-    #editorDockBar { height:40px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 6px; gap:1px; flex-shrink:0; }
-    body:not(.advanced-mode) #editorDockBar { display:none; }
+    #editorDockBar { height:40px; background:var(--surface); display:flex; align-items:center; padding:0 6px; gap:1px; flex-shrink:0; }
     .dock-tab { display:flex; align-items:center; gap:5px; padding:3px 10px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer; background:transparent; border:none; color:var(--muted); font-family:var(--sans); transition:all var(--t-fast); }
     .dock-tab:hover { color:var(--text); }
     .dock-tab.on { background:var(--border2); color:var(--text); }
@@ -877,7 +805,6 @@
       display: flex;
       height: 34px;
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
       align-items: flex-end;
       overflow-x: auto;
       flex-shrink: 0;
@@ -893,7 +820,7 @@
       font-size: 11px;
       font-family: var(--mono);
       cursor: pointer;
-      border-right: 1px solid var(--border);
+      border-right: none;
       border-top: 2px solid transparent;
       white-space: nowrap;
       color: var(--muted);
@@ -913,13 +840,13 @@
     /* ─────────────────────────────────────────────
        BACKEND PANE
     ───────────────────────────────────────────── */
-    .pane-mode-switch { height:36px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .pane-mode-switch { height:36px; background:var(--surface); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .pane-mode-pills { display:flex; gap:2px; background:var(--border); border-radius:var(--r-sm); padding:3px; }
     .pane-mode-btn { padding:3px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--muted); font-family:var(--sans); transition:all var(--t-fast); display:flex; align-items:center; gap:5px; }
     .pane-mode-btn svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
     .pane-mode-btn:hover { color:var(--text); }
     .pane-mode-btn.active { background:var(--border2); color:var(--text); }
-    #sidebar { transition: width 200ms ease, min-width 200ms ease, border-right-width 200ms ease; overflow:hidden; }
+    #sidebar { transition: width 200ms ease, min-width 200ms ease; overflow:hidden; }
     #editorDock.pane-data #sidebar { flex:1 !important; width:auto !important; max-width:none !important; flex-shrink:1 !important; border-right:none; }
     #sidebar.backend-hidden { width:0 !important; min-width:0 !important; border-right-width:0 !important; }
 
@@ -931,11 +858,11 @@
     #editPane.show { display:flex; }
     #commercePane { flex:1; display:none; flex-direction:row; min-height:0; overflow:hidden; min-width:0; }
     #commercePane.show { display:flex; }
-    #commerceNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; border-right:1px solid var(--border); }
+    #commerceNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; }
     #commerceMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
     .commerce-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
     .commerce-panel.active { display:flex; }
-    #commerceStripeBar { flex-shrink:0; padding:12px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); background:var(--surface); }
+    #commerceStripeBar { flex-shrink:0; padding:12px 20px; display:flex; align-items:center; gap:12px; background:var(--surface); }
     #commerceStripeBar.csb-hidden { display:none; }
     .csb-left { flex:1; min-width:0; }
     .csb-title { font-size:13px; font-weight:700; color:var(--text); }
@@ -946,15 +873,15 @@
     .csb-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#4ade80; margin-right:7px; vertical-align:middle; }
     .csb-status { font-size:13px; font-weight:700; color:#4ade80; }
     .csb-account { font-family:var(--mono); font-size:11px; color:var(--muted); }
-    .csb-snippet-btn { flex-shrink:0; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; }
+    .csb-snippet-btn { flex-shrink:0; padding:5px 12px; background:var(--border); color:var(--muted); border:none; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; }
     .csb-snippet-btn:hover { color:var(--text); border-color:rgba(255,255,255,.25); }
-    #commerceSnippet { flex-shrink:0; padding:14px 20px; background:rgba(255,255,255,.02); border-bottom:1px solid var(--border); display:none; }
+    #commerceSnippet { flex-shrink:0; padding:14px 20px; background:rgba(255,255,255,.02); display:none; }
     #commerceSnippet.open { display:block; }
     .csb-snippet-label { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
     .csb-snippet-code { font-family:var(--mono); font-size:11px; color:var(--text); background:var(--surface); padding:10px 14px; border-radius:6px; white-space:pre; overflow-x:auto; line-height:1.6; }
-    .csb-copy-btn { margin-top:8px; padding:4px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; letter-spacing:.04em; }
+    .csb-copy-btn { margin-top:8px; padding:4px 10px; background:var(--border); color:var(--muted); border:none; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; letter-spacing:.04em; }
     .csb-copy-btn:hover { color:var(--text); }
-    #editNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; border-right:1px solid var(--border); }
+    #editNav { width:168px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column; padding:10px 8px; gap:1px; overflow:hidden; }
     #editMain { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
     .edit-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
     .edit-panel.active { display:flex; }
@@ -1266,9 +1193,11 @@
     #aiCenterInput { width: min(92%, 800px); pointer-events: all; }
     #aiCenterInputBox {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 10px;
     }
+    #aiCenterInputBox #aiSend,
+    #aiCenterInputBox .ai-attach-btn { margin-bottom: 0; }
     #aiCenterInputField {
       flex: 1;
       min-width: 0;
@@ -1505,6 +1434,7 @@
     }
     .mkt-plan-btn:hover { opacity: .82; }
 
+
     /* ─────────────────────────────────────────────
        CHAT AREA
     ───────────────────────────────────────────── */
@@ -1649,10 +1579,14 @@
     .ai-text hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
     .ai-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
     .ai-text a:hover { color: var(--accent2); }
-    .ai-text table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 12px; }
-    .ai-text th { text-align: left; font-weight: 700; color: var(--text); padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,.18); }
-    .ai-text td { padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.8); vertical-align: top; }
-    .ai-text tr:last-child td { border-bottom: none; }
+    .ai-text .ai-tbl-wrap { border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.04); margin: 10px 0; }
+    .ai-text table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    .ai-text thead tr { background: linear-gradient(90deg, rgba(99,102,241,.22), rgba(139,92,246,.15)); }
+    .ai-text th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.5); padding: 8px 12px; white-space: nowrap; }
+    .ai-text td { padding: 8px 12px; color: var(--text); vertical-align: top; }
+    .ai-text tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(255,255,255,.04); }
+    .ai-text tbody tr:hover td { background: rgba(255,255,255,.03); }
+    .ai-text td.ai-td-num { font-weight: 700; color: #a78bfa; font-variant-numeric: tabular-nums; }
 
     /* Typing dots */
     @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-5px); opacity: 1; } }
@@ -1671,6 +1605,10 @@
     .ai-act-btn:hover { background: var(--border2); color: var(--text); }
     .ai-act-btn svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     .ai-act-btn.copied { color: #4ade80; }
+    .ai-continue-wrap { display: flex; align-items: center; gap: 10px; margin: 12px 0 2px; }
+    .ai-continue-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; font-family: inherit; }
+    .ai-continue-btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+    .ai-continue-note { font-size: 11px; color: var(--muted); opacity: .55; }
 
     /* File cards */
     /* Edited files summary */
@@ -2052,14 +1990,12 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      border-left: 1px solid var(--border);
       overflow: hidden;
       box-sizing: border-box;
       transition:
         width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
         max-width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.22s ease,
-        border-color 0.2s ease;
+        opacity 0.22s ease;
     }
     #rightPanel:not(.hidden) { min-width: 180px; }
     #rightPanel.hidden {
@@ -2082,7 +2018,7 @@
     #rightPanel.hidden > .right-panel-slide { transform: translateX(100%); }
 
     /* Preview toolbar */
-    #previewToolbar { height: 38px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 5px; padding: 0 8px; flex-shrink: 0; }
+    #previewToolbar { height: 38px; background: var(--surface2); display: flex; align-items: center; gap: 5px; padding: 0 8px; flex-shrink: 0; }
     .prev-btn { width: 26px; height: 26px; background: rgba(255, 255, 255, .07); border: none; border-radius: 5px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--t-fast), color var(--t-fast), opacity var(--t-fast); flex-shrink: 0; }
     .prev-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .12); color: var(--text); }
     .prev-btn:disabled { opacity: .25; cursor: default; }
@@ -2507,7 +2443,7 @@
         order: -1 !important;
         width: 100% !important; max-width: 100% !important; min-width: 0 !important;
         height: 44svh !important; flex: none !important;
-        border-left: none !important; border-bottom: 1px solid var(--border);
+        border-left: none !important;
       }
       #rightPanel.hidden {
         width: 100% !important; max-width: 100% !important;
@@ -2539,17 +2475,17 @@
   <a href="home.html" class="tb-logo" title="Vexium — Home">
     <img src="vexium_logo.png" alt="Vexium"/>
   </a>
-  <div class="tb-sep"></div>
-  <span class="tb-proj" id="tbProj">Loading…</span>
-  <span class="tb-saving" id="tbSaving">saving…</span>
+  <div class="tb-center">
+    <span class="tb-proj-emoji" id="tbEmoji"></span>
+    <span class="tb-proj" id="tbProj">Loading…</span>
+    <span class="tb-saving" id="tbSaving">saving…</span>
+  </div>
 
   <div class="tb-right">
     <div id="tbPresence" style="display:flex;align-items:center;gap:-4px;margin-right:4px"></div>
-    <button id="btnDev" onclick="toggleDevPanel()" title="Dev Panel">
-      <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-      Adv
+    <button class="tb-icon-btn" id="btnPreview" onclick="togglePreview()" title="Preview">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="22" x2="16" y2="22"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
     </button>
-    <button class="tb-btn" id="btnPreview" onclick="togglePreview()">Preview</button>
     <button class="tb-icon-btn" onclick="openEditorSettings()" title="Project settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -2560,38 +2496,99 @@
 <!-- ═══════════════════════════════════════════
      PROJECT SETTINGS MODAL
 ═══════════════════════════════════════════ -->
-<div class="overlay-backdrop" id="epOverlay">
-  <div class="settings-modal">
-    <div class="settings-header">
-      <div class="settings-title">Project settings</div>
-      <button class="settings-close" onclick="closeEditorSettings()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+<!-- ═══════════════════════════════════════════
+     SETTINGS SIDEBAR
+═══════════════════════════════════════════ -->
+<div id="settingsSidebar">
+  <div class="ss-pages">
+
+    <!-- PAGE 1: MAIN SETTINGS -->
+    <div class="ss-page" id="ssMain">
+      <div class="ss-topbar">
+        <span class="ss-topbar-label">Project settings</span>
+        <button class="ss-close" onclick="closeEditorSettings()" title="Close">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="ss-identity">
+        <div class="ss-emoji-wrap" id="ssEmojiWrap" onclick="toggleEmojiPicker()">
+          <span id="epEmojiBtn">💻</span>
+        </div>
+        <input id="epNameInput" placeholder="Project name" autocomplete="off" spellcheck="false"
+          onblur="saveEditorSettings()" onkeydown="if(event.key==='Enter')this.blur()"/>
+      </div>
+      <div id="epEmojiPicker" style="display:none;padding:0 16px 8px">
+        <div class="ep-emoji-strip" id="epEmojiStrip"></div>
+      </div>
+
+      <div id="epCollabSection" class="ss-section">
+        <div class="ss-section-label">Collaborators</div>
+        <div class="ep-collab-list" id="epCollabList">
+          <div class="ep-collab-none">Loading…</div>
+        </div>
+      </div>
+
+      <div class="ss-divider"></div>
+
+      <div class="ss-row" onclick="openPubSettings()">
+        <div class="ss-row-text">
+          <div class="ss-row-label">Publishing</div>
+          <div class="ss-row-sub" id="ssPublishSub">Make your site live with a shareable URL</div>
+        </div>
+        <button class="ss-circle-btn" tabindex="-1">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </button>
+      </div>
+
+      <div class="ss-divider"></div>
+
+      <div class="ss-row" onclick="ssOpenStripe()">
+        <div class="ss-row-text">
+          <div class="ss-row-label">Payments</div>
+          <div class="ss-row-sub" id="ssStripeSub">Connect Stripe to accept payments</div>
+        </div>
+        <button class="ss-circle-btn" id="ssStripeBtn" tabindex="-1">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </button>
+      </div>
+
+      <div class="ss-divider"></div>
+
+      <div class="ss-section">
+        <div class="ss-section-label">Backups</div>
+        <div class="ss-backup-grid" id="ssBackupGrid">
+          <div class="ss-bk-slot empty" onclick="saveBackupSlot(1)">+</div>
+          <div class="ss-bk-slot empty" onclick="saveBackupSlot(2)">+</div>
+          <div class="ss-bk-slot empty" onclick="saveBackupSlot(3)">+</div>
+        </div>
+      </div>
+
+      <div class="ss-divider"></div>
+
+      <div class="ss-row" onclick="toggleAdvancedPanel()">
+        <div class="ss-row-text">
+          <div class="ss-row-label">Advanced</div>
+          <div class="ss-row-sub">Code editor, backend, and developer tools</div>
+        </div>
+        <button class="ss-circle-btn" id="ssAdvBtn" tabindex="-1">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="settings-body">
-      <div>
-        <div class="settings-section-label">Project</div>
-        <div class="ep-name-row">
-          <div class="ep-emoji-btn" id="epEmojiBtn" onclick="toggleEmojiPicker()">💻</div>
-          <input class="ep-name-input" id="epNameInput" placeholder="Project name" autocomplete="off"/>
-        </div>
-        <div id="epEmojiPicker" style="display:none;margin-top:10px">
-          <div class="ep-emoji-strip" id="epEmojiStrip"></div>
-        </div>
+
+    <!-- PAGE 2: PUBLISH SETTINGS -->
+    <div class="ss-page" id="ssPub">
+      <div class="ss-topbar">
+        <button class="ss-back" onclick="closePubSettings()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="ss-close" onclick="closeEditorSettings()" title="Close">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <div id="epCollabSection">
-        <div class="settings-divider"></div>
-        <div>
-          <div class="settings-section-label">Collaborators</div>
-          <div class="ep-collab-list" id="epCollabList">
-            <div class="ep-collab-none">Loading…</div>
-          </div>
-        </div>
-      </div>
-      <div class="settings-divider"></div>
-      <div>
-        <div class="settings-section-label">Publishing</div>
-        <!-- Unpublished state -->
+      <div class="ss-pub-content">
         <div class="ep-publish-unpublished" id="epPublishUnpublished">
           <button class="ep-publish-btn" id="epPublishBtn" onclick="publishSite()">
             <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -2599,7 +2596,6 @@
           </button>
           <p class="ep-publish-desc" style="text-align:center">Make your site a real shareable link anyone can visit</p>
         </div>
-        <!-- Published state -->
         <div class="ep-published-state" id="epPublishedState" style="display:none">
           <div class="ep-pub-status-row">
             <div class="ep-pub-dot" id="epPubDot"></div>
@@ -2617,25 +2613,63 @@
           </div>
           <div class="ep-pub-actions-row">
             <button class="ep-pub-action-btn republish inactive" id="epUpdateBtn" onclick="updateSite()">Update</button>
-            <button class="ep-pub-action-btn pub-settings" onclick="openPubSettings()">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-              Publish settings
-            </button>
           </div>
         </div>
-      </div>
-      <div class="settings-divider"></div>
-      <div>
-        <div class="settings-section-label">Backups</div>
-        <div id="epBackupList" class="ep-backup-list"></div>
-        <div id="epBackupActions" class="bk-save-wrap"></div>
+
+        <div class="ss-divider"></div>
+        <div class="ss-section" style="padding:0">
+          <div class="ss-section-label">Custom domain</div>
+          <div id="pubDomainConnectRow">
+            <div class="pub-domain-row">
+              <input class="pub-domain-input" id="pubDomainInput" placeholder="yourdomain.com" autocomplete="off" onkeydown="if(event.key==='Enter')connectCustomDomain()"/>
+              <button class="pub-domain-btn" id="pubDomainConnectBtn" onclick="connectCustomDomain()">Connect</button>
+            </div>
+            <p class="pub-domain-hint" style="text-align:center"><button class="pub-dns-tutorial-link" onclick="openDomainTutorial()">Watch setup tutorial</button></p>
+          </div>
+          <div id="pubDomainConnected" style="display:none;flex-direction:column;gap:10px">
+            <div class="pub-domain-connected-row">
+              <div id="pubDomainVerifyDot" class="pub-domain-dot"></div>
+              <div id="pubDomainName" class="pub-domain-name-text"></div>
+              <button onclick="checkDomainStatus()" class="pub-domain-action-btn" id="pubDomainCheckBtn">Check</button>
+              <button onclick="removeCustomDomain()" class="pub-domain-remove-btn">Remove</button>
+            </div>
+            <div id="pubDomainStatusLabel" class="pub-domain-status"></div>
+            <div id="pubDnsInstructions" style="display:none;flex-direction:column;gap:8px">
+              <div class="pub-dns-label">Add these DNS records</div>
+              <div class="pub-dns-table">
+                <div class="pub-dns-head"><span>Type</span><span>Name</span><span>Value</span></div>
+                <div class="pub-dns-row">
+                  <span class="pub-dns-type">CNAME</span>
+                  <span id="pubDnsCnameName" class="pub-dns-mono"></span>
+                  <span class="pub-dns-mono">cname.vercel-dns.com</span>
+                </div>
+                <div id="pubDnsTxtRow" class="pub-dns-row" style="display:none">
+                  <span class="pub-dns-type">TXT</span>
+                  <span id="pubDnsTxtName" class="pub-dns-mono"></span>
+                  <span id="pubDnsTxtValue" class="pub-dns-mono"></span>
+                </div>
+              </div>
+              <div class="pub-dns-tutorial" style="text-align:center"><button class="pub-dns-tutorial-link" onclick="openDomainTutorial()">Watch setup tutorial</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="ssPubDanger" style="display:none">
+          <div class="ss-divider"></div>
+          <button class="pub-danger-btn" onclick="unpublishSite()">Unpublish site</button>
+        </div>
       </div>
     </div>
-    <div class="settings-footer">
-      <button class="settings-btn cancel" onclick="closeEditorSettings()">Cancel</button>
-      <button class="settings-btn save" onclick="saveEditorSettings()">Save changes</button>
-    </div>
+
   </div>
+</div>
+
+<!-- Backup slot dropdown -->
+<div id="ssBkDropdown">
+  <div class="ss-bk-dd-item" onclick="ssBkPreview()">Preview</div>
+  <div class="ss-bk-dd-item" onclick="ssBkRestore()">Restore</div>
+  <div class="ss-bk-dd-item" onclick="ssBkSave()">Replace</div>
+  <div class="ss-bk-dd-item danger" onclick="ssBkDelete()">Remove</div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -2661,78 +2695,6 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     PUBLISH SETTINGS MODAL
-═══════════════════════════════════════════ -->
-<div id="pubSettingsOverlay" onclick="if(event.target===this)closePubSettings()">
-  <div class="pub-settings-modal">
-    <div class="pub-settings-header">
-      <div class="pub-settings-title">Publish settings</div>
-      <button class="settings-close" onclick="closePubSettings()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="pub-settings-body">
-      <div>
-        <div class="pub-settings-label">Published URL</div>
-        <div class="pub-url-display">
-          <a class="pub-url-text" id="pubSettingsUrl" href="#" target="_blank">vexium.ai/s/—</a>
-          <button class="ep-pub-icon-btn" onclick="copyPubUrl()" title="Copy link">
-            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-          <a class="ep-pub-icon-btn" id="pubSettingsOpenBtn" href="#" target="_blank" title="Open site">
-            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
-        </div>
-      </div>
-      <div class="pub-settings-divider"></div>
-      <div>
-        <div class="pub-settings-label">Custom domain</div>
-        <!-- Input row — shown when no domain connected -->
-        <div id="pubDomainConnectRow">
-          <div class="pub-domain-row">
-            <input class="pub-domain-input" id="pubDomainInput" placeholder="yourdomain.com" autocomplete="off" onkeydown="if(event.key==='Enter')connectCustomDomain()"/>
-            <button class="pub-domain-btn" id="pubDomainConnectBtn" onclick="connectCustomDomain()">Connect</button>
-          </div>
-          <p class="pub-domain-hint" style="text-align:center"><button class="pub-dns-tutorial-link" onclick="openDomainTutorial()">Watch setup tutorial</button></p>
-        </div>
-        <!-- Connected state — shown after domain is saved -->
-        <div id="pubDomainConnected" style="display:none;flex-direction:column;gap:10px">
-          <div class="pub-domain-connected-row">
-            <div id="pubDomainVerifyDot" class="pub-domain-dot"></div>
-            <div id="pubDomainName" class="pub-domain-name-text"></div>
-            <button onclick="checkDomainStatus()" class="pub-domain-action-btn" id="pubDomainCheckBtn">Check</button>
-            <button onclick="removeCustomDomain()" class="pub-domain-remove-btn">Remove</button>
-          </div>
-          <div id="pubDomainStatusLabel" class="pub-domain-status"></div>
-          <!-- DNS instructions -->
-          <div id="pubDnsInstructions" style="display:none;flex-direction:column;gap:8px">
-            <div class="pub-dns-label">Add these DNS records</div>
-            <div class="pub-dns-table">
-              <div class="pub-dns-head"><span>Type</span><span>Name</span><span>Value</span></div>
-              <div class="pub-dns-row">
-                <span class="pub-dns-type">CNAME</span>
-                <span id="pubDnsCnameName" class="pub-dns-mono"></span>
-                <span class="pub-dns-mono">cname.vercel-dns.com</span>
-              </div>
-              <div id="pubDnsTxtRow" class="pub-dns-row" style="display:none">
-                <span class="pub-dns-type">TXT</span>
-                <span id="pubDnsTxtName" class="pub-dns-mono"></span>
-                <span id="pubDnsTxtValue" class="pub-dns-mono"></span>
-              </div>
-            </div>
-            <div class="pub-dns-tutorial" style="text-align:center"><button class="pub-dns-tutorial-link" onclick="openDomainTutorial()">Watch setup tutorial</button></div>
-          </div>
-        </div>
-      </div>
-      <div class="pub-settings-divider"></div>
-      <div>
-        <div class="pub-settings-label">Danger zone</div>
-        <button class="pub-danger-btn" onclick="unpublishSite()">Unpublish site</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ═══════════════════════════════════════════
      DOMAIN TUTORIAL MODAL
@@ -2760,6 +2722,20 @@
     <div class="pub-confirm-btns">
       <button class="pub-confirm-btn cancel" onclick="document.getElementById('pubConfirmOverlay').classList.remove('show')">Cancel</button>
       <button class="pub-confirm-btn danger" onclick="_confirmUnpublish()">Unpublish</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     UPDATE CONFIRM
+═══════════════════════════════════════════ -->
+<div id="updateConfirmOverlay">
+  <div class="pub-confirm-modal">
+    <div class="pub-confirm-title">Push this update live?</div>
+    <p class="pub-confirm-sub">Your published site will be replaced immediately. Visitors will see the new version right away — this can't be undone.</p>
+    <div class="pub-confirm-btns">
+      <button class="pub-confirm-btn cancel" onclick="document.getElementById('updateConfirmOverlay').classList.remove('show')">Cancel</button>
+      <button class="pub-confirm-btn confirm" onclick="_confirmUpdate()">Update site</button>
     </div>
   </div>
 </div>
@@ -2986,6 +2962,9 @@
       <!-- DEV PANEL -->
       <div id="devPanel">
         <div id="devNav">
+          <button class="dev-nav-close" onclick="toggleAdvancedPanel()" title="Close advanced panel">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
           <div class="dev-nav-section">PROJECT</div>
           <div class="dev-nav-item active" data-dev="overview" onclick="setDevTab('overview')">
             <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -3285,7 +3264,9 @@
               </div>
             </div>
           </div>
-          <button class="prev-text-btn" onclick="openInViewer()">Open</button>
+          <button class="prev-btn" onclick="openInViewer()" title="Open in viewer">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
         </div>
         <div id="previewInner">
           <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals" title="Preview"></iframe>
@@ -3581,6 +3562,7 @@ async function loadProject() {
   mainFile = normalizeMainFile(mainFile, fileSystem) || 'index.html';
 
   document.getElementById('tbProj').textContent = project.name || 'Untitled';
+  document.getElementById('tbEmoji').textContent = project.emoji || '';
   document.title = (project.name || 'Untitled') + ' — Vexium';
   document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
   const uname = localStorage.getItem('vexium_username') || '?';
@@ -3617,17 +3599,6 @@ async function loadProject() {
   const _scParam = new URLSearchParams(location.search).get('stripe_connect');
   if (_scParam === 'return' || _scParam === 'refresh') {
     setTimeout(() => commerceCheckConnectReturn(), 300);
-  }
-
-  // Fetch advanced_mode from profile
-  if (sb) {
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session) {
-        const { data: prof } = await sb.from('profiles').select('advanced_mode').eq('id', session.user.id).single();
-        if (prof?.advanced_mode) document.body.classList.add('advanced-mode');
-      }
-    } catch(e) {}
   }
 
   _restoreDevState();
@@ -3969,24 +3940,54 @@ let epPickerOpen = false;
 
 async function openEditorSettings() {
   if (!project) return;
-  epEmojiCur = project.emoji || '💻';
+  // Toggle closed if already open
+  const sidebar = document.getElementById('settingsSidebar');
+  if (sidebar.classList.contains('show')) { closeEditorSettings(); return; }
+  epEmojiCur = project.emoji || '\u{1F4BB}';
   document.getElementById('epEmojiBtn').textContent = epEmojiCur;
   document.getElementById('epNameInput').value = project.name || '';
   buildEpEmojiStrip();
   epPickerOpen = false;
   document.getElementById('epEmojiPicker').style.display = 'none';
-  // Disable visibility toggle for non-owners
-  let isOwner = true;
-  if (sb && project.user_id) {
-    try { const { data: { session: _s } } = await sb.auth.getSession(); isOwner = _s?.user?.id === project.user_id; } catch {}
-  }
   await loadEpCollabs();
   renderPublishSection();
   loadBackups();
-  document.getElementById('epOverlay').classList.add('show');
+  ssUpdateStripeBtn();
+  sidebar.classList.remove('ss-pub-open');
+  sidebar.classList.add('show');
 }
 
-function closeEditorSettings() { document.getElementById('epOverlay').classList.remove('show'); }
+function closeEditorSettings() {
+  document.getElementById('settingsSidebar').classList.remove('show');
+  document.getElementById('settingsSidebar').classList.remove('ss-pub-open');
+  ssBkCloseDd();
+}
+
+function ssUpdateStripeBtn() {
+  const connected = !!(project && project.stripe_connect_account_id);
+  const chargesOk = !!(project && project.stripe_connect_charges_enabled);
+  const sub = document.getElementById('ssStripeSub');
+  const btn = document.getElementById('ssStripeBtn');
+  if (sub) sub.textContent = chargesOk ? 'Connected and ready' : connected ? 'Setup incomplete' : 'Connect Stripe to accept payments';
+  if (btn) {
+    btn.classList.toggle('stripe-ok', chargesOk);
+    btn.classList.toggle('active', false);
+  }
+}
+function ssOpenStripe() {
+  closeEditorSettings();
+  setDevTab('commerce');
+  toggleDevPanel(true);
+}
+
+function toggleAdvancedPanel() {
+  const willOpen = !_devOpen;
+  closeEditorSettings();
+  toggleDevPanel(willOpen ? true : false);
+  const btn = document.getElementById('ssAdvBtn');
+  if (btn) btn.classList.toggle('active', _devOpen);
+}
+function openAdvancedPanel() { toggleAdvancedPanel(); }
 
 function toggleEmojiPicker() {
   epPickerOpen = !epPickerOpen;
@@ -4142,6 +4143,8 @@ async function renderPublishSection() {
   const published = project && project.published_slug;
   document.getElementById('epPublishUnpublished').style.display = published ? 'none' : '';
   document.getElementById('epPublishedState').style.display    = published ? ''     : 'none';
+  const _danger = document.getElementById('ssPubDanger'); if (_danger) _danger.style.display = published ? '' : 'none';
+  const _sub = document.getElementById('ssPublishSub'); if (_sub) _sub.textContent = published ? 'Live — manage your published site' : 'Make your site live with a shareable URL';
   if (published) {
     const url = await _pubUrl(project.published_slug);
     document.getElementById('epPubUrl').textContent = url;
@@ -4191,7 +4194,12 @@ async function publishSite() {
   showToast('🚀', 'Published!');
 }
 
-async function updateSite() {
+function updateSite() {
+  if (!project || !project.published_slug) return;
+  document.getElementById('updateConfirmOverlay').classList.add('show');
+}
+async function _confirmUpdate() {
+  document.getElementById('updateConfirmOverlay').classList.remove('show');
   if (!project || !project.published_slug) return;
   const now = new Date().toISOString();
   if (sb) {
@@ -4236,24 +4244,17 @@ async function copyPubUrl() {
 }
 
 async function openPubSettings() {
-  if (!project || !project.published_slug) return;
-  const url = await _pubUrl(project.published_slug);
-  const fullUrl = 'https://' + url;
-  const linkEl = document.getElementById('pubSettingsUrl');
-  linkEl.textContent = fullUrl;
-  linkEl.href = fullUrl;
-  const openBtn = document.getElementById('pubSettingsOpenBtn');
-  if (openBtn) openBtn.href = fullUrl;
+  renderPublishSection();
   _renderDomainSection();
-  document.getElementById('pubSettingsOverlay').classList.add('show');
+  document.getElementById('settingsSidebar').classList.add('ss-pub-open');
 }
 
 function closePubSettings() {
-  document.getElementById('pubSettingsOverlay').classList.remove('show');
+  document.getElementById('settingsSidebar').classList.remove('ss-pub-open');
 }
 
 function closePubSettingsBack() {
-  document.getElementById('pubSettingsOverlay').classList.remove('show');
+  document.getElementById('settingsSidebar').classList.remove('ss-pub-open');
 }
 
 const DOMAIN_TUTORIAL_URL = ''; // TODO: set YouTube embed URL when tutorial is ready
@@ -4428,6 +4429,7 @@ async function saveEditorSettings() {
   project.emoji = epEmojiCur;
   if (newSlug) { project.published_slug = newSlug; _ownerUsername = null; }
   document.getElementById('tbProj').textContent = name;
+  document.getElementById('tbEmoji').textContent = epEmojiCur || '';
 
   const updates = { name, emoji: epEmojiCur, updated_at: new Date().toISOString() };
   if (newSlug) updates.published_slug = newSlug;
@@ -4444,14 +4446,11 @@ async function saveEditorSettings() {
       if (p) { Object.assign(p, updates); localStorage.setItem('vexium_projects', JSON.stringify(list)); }
     } catch(e) {}
   }
-  closeEditorSettings();
   if (newSlug) renderPublishSection();
   showToast('✓', 'Saved');
 }
 
-document.getElementById('epOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('epOverlay')) closeEditorSettings();
-});
+// epOverlay click-outside removed (now a sidebar)
 
 // ── BACKUPS ───────────────────────────────────────────────────────────────────
 
@@ -4495,95 +4494,84 @@ function bkFileTag(filename) {
   return '<span class="bk-file-tag bk-tag-other">FILE</span>';
 }
 
+let _ssBkActiveSlot = null;
+
 function _bkRender() {
-  const list = document.getElementById('epBackupList');
-  const actions = document.getElementById('epBackupActions');
-  if (!list || !actions) return;
-
-  const clockSvg = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>`;
-
-  if (_bkPickMode) {
-    list.innerHTML = _loadedBackups.map(bk => {
-      const fc = Object.keys(bk.files || {}).filter(f => !f.startsWith('_')).length;
-      return `<div class="bk-card">
-        <div class="bk-card-icon">${clockSvg}</div>
-        <div class="bk-card-info">
-          <div class="bk-card-date">${bkFormatDate(bk.created_at)}</div>
-          <div class="bk-card-meta">${fc} file${fc !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="bk-card-actions">
-          <button class="bk-btn bk-btn-replace" onclick="saveBackup(${bk.slot}, this)">Replace</button>
-        </div>
+  const grid = document.getElementById('ssBackupGrid');
+  if (!grid) return;
+  grid.innerHTML = [1,2,3].map(slot => {
+    const bk = _loadedBackups.find(b => b.slot === slot);
+    if (bk) {
+      const d = new Date(bk.created_at);
+      const mo = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const ti = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return `<div class="ss-bk-slot filled" onclick="ssBkOpenDd(event,${slot})">
+        <div class="ss-bk-date">${mo}<br>${ti}</div>
+        <div class="ss-bk-overlay">…</div>
       </div>`;
-    }).join('');
-    actions.innerHTML = `
-      <div class="bk-pick-hint">Choose a backup to replace</div>
-      <span class="bk-pick-cancel" onclick="_bkExitPick()">Cancel</span>`;
-  } else {
-    list.innerHTML = _loadedBackups.map(bk => {
-      const fc = Object.keys(bk.files || {}).filter(f => !f.startsWith('_')).length;
-      return `<div class="bk-card">
-        <div class="bk-card-icon">${clockSvg}</div>
-        <div class="bk-card-info">
-          <div class="bk-card-date">${bkFormatDate(bk.created_at)}</div>
-          <div class="bk-card-meta">${fc} file${fc !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="bk-card-actions">
-          <button class="bk-btn bk-btn-ghost" onclick="openBkPreview('${bk.id}')">Preview</button>
-          <button class="bk-btn bk-btn-ghost" onclick="openBkRestore(${bk.slot})">Restore</button>
-        </div>
-      </div>`;
-    }).join('');
-    actions.innerHTML = `<button class="bk-save-btn" onclick="bkSaveOrPick(this)">Save backup</button>`;
-  }
+    }
+    return `<div class="ss-bk-slot empty" onclick="saveBackupSlot(${slot})">+</div>`;
+  }).join('');
 }
 
-function _bkExitPick() { _bkPickMode = false; _bkRender(); }
+function _bkExitPick() { _bkRender(); }
+
+let _ssBkDdOpen = false;
+function ssBkOpenDd(e, slot) {
+  e.stopPropagation();
+  _ssBkActiveSlot = slot;
+  const dd = document.getElementById('ssBkDropdown');
+  dd.style.left = Math.min(e.clientX - 60, window.innerWidth - 160) + 'px';
+  dd.style.top  = Math.min(e.clientY + 6,  window.innerHeight - 170) + 'px';
+  dd.classList.add('show');
+  _ssBkDdOpen = true;
+}
+function ssBkCloseDd() {
+  document.getElementById('ssBkDropdown')?.classList.remove('show');
+  _ssBkDdOpen = false;
+}
+document.addEventListener('click', () => { if (_ssBkDdOpen) ssBkCloseDd(); });
+
+function ssBkPreview() { const bk = _loadedBackups.find(b => b.slot === _ssBkActiveSlot); if (bk) openBkPreview(bk.id); ssBkCloseDd(); }
+function ssBkRestore() { const s = _ssBkActiveSlot; ssBkCloseDd(); openBkRestore(s); }
+function ssBkSave()    { const s = _ssBkActiveSlot; ssBkCloseDd(); saveBackupSlot(s); }
+async function ssBkDelete() {
+  const slot = _ssBkActiveSlot; ssBkCloseDd();
+  if (!sb || !projectId) return;
+  if (!await bkConfirm('Remove backup', 'This backup will be permanently deleted.')) return;
+  await sb.from('project_backups').delete().eq('project_id', projectId).eq('slot', slot);
+  showToast('✓', 'Backup removed');
+  loadBackups();
+}
+
+async function saveBackupSlot(slot) {
+  if (!sb || !projectId) return;
+  if (editor && activeFile) fileSystem[activeFile] = editor.getValue();
+  _bkRender();
+  const snapshot = JSON.parse(JSON.stringify(fileSystem));
+  const { error } = await sb.from('project_backups').upsert(
+    { project_id: projectId, slot, files: snapshot, created_at: new Date().toISOString() },
+    { onConflict: 'project_id,slot' }
+  );
+  if (error) showToast('!', 'Backup failed'); else showToast('✓', 'Backup saved');
+  loadBackups();
+}
 
 async function loadBackups() {
-  const list = document.getElementById('epBackupList');
-  const actions = document.getElementById('epBackupActions');
-  if (!list || !projectId) return;
+  const grid = document.getElementById('ssBackupGrid');
+  if (!grid || !projectId) return;
 
   if (_userPlan === 'trial') {
-    list.innerHTML = `<div class="bk-locked">Backups are available on Starter and above. <a href="settings.html?tab=billing" target="_blank">Upgrade</a></div>`;
-    actions.innerHTML = '';
+    grid.innerHTML = `<div style="grid-column:span 3;font-size:11px;color:var(--muted);padding:4px 0">Backups on Starter+. <a href="settings.html?tab=billing" target="_blank" style="color:var(--text)">Upgrade</a></div>`;
     return;
   }
-
-  list.innerHTML = `<div class="bk-card-meta" style="padding:2px 0 8px">Loading…</div>`;
-  actions.innerHTML = '';
   const { data } = await sb.from('project_backups').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
   _loadedBackups = data || [];
   _bkPickMode = false;
   _bkRender();
 }
 
-function bkSaveOrPick(btn) {
-  if (_loadedBackups.length < 3) {
-    const nextSlot = [1,2,3].find(s => !_loadedBackups.some(b => b.slot === s));
-    saveBackup(nextSlot, btn);
-  } else {
-    _bkPickMode = true;
-    _bkRender();
-  }
-}
-
-async function saveBackup(slot, btn) {
-  if (!sb || !projectId) return;
-  if (editor && activeFile) fileSystem[activeFile] = editor.getValue();
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-
-  const snapshot = JSON.parse(JSON.stringify(fileSystem));
-  const { error } = await sb.from('project_backups').upsert(
-    { project_id: projectId, slot, files: snapshot, created_at: new Date().toISOString() },
-    { onConflict: 'project_id,slot' }
-  );
-
-  if (error) { showToast('!', 'Backup failed'); loadBackups(); return; }
-  showToast('✓', 'Backup saved');
-  loadBackups();
-}
+// bkSaveOrPick/saveBackup replaced by saveBackupSlot above
 
 function openBkPreview(backupId) {
   window.open(`viewer.html?backup=${backupId}`, '_blank');
@@ -5228,12 +5216,15 @@ let _aiUserStopped = false;
 let _aiStreamCleanup = null;
 let _continuationBase = null; // { file, content } — set by _aiAutoComplete, used to append tail
 let _continuationExcludeFile = null; // file excluded from payload during continuation so Claude writes only the tail
-let _seamlessContinuation = null; // { row, textEl, workingOnEl, streamAvatar, collectedFiles, collectedNames } — kept alive across continuation calls so the UI never visibly restarts
+let _continuationActive = false; // set by _aiAutoComplete, consumed+cleared by aiCallAPI — drives continuation_mode on the wire independent of whether a base was captured
+const _MAX_AUTO_CONTINUE = 12; // hard ceiling on chained auto-continuations per user turn — prevents a runaway loop on a build that keeps hitting max_tokens
+let _seamlessContinuation = null; // { row, workingOnEl, streamAvatar, collectedFiles, message } — kept alive across continuation rounds so the response never visibly restarts (consumer rebuilds collectedNames + nulls textEl)
 // Frozen at the moment a build starts (before the AI writes anything) and replayed on every
 // continuation request for that build. The server needs this to keep the system prompt's
 // fresh-build-vs-edit shape identical across rounds — otherwise it drifts as files fill in,
 // busting Anthropic's prompt cache and forcing a full-price rewrite on every continuation call.
 let _buildIsFreshSession = null;
+let _buildCategory = null; // category the server inferred for this build, frozen and replayed on every continuation so the cached system prompt stays byte-identical
 let _preEditSnapshot = {}; // snapshot of files before each AI edit — used to restore on truncation
 const _aiTypingPhases = ['Thinking…', 'Analyzing…', 'Planning…', 'Strategizing…'];
 /** Max chat turns sent to the edge (full history explodes input tokens / cost). */
@@ -5250,6 +5241,10 @@ let aiSessionMessageCount = 0;
 const AI_EDGE_URL = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
   ? SUPABASE_URL.trim().replace(/\/+$/, '')
   : 'https://ciuqhxrxcznmgorjeumz.supabase.co') + '/functions/v1/ai-chat';
+// Main streaming builds run on the Cloudflare Worker — no ~150s Supabase timeout, so a full page
+// generates in ONE call (no fragile continuation/stitching). Everything else (page builds, convo,
+// edits-as-patches) stays on Supabase ai-chat. To revert builds to Supabase: set AI_BUILD_URL = AI_EDGE_URL.
+const AI_BUILD_URL = 'https://vexium-ai-build.startafter.workers.dev';
 
 function aiFileColor(name) {
   if (!name) return '#6366f1';
@@ -5900,24 +5895,26 @@ function formatChatText(raw) {
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   s = s.replace(/^[-*_]{3,}$/gm,'<hr>');
   s = s.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
-  // Markdown tables
+  // Markdown tables → borderless styled tables
   s = s.replace(/((?:^\|.+\|\n?)+)/gm, block => {
     const rows = block.trim().split('\n').filter(r => r.trim());
     if (rows.length < 2) return block;
     const isSep = r => /^\|[\s\-:|]+\|/.test(r);
-    let html = '<table>';
-    let firstDataRow = true;
-    for (const row of rows) {
-      if (isSep(row)) continue;
-      const cells = row.split('|').slice(1, -1).map(c => c.trim());
-      if (firstDataRow) {
-        html += '<tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr>';
-        firstDataRow = false;
-      } else {
-        html += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
-      }
-    }
-    html += '</table>';
+    const dataRows = rows.filter(r => !isSep(r));
+    if (dataRows.length < 2) return block;
+    const parse = r => r.split('|').slice(1,-1).map(c => c.trim());
+    const numRe = /^[\$€£¥]?[\d,]+(\.\d+)?[kKmMbB%]?$/;
+    const headers = parse(dataRows[0]);
+    const body = dataRows.slice(1);
+    let html = '<div class="ai-tbl-wrap"><table><thead><tr>' +
+      headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+    body.forEach(row => {
+      const cells = parse(row);
+      html += '<tr>' + cells.map(c =>
+        `<td${numRe.test(c.replace(/\s/g,'')) ? ' class="ai-td-num"' : ''}>${c}</td>`
+      ).join('') + '</tr>';
+    });
+    html += '</tbody></table></div>';
     return html;
   });
   s = s.replace(/((?:^[-*] .+\n?)+)/gm, block => {
@@ -6324,10 +6321,13 @@ async function aiApplySingleSuggestion(el) {
   await aiSendWithBottomText(text);
 }
 
-function renderCritique(critique, targetEl) {
-  if (!critique || !targetEl) return;
-  const improvements = (critique.improvements || []).filter(s => String(s || '').trim());
+function renderSuggestions(items, targetEl) {
+  if (!Array.isArray(items) || !targetEl) return;
+  const improvements = items.filter(s => String(s || '').trim());
   if (!improvements.length) return;
+  // A build + its continuation(s) each emit a suggestions event — keep only the latest card so
+  // they don't stack on the reused seamless row.
+  targetEl.querySelectorAll('.ai-suggestions').forEach(el => el.remove());
   const itemsHtml = improvements.map(s =>
     '<div class="ai-suggestions-item" onclick="aiApplySingleSuggestion(this)" title="Apply this suggestion">' + escHtml(s) + '</div>'
   ).join('');
@@ -6682,13 +6682,27 @@ async function aiSend(fromBottom) {
   _autoRecoverCount = 0;
   _transientRetryCount = 0;
   _buildIsFreshSession = isDefaultCode(fileSystem);
+  // NOTE: do NOT reset _buildCategory here. It's captured from the first call's build_meta and must
+  // persist across onboarding turns + build + continuation so the cached system prompt stays
+  // byte-identical (warm cache = 0.1x reads instead of 1.25x rewrites every call). It only resets on
+  // page load (new project session).
   _aiCutFile = null;
   _maxTokensHit = false;
   _aiUserStopped = false;
-  // Snapshot current files so truncated edits can be undone and retried
+  _continuationExcludeFile = null;
+  _continuationBase = null; // clear any stale base left by a continuation that ended without a matching file event — otherwise it would wrongly merge into this fresh request
+  _continuationActive = false;
+  // Snapshot real files so truncated edits can be undone.
+  // Default/empty files are excluded — if they're snapshotted, the truthy value blocks
+  // checkpoint and max_tokens_hit saves during a fresh build, leaving fileSystem with
+  // only the skeleton when the stream is cut off and Continue is clicked.
   _preEditSnapshot = {};
   const _INTERNAL = ['_longterm','_shortterm','_backend','_pages'];
-  Object.keys(fileSystem).forEach(f => { if (!_INTERNAL.includes(f)) _preEditSnapshot[f] = fileSystem[f]; });
+  Object.keys(fileSystem).forEach(f => {
+    if (_INTERNAL.includes(f)) return;
+    const c = fileSystem[f] || '';
+    if (c.length > 300 || c.includes('<style') || c.includes('<script')) _preEditSnapshot[f] = fileSystem[f];
+  });
   _pendingBrief = null;
   _pendingSpec  = null;
 
@@ -6893,6 +6907,7 @@ function aiStop() {
   _aiUserStopped = true;
   if (aiAbortController) aiAbortController.abort();
   if (_aiStreamCleanup) { _aiStreamCleanup(); _aiStreamCleanup = null; }
+  _discardSeamlessContinuation(); // clean up any avatar/spinner finalize kept alive for a pending continuation
   // Force UI reset immediately — don't wait for the async abort path
   aiTyping = false;
   aiSetGenerating(false);
@@ -7441,15 +7456,23 @@ async function aiCallAPI() {
   // Declared before try so Safari's block-scoped function rules don't hide them from catch
   let _starLerpRaf = null;
   let _stopStarLerp = () => {};
+  let _stopWorkingOn = () => {};
 
   try {
     streamFinalized = false;
-    const response = await edgeFetchWithAuth(AI_EDGE_URL, {
+    // Consume-and-clear: only the call _aiAutoComplete set up is a continuation. Any other
+    // caller (aiSend, patch-retry) leaves the flag false, so it can never leak across requests.
+    const _isContinuation = _continuationActive; _continuationActive = false;
+    const _fullFiles = buildFullFilesForPatching();
+    const response = await edgeFetchWithAuth(AI_BUILD_URL, {
       method: 'POST',
       body: JSON.stringify({
         messages: _apiMessages,
         files: buildAiFilesPayload(),
-        ...(Object.keys(buildFullFilesForPatching()).length ? { full_files: buildFullFilesForPatching() } : {}),
+        // full_files is only for server-side patch application on edits. Never send it on a
+        // continuation — the partial file can be ~tens of thousands of tokens of pure re-sent
+        // input every round, which is what made continued builds so expensive.
+        ...(!_isContinuation && Object.keys(_fullFiles).length ? { full_files: _fullFiles } : {}),
         brief: _pendingBrief || undefined,
         spec: _pendingSpec || undefined,
         auto_fix: aiAutofixEnabled(),
@@ -7458,8 +7481,9 @@ async function aiCallAPI() {
         active_file: activeFile || mainFile,
         project_has_real_files: !isDefaultCode(fileSystem),
         project_id: projectId || undefined,
-        continuation_mode: !!_continuationBase || undefined,
+        continuation_mode: _isContinuation || undefined,
         fresh_build_session: _buildIsFreshSession === null ? undefined : _buildIsFreshSession,
+        build_category: _buildCategory || undefined,
       }),
       signal: aiAbortController.signal
     });
@@ -7472,17 +7496,22 @@ async function aiCallAPI() {
     const _scPrev = _seamlessContinuation;
     _seamlessContinuation = null;
 
+    // _rowInner must be declared here (not inside else) so _starLerpStep can reference it
+    let _rowInner = null;
+
     if (_scPrev) {
       // Seamless continuation: reuse the existing row/spinner so the UI never appears to restart
       row = _scPrev.row;
       textEl = null;               // leave the old chat text intact — don't overwrite it
       _workingOnEl = _scPrev.workingOnEl;
       _streamAvatar = _scPrev.streamAvatar;
+      _rowInner = row.firstChild || row;
+      fullMessage = _scPrev.message || ''; // carry the original chat text so the saved history keeps it
     } else {
       // Create the AI response row fresh
       row = document.createElement('div');
       row.className = 'ai-row ai';
-      const _rowInner = document.createElement('div');
+      _rowInner = document.createElement('div');
       _rowInner.style.cssText = 'position:relative;width:100%';
       _streamAvatar = document.createElement('div');
       _streamAvatar.className = 'ai-avatar';
@@ -7610,10 +7639,10 @@ async function aiCallAPI() {
         }
       }, 8500);
     }
-    function _stopWorkingOn() {
+    _stopWorkingOn = function() {
       clearInterval(_workingOnTimer); _workingOnTimer = null;
       if (_workingOnEl) { _workingOnEl.style.opacity = '0'; setTimeout(() => { if (_workingOnEl) { _workingOnEl.remove(); _workingOnEl = null; } }, 320); }
-    }
+    };
 
     // Expose cleanup so aiStop() can forcibly clean up even mid-stream
     _aiStreamCleanup = () => {
@@ -7635,9 +7664,23 @@ async function aiCallAPI() {
     const _partialContent = {};
 
     /** When the edge drops the SSE (Deno: connection closed before message completed), `event: done` never fires — still apply fences + history. */
-    finalizeAssistantStream = function(fromEarlyClose, keepUI) {
+    finalizeAssistantStream = function(fromEarlyClose, keepUI, willContinueParam) {
       if (streamFinalized) return;
       streamFinalized = true;
+
+      // Decide up front whether a continuation fires right after this finalize (max_tokens hit, or
+      // an early close that left a real mid-file partial). When it will, we keep the avatar/spinner
+      // alive for a seamless handoff and SKIP per-round end-of-turn work (summary, page builds,
+      // history, lock release) — those run once on the FINAL round so they don't stack on the row.
+      const cutFile = currentStreamingFile;
+      const partialContent = (cutFile && _partialContent[cutFile]) || '';
+      // During a continuation, partialContent holds only the freshly-written tail — any non-empty
+      // amount is real progress worth saving, so don't gate it behind the 500-char fresh-build threshold.
+      const _inContinuation = !!(cutFile && _continuationBase && _continuationBase.file === cutFile);
+      const hasMidStreamFile = !!(cutFile && (partialContent.length >= 500 || (_inContinuation && partialContent.length > 0)));
+      const INTERNAL_CONT = ['_longterm','_shortterm','_backend','_pages'];
+      const _willContinueNow = !!cutFile && !INTERNAL_CONT.includes(cutFile)
+        && (willContinueParam || (fromEarlyClose && hasMidStreamFile));
 
       if (collectedFiles.length === 0 && fullMessage) {
         const extracted = {};
@@ -7707,64 +7750,54 @@ async function aiCallAPI() {
         setTimeout(refreshPreview, 120);
         saveNow();
 
-        const builtNames = new Set(collectedFiles.map(f => f.name));
+        // Cost control: do NOT auto-build the other planned pages — each one is a full extra AI
+        // call (~$0.12-0.15). Build only the landing page; the AI's message offers to add the rest,
+        // and the user requests them on demand (cheaper Haiku page-adds). aiCallPageBuilds() still
+        // exists and is invoked from those explicit requests.
 
-        // Only build pages the AI explicitly planned in the spec — never scan message
-        // history for .html references (that causes expensive rebuilds on every edit)
-        const specPages = ((_pendingBrief && _pendingBrief.pageStructure) || (_pendingSpec && _pendingSpec.sections) || [])
-          .filter(p => typeof p === 'string' && p.endsWith('.html'));
-
-        const missingPages = specPages
-          .filter(p => p !== 'index.html' && !builtNames.has(p) && !fileSystem[p]);
-
-        if (missingPages.length > 0) {
-          setTimeout(() => aiCallPageBuilds(missingPages), 600);
+        // Only on the final round — never mid-continuation (the main file isn't done yet, and a
+        // per-round summary would stack duplicates on the reused seamless row).
+        if (!_willContinueNow) {
+          const target = row._contentWrap || row;
+          buildEditedSummary(collectedFiles, target);
         }
-
-        const target = row._contentWrap || row;
-        buildEditedSummary(collectedFiles, target);
       }
 
       if (textEl) { _revealLen = fullMessage.length; if (_streamRaf) { cancelAnimationFrame(_streamRaf); _streamRaf = null; } textEl.removeAttribute('data-streaming'); if (fullMessage) { textEl.innerHTML = formatChatText(fullMessage); textEl.className = 'ai-text settling'; requestAnimationFrame(() => requestAnimationFrame(() => { if (textEl) textEl.classList.remove('settling'); })); } }
 
       // Early-close recovery check (must run before UI cleanup so we can keep UI alive)
-      const cutFile = currentStreamingFile;
-      const partialContent = (cutFile && _partialContent[cutFile]) || '';
-      const hasMidStreamFile = !!(cutFile && partialContent.length >= 500);
-      const _willKeepUI = keepUI || (fromEarlyClose && hasMidStreamFile);
+      _stopStarLerp(); // always stop THIS call's avatar lerp loop; the next call starts its own
 
-      if (_willKeepUI) {
-        // Keep the working-on spinner and avatar alive — continuation is coming shortly
-        if (_workingOnEl) {
-          const _woAct = _workingOnEl.querySelector('.ai-wo-action');
-          if (_woAct) _woAct.textContent = 'continuing…';
-          const _woLines = _workingOnEl.querySelector('.ai-wo-lines');
-          if (_woLines) _woLines.textContent = '';
-          clearInterval(_workingOnTimer); _workingOnTimer = null;
-        }
-        // Store UI refs so the next aiCallAPI() can reuse them seamlessly
-        if (!_seamlessContinuation) {
-          _seamlessContinuation = { row, textEl, workingOnEl: _workingOnEl, streamAvatar: _streamAvatar, collectedFiles, collectedNames };
-        }
-      } else {
-        _stopStarLerp();
-        if (_streamAvatar) { _streamAvatar.style.opacity = '0'; setTimeout(() => _streamAvatar && _streamAvatar.remove(), 360); _streamAvatar = null; }
-        _stopWorkingOn();
+      // Connection dropped mid-file: persist the partial tail now.
+      if (fromEarlyClose && hasMidStreamFile && partialContent) {
+        // Prepend the continuation base (if this cut file is itself a continuation) so a SECOND
+        // early-close doesn't overwrite the accumulated file with just the latest tail — matching
+        // what the max_tokens_hit and 50-line checkpoint saves already do.
+        const _ecBase = _inContinuation ? _continuationBase.content : '';
+        fileSystem[cutFile] = _ecBase + partialContent;
+        dirtyFiles.add(cutFile);
+        syncEditorModelIfViewing(cutFile, fileSystem[cutFile]);
+        saveNow();
       }
 
-      // Only auto-recover if a file was actually mid-stream when the connection dropped.
-      // Never retry on bare early-close with no content — that's usually a clean finish
-      // that arrived before the `done` event, not a real truncation.
-      if (fromEarlyClose && hasMidStreamFile) {
-        _autoRecoverCount++;
+      if (_willContinueNow) {
+        // Seamless continuation: keep the avatar + working-on spinner alive and hand them to the
+        // next call so the response never visibly restarts. Only stop this call's fallback-text
+        // timer (its interval id lives in this closure — the next call can't clear it otherwise).
         _aiCutFile = cutFile;
-        // Save partial content now so _aiAutoComplete can read the tail for patch continuation.
-        if (partialContent && !_preEditSnapshot[cutFile]) {
-          fileSystem[cutFile] = partialContent;
-          dirtyFiles.add(cutFile);
-        }
-        setTimeout(() => _aiAutoComplete(), 350);
+        clearInterval(_workingOnTimer); _workingOnTimer = null;
+        _seamlessContinuation = { row, workingOnEl: _workingOnEl, streamAvatar: _streamAvatar, collectedFiles, message: fullMessage };
+        _scheduleAutoContinue();
+        // Skip the copy button / history push / lock release — the FINAL finalize does those once,
+        // with the cumulative collectedFiles carried across rounds via _seamlessContinuation.
+        _compactMode = false;
+        scrollIfSticky();
+        return;
       }
+
+      // Not continuing — tear down the streaming UI fully.
+      if (_streamAvatar) { _streamAvatar.style.opacity = '0'; setTimeout(() => _streamAvatar && _streamAvatar.remove(), 360); _streamAvatar = null; }
+      _stopWorkingOn();
 
       const meta = document.createElement('div');
       meta.className = 'ai-msg-meta';
@@ -7800,6 +7833,10 @@ async function aiCallAPI() {
 
 
         if (eventType === 'start') aiHideTyping();
+
+        // Freeze the server-inferred category so every continuation of this build replays it,
+        // keeping the cached system prompt byte-identical (0.1x cache reads instead of 1.25x rewrites).
+        if (eventType === 'build_meta' && data.category) _buildCategory = data.category;
 
         if (eventType === 'delta' && data.text) {
           _gotAnyOutput = true;
@@ -7846,7 +7883,7 @@ async function aiCallAPI() {
           _partialContent[currentStreamingFile] = (_partialContent[currentStreamingFile] || '') + data.text;
           // Checkpoint: persist progress to fileSystem every 50 lines so a drop never loses much.
           // Include base content so chained continuations always see the full accumulated file.
-          if (_woLineCount > 0 && _woLineCount % 50 === 0 && !_preEditSnapshot[currentStreamingFile]) {
+          if (_woLineCount > 0 && _woLineCount % 50 === 0) {
             const _ckBase = (_continuationBase && _continuationBase.file === currentStreamingFile) ? _continuationBase.content : '';
             fileSystem[currentStreamingFile] = _ckBase + _partialContent[currentStreamingFile];
             dirtyFiles.add(currentStreamingFile);
@@ -7863,6 +7900,7 @@ async function aiCallAPI() {
             if (_continuationBase && _continuationBase.file === fileKey && content) {
               content = _continuationBase.content + content;
               _continuationBase = null;
+              _continuationExcludeFile = null;
             }
             fileSystem[fileKey] = content;
             dirtyFiles.add(fileKey);
@@ -7945,25 +7983,18 @@ async function aiCallAPI() {
           // Save currentStreamingFile BEFORE finalizeAssistantStream clears it
           const midStreamFile = currentStreamingFile;
           _maxTokensHit = false;
-          // Detect whether we're about to do a seamless continuation so finalize can keep the UI alive
           const INTERNAL = ['_longterm', '_shortterm', '_backend', '_pages'];
           const _willContinue = hitTokenLimit && midStreamFile && !INTERNAL.includes(midStreamFile);
-          finalizeAssistantStream(false, _willContinue);
-          // If the stream completed but produced nothing at all, show a retry prompt
+          // finalize owns the continuation: when willContinue it keeps the avatar/spinner alive,
+          // hands them off seamlessly, sets _aiCutFile, and schedules the next round.
+          finalizeAssistantStream(false, false, _willContinue);
           if (!hadOutput && !hitTokenLimit && textEl) {
             textEl.innerHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic">No response — please try again.</p>';
           }
-          // Only recover if: (1) token limit hit, (2) a real user-visible file was cut off.
-          // Skip recovery for internal memory files — they update themselves next build.
-          if (_willContinue) {
-            _autoRecoverCount++;
-            _aiCutFile = midStreamFile;
-            setTimeout(() => _aiAutoComplete(), 350);
-          }
         }
 
-        if (eventType === 'critique') {
-          renderCritique(data, row._contentWrap || row);
+        if (eventType === 'suggestions' && data && Array.isArray(data.items)) {
+          renderSuggestions(data.items, row._contentWrap || row);
           scrollIfSticky();
         }
 
@@ -7997,11 +8028,13 @@ async function aiCallAPI() {
 
         if (eventType === 'max_tokens_hit') {
           _maxTokensHit = true;
-          // Save partial content immediately so _aiAutoComplete has the tail when it fires.
-          // Can't rely on the partial_file SSE event arriving before the 800ms timer.
-          if (currentStreamingFile && _partialContent[currentStreamingFile] && !_preEditSnapshot[currentStreamingFile]) {
-            fileSystem[currentStreamingFile] = _partialContent[currentStreamingFile];
+          if (currentStreamingFile && _partialContent[currentStreamingFile]) {
+            const _mkBase = (_continuationBase && _continuationBase.file === currentStreamingFile) ? _continuationBase.content : '';
+            const _saved = _mkBase + _partialContent[currentStreamingFile];
+            fileSystem[currentStreamingFile] = _saved;
             dirtyFiles.add(currentStreamingFile);
+            syncEditorModelIfViewing(currentStreamingFile, _saved);
+            saveNow();
           }
         }
 
@@ -8167,16 +8200,53 @@ function aiCompactChat() {
   }
 }
 
+function aiContinueNow(btn) {
+  btn?.closest('.ai-continue-wrap')?.remove();
+  _autoRecoverCount = 0; // manual resume grants a fresh auto-continue budget
+  _aiAutoComplete();
+}
+
+// Fire the next continuation. The 400ms delay lets aiCallAPI's success path reset aiTyping
+// before _aiAutoComplete's guard runs. No visible note: finalize keeps the avatar + working-on
+// spinner alive across the gap, so the response never appears to stop.
+function _scheduleAutoContinue() {
+  setTimeout(() => _aiAutoComplete(), 400);
+}
+
+// Tear down a pending seamless handoff when the continuation will NOT proceed (cap hit, user
+// stopped). finalize kept the avatar + spinner alive expecting a next round; clean them up here.
+function _discardSeamlessContinuation() {
+  const sc = _seamlessContinuation; _seamlessContinuation = null;
+  if (!sc) return;
+  if (sc.streamAvatar) { const a = sc.streamAvatar; a.style.opacity = '0'; setTimeout(() => a && a.remove(), 360); }
+  if (sc.workingOnEl) { const w = sc.workingOnEl; w.style.opacity = '0'; setTimeout(() => w && w.remove(), 320); }
+}
+
 function _aiAutoComplete() {
   if (aiTyping) return;
-  if (_aiUserStopped) { _aiUserStopped = false; return; }
+  if (_aiUserStopped) { _aiUserStopped = false; _discardSeamlessContinuation(); return; }
+  // Cap chained auto-continuations so a build that keeps hitting the token limit can't
+  // re-fire Anthropic requests forever. Past the ceiling, fall back to a manual Continue
+  // button (aiContinueNow resets the counter) so the user stays in control of the spend.
+  if (_autoRecoverCount >= _MAX_AUTO_CONTINUE) {
+    _discardSeamlessContinuation();
+    const _wrap = document.createElement('div');
+    _wrap.className = 'ai-continue-wrap';
+    _wrap.innerHTML = '<button class="ai-continue-btn" onclick="aiContinueNow(this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Continue</button><span class="ai-continue-note">Paused — tap to keep going</span>';
+    (document.getElementById('aiMessages') || document.body).appendChild(_wrap);
+    return;
+  }
+  _autoRecoverCount++;
+  _continuationActive = true; // tells the next aiCallAPI this is a continuation, even on the fallback branches below that never set a base
   const cutFile = _aiCutFile;
   _aiCutFile = null;
   _continuationExcludeFile = null; // reset from previous iteration
   _continuationBase = null;
   if (aiHistory.length && aiHistory[aiHistory.length - 1].role === 'assistant') aiHistory.pop();
 
-  const noIntroNote = `\n\nDo not write a new intro, summary, or "here we go" message — the user already saw that. Either omit the chat message entirely or, if you must say something, make it a single short phrase like "continuing…".`;
+  // No chat text at all on continuation — the file content must go inside a <file> block, never the
+  // message. A stray chat line (even "continuing…") is what leaks raw code into the bubble.
+  const noIntroNote = `\n\nDo NOT write any chat message, intro, summary, or the word "continuing" — output ONLY the <file> block. Text outside the <file> block is shown to the user as raw code and discarded.`;
 
   let msg;
   if (cutFile && fileSystem[cutFile]) {
@@ -8188,11 +8258,11 @@ function _aiAutoComplete() {
     // so it will write ONLY the continuation tail. _continuationBase prepends on arrival.
     _continuationExcludeFile = cutFile;
     _continuationBase = { file: cutFile, content: partialContent };
-    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines written so far). Continue writing it from exactly where it stopped — do NOT restart from line 1. Here are the last lines already written:\n\n${tail}\n\nWrite ONLY what comes after those lines, wrapped in <file name="${cutFile}">. Do not repeat anything above.${noIntroNote}`;
+    msg = `Your previous response was cut off while writing ${cutFile} (${partLines.length} lines written so far). Continue from exactly where it stopped — do NOT restart from line 1. Here are the last lines already written:\n\n${tail}\n\nWrap your output in <file name="${cutFile}"> … </file> and write ONLY what comes after those lines. The <file> wrapper is REQUIRED. Do not repeat anything above.${noIntroNote}`;
   } else if (cutFile) {
-    msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} as a <file> block.${noIntroNote}`;
+    msg = `The output was cut off before ${cutFile} was finished. Write the complete ${cutFile} wrapped in a <file name="${cutFile}"> … </file> block.${noIntroNote}`;
   } else {
-    msg = `The output was cut off. Continue and complete all remaining files.${noIntroNote}`;
+    msg = `The output was cut off. Continue and complete all remaining files, each wrapped in its own <file name="..."> … </file> block.${noIntroNote}`;
   }
 
   aiHistory.push({ role: 'user', content: msg }); // in-memory only — never saved to DB or shown in UI
@@ -8412,7 +8482,7 @@ const BK_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 function toggleDevPanel(forceOpen) {
   _devOpen = forceOpen !== undefined ? !!forceOpen : !_devOpen;
   document.getElementById('devPanel').classList.toggle('show', _devOpen);
-  document.getElementById('btnDev')?.classList.toggle('active', _devOpen);
+  document.getElementById('ssAdvBtn')?.classList.toggle('active', _devOpen);
   _syncDevPanel();
   if (_devOpen) {
     // Activate the correct nav item and section before loading data
@@ -9100,10 +9170,10 @@ function commerceRenderSnippet(accountId) {
   const snippet = document.getElementById('commerceSnippet');
   if (!snippet || !project) return;
   const fnBase = `${BK_URL}/functions/v1`;
-  const code = `<button onclick="vxBuy(2999, 'My Product')">Buy — $29.99</button>
+  const code = `<button onclick="vxBuyAmount(2999, 'My Product')">Buy — $29.99</button>
 
 <script>
-async function vxBuy(amountCents, name) {
+async function vxBuyAmount(amountCents, name) {
   const res = await fetch('${fnBase}/stripe-site-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -9120,7 +9190,7 @@ async function vxBuy(amountCents, name) {
 }
 <\/script>`;
   snippet.innerHTML = `
-    <div class="csb-snippet-label">Add a buy button to your site</div>
+    <div class="csb-snippet-label">Quick buy button (or just ask the AI to build a store — it wires real, tamper-proof product pricing for you)</div>
     <div class="csb-snippet-code" id="csbCodeEl">${escHtml(code)}</div>
     <button class="csb-copy-btn" onclick="commerceCopySnippet()">Copy code</button>`;
 }

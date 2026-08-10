@@ -91,15 +91,7 @@
     .tb-logo {
       display: flex;
       align-items: center;
-      gap: 9px;
       flex-shrink: 0;
-    }
-    .tb-wordmark {
-      font-size: 19px;
-      font-weight: 800;
-      letter-spacing: -.02em;
-      color: var(--text);
-      white-space: nowrap;
     }
     .tb-logo img {
       width: auto;
@@ -323,7 +315,7 @@
     .ep-emoji-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 8px 0 2px; }
     .ep-emoji-opt { font-size: 18px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; border: none; transition: background 120ms ease; user-select: none; }
     .ep-emoji-opt:hover { background: var(--border2); }
-    .ep-emoji-opt.sel { background: rgba(124,58,237,.25); }
+    .ep-emoji-opt.sel { background: rgba(124,58,237,.15); }
     .ss-section { padding: 0 16px; }
     .ss-section-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 7px; }
     .ss-divider { height: 1px; background: rgba(0,0,0,.06); margin: 12px 0; }
@@ -419,7 +411,7 @@
     .bk-restore-selrow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 0 8px; }
     .bk-restore-selrow-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); }
     .bk-restore-selall { font-size: 11px; color: rgba(0,0,0,.6); cursor: pointer; padding: 3px 8px; border-radius: 6px; transition: background var(--t-fast), color var(--t-fast); }
-    .bk-restore-selall:hover { background: rgba(0,0,0,.08); color: #fff; }
+    .bk-restore-selall:hover { background: rgba(0,0,0,.08); color: var(--text); }
     .bk-file-list { display: flex; flex-direction: column; gap: 1px; }
     .bk-file-row { display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 10px; cursor: pointer; transition: background var(--t-fast); user-select: none; }
     .bk-file-row:hover { background: rgba(0,0,0,.04); }
@@ -1217,7 +1209,7 @@
       min-width: 0;
       border-radius: var(--r-full);
       border: none;
-      background: #222222;
+      background: var(--surface2);
       padding: 11px 18px;
       transition: background var(--t-fast), border-radius var(--t-fast);
     }
@@ -1287,7 +1279,7 @@
       width: min(92%, 600px);
     }
     .ai-tpl {
-      background: #222222;
+      background: var(--surface2);
       border: none;
       border-radius: var(--r-full);
       padding: 6px 13px;
@@ -1829,7 +1821,7 @@
       min-width: 0;
       border-radius: var(--r-xl);
       border: none;
-      background: #222222;
+      background: var(--surface2);
       overflow: hidden;
       transition: background var(--t-fast);
     }
@@ -1845,7 +1837,7 @@
       gap: 5px;
       padding: 4px 10px 4px 8px;
       border-radius: var(--r-full);
-      background: #222222;
+      background: var(--surface2);
       border: none;
       font-size: 11px;
       font-weight: 600;
@@ -2232,7 +2224,7 @@
     #errPopup .ep-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--err); flex-shrink: 0; }
     #errPopup .ep-label { font-size: 12px; font-weight: 600; color: #fca5a5; }
     #errPopup .ep-fix { padding: 4px 10px; background: rgba(239,68,68,.18); border: none; border-radius: 5px; color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all var(--t-fast); white-space: nowrap; }
-    #errPopup .ep-fix:hover { background: rgba(239,68,68,.3); color: #fff; }
+    #errPopup .ep-fix:hover { background: rgba(239,68,68,.3); color: var(--err); }
     #errPopup .ep-close { width: 18px; height: 18px; background: transparent; border: none; color: rgba(0,0,0,.3); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 3px; padding: 0; transition: color var(--t-fast); }
     #errPopup .ep-close:hover { color: rgba(0,0,0,.7); }
     #errPopup .ep-close svg { width: 9px; height: 9px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
@@ -2254,7 +2246,7 @@
     .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 26px; width: 340px; max-width: 90vw; box-shadow: 0 40px 80px rgba(0,0,0,.7); }
     .modal-box h3 { font-family: var(--sans); font-size: 16px; font-weight: 800; margin-bottom: 16px; letter-spacing: -.3px; }
     .modal-input { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; margin-bottom: 14px; font-family: var(--mono); transition: border-color var(--t-fast); }
-    .modal-input:focus { border-color: rgba(124,58,237,.25); }
+    .modal-input:focus { border-color: rgba(124,58,237,.4); }
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
     .mbtn { padding: 7px 16px; border: none; border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: var(--sans); transition: all var(--t-fast); }
     .mbtn-cancel { background: var(--border2); color: var(--muted); }
@@ -2438,7 +2430,7 @@
     .uw-btns { display: flex; gap: 8px; }
     .uw-cancel { flex: 1; padding: 10px; border-radius: var(--r-md); background: rgba(0,0,0,.05); border: 1px solid rgba(0,0,0,.08); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background .12s; }
     .uw-cancel:hover { background: rgba(0,0,0,.09); }
-    .uw-confirm { flex: 2; padding: 10px; border-radius: var(--r-md); background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; box-shadow: 0 0 20px rgba(124,58,237,.25); }
+    .uw-confirm { flex: 2; padding: 10px; border-radius: var(--r-md); background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: opacity .12s; box-shadow: 0 0 20px rgba(124,58,237,.3); }
     .uw-confirm:hover { opacity: .88; }
 
     /* ── MOBILE LAYOUT ── */
@@ -3668,7 +3660,7 @@ function loadMonaco() {
       colors: {
         'editor.background':              '#0a0a0a',
         'editor.foreground':              '#d4d4d4',
-        'editorLineNumber.foreground':    'var(--surface2)',
+        'editorLineNumber.foreground':    '#2a2a2a',
         'editorLineNumber.activeForeground': '#555555',
         'editor.lineHighlightBackground': '#ffffff09',
         'editor.lineHighlightBorder':     '#00000000',
@@ -9695,6 +9687,7 @@ function bkCopyCode(id, btn) {
 
 <!-- Chart tooltip -->
 <div id="chartTip"><div id="chartTipName"></div><div id="chartTipVal"></div></div>
+
 
 </body>
 </html>

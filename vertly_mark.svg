@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Vertly">
+  <rect width="100" height="100" rx="26" fill="#8b12ff"/>
+  <g fill="#ffffff">
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(0 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(30 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(60 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(90 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(120 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(150 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(180 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(210 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(240 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(270 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(300 50 50)"/>
+    <polygon points="43,15 57,15 53,41 47,41" transform="rotate(330 50 50)"/>
+  </g>
+</svg>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Analytics — Vexium</title>
-  <link rel="icon" type="image/png" href="logo_background.png">
+  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,23 +13,28 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
-      --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;
-      --b1:#262626;--b2:#333333;--b3:#444444;
-      --text:#ffffff;--sub:#666666;
-      --ok:#4ade80;--err:#f87171;--warn:#fbbf24;
+      --bg:#f1f1f4;--s1:#ffffff;--s2:#e7e7ee;--s3:#dcdce6;
+      --b1:#edeef3;--b2:#e4e4ec;--b3:#d6d6e0;
+      --a1:#18181b;--a2:#6b6b76;
+      --accent:#7c3aed;--accent-h:#6d28d9;--accent-soft:rgba(124,58,237,.10);
+      --text:#191922;--sub:#6a6a76;
+      --ok:#16a34a;--err:#dc2626;--warn:#d97706;
       --sans:'Plus Jakarta Sans',sans-serif;
+      --shadow:0 14px 34px rgba(30,27,60,.10);--shadow-sm:0 4px 16px rgba(30,27,60,.06);
     }
     html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:99px}
 
     /* TOPBAR */
-    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
-    #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;width:0;opacity:.65;pointer-events:none;z-index:201;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
+    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.72);backdrop-filter:blur(24px) saturate(140%);box-shadow:0 6px 22px rgba(30,27,60,.08)}
+    #topbarLoader{position:absolute;bottom:-1px;left:0;height:1px;width:0;opacity:.65;pointer-events:none;z-index:201;background:linear-gradient(90deg,#7c3aed,#8b5cf6,#7c3aed,#c4b5fd,#8b5cf6);animation:tbLoad 2s cubic-bezier(.1,.4,.4,1) forwards}
     @keyframes tbLoad{0%{width:0%}15%{width:30%}50%{width:60%}100%{width:80%}}
-    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform 60ms ease-out}
+    .tb-logo{display:flex;align-items:center;gap:9px}
+    .tb-wordmark{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--text);white-space:nowrap}
+    .tb-logo img{height:26px;width:auto;border-radius:0;display:block;transition:transform 60ms ease-out}
     .tb-logo:hover img{transform:scale(1.08)}
     .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000 !important;cursor:pointer;flex-shrink:0;text-decoration:none}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff !important;cursor:pointer;flex-shrink:0;text-decoration:none}
 
     /* PAGE */
     .page{max-width:clamp(800px,88vw,1320px);margin:0 auto;padding:clamp(28px,4vw,56px) clamp(16px,4vw,56px)}
@@ -49,7 +54,7 @@
     .proj-dd-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;flex-shrink:0;transition:transform .15s}
     .proj-dd-btn.open svg{transform:rotate(180deg)}
     .proj-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .proj-dd-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:var(--s1);border-radius:12px;padding:4px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
+    .proj-dd-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:var(--s1);border-radius:12px;padding:4px;z-index:100;box-shadow:0 8px 32px rgba(30,27,60,.12);display:none}
     .proj-dd-menu.open{display:block}
     .proj-dd-opt{padding:9px 12px;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px;color:var(--sub)}
     .proj-dd-opt:hover{background:var(--s2);color:var(--text)}
@@ -57,7 +62,7 @@
     .proj-dd-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
     /* STAT CARDS */
-    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
     @media(max-width:700px){
       .stat-grid{grid-template-columns:repeat(2,1fr)}
       .chart-section{padding:16px 14px}
@@ -68,17 +73,17 @@
     .stat-card{border-radius:14px;padding:20px 22px;cursor:pointer;transition:opacity .15s,box-shadow .2s;user-select:none}
     .stat-card:nth-child(1){background:rgba(96,165,250,.08)}
     .stat-card:nth-child(2){background:rgba(167,139,250,.08)}
-    .stat-card:nth-child(3){background:rgba(74,222,128,.08)}
+    .stat-card:nth-child(3){background:rgba(251,191,36,.08)}
     .stat-card:nth-child(4){background:rgba(251,191,36,.08)}
     .stat-card.active:nth-child(1){box-shadow:0 0 0 2px rgba(96,165,250,.5)}
     .stat-card.active:nth-child(2){box-shadow:0 0 0 2px rgba(167,139,250,.5)}
-    .stat-card.active:nth-child(3){box-shadow:0 0 0 2px rgba(74,222,128,.5)}
+    .stat-card.active:nth-child(3){box-shadow:0 0 0 2px rgba(251,191,36,.5)}
     .stat-card.active:nth-child(4){box-shadow:0 0 0 2px rgba(251,191,36,.5)}
     .stat-card:not(.active){opacity:.5}
     .stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
     .stat-card:nth-child(1) .stat-label{color:rgba(96,165,250,.9)}
     .stat-card:nth-child(2) .stat-label{color:rgba(167,139,250,.9)}
-    .stat-card:nth-child(3) .stat-label{color:rgba(74,222,128,.9)}
+    .stat-card:nth-child(3) .stat-label{color:rgba(251,191,36,.9)}
     .stat-card:nth-child(4) .stat-label{color:rgba(251,191,36,.9)}
     .stat-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .stat-value{font-size:clamp(26px,2.4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:6px}
@@ -117,12 +122,12 @@
     .bar-seg:last-child{border-radius:0}
 
     /* tooltip */
-    #chartTip{position:fixed;pointer-events:none;z-index:9999;display:none;background:rgba(14,14,14,.96);border-radius:10px;padding:9px 13px;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,.5);min-width:120px}
+    #chartTip{position:fixed;pointer-events:none;z-index:9999;display:none;background:rgba(14,14,14,.96);border-radius:10px;padding:9px 13px;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(30,27,60,.12);min-width:120px}
     #chartTipName{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.8);margin-bottom:2px}
-    #chartTipVal{font-size:11px;font-weight:600;color:var(--sub)}
+    #chartTipVal{font-size:11px;font-weight:600;color:rgba(255,255,255,.65)}
 
     /* color key */
-    .color-key{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04)}
+    .color-key{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06)}
     .color-key-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--sub)}
     .color-key-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
@@ -138,13 +143,13 @@
     @media(max-width:760px){.detail-grid{grid-template-columns:1fr}}
     .detail-card{background:var(--s1);border-radius:16px;padding:22px 24px}
     .detail-card-title{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sub);margin-bottom:16px}
-    .detail-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.035);gap:12px}
+    .detail-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05);gap:12px}
     .detail-row:last-child{border-bottom:none}
     .detail-row-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;min-width:0}
     .detail-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
     .detail-row-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .detail-row-val{font-size:12px;font-weight:700;color:var(--sub);flex-shrink:0}
-    .detail-bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.035)}
+    .detail-bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .detail-bar-row:last-child{border-bottom:none}
     .detail-bar-label{font-size:12px;font-weight:600;color:var(--sub);width:72px;flex-shrink:0;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .detail-bar-track{flex:1;height:6px;background:var(--s2);border-radius:99px;overflow:hidden}
@@ -157,7 +162,7 @@
     .proj-tbl-head{padding-bottom:10px;border-bottom:1px solid var(--b1)}
     .proj-tbl-hcell{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;text-align:right}
     .proj-tbl-hcell:first-child{text-align:left}
-    .proj-tbl-row{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.035)}
+    .proj-tbl-row{padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .proj-tbl-row:last-child{border-bottom:none}
     .proj-tbl-cell{font-size:12px;font-weight:700;color:var(--sub);text-align:right}
     .proj-tbl-cell.hi{color:var(--text)}
@@ -181,7 +186,7 @@
 
 <div id="topbar">
   <div id="topbarLoader"></div>
-  <a href="home.html" class="tb-logo"><img src="vexium_logo.png" alt="Vexium"/></a>
+  <a href="home.html" class="tb-logo"><img src="vertly_text.png" alt="Vertly"/></a>
   <div class="tb-right">
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
@@ -229,14 +234,6 @@
       <div class="stat-value empty" id="statViews">—</div>
       <div class="stat-meta" id="statViewsMeta">—</div>
     </div>
-    <div class="stat-card" data-metric="sites" onclick="selectMetric('sites')">
-      <div class="stat-label">
-        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Projects
-      </div>
-      <div class="stat-value empty" id="statSites">—</div>
-      <div class="stat-meta" id="statSitesMeta">—</div>
-    </div>
     <div class="stat-card" data-metric="revenue" onclick="selectMetric('revenue')">
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -271,14 +268,14 @@
 
 <script>
   const SUPABASE_URL  = 'https://ciuqhxrxcznmgorjeumz.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MDkxOTUsImV4cCI6MjA2MDA4NTE5NX0.ZKHdTLSEsQYKmVnM3T9gJ59l8U6V6DYxHFrcrOmXMM4';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDYxODUsImV4cCI6MjA4ODMyMjE4NX0.54fc-rv6tLCE-6BM6eFFy3HjPcPnus69NckKjIKNJCY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
   // Per-metric accent colors
-  const METRIC_COLOR = { visitors:'#60a5fa', views:'#a78bfa', sites:'#4ade80', revenue:'#fbbf24' };
+  const METRIC_COLOR = { visitors:'#60a5fa', views:'#7c3aed', sites:'#4ade80', revenue:'#fbbf24' };
 
   // Project palette — assigned in order
-  const PALETTE = ['#60a5fa','#a78bfa','#4ade80','#fbbf24','#f87171','#34d399','#f472b6','#38bdf8','#fb923c','#e879f9'];
+  const PALETTE = ['#60a5fa','#7c3aed','#4ade80','#fbbf24','#f87171','#34d399','#f472b6','#38bdf8','#fb923c','#e879f9'];
 
   let _projects    = [];
   let _views       = [];
@@ -465,12 +462,6 @@
     setVal('statViews', visits ? fmt(visits) : '0', false);
     document.getElementById('statViewsMeta').textContent = visits ? `Last ${rangeLabel}` : 'No data yet';
 
-    const projectsWithData = new Set(av.map(v=>v.project_id)).size;
-    const publicCount = _projects.filter(p=>p.published_slug).length;
-    setVal('statSites', publicCount ? fmt(publicCount) : '0', false);
-    document.getElementById('statSitesMeta').textContent = _projects.length
-      ? `${projectsWithData} with traffic`
-      : 'No projects yet';
   }
 
   function renderChart(){
@@ -796,7 +787,7 @@
           valEl.innerHTML = (data.stats||[]).map(s=>
             `<div style="display:flex;align-items:center;gap:7px;margin-top:5px">
               <div style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
-              <span style="color:rgba(255,255,255,.85);font-size:11px;font-weight:600">${esc(s.name)}</span>
+              <span style="color:var(--text);font-size:11px;font-weight:600">${esc(s.name)}</span>
               <span style="color:var(--sub);font-size:11px;font-weight:700;margin-left:auto;padding-left:12px">${s.count}</span>
             </div>`
           ).join('');

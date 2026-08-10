@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Settings — Vexium</title>
-  <link rel="icon" type="image/png" href="logo_background.png"/>
+  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,49 +12,53 @@
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --bg:#0a0a0a;--surface:#1a1a1a;--surface2:#222;
-      --text:#fff;--muted:#666;--sub:#999;
-      --err:#f87171;--ok:#4ade80;
+      --bg:#f1f1f4;--surface:#ffffff;--surface2:#e7e7ee;--surface3:#dcdce6;
+      --text:#191922;--muted:#9a9aa4;--sub:#6a6a76;
+      --accent:#7c3aed;--accent-h:#6d28d9;--accent-soft:rgba(124,58,237,.10);
+      --err:#dc2626;--ok:#16a34a;
       --sans:'Plus Jakarta Sans',sans-serif;
+      --shadow:0 14px 34px rgba(30,27,60,.10);--shadow-sm:0 4px 16px rgba(30,27,60,.06);
     }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
     a{color:inherit;text-decoration:none}
 
     /* ── TOPBAR ── */
-    #topbarLoader{position:fixed;top:0;left:0;height:2px;width:0%;pointer-events:none;z-index:9999;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#a78bfa,#f472b6);opacity:1;transition:width .35s ease,opacity .3s ease}
-    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+    #topbarLoader{position:fixed;top:0;left:0;height:2px;width:0%;pointer-events:none;z-index:9999;background:linear-gradient(90deg,#7c3aed,#8b5cf6,#a78bfa,#c4b5fd,#8b5cf6);opacity:1;transition:width .35s ease,opacity .3s ease}
+    #topbar{position:sticky;top:0;z-index:200;height:48px;padding:0 clamp(12px,2vw,24px);display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.72);backdrop-filter:blur(24px) saturate(140%);box-shadow:0 6px 22px rgba(30,27,60,.08)}
     .tb-logo{display:flex;align-items:center;flex-shrink:0}
-    .tb-logo img{width:30px;height:30px;border-radius:6px;display:block;transition:transform 60ms ease-out}
+    .tb-logo{display:flex;align-items:center;gap:9px}
+    .tb-wordmark{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--text);white-space:nowrap}
+    .tb-logo img{height:26px;width:auto;border-radius:0;display:block;transition:transform 60ms ease-out}
     .tb-logo:hover img{transform:scale(1.08)}
     .tb-spacer{flex:1}
     .tb-right{display:flex;align-items:center;gap:10px}
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;transition:background .15s}
-    .tb-bell:hover{background:rgba(255,255,255,.07)}
+    .tb-bell:hover{background:rgba(0,0,0,.07)}
     .tb-bell svg{width:17px;height:17px;stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
-    .tb-bell:hover svg{stroke:#fff}
-    .bell-dot{position:absolute;top:2px;right:2px;min-width:14px;height:14px;border-radius:99px;background:#fff;border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#000;padding:0 2px;font-family:var(--sans)}
+    .tb-bell:hover svg{stroke:var(--text)}
+    .bell-dot{position:absolute;top:2px;right:2px;min-width:14px;height:14px;border-radius:99px;background:var(--text);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;padding:0 2px;font-family:var(--sans)}
     .bell-dot.show{display:flex}
-    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;cursor:pointer;flex-shrink:0;text-decoration:none}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
     /* notification sidebar */
     #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
     #notifBackdrop.show{display:block}
-    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid rgba(255,255,255,.08);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
-    #notifSidebar.show{transform:translateX(0);box-shadow:-20px 0 60px rgba(0,0,0,.6)}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid rgba(0,0,0,.08);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    #notifSidebar.show{transform:translateX(0);box-shadow:-20px 0 60px rgba(30,27,60,.16)}
     .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
     .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
     .notif-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-    .notif-close:hover{background:rgba(255,255,255,.07);color:#fff}
+    .notif-close:hover{background:rgba(0,0,0,.07);color:var(--text)}
     .notif-close svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
     .notif-list{flex:1;overflow-y:auto;padding:0 8px 16px}
     .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer;border-radius:10px;transition:background .1s;margin-bottom:2px}
-    .notif-item:hover{background:rgba(255,255,255,.05)}
-    .notif-item.unread{background:rgba(255,255,255,.04)}
-    .notif-av{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;flex-shrink:0;margin-top:1px}
+    .notif-item:hover{background:rgba(0,0,0,.05)}
+    .notif-item.unread{background:rgba(0,0,0,.04)}
+    .notif-av{width:32px;height:32px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
     .notif-body{flex:1;min-width:0}
     .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
     .notif-text b{font-weight:700}
     .notif-time{font-size:10px;color:var(--muted);margin-top:3px}
-    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;margin-top:7px}
+    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:7px}
     .notif-empty{padding:60px 20px;text-align:center;font-size:13px;color:var(--muted)}
 
     /* ── PAGE FRAME ── */
@@ -64,11 +68,11 @@
     .sidebar{width:200px;flex-shrink:0;padding:0 8px;position:sticky;top:48px;align-self:flex-start}
     .sidebar-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:20px;padding:0 10px}
     .back-btn{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:600;padding:6px 10px;border-radius:8px;background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color .12s,background .12s;margin-bottom:16px;text-decoration:none}
-    .back-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+    .back-btn:hover{color:var(--text);background:rgba(0,0,0,.05)}
     .back-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
     .nav-item{display:block;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--sub);background:none;border:none;cursor:pointer;text-align:left;font-family:var(--sans);transition:color .12s,background .12s}
-    .nav-item:hover{color:var(--text);background:rgba(255,255,255,.05)}
-    .nav-item.active{color:var(--text);background:rgba(255,255,255,.07);font-weight:600}
+    .nav-item:hover{color:var(--text);background:rgba(0,0,0,.05)}
+    .nav-item.active{color:var(--text);background:rgba(0,0,0,.07);font-weight:600}
 
     /* ── CONTENT ── */
     .content{flex:1;min-width:0;padding:0 0 0 32px}
@@ -82,14 +86,14 @@
         width:100%;position:sticky;top:48px;z-index:10;
         padding:0;margin-bottom:24px;
         background:var(--bg);
-        border-bottom:1px solid rgba(255,255,255,.06);
+        border-bottom:1px solid rgba(0,0,0,.06);
         padding-bottom:12px;
       }
       .sidebar-title{display:none}
       .back-btn{display:inline-flex;margin-bottom:12px;padding:4px 8px}
 
       /* Nav items become horizontal pill tabs */
-      .sidebar-nav-row{display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:99px;padding:3px;width:fit-content}
+      .sidebar-nav-row{display:flex;gap:4px;background:rgba(0,0,0,.05);border-radius:99px;padding:3px;width:fit-content}
       .nav-item{
         display:inline-block !important;
         width:auto !important;
@@ -98,7 +102,7 @@
         font-size:13px;
         text-align:center;
       }
-      .nav-item.active{background:rgba(255,255,255,.12);color:var(--text)}
+      .nav-item.active{background:rgba(0,0,0,.12);color:var(--text)}
 
       /* Content: no left padding */
       .content{padding:0}
@@ -139,7 +143,7 @@
     .group-title{font-size:16px;font-weight:700;margin-bottom:20px}
 
     /* ── ROW ── */
-    .row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:24px}
+    .row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(0,0,0,.05);gap:24px}
     .row:last-child{border-bottom:none}
     .row-label{flex:1;min-width:0}
     .row-label-text{font-size:14px;font-weight:500;color:var(--text)}
@@ -154,7 +158,7 @@
     .inp-block{display:block;width:100%}
 
     /* ── STACKED ROW (label above full-width input) ── */
-    .row-stack{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .row-stack{padding:14px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .row-stack:last-child{border-bottom:none}
     .row-stack-label{font-size:14px;font-weight:500;margin-bottom:8px}
     .row-stack-sub{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
@@ -181,18 +185,18 @@
     .pro-dot{background:#a78bfa}
     .max-dot{background:#f472b6}
 
-    .usage-wrap{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .usage-wrap{padding:14px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .usage-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
     .usage-title{font-size:14px;font-weight:500}
     .usage-pct{font-size:12px;color:var(--muted);font-weight:600}
-    .usage-track{height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:6px}
+    .usage-track{height:5px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden;margin-bottom:6px}
     .usage-fill{height:100%;border-radius:99px;transition:width .4s ease;background:#4ade80}
     .usage-fill.warn{background:#facc15}
     .usage-fill.crit{background:#f87171}
     .usage-sub{font-size:11px;color:var(--muted)}
 
     /* extra usage */
-    .extra-wrap{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .extra-wrap{padding:14px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .extra-top-row{display:flex;align-items:center;justify-content:space-between;gap:20px}
     .extra-left{display:flex;align-items:center;gap:16px}
     .donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
@@ -213,8 +217,8 @@
 
     /* billing history */
     .bh-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
-    .bh-table th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:0 0 10px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .bh-table td{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle}
+    .bh-table th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:0 0 10px;border-bottom:1px solid rgba(0,0,0,.06)}
+    .bh-table td{padding:12px 0;border-bottom:1px solid rgba(0,0,0,.04);color:var(--text);vertical-align:middle}
     .bh-table td:last-child{text-align:right;font-weight:700}
     .bh-table tr:last-child td{border-bottom:none}
     .bh-type-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
@@ -222,11 +226,11 @@
     .bh-type-extra{background:rgba(96,165,250,.15);color:#60a5fa}
     .bh-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--muted)}
 
-    .trial-note-row{font-size:12px;color:var(--muted);padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .trial-note-row{font-size:12px;color:var(--muted);padding:12px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .trial-days{font-weight:600;color:#facc15}
 
     .plans-wrap{padding-top:28px}
-    .billing-toggle{display:inline-flex;background:rgba(255,255,255,.06);border-radius:99px;padding:4px;margin-bottom:16px;align-self:center}
+    .billing-toggle{display:inline-flex;background:rgba(0,0,0,.06);border-radius:99px;padding:4px;margin-bottom:16px;align-self:center}
     .billing-toggle-wrap{display:flex;justify-content:center;margin-bottom:0}
     .btog-opt{padding:7px 18px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:7px;transition:background .2s,color .2s}
     .btog-opt.on{background:var(--text);color:var(--bg)}
@@ -235,41 +239,41 @@
     .plans-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
     .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
     .plan-card{border-radius:12px;padding:18px 16px;background:var(--surface);position:relative;transition:background .15s}
-    .plan-card.current{background:rgba(255,255,255,.12)}
-    .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+    .plan-card.current{background:var(--accent-soft)}
+    .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
     .plan-card-name{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px}
     .plan-card-price{font-size:22px;font-weight:800;letter-spacing:-.5px}
     .plan-card-price .mo{font-size:11px;font-weight:500;color:var(--muted)}
     .plan-card-budget{font-size:10px;color:var(--muted);margin-top:6px}
-    .plan-card-btn{margin-top:14px;width:100%;padding:7px 0;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s;background:rgba(255,255,255,.1);color:var(--text)}
+    .plan-card-btn{margin-top:14px;width:100%;padding:7px 0;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s;background:rgba(0,0,0,.1);color:var(--text)}
     .plan-card-btn:hover:not(:disabled){opacity:.75}
-    .plan-card-btn.upgrade{background:#fff;color:#000;position:relative;overflow:hidden}
+    .plan-card-btn.upgrade{background:var(--text);color:#fff;position:relative;overflow:hidden}
     @keyframes rbShift{to{background-position:200% center}}
     .plan-card-btn.upgrade::after{content:'';position:absolute;inset:0;border-radius:6px;background:linear-gradient(90deg,#ff6b6b,#ffb347,#ffe066,#4ade80,#38bdf8,#a78bfa,#ff6b6b);background-size:200% auto;animation:rbShift 3s linear infinite;opacity:0;transition:opacity .25s ease;pointer-events:none}
     .plan-card-btn.upgrade:hover::after{opacity:.22}
-    .plan-card-btn.current-btn{background:rgba(255,255,255,.06);color:var(--muted);cursor:default}
+    .plan-card-btn.current-btn{background:rgba(0,0,0,.06);color:var(--muted);cursor:default}
     .beta-note{font-size:11px;color:var(--muted);text-align:center}
 
     /* ── TOGGLE ── */
     .toggle{position:relative;width:44px;height:26px;flex-shrink:0;display:inline-block}
     .toggle input{opacity:0;width:0;height:0;position:absolute}
     .toggle-track{position:absolute;inset:0;background:#3a3a3a;border-radius:99px;cursor:pointer;transition:background .2s}
-    .toggle input:checked + .toggle-track{background:#fff}
-    .toggle-track::after{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#888;border-radius:50%;transition:transform .2s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-    .toggle input:checked + .toggle-track::after{transform:translateX(18px);background:#000}
+    .toggle input:checked + .toggle-track{background:var(--accent)}
+    .toggle-track::after{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+    .toggle input:checked + .toggle-track::after{transform:translateX(18px);background:#fff}
 
     /* ── SPINNER ── */
     @keyframes spin{to{transform:rotate(360deg)}}
     .spin{width:12px;height:12px;border:1.5px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
-    .btn-primary .spin{border-color:rgba(0,0,0,.2);border-top-color:#000}
-    .btn-ghost .spin{border-color:rgba(255,255,255,.2);border-top-color:#fff}
+    .btn-primary .spin{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+    .btn-ghost .spin{border-color:rgba(0,0,0,.2);border-top-color:var(--text)}
   </style>
 </head>
 <body>
 
 <div id="topbar">
   <div id="topbarLoader"></div>
-  <a href="home.html" class="tb-logo" title="Vexium — Home"><img src="vexium_logo.png" alt="Vexium"/></a>
+  <a href="home.html" class="tb-logo" title="Vertly — Home"><img src="vertly_text.png" alt="Vertly"/></a>
   <div class="tb-spacer"></div>
   <div class="tb-right">
     <div class="tb-bell" id="bellBtn" onclick="toggleNotif()">
@@ -469,7 +473,7 @@
             <div class="extra-left">
               <div class="donut-wrap" id="donutWrap" style="display:none">
                 <svg width="72" height="72" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
+                  <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="8"/>
                   <circle cx="36" cy="36" r="28" fill="none" stroke="#60a5fa" stroke-width="8"
                     stroke-linecap="round" id="donutArc"
                     stroke-dasharray="175.9" stroke-dashoffset="175.9"/>
@@ -758,7 +762,7 @@
     const presets = document.querySelectorAll('.preset-btn');
     const buyBtn  = document.getElementById('buyCustomLabel');
     presets.forEach(b => b.disabled = true);
-    if (buyBtn) buyBtn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
+    if (buyBtn) buyBtn.innerHTML = '<span class="spin" style="border-top-color:#fff"></span>';
     try {
       const stripeJs = getStripeJs();
       if (!stripeJs) throw new Error('Payment system unavailable. Please refresh and try again.');
@@ -828,7 +832,7 @@
     if (!sb || !myId) return;
     const btn = document.getElementById('btn' + cap(plan));
     const orig = btn.textContent;
-    btn.innerHTML = '<span class="spin" style="border-top-color:#000"></span>';
+    btn.innerHTML = '<span class="spin" style="border-top-color:#fff"></span>';
     btn.disabled  = true;
     try {
       const stripeJs = getStripeJs();
@@ -1028,15 +1032,15 @@
 </script>
 <!-- Change password modal -->
 <div id="passOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:16px;width:100%;max-width:380px;padding:28px">
+  <div style="background:var(--surface);border:1px solid rgba(0,0,0,.08);border-radius:16px;width:100%;max-width:380px;padding:28px">
     <div style="font-size:18px;font-weight:800;margin-bottom:20px">Change password</div>
     <div style="margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">New password</div>
-      <input id="mNewPass" type="password" placeholder="New password" autocomplete="new-password" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+      <input id="mNewPass" type="password" placeholder="New password" autocomplete="new-password" style="width:100%;background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(0,0,0,.1)'" onblur="this.style.background='rgba(0,0,0,.06)'"/>
     </div>
     <div style="margin-bottom:20px">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">Confirm password</div>
-      <input id="mConfirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+      <input id="mConfirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password" style="width:100%;background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(0,0,0,.1)'" onblur="this.style.background='rgba(0,0,0,.06)'"/>
     </div>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="btn btn-ghost" style="flex:1" onclick="closePassModal()">Cancel</button>
@@ -1088,7 +1092,7 @@
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">This will permanently delete your account and every project you've created. There's no going back.</div>
     <div style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">Type your username to confirm</div>
-      <input id="deleteConfirmInput" type="text" placeholder="your username" autocomplete="off" oninput="checkDeleteConfirm()" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(255,255,255,.1)'" onblur="this.style.background='rgba(255,255,255,.06)'"/>
+      <input id="deleteConfirmInput" type="text" placeholder="your username" autocomplete="off" oninput="checkDeleteConfirm()" style="width:100%;background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:background .15s" onfocus="this.style.background='rgba(0,0,0,.1)'" onblur="this.style.background='rgba(0,0,0,.06)'"/>
     </div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeDeleteModal()">Cancel</button>

@@ -2,6 +2,7 @@
 // Deploy: supabase functions deploy ai-chat
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { buildComponentLibraryPrompt, categoriesForBuild } from "./components.ts";
 
 const ANTHROPIC_API_KEY  = Deno.env.get("ANTHROPIC_API_KEY")!;
 const SUPABASE_URL        = Deno.env.get("SUPABASE_URL")!;
@@ -63,6 +64,28 @@ async function incrementUsage(userId: string, inputTokens: number, outputTokens:
       console.error(`[usage] RPC failed: ${res.status} ${body}`);
     }
   } catch(e) { console.error(`[usage] fetch error: ${e}`); }
+}
+
+type UsageAcc = { in: number; out: number; cacheWrite: number; cacheRead: number };
+
+// Returns a flush() that bills ONLY the delta since the last flush, so it can be called repeatedly
+// DURING a stream. This makes billing resilient to interruption: a Stop, a refresh, a client
+// disconnect, or Supabase killing the function at its wall-clock limit can lose at most the tokens
+// since the previous flush — never the whole call. Fire-and-forget; increment_usage is atomic so
+// overlapping increments are safe and additive.
+function makeUsageFlusher(userId: string, model: string, usage: UsageAcc): () => void {
+  const flushed: UsageAcc = { in: 0, out: 0, cacheWrite: 0, cacheRead: 0 };
+  return () => {
+    const dIn = usage.in - flushed.in;
+    const dOut = usage.out - flushed.out;
+    const dCW = usage.cacheWrite - flushed.cacheWrite;
+    const dCR = usage.cacheRead - flushed.cacheRead;
+    if (dIn <= 0 && dOut <= 0 && dCW <= 0 && dCR <= 0) return;
+    // Update the high-water mark synchronously BEFORE the async RPC so a concurrent flush
+    // (heartbeat vs finally) can't double-count the same tokens.
+    flushed.in = usage.in; flushed.out = usage.out; flushed.cacheWrite = usage.cacheWrite; flushed.cacheRead = usage.cacheRead;
+    if (userId) incrementUsage(userId, dIn, dOut, model, dCW, dCR).catch(() => {});
+  };
 }
 
 // ─── PROJECT CONTEXT (AI memory blob) ────────────────────────────────────────
@@ -230,7 +253,7 @@ If you changed a color: "changed it to a deep navy" — not the hex.
 If you added a section: "added a features section with three cards" — describe what it looks like, not how it's built.
 
 FORMATTING REMINDER:
-Markdown renders in this interface. Use it thoughtfully — numbered lists work well for laying out a plan or multiple questions, headers work for something that needs clear structure. Don't overdo bullet points and don't use a dash at the start of every thought. Write naturally.
+Markdown renders in this interface. Use it — don't avoid it. Numbered lists for multiple questions or steps. Bold for the key term or main point of each item. Bullet points for options or feature lists. Headers when covering something substantial. If you're asking 2+ questions, number them and bold the topic of each. Don't write a wall of text when a formatted list is faster to read. One-liner answers can stay plain; anything with multiple ideas should be structured.
 
 OUTPUT FORMAT:
 Every site is built as self-contained HTML files. No separate .css or .js files — ever.
@@ -238,6 +261,10 @@ All styles go in a <style> tag in <head>. All JavaScript goes in a <script> tag 
 Use XML delimiters ONLY. Never backtick code fences.
 
 NEVER put code, HTML, or patch content inside the chat message. Your message text is only for talking to the user — no HTML tags, no <replace> blocks, no <find> blocks, no raw code of any kind. All file changes go in proper <file> or <patch> blocks ONLY. If a patch block is incomplete, output a new complete <patch> block — never paste replacement content loose in the message.
+
+Concrete failure to avoid — do NOT narrate a change like this:
+"Let me update the heading style: <replace> .cta-inner h2 { font-family: 'Crimson Text', serif; ... } </replace> </patch> Done. Swapped the font."
+That dumps raw patch syntax straight into the chat where the user reads it as garbled text. Instead say only "Updating the heading style to Crimson Text." and put the ENTIRE <find>/<replace> pair inside its own <patch name="..."> block — nothing about the change's literal code belongs in the message, ever.
 
 <file name="index.html">
 <!DOCTYPE html>
@@ -266,12 +293,6 @@ Patch format for targeted edits:
 <patch name="index.html"><insert_after>anchor</insert_after><content>new html</content></patch>
 <patch name="index.html"><delete>block to remove</delete></patch>
 File ops: <rename from="old.html" to="new.html"/>  <delete name="file.html"/>
-
-After every fresh build, output a critique:
-<critique>
-{"score":7,"strengths":["specific win","another"],"improvements":["specific actionable","another"],"auto_fix":"single highest-impact improvement"}
-</critique>
-Score: 6=solid with gaps, 7=good, 8=strong, 9=exceptional. Never 10. No critique on edits.
 
 EDITING — THIS IS CRITICAL:
 Patches are the ONLY valid output format for edits. Find the exact lines that need changing and replace only those lines.
@@ -422,6 +443,48 @@ _BACKEND FILE — output alongside any backend/auth code:
 </file>
 Rules: "id" matches collection name exactly. Set auth.enabled:true when using signup/login. Merge with existing _backend — never wipe existing collections. Only output _backend when adding backend features.
 
+PAYMENTS — WHEN THE SITE SELLS SOMETHING OR TAKES MONEY (buy buttons, products, checkout, donations, paid bookings):
+Vexium has built-in payments. The owner connects their Stripe account once in the Payments panel — you NEVER tell them to set up Stripe, paste code, or add keys. You wire the buttons; they start charging the moment the owner connects (a button built before they connect simply starts working once they do). A button that says "Buy" MUST actually charge — never build a fake or decorative payment/"Add to cart" button.
+
+FIXED-PRICE PRODUCTS (the normal case — a store, a paid product, a ticket): define each product in _backend "products", then buy buttons reference it BY ID. The price lives server-side so it can't be tampered with — never put the real price only in the button.
+Add to the _backend file a "products" array: each is { "id": "unique-id", "name": "Display name", "price_cents": 2999 }. price_cents is an integer ($29.99 → 2999, $5 → 500, min 50). Merge with existing _backend, like collections.
+Then each product's button calls vxBuy('that-product-id').
+
+DONATIONS / PAY-WHAT-YOU-WANT / CUSTOM AMOUNTS ONLY: use vxBuyAmount(cents, 'name') with a client-side amount. Only for genuinely variable amounts — never for fixed-price goods.
+
+COPY THIS EXACTLY whenever the site has any pay action — never deviate:
+const VX_PAY_API = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/stripe-site-checkout';
+async function vxCheckout(payload) {
+  try {
+    const res = await fetch(VX_PAY_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({
+        project_id: '{{VEXIUM_PROJECT_ID}}',
+        success_url: location.origin + location.pathname + '?paid=1',
+        cancel_url: location.href
+      }, payload))
+    });
+    const data = await res.json();
+    if (data.url) { window.location.href = data.url; }
+    else { alert(data.error || 'Payment could not be started.'); }
+  } catch(e) { alert('Network error — please try again.'); }
+}
+function vxBuy(productId) { return vxCheckout({ product_id: productId }); }
+function vxBuyAmount(amountCents, productName) { return vxCheckout({ amount_cents: amountCents, name: productName }); }
+
+PAYMENT RULES:
+- Fixed-price item → define it in _backend products and call vxBuy('id'). Donation/custom → vxBuyAmount(cents, 'name'). Never hardcode a fixed price in vxBuyAmount.
+- Wire EVERY buy / "buy now" / "add to cart" / checkout / donate / "pay" button — a store's product cards each call vxBuy with their own product id.
+- On page load, if the address contains ?paid=1, show a clear success confirmation (e.g. a banner "Payment received — thank you!"); otherwise keep it hidden.
+- Payments need NO login/account — these stand alone. Only add accounts if the user wants them for a separate reason.
+- Never invent another payment provider, never embed Stripe.js or publishable keys, never build a custom card form — always vxBuy/vxBuyAmount.
+
+_BACKEND with products example:
+<file name="_backend">
+{ "collections": [], "auth": { "enabled": false }, "products": [ { "id": "tee-classic", "name": "Classic Tee", "price_cents": 2999 }, { "id": "tee-premium", "name": "Premium Tee", "price_cents": 4500 } ] }
+</file>
+
 `;;
 
 
@@ -430,6 +493,12 @@ Rules: "id" matches collection name exactly. Set auth.enabled:true when using si
 // ─────────────────────────────────────────────────────────────────────────────
 const FRONTEND_CRAFT = `
 <frontend-craft>
+DESIGN DEFAULTS — WHEN THE BRIEF DOESN'T SPECIFY
+Most builds start from a blank slate: no brand colors, no font preferences, no reference site. When filling in those blanks, default to safe and minimal — not experimental. A clean, restrained choice that fits any brand is the right baseline; save bold typography and adventurous palettes for when the brief actually calls for it.
+Default fonts: Inter, Geist, DM Sans, Plus Jakarta Sans, or Manrope. Pick one and use it for both display and body — a heavier weight (700-800) for headlines, regular (400) for body. Avoid display/serif/decorative fonts unless the project's tone is explicitly editorial, luxury, or creative.
+Default colorways: an off-black or off-white neutral base with ONE accent color — indigo, blue, or a color that fits the industry (green for finance/growth, teal for health, etc). Avoid multi-color accent systems, neon palettes, or gradients spanning more than two hues by default.
+The moment the user gives ANY signal — a brand color, a reference site, a strong industry convention, an explicit style request — follow that over these defaults. These are fallbacks for blank-slate builds, not a ceiling on what the site can become.
+
 TYPOGRAPHY
 Strong typography comes from contrast — a display font with personality paired with a clean neutral body. Inter and Roboto as display fonts tend to feel generic; there are better choices. Import from Google Fonts. Headlines should be large enough to feel confident — small type often signals insecurity in the design. Tight letter-spacing on large headlines feels intentional. Strong weight contrast between headlines and body text (heavy headlines, regular body) makes hierarchy readable at a glance.
 
@@ -473,12 +542,18 @@ No external image URLs — they'll break. Build visuals with CSS: gradient backg
 
 COPY
 Write real copy. Lorem ipsum is worse than nothing because it makes the design look unfinished. Write something that actually fits the brand, even if you're making it up. Hero headlines should be specific and active. CTAs should be verbs, not nouns.
+
+SECTION VARIETY — this is where most AI-generated sites feel flat
+Alternate light and dark sections down the page. Never let three consecutive sections share the same background. A page rhythm of light → dark → light → dark reads as intentional; all-light or all-dark reads as lazy. The component library has both dark and light variants of every section type — mix them.
+Use signature components for flair — this is the single biggest thing separating a premium site from a generic AI one. The component library includes high-craft pieces the AI builds badly from scratch: animated charts (line/bar/donut/gauge/heatmap) and stat cards, bento grids, gradient-mesh sections, animated borders, scrolling logo strips, animated counters, step flows, toasts, tabs. Weave 2–4 of these into the page where they genuinely fit — a "trusted by" logo strip after the hero, a bento feature grid instead of three equal cards, a live dashboard/chart preview for a data product, a gradient-mesh CTA. They are what make a site feel like a real product, not a brochure. Fit beats quantity — only use what suits THIS business (no charts on a site that wouldn't have data). Adapt them to the brand; never let the page feel assembled from a kit.
+Section count: aim for 4–6 focused sections — a tight, confident page beats a long padded one. A strong default is hero → social proof or features → one more value section (features/process/pricing) → testimonials or CTA → footer. Quality and variety over quantity; do not pad with repetitive sections.
+Keep it efficient: write clean, non-repetitive HTML. The whole page must be generated in one pass, so favor a sharp, complete landing page over an exhaustive one — don't bloat markup or duplicate near-identical blocks.
 </frontend-craft>`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE PATTERNS — functional best practices per page type
 // ─────────────────────────────────────────────────────────────────────────────
-const PAGE_PATTERNS = `
+const PAGE_PATTERNS_FULL = `
 <page-patterns>
 
 ━━━ LANDING / MARKETING PAGES ━━━
@@ -651,11 +726,36 @@ WAITLIST ANTI-PATTERNS:
 
 ━━━ E-COMMERCE ━━━
 
+REAL PAYMENTS: every "Add to cart" / "Buy" / checkout button MUST call vxBuy(priceCents, 'Product name') from the PAYMENTS section — wire each product's real price. Never build a store with dead buttons. (For a simple catalog, "Add to cart" can go straight to vxBuy for that product — no cart state needed unless the user wants a multi-item cart.)
 Product detail page: hero image (CSS gradient/color fill as placeholder — no broken img tags) left 55%, product details right 45%. Price: prominent, 28–32px, weight 700. CTA: "Add to cart" full-width, 48px, immediately visible without scroll. Trust signals directly below CTA: "Free returns" / "Ships in 2–3 days" / "Secure checkout" in 12px with small icons.
 Product cards: image (aspect-ratio 1, gradient bg placeholder) + name + price + quick-add on hover. Never just text rows.
 Cart: badge on nav icon with item count. Cart drawer (slides in from right) is better than a separate cart page.
 
 </page-patterns>`;
+
+// Split the master patterns doc into per-page-type sections so a build only pays (in the cached
+// system prompt) for the page types it's actually making. A fresh landing build doesn't need the
+// dashboard / auth / e-commerce playbooks — those pages are built on demand via page_mode.
+const PAGE_PATTERN_SECTIONS: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  const inner = PAGE_PATTERNS_FULL.replace(/^[\s\S]*?<page-patterns>/, "").replace(/<\/page-patterns>[\s\S]*$/, "");
+  const parts = inner.split(/━━━\s*(.+?)\s*━━━/);
+  for (let i = 1; i < parts.length; i += 2) {
+    const title = parts[i].trim();
+    map[title] = `━━━ ${title} ━━━\n${(parts[i + 1] || "").trim()}`;
+  }
+  return map;
+})();
+
+// Assemble just the relevant pattern sections for a fresh build. LANDING/PRICING/WAITLIST are the
+// pieces a marketing landing actually composes from; e-commerce only for store sites. Dashboard +
+// auth patterns are omitted here (saved for the on-demand page builds that need them).
+function pagePatternsFor(category: string): string {
+  const want = ["LANDING / MARKETING PAGES", "PRICING PAGES", "WAITLIST / LAUNCH PAGES"];
+  if (category === "ecommerce-consumer") want.push("E-COMMERCE");
+  const secs = want.map(k => PAGE_PATTERN_SECTIONS[k]).filter(Boolean);
+  return `<page-patterns>\n\n${secs.join("\n\n\n")}\n\n</page-patterns>`;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SYSTEM PROMPT — CONVERSATION MODE
@@ -668,9 +768,7 @@ You can help with anything. Website questions, business strategy, payments, mark
 
 The one exception: Vexium handles all website building. No tech stack decisions, no hosting setup — when someone asks about that, "Vexium handles all of that" is the answer. But anything else — external tools, services, strategy, business decisions — help them think it through properly.
 
-Match your response to what was asked. A quick question gets a quick answer. Something that needs a plan gets a plan — use markdown to make it readable, numbered steps if there's an order to it, a header if it needs clear structure. Don't pad short answers with formatting.
-
-Write like a person. AI has a habit of starting every thought with a dash — write in actual sentences instead. It reads better and sounds more natural.
+Match your response to what was asked. A quick question gets a quick answer. Something with multiple points gets formatted — numbered lists, bold key terms, headers for structure. If you're covering 2+ ideas, structure them so the user can skim. Don't pad one-liners with formatting, but don't write walls of text when a list would be clearer.
 
 NEVER output code, HTML, CSS, JavaScript, or any file content in your messages — not even inside markdown code blocks or backticks. You are talking to the user, not writing files. All file creation happens through a separate build system. If someone describes what they want to build and you're ready, just say so in plain text.`;
 
@@ -1110,13 +1208,35 @@ function compressMessages(
 // TOKEN BUDGET — scale max_tokens to request complexity, saving cost on edits
 // ─────────────────────────────────────────────────────────────────────────────
 function estimateMaxTokens(model: string): number {
-  // Haiku max is 64k; Sonnet supports 128k with the output-128k beta.
-  return model === MODEL_FAST ? 64000 : 128000;
+  // A complete landing page is ~8-12k tokens. 24k gives Sonnet comfortable headroom without
+  // encouraging bloated output. Haiku patches are always small — 12k is generous.
+  // Old 128k limit was causing 20-30k token responses and Supabase timeout-induced restarts.
+  return model === MODEL_FAST ? 12000 : 24000;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CALL ANTHROPIC
 // ─────────────────────────────────────────────────────────────────────────────
+// Build the exact Anthropic request body (no fetch). Used both by callAnthropic and by `prepare`
+// mode, so the Cloudflare build Worker can run the IDENTICAL payload Supabase would have run.
+function buildAnthropicPayload(
+  model: string,
+  system: string,
+  messages: { role: string; content: unknown }[],
+  maxTokens: number,
+  stream = false,
+  dynamicSuffix = "",
+): Record<string, unknown> {
+  // Structure system as array: static cacheable part + optional dynamic suffix
+  const systemBlocks: unknown[] = [
+    { type: "text", text: system, cache_control: { type: "ephemeral" } },
+  ];
+  if (dynamicSuffix) {
+    systemBlocks.push({ type: "text", text: dynamicSuffix });
+  }
+  return { model, max_tokens: maxTokens, system: systemBlocks, messages, stream };
+}
+
 async function callAnthropic(
   model: string,
   system: string,
@@ -1132,18 +1252,10 @@ async function callAnthropic(
     "anthropic-beta": "prompt-caching-2024-07-31,output-128k-2025-02-19",
   };
 
-  // Structure system as array: static cacheable part + optional dynamic suffix
-  const systemBlocks: unknown[] = [
-    { type: "text", text: system, cache_control: { type: "ephemeral" } },
-  ];
-  if (dynamicSuffix) {
-    systemBlocks.push({ type: "text", text: dynamicSuffix });
-  }
-
   return fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers,
-    body: JSON.stringify({ model, max_tokens: maxTokens, system: systemBlocks, messages, stream }),
+    body: JSON.stringify(buildAnthropicPayload(model, system, messages, maxTokens, stream, dynamicSuffix)),
   });
 }
 
@@ -1484,6 +1596,13 @@ async function streamBuild(
   anthropicRes: Response,
   existingFiles: Record<string, string>,
   emit: (event: string, data: unknown) => Promise<void>,
+  // Live usage mirror — updated as tokens arrive so the caller can bill what was generated even if
+  // the client disconnects (clicks Stop) before the stream finishes. Without this, usage was only
+  // known after the function returned, so an early Stop cost the user nothing.
+  usageOut?: { in: number; out: number; cacheWrite: number; cacheRead: number },
+  // When the client disconnects, this aborts — we cancel the Anthropic read so generation (and
+  // billing) stops at roughly the point the user pressed Stop instead of running to completion.
+  signal?: AbortSignal,
 ): Promise<{ files: Record<string, string>; message: string; critique: Record<string, unknown> | null; tokensIn: number; tokensOut: number; tokensCacheWrite: number; tokensCacheRead: number }> {
   const reader = anthropicRes.body!.getReader();
   const decoder = new TextDecoder();
@@ -1497,9 +1616,13 @@ async function streamBuild(
   let tokensOut = 0;
   let tokensCacheWrite = 0;
   let tokensCacheRead = 0;
+  let outChars = 0; // total output text streamed — used to estimate tokens if Stop hits before Anthropic reports its final count
 
   try {
     while (true) {
+      // Client disconnected (Stop): stop reading so Anthropic stops generating/billing. The usage
+      // accumulated so far (plus the char-based estimate below) is still recorded by the caller.
+      if (signal?.aborted) { try { await reader.cancel(); } catch { /* already closing */ } break; }
       const { done, value } = await reader.read();
       if (done) break;
       antBuf += decoder.decode(value, { stream: true });
@@ -1519,13 +1642,17 @@ async function streamBuild(
             tokensIn         += usage.input_tokens                 || 0;
             tokensCacheWrite += usage.cache_creation_input_tokens  || 0;
             tokensCacheRead  += usage.cache_read_input_tokens      || 0;
-            tokensOut        += usage.output_tokens                || 0;
+            // output_tokens in usage is CUMULATIVE for the response — take the max, never sum
+            // (summing repeated cumulative values would massively over-count).
+            tokensOut         = Math.max(tokensOut, usage.output_tokens || 0);
           }
+          if (usageOut) { usageOut.in = tokensIn; usageOut.cacheWrite = tokensCacheWrite; usageOut.cacheRead = tokensCacheRead; usageOut.out = tokensOut; }
         }
 
         if (parsed.type === "message_delta") {
           const usage = parsed.usage as Record<string, number> | undefined;
-          if (usage) tokensOut += usage.output_tokens || 0;
+          if (usage) tokensOut = Math.max(tokensOut, usage.output_tokens || 0); // cumulative — take latest, don't sum
+          if (usageOut) usageOut.out = tokensOut;
           // Detect token limit hit — signal client so it can continue automatically
           const delta = parsed.delta as Record<string, unknown> | undefined;
           if (delta?.stop_reason === "max_tokens") {
@@ -1537,6 +1664,10 @@ async function streamBuild(
           const delta = parsed.delta as Record<string, unknown>;
           if (delta?.type === "text_delta") {
             const text = delta.text as string;
+            outChars += text.length; // track output volume for the Stop-before-final-usage estimate
+            // Update the live output estimate every chunk (Anthropic only reports real output_tokens
+            // in the FINAL message_delta, so without this an interrupted stream would bill ~0 output).
+            if (usageOut) usageOut.out = Math.max(usageOut.out, Math.ceil(outChars / 4));
             const events = processStreamBlock(text, state);
 
             for (const ev of events) {
@@ -1581,8 +1712,8 @@ async function streamBuild(
                   }
                 }
               } else if (ev.type === "critique") {
-                finalCritique = ev.data as Record<string, unknown>;
-                await emit("critique", ev.data);
+                // Critique removed from the product — the parser still swallows any stray <critique>
+                // block so it never leaks into the chat, but we no longer emit or use it.
               } else if (ev.type === "rename") {
                 await emit("rename", { from: ev.from, to: ev.to });
               } else if (ev.type === "delete") {
@@ -1620,6 +1751,13 @@ async function streamBuild(
       await emit("partial_file", { name: state.curFileName, content: partialEncoded, encoding: "base64" });
     } catch { /* stream may already be closing */ }
   }
+
+  // If Stop hit before Anthropic reported its final cumulative output_tokens, fall back to a
+  // char-based estimate (~4 chars/token) so an interrupted build still bills for what it produced
+  // instead of nothing. On normal completion the reported count is >= this, so max() is a no-op.
+  const estOut = Math.ceil(outChars / 4);
+  if (estOut > tokensOut) tokensOut = estOut;
+  if (usageOut) usageOut.out = Math.max(usageOut.out, tokensOut);
 
   return { files: collectedFiles, message: finalMessage, critique: finalCritique, tokensIn, tokensOut, tokensCacheWrite, tokensCacheRead };
 }
@@ -1740,6 +1878,7 @@ async function generateSuggestions(
   builtMessage: string,
   builtFiles: Record<string, string>,
   messages: { role: string; content: unknown }[],
+  userId = "",
 ): Promise<string[]> {
   try {
     const fileNames = Object.keys(builtFiles).join(", ") || "none";
@@ -1749,6 +1888,8 @@ async function generateSuggestions(
     const res = await callAnthropic(MODEL_FAST, SUGGESTIONS_SYSTEM, [{ role: "user", content: prompt }], 150, false);
     if (!res.ok) return [];
     const d = await res.json();
+    const u = d.usage || {};
+    if (userId) await incrementUsage(userId, u.input_tokens || 0, u.output_tokens || 0, MODEL_FAST, u.cache_creation_input_tokens || 0, u.cache_read_input_tokens || 0);
     const text = (d.content?.[0]?.text || "[]").replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed)) return parsed.slice(0, 3).filter((s: unknown) => typeof s === "string");
@@ -1779,6 +1920,12 @@ serve(async (req) => {
     project_id?: string;
     ai_context?: Record<string, unknown>;
     continuation_mode?: boolean;
+    fresh_build_session?: boolean;
+    build_category?: string; // frozen category replayed on continuation so the component-library block stays byte-identical (cache hit)
+    prepare?: boolean;       // build Worker asks for the Anthropic payload instead of streaming it here
+    suggest?: boolean;       // build Worker asks for follow-up suggestions after a build
+    built_message?: string;  // suggest mode: the message the build produced
+    built_files?: Record<string, string>; // suggest mode: the files the build produced
     marketing_questions?: boolean;
     marketing_guide?: boolean;
     marketing_answers?: string;
@@ -1789,6 +1936,22 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400, headers: { ...CORS, "Content-Type": "application/json" },
     });
+  }
+
+  // prepare mode: the Cloudflare build Worker asks us to assemble the Anthropic request (all the
+  // prompt logic) but NOT call it — so the Worker can run it with no wall-clock timeout. The two
+  // streaming sites below (onboarding gate + main build) return the payload as JSON when set.
+  const prepareMode = body.prepare === true;
+
+  // ── SUGGEST MODE (build Worker → us, after a build, to fetch follow-up suggestions) ──
+  if (body.suggest) {
+    const items = await generateSuggestions(
+      (body.built_message as string) || "",
+      (body.built_files as Record<string, string>) || {},
+      (body.messages as { role: string; content: unknown }[]) || [],
+      userId || "",
+    );
+    return new Response(JSON.stringify({ items }), { headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
   // ── BRIEF MODE ────────────────────────────────────────────────────────────
@@ -1959,7 +2122,7 @@ ${guide}`;
     const emit = async (event: string, data: unknown): Promise<void> => {
       try { await writer.write(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)); } catch {}
     };
-    (async () => { try { const r = await streamChat(convoRes, emit); if (userId) await incrementUsage(userId, r.tokensIn, r.tokensOut, MODEL_BUILD, r.cacheWrite, r.cacheRead); const _cs = await generateSuggestions(r.text, {}, messages as {role:string;content:unknown}[]); if (_cs.length) await emit("suggestions", { items: _cs }); } catch {} finally { try { await writer.close(); } catch {} } })();
+    (async () => { try { const r = await streamChat(convoRes, emit); if (userId) await incrementUsage(userId, r.tokensIn, r.tokensOut, MODEL_BUILD, r.cacheWrite, r.cacheRead); const _cs = await generateSuggestions(r.text, {}, messages as {role:string;content:unknown}[], userId); if (_cs.length) await emit("suggestions", { items: _cs }); } catch {} finally { try { await writer.close(); } catch {} } })();
     return new Response(readable, {
       headers: { ...CORS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     });
@@ -2222,6 +2385,18 @@ Talk like a real person. Ask what you actually need, nothing more. If you realiz
     else if (Object.keys(brief).length > 0) context += briefContext(brief, guide);
     else context += `\n\n${guide}`;
 
+    // Give the page builder ONLY the pattern playbook for the page type it's making (these were
+    // dropped from the fresh landing build to keep that prompt small). Keyed off the page name.
+    const pn = pageName.toLowerCase();
+    const sectionKey =
+      /dash|admin|app|console|portal/.test(pn) ? "SAAS DASHBOARDS" :
+      /login|signup|sign-up|signin|sign-in|auth|register|account/.test(pn) ? "AUTH PAGES" :
+      /pricing|plans/.test(pn) ? "PRICING PAGES" :
+      /waitlist|launch|early/.test(pn) ? "WAITLIST / LAUNCH PAGES" :
+      /shop|store|product|cart|checkout/.test(pn) ? "E-COMMERCE" :
+      "LANDING / MARKETING PAGES";
+    if (PAGE_PATTERN_SECTIONS[sectionKey]) context += `\n\n<page-patterns>\n${PAGE_PATTERN_SECTIONS[sectionKey]}\n</page-patterns>`;
+
     context += fileContext(files, true);
 
     const pageMessages = [
@@ -2251,7 +2426,11 @@ Talk like a real person. Ask what you actually need, nothing more. If you realiz
     const emit = async (event: string, data: unknown): Promise<void> => {
       try { await writer.write(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)); } catch {}
     };
-    (async () => { try { const r = await streamBuild(pageRes, files, emit); if (userId) await incrementUsage(userId, r.tokensIn, r.tokensOut, MODEL_FAST, r.tokensCacheWrite, r.tokensCacheRead); } catch {} finally { try { await writer.close(); } catch {} } })();
+    const pageUsage = { in: 0, out: 0, cacheWrite: 0, cacheRead: 0 };
+    const flushPageUsage = makeUsageFlusher(userId, MODEL_FAST, pageUsage);
+    const pageHb = setInterval(() => { try { writer.write(encoder.encode(": hb\n\n")); } catch {} flushPageUsage(); }, 8000);
+    const pageTask = (async () => { try { await streamBuild(pageRes, files, emit, pageUsage, req.signal); } catch {} finally { clearInterval(pageHb); flushPageUsage(); try { await writer.close(); } catch {} } })();
+    try { (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime?.waitUntil?.(pageTask); } catch {}
     return new Response(readable, {
       headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
     });
@@ -2303,25 +2482,101 @@ Talk like a real person. Ask what you actually need, nothing more. If you realiz
   const projectId = body.project_id || "";
 
   const continuationMode = body.continuation_mode === true;
-  const hasFiles = Object.keys(files).filter(f => !INTERNAL_FILES.includes(f)).length > 0;
   const htmlFileNames = Object.keys(files).filter(f => f.endsWith('.html'));
-  const isFreshBuild = isDefaultCode({ ...files }) || Object.keys(files).length === 0;
 
-  // ── CHAT GATE: always ask before the very first build ────────────────────
-  // On a fresh project's first user message, chat first — get name + purpose.
-  // Once the user replies (2+ user messages), build immediately.
+  // A continuation must reuse the EXACT prompt shape (fresh-build vs. edit) of the request
+  // that started this build. By the time a continuation fires, `files` already contains the
+  // partially-written page — so the live checks below would flip from "fresh" to "edit",
+  // PAGE_PATTERNS/guide/component-library would appear or vanish from the system prompt, and
+  // Anthropic would treat it as new text: a full 1.25x cache-rewrite of the ~10k-token system
+  // prompt on every single continuation call instead of a 0.1x cache-read. The client freezes
+  // this flag at send-time (before the AI writes anything) and replays it on every continuation.
+  const liveHasFiles = Object.keys(files).filter(f => !INTERNAL_FILES.includes(f)).length > 0;
+  const liveIsFreshBuild = isDefaultCode({ ...files }) || Object.keys(files).length === 0;
+  const frozenFreshBuild = (continuationMode && typeof body.fresh_build_session === "boolean")
+    ? body.fresh_build_session
+    : null;
+  const isFreshBuild = frozenFreshBuild ?? liveIsFreshBuild;
+  const hasFiles = frozenFreshBuild !== null ? !frozenFreshBuild : liveHasFiles;
+
+  // ── SHARED CACHED SYSTEM ────────────────────────────────────────────────────
+  // Computed BEFORE the gate so the onboarding gate, the actual build, and every continuation all
+  // send the IDENTICAL cached system block — only the mode instructions differ (via the non-cached
+  // dynamicSuffix). This keeps Anthropic's prompt cache warm across the whole session: one 1.25x
+  // write on the first call, then 0.1x reads on every later call (onboarding turns + build + continuation).
+  // Previously the gate used a different system than the build/continuation, so each continuation
+  // cache-MISSED and paid the full 1.25x rewrite.
+  // Freeze the category for the WHOLE session: the client captures it from the first call's
+  // build_meta event and replays it on every subsequent call (onboarding turns + build + continuation).
+  // Without this, inferCategory re-scans the growing conversation each turn and can flip the category,
+  // which changes the cached system block and busts Anthropic's prompt cache → a 1.25x rewrite EVERY
+  // call instead of one write + cheap 0.1x reads. (Was the dominant cost — ~$0.05/call × ~5 calls.)
+  const category = body.build_category || inferCategory(brief, messages);
+  const guide = hasFiles ? "" : getCategoryGuide(category);
+  // 1 structural example per category (+2 accent), seeded by project_id so it's byte-stable across
+  // the session. Only for fresh builds (where the AI composes from scratch).
+  const componentLibrary = !hasFiles
+    ? buildComponentLibraryPrompt(categoriesForBuild(category), projectId || "anon", 1)
+    : "";
+  // The fresh-build cached block (also reused by the gate). Edits use a smaller block (below).
+  const freshCachedSystem = SYSTEM_CORE + `\n\n${FRONTEND_CRAFT}\n\n${pagePatternsFor(category)}`
+    + (guide ? `\n\n${guide}` : "")
+    + (componentLibrary ? `\n\n${componentLibrary}` : "");
+
+  // ── ONBOARDING CHAT GATE ──────────────────────────────────────────────────
+  // Runs for fresh builds while there are still < 5 user messages. The AI gathers
+  // a brief across up to ~3 back-and-forth turns (name/purpose → monetization →
+  // design/pages), then builds. Falls through to the main build path automatically
+  // once it has everything or the user says "just build it."
   const userMsgs = (messages as {role:string;content:unknown}[]).filter(m => m.role === "user");
-  if (isFreshBuild && userMsgs.length === 1) {
-    const SYSTEM_CHAT_GATE = SYSTEM_CORE + `\n\n${FRONTEND_CRAFT}\n\n${PAGE_PATTERNS}` + `
+  if (isFreshBuild && userMsgs.length <= 5 && !continuationMode) {
+    // Onboarding instructions live in the NON-cached suffix so the cached block stays identical to
+    // the build/continuation (cache stays warm across the session). See SHARED CACHED SYSTEM above.
+    const ONBOARDING_SUFFIX = `
 
-FIRST MESSAGE RULES:
-You need two things before building: a name and a clear purpose.
+ONBOARDING — GATHERING THE BRIEF:
+Before building anything, learn what you need. Work through these four topics across a natural conversation — one or two per message, never all at once.
 
-If BOTH are present in the message: say one brief sentence about your direction, then immediately output the files using <file name="index.html"> XML delimiters. Never markdown code blocks.
+FOUR TOPICS TO COVER:
+1. NAME + PURPOSE — what is it, who is it for, what does it do
+2. MONETIZATION — will this make money? Give concrete options: "Monthly subscriptions, one-time purchase, free for now, or mainly for leads?" Let them pick or decide yourself if they say "you choose."
+3. DESIGN DIRECTION — always offer 2 specific directions with real references. E.g. "I'm thinking dark and minimal like Linear, or something warmer and more consumer-friendly like Notion. Which feels right — or should I just pick?" Never ask "what style do you want?" open-endedly.
+4. PAGES — suggest what makes sense: "For this I'd build landing + pricing + about. Or just the landing page if you want to launch fast. What do you think?"
 
-If name OR purpose is missing: ask only what you need (max 2 questions). Be conversational, not clinical.`;
+HOW TO DO THIS WELL:
+- Cover ONE topic per reply. Two at most if they're tightly related (e.g. design + pages).
+- Give specific options, not open questions. "Subscriptions or one-time?" beats "How do you want to make money?"
+- When suggesting design directions, name actual site references (Linear, Stripe, Vercel, Notion, Airbnb, Figma, etc.) so they can picture it.
+- Keep replies short — cover one topic per turn, 2-4 items max.
+- Format questions as a numbered list with bold topic labels. E.g. "1. **Accounts?** Will students log in to save data, or is this session-only?  2. **Pages?** Just the dashboard, or a landing page too?" This makes it easy to skim.
+- Never say "great choice", "perfect", "absolutely" — just absorb what they said and move forward.
+- If they say "you decide" or "whatever you think" on any topic — make the call yourself and move on without asking again.
 
-    const chatRes = await callAnthropic(MODEL_BUILD, SYSTEM_CHAT_GATE, messages as {role:string;content:unknown}[], estimateMaxTokens(MODEL_BUILD), true);
+WHEN TO BUILD:
+- Once all four topics are covered (or the user has made their position clear on each): say one short sentence about what you're making, then output the file immediately.
+- If the first message already contains name, purpose, monetization, design, and pages → skip all questions and build right now.
+- After 3 back-and-forth exchanges: build regardless — fill in any remaining blanks yourself.
+- If the user says "just build it", "start building", "go ahead", or similar → build immediately, no more questions.
+
+BUILD THE LANDING PAGE ONLY (index.html) — NOTHING ELSE:
+Even if the plan includes other pages (pricing, about, etc.), your first build outputs ONLY index.html. Do NOT write pricing.html, about.html, or any other file in this response. After the landing page, end your message by offering the rest in plain language — e.g. "That's your landing page. Want me to add the pricing and about pages next?" The user will ask, and you'll build those one at a time. This keeps each build fast and cheap.
+
+OUTPUT FORMAT:
+When building: use <file name="index.html"> XML delimiters ONLY. Never backtick code blocks.
+When chatting (still gathering): plain text only. Never put file tags in a chat response.`;
+
+    // prepare: hand the build Worker the onboarding payload to run with no timeout (48k headroom).
+    if (prepareMode) {
+      return new Response(JSON.stringify({
+        kind: "run",
+        payload: buildAnthropicPayload(MODEL_BUILD, freshCachedSystem, messages as {role:string;content:unknown}[], 48000, true, ONBOARDING_SUFFIX),
+        files_for_patching: files,
+        user_id: userId || "",
+        category,
+        want_suggestions: false,
+      }), { headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+    const chatRes = await callAnthropic(MODEL_BUILD, freshCachedSystem, messages as {role:string;content:unknown}[], estimateMaxTokens(MODEL_BUILD), true, ONBOARDING_SUFFIX);
     if (chatRes.ok) {
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
@@ -2329,15 +2584,20 @@ If name OR purpose is missing: ask only what you need (max 2 questions). Be conv
       const emitChat = async (event: string, data: unknown): Promise<void> => {
         try { await writer.write(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)); } catch {}
       };
-      (async () => { try { const r = await streamBuild(chatRes, files, emitChat); if (userId) await incrementUsage(userId, r.tokensIn, r.tokensOut, MODEL_BUILD, r.tokensCacheWrite, r.tokensCacheRead); } catch {} finally { try { await writer.close(); } catch {} } })();
+      const gateUsage = { in: 0, out: 0, cacheWrite: 0, cacheRead: 0 };
+      const flushGateUsage = makeUsageFlusher(userId, MODEL_BUILD, gateUsage);
+      const gateHb = setInterval(() => { try { writer.write(encoder.encode(": hb\n\n")); } catch {} flushGateUsage(); }, 8000);
+      // Send the frozen category on the FIRST onboarding turn so the client replays it on every
+      // later call — keeping the cached system block byte-identical (cache stays warm all session).
+      const gateTask = (async () => { try { await emitChat("build_meta", { category }); await streamBuild(chatRes, files, emitChat, gateUsage, req.signal); } catch {} finally { clearInterval(gateHb); flushGateUsage(); try { await writer.close(); } catch {} } })();
+      try { (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime?.waitUntil?.(gateTask); } catch {}
       return new Response(readable, {
         headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
       });
     }
   }
 
-  const category = inferCategory(brief, messages);
-  const guide = hasFiles ? "" : getCategoryGuide(category);
+  // category, guide, componentLibrary, freshCachedSystem are computed once above (SHARED CACHED SYSTEM).
 
   // Compress message history — project state files handle the rest
   const compressedMessages = compressMessages(messages as { role: string; content: unknown }[]);
@@ -2348,14 +2608,18 @@ If name OR purpose is missing: ask only what you need (max 2 questions). Be conv
   const messagesWithContext = compressedMessages.map((m, i) => {
     if (m.role === "user" && i === compressedMessages.length - 1) {
       const editPrefix = hasFiles && !continuationMode
-        ? `[EDIT MODE — ${htmlFileNames.length} page(s). OUTPUT PATCHES ONLY — <file> blocks are BANNED for existing files. Find the specific lines that need changing and output only those as <patch> blocks. If the change is large, output multiple patches. There is no situation where a full file rewrite is acceptable unless the user said "rebuild", "redo", "remake", or "start over." If you output a <file> block and the output gets cut off, the file is destroyed. Use patches. Always patches. Also: every edit must be complete — if a change needs both HTML and CSS, patch both in the same response.\n\nFILES NOT SHOWN IN FULL: Some HTML files are omitted from this context because _pages lists their section map. If the user asks to edit a file you can't see (e.g. schedule.html), you MUST still write the patch — use the section name and line range from _pages to target the right area. NEVER ask the user to share the file or offer to rebuild it. The server applies your patch to the full file regardless of whether you were shown its content. Just write the patch.]\n\n`
+        ? `[EDIT MODE — ${htmlFileNames.length} page(s). OUTPUT PATCHES ONLY — <file> blocks are BANNED for existing files. Find the specific lines that need changing and output only those as <patch> blocks. If the change is large, output multiple patches. There is no situation where a full file rewrite is acceptable unless the user said "rebuild", "redo", "remake", or "start over." If you output a <file> block and the output gets cut off, the file is destroyed. Use patches. Always patches. Also: every edit must be complete — if a change needs both HTML and CSS, patch both in the same response.\n\nEXCEPTION — NEW PAGES: if the user asks to ADD a page that does not exist yet (e.g. a pricing or about page), output ONE complete <file name="thatpage.html"> block for it. Match style.css and copy the nav from index.html exactly so links work. The patches-only rule applies only to files that already exist; a brand-new file must be a <file> block.\n\nFILES NOT SHOWN IN FULL: Some HTML files are omitted from this context because _pages lists their section map. If the user asks to edit a file you can't see (e.g. schedule.html), you MUST still write the patch — use the section name and line range from _pages to target the right area. NEVER ask the user to share the file or offer to rebuild it. The server applies your patch to the full file regardless of whether you were shown its content. Just write the patch.]\n\n`
         : "";
 
       let context = "";
-      if (!hasFiles) {
+      if (!hasFiles && !continuationMode) {
         if (spec) context += specContext(spec);
         else if (Object.keys(brief).length > 0) context += briefContext(brief, guide);
         else context += `\n\n${guide}`;
+        // Landing page only on a fresh build — even if the plan lists other pages. Output ONLY
+        // index.html, then offer to add the rest in your message. Each extra page is a separate
+        // (cheaper) build the user requests on demand. Do NOT write other .html files in this response.
+        context += `\n\n[BUILD ONLY index.html — the landing page. Do NOT create pricing.html, about.html, or any other page now, even if the plan mentions them. After the landing page, end your message by offering to build the other pages next (e.g. "Want me to add the pricing and about pages?"). The user will ask for them one at a time.]`;
       }
 
       context += fileContext(files, false, hasFiles);
@@ -2374,25 +2638,47 @@ If name OR purpose is missing: ask only what you need (max 2 questions). Be conv
     return m;
   });
 
-  // Edits get FRONTEND_CRAFT too — design principles matter just as much when editing.
-  // PAGE_PATTERNS only for fresh builds (page blueprints aren't relevant to targeted edits).
-  // Category guide included for edits that involve design judgment.
+  // Cached system block. Fresh builds reuse the exact `freshCachedSystem` the gate already sent, so
+  // the build + every continuation are 0.1x cache reads. Edits use a smaller block (no PAGE_PATTERNS
+  // / component library — irrelevant to targeted patches).
   const staticSystem = hasFiles
     ? SYSTEM_CORE + `\n\n${FRONTEND_CRAFT}` + (!isFreshBuild && guide ? `\n\n${guide}` : "")
-    : SYSTEM_CORE + `\n\n${FRONTEND_CRAFT}\n\n${PAGE_PATTERNS}` + (guide ? `\n\n${guide}` : "");
-  const dynamicSuffix = "";
+    : freshCachedSystem;
+  const dynamicSuffix = continuationMode
+    ? "\n\nCONTINUATION MODE — CRITICAL: You are completing a file that was cut off mid-generation. The last user message gives the file name and the final lines already written.\n\nYou MUST wrap your output in a single <file name=\"EXACT_FILE_NAME\"> … </file> block, using the exact file name from the user message. The <file> wrapper is REQUIRED — text written outside it is shown to the user as raw code in the chat and then discarded, which corrupts the build.\n\nInside the block, write ONLY the code that comes immediately after the last lines shown — continue from precisely where it stopped. Do NOT write <!DOCTYPE html>, the <head>, the nav, or repeat ANY content already shown. Do NOT write a chat message, intro, summary, or the word \"continuing\" — output nothing but the <file> block. Continue to the natural end of the file (…</body></html> for an HTML page) and close with </file>."
+    : "";
 
   // Sonnet for: fresh builds, full-rebuilds, or creating new visual components from scratch.
   // Haiku for: modifying/tweaking things that already exist (colors, text, layout, bugs).
   // Logic: creative verb + visual noun = building something new = needs Sonnet quality.
-  const hasCreativeVerb = /\b(add|create|make|build|design|put|insert|generate|give\s+me)\b/i.test(lastUserText);
-  const hasVisualNoun   = /\b(hero|section|component|banner|card|pricing|testimonial|gallery|portfolio|team|faq|about|contact|cta|animation|effect|feature|landing|page|navbar|nav|header|footer)\b/i.test(lastUserText);
-  const forcesSonnet = isFreshBuild || /\b(redesign|rebuild|redo|start\s+over|from\s+scratch)\b/i.test(lastUserText) || (hasCreativeVerb && hasVisualNoun);
+  // Sonnet only where quality shows most: the first landing build, or an explicit full rebuild.
+  // Everything else on an existing site (adding pages/sections, edits) uses cheap Haiku — this is
+  // the "Sonnet for the landing, Haiku for extras" cost split. Say "redesign/rebuild" to force Sonnet.
+  const forcesSonnet = isFreshBuild || /\b(redesign|rebuild|redo|start\s+over|from\s+scratch)\b/i.test(lastUserText);
 
   const isSimpleEdit = hasFiles && !forcesSonnet && !continuationMode;
 
   const buildModel = isSimpleEdit ? MODEL_FAST : MODEL_BUILD;
-  const maxTokens = estimateMaxTokens(buildModel);
+  // Continuation only writes the tail — 8k is plenty and keeps the call fast.
+  // On the build Worker (prepareMode) there's no wall-clock timeout, so give a fresh build big
+  // headroom (~48k Sonnet / 16k Haiku) — the whole page fits in ONE call and never has to continue.
+  const maxTokens = continuationMode
+    ? 8000
+    : (prepareMode ? (buildModel === MODEL_FAST ? 16000 : 48000) : estimateMaxTokens(buildModel));
+
+  // prepare: return the assembled payload for the Worker to run with no timeout.
+  if (prepareMode) {
+    return new Response(JSON.stringify({
+      kind: "run",
+      payload: buildAnthropicPayload(buildModel, staticSystem, messagesWithContext as { role: string; content: unknown }[], maxTokens, true, dynamicSuffix),
+      files_for_patching: filesForPatching,
+      user_id: userId || "",
+      category,
+      is_continuation: continuationMode,
+      want_suggestions: true,
+      suggestion_messages: messages,
+    }), { headers: { ...CORS, "Content-Type": "application/json" } });
+  }
 
   const anthropicRes = await callAnthropic(
     buildModel,
@@ -2427,40 +2713,47 @@ If name OR purpose is missing: ask only what you need (max 2 questions). Be conv
     await safeWrite(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
   };
 
-  (async () => {
+  // Live usage mirror — streamBuild updates this as tokens arrive, so usage is recorded even if the
+  // client hits Stop mid-stream (previously totals were only known after streamBuild returned, so an
+  // early Stop billed nothing).
+  const usageAcc = { in: 0, out: 0, cacheWrite: 0, cacheRead: 0 };
+
+  // Bill incrementally as tokens arrive (every heartbeat) so an interruption can't bypass usage.
+  const flushUsage = makeUsageFlusher(userId, buildModel, usageAcc);
+
+  const bgTask = (async () => {
     const heartbeat = setInterval(() => {
       safeWrite(encoder.encode(": heartbeat\n\n"));
+      flushUsage(); // commit usage-so-far every 8s — survives Stop/refresh/timeout-kill
     }, 8000);
 
-    // Declared outside try so finally can always track usage even if something throws mid-way
-    let totalIn = 0, totalOut = 0, totalCW = 0, totalCR = 0;
-
     try {
-      const { files: builtFiles, message: builtMessage, critique, tokensIn: t1in, tokensOut: t1out, tokensCacheWrite: t1cw, tokensCacheRead: t1cr } = await streamBuild(anthropicRes, filesForPatching, emit);
-      totalIn = t1in; totalOut = t1out; totalCW = t1cw; totalCR = t1cr;
+      // Hand the resolved category to the client up front so it can freeze it and replay it on
+      // every continuation of this build — keeping the cached system prompt byte-identical (0.1x reads).
+      await emit("build_meta", { category });
+      const { files: builtFiles, message: builtMessage } = await streamBuild(anthropicRes, filesForPatching, emit, usageAcc, req.signal);
 
-      // Auto-fix only on fresh builds — never on edits (wasteful + can revert intentional changes)
-      if (runAutoFixAfter && isFreshBuild && critique && critique.auto_fix && Object.keys(builtFiles).length > 0) {
-        const allFiles = { ...files, ...builtFiles };
-        const { tokensIn: t2in, tokensOut: t2out, tokensCacheWrite: t2cw, tokensCacheRead: t2cr } = await runAutoFix(allFiles, critique, emit);
-        totalIn += t2in; totalOut += t2out; totalCW += t2cw; totalCR += t2cr;
+      // Auto-fix disabled: adds a second API call per build without meaningful quality gain.
+      // The reduced max_tokens (24k) already produces tighter, better output.
+
+      // Generate follow-up suggestions — skip if the client already disconnected (Stop)
+      if (!req.signal?.aborted) {
+        try {
+          const sugg = await generateSuggestions(builtMessage || "", builtFiles, messages as {role:string;content:unknown}[], userId);
+          if (sugg.length) await emit("suggestions", { items: sugg });
+        } catch {}
       }
-
-      // Generate follow-up suggestions and emit before closing stream
-      try {
-        const sugg = await generateSuggestions(builtMessage || "", builtFiles, messages as {role:string;content:unknown}[]);
-        if (sugg.length) await emit("suggestions", { items: sugg });
-      } catch {}
     } catch {}
     finally {
       clearInterval(heartbeat);
-      // Always track usage here — even if autoFix or suggestions threw and skipped the old call
-      if (userId && (totalIn > 0 || totalOut > 0)) {
-        try { await incrementUsage(userId, totalIn, totalOut, buildModel, totalCW, totalCR); } catch {}
-      }
+      flushUsage(); // final delta (tokens since the last heartbeat flush)
       await safeClose();
     }
   })();
+
+  // Keep the isolate alive after the client disconnects so the usage-tracking finally always runs.
+  // Without this, a Stop could tear the function down before usage was recorded.
+  try { (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime?.waitUntil?.(bgTask); } catch {}
 
   return new Response(readable, {
     headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },

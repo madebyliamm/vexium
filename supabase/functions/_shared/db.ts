@@ -75,6 +75,14 @@ export async function getProjectByConnectAccount(accountId: string): Promise<Rec
   return rows[0] || null;
 }
 
+// Full commerce view of a project — includes the files blob so the checkout endpoint can read the
+// owner's product catalog (and its SERVER-SIDE prices) instead of trusting client-supplied amounts.
+export async function getProjectCommerce(projectId: string): Promise<Record<string, any> | null> {
+  const res = await fetch(`${REST}/projects?id=eq.${encodeURIComponent(projectId)}&select=id,user_id,stripe_connect_account_id,stripe_connect_charges_enabled,files,published_files&limit=1`, { headers: HEADERS });
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
 export async function insertSiteData(projectId: string, collection: string, data: Record<string, unknown>): Promise<void> {
   const res = await fetch(`${REST}/site_data`, {
     method: "POST",

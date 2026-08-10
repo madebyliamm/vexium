@@ -4,24 +4,24 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Vexium</title>
-  <link rel="icon" type="image/png" href="logo_background.png"/>
+  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg"/>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;background:#fff;overflow:hidden}
     #frame{width:100%;height:100%;border:none;display:none}
-    #bkBanner{display:none;position:fixed;top:0;left:0;right:0;height:44px;z-index:9999;background:rgba(10,10,10,.96);backdrop-filter:blur(14px);align-items:center;justify-content:center;font-family:system-ui,sans-serif;}
+    #bkBanner{display:none;position:fixed;top:0;left:0;right:0;height:44px;z-index:9999;background:rgba(255,255,255,.86);backdrop-filter:blur(14px) saturate(140%);box-shadow:0 4px 20px rgba(30,27,60,.1);align-items:center;justify-content:center;font-family:system-ui,sans-serif;}
     #bkBanner.show{display:flex}
-    #bkDropBtn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:none;border-radius:9px;color:rgba(255,255,255,.85);font-size:13px;font-family:system-ui,sans-serif;font-weight:500;padding:6px 12px 6px 14px;cursor:pointer;outline:none;transition:background .15s;}
-    #bkDropBtn:hover{background:rgba(255,255,255,.12)}
-    #bkDropBtn svg{width:13px;height:13px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .2s;}
+    #bkDropBtn{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.07);border:none;border-radius:9px;color:rgba(0,0,0,.85);font-size:13px;font-family:system-ui,sans-serif;font-weight:500;padding:6px 12px 6px 14px;cursor:pointer;outline:none;transition:background .15s;}
+    #bkDropBtn:hover{background:rgba(0,0,0,.12)}
+    #bkDropBtn svg{width:13px;height:13px;stroke:rgba(0,0,0,.4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .2s;}
     #bkDropBtn.open svg{transform:rotate(180deg)}
-    #bkDropMenu{position:fixed;top:52px;left:50%;transform:translateX(-50%);min-width:180px;background:#1a1a1a;border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;flex-direction:column;gap:1px;z-index:10000;}
+    #bkDropMenu{position:fixed;top:52px;left:50%;transform:translateX(-50%);min-width:180px;background:#ffffff;border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(30,27,60,.16);display:none;flex-direction:column;gap:1px;z-index:10000;}
     #bkDropMenu.show{display:flex}
-    .bk-drop-item{padding:8px 12px;border-radius:7px;font-size:13px;font-family:system-ui,sans-serif;color:rgba(255,255,255,.75);cursor:pointer;transition:background .12s;white-space:nowrap;}
-    .bk-drop-item:hover{background:rgba(255,255,255,.08);color:#fff}
-    .bk-drop-item.active{color:#fff;font-weight:600}
+    .bk-drop-item{padding:8px 12px;border-radius:7px;font-size:13px;font-family:system-ui,sans-serif;color:rgba(0,0,0,.75);cursor:pointer;transition:background .12s;white-space:nowrap;}
+    .bk-drop-item:hover{background:rgba(0,0,0,.08);color:#191922}
+    .bk-drop-item.active{color:#191922;font-weight:600}
     #frame.bk-mode{height:calc(100% - 44px);margin-top:44px}
 
     /* ── LOADING ── */
@@ -33,7 +33,7 @@
     }
     #loading .ld-dots span{
       display:inline-block;width:6px;height:6px;border-radius:50%;
-      background:#c4b5fd;margin:0 3px;
+      background:#7c3aed;margin:0 3px;
       animation:ldot .9s ease-in-out infinite;
     }
     #loading .ld-dots span:nth-child(2){animation-delay:.15s}
@@ -86,7 +86,7 @@
 </div>
 
 <div id="notFound">
-  <img src="vexium_logo_black.png" alt="Vexium"/>
+  <img src="vertly_mark.svg" alt="Vertly"/>
   <p>No project found.</p>
 </div>
 

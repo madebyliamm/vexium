@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Vexium — Sign in</title>
-  <link rel="icon" type="image/png" href="logo_background.png"/>
+  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,13 +12,15 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     a{color:inherit;text-decoration:none} a:visited{color:inherit}
     :root{
-      --bg:#0a0a0a;--surface:#111;--surface2:#181818;--surface3:#1e1e1e;
-      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.1);
-      --text:#fff;--muted:#444;--muted2:#777;--muted3:#aaa;
-      --ok:#4ade80;--err:#f87171;
+      --bg:#f1f1f4;--surface:#ffffff;--surface2:#e7e7ee;--surface3:#dcdce6;
+      --border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.1);
+      --text:#191922;--muted:#a8a8b2;--muted2:#7e7e88;--muted3:#5a5a64;
+      --accent:#7c3aed;--accent-h:#6d28d9;--accent-soft:rgba(124,58,237,.10);
+      --ok:#16a34a;--err:#dc2626;
       --sans:'Plus Jakarta Sans',sans-serif;
       --r-sm:8px;--r-md:12px;--r-lg:18px;--r-full:999px;
-      --rainbow:linear-gradient(90deg,#ff6b6b,#ffb347,#ffe066,#4ade80,#38bdf8,#a78bfa,#ff6b6b);
+      --shadow:0 14px 34px rgba(30,27,60,.10);--shadow-sm:0 4px 16px rgba(30,27,60,.06);
+      --rainbow:linear-gradient(90deg,#7c3aed,#8b5cf6,#a78bfa,#8b5cf6,#7c3aed);
     }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
     body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-x:hidden;min-height:100svh}
@@ -32,7 +34,7 @@
     /* ── Back ── */
     .back{position:fixed;top:16px;left:16px;z-index:10;display:flex;align-items:center;gap:5px;
       color:var(--muted2);font-size:12px;font-weight:600;padding:7px 12px;border-radius:var(--r-sm);transition:all .15s}
-    .back:hover{color:var(--text);background:rgba(255,255,255,.05)}
+    .back:hover{color:var(--text);background:rgba(0,0,0,.05)}
     .back svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round}
 
     /* ── Card ── */
@@ -40,7 +42,7 @@
       width:100%;max-width:420px;
       background:var(--surface);border-radius:22px;
       padding:34px 30px 28px;position:relative;z-index:1;
-      box-shadow:0 32px 80px rgba(0,0,0,.6);
+      box-shadow:0 32px 80px rgba(30,27,60,.14);
       animation:fadeUp .35s ease both;
     }
     .card.wide{max-width:540px}
@@ -102,7 +104,7 @@
     /* ── Msg / Spinner ── */
     .msg{font-size:12px;text-align:center;margin-top:12px;line-height:1.5}
     .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
-    .spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
+    .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 
     /* ── Auth switch ── */
     .auth-switch{
@@ -144,7 +146,7 @@
     .trial-card.selected .trial-check::after{content:'';width:7px;height:7px;background:#000;border-radius:50%}
 
     .auth-billing-toggle{display:flex;justify-content:center;margin-bottom:14px}
-    .auth-billing-toggle .billing-inner{display:inline-flex;background:rgba(255,255,255,.06);border-radius:99px;padding:3px}
+    .auth-billing-toggle .billing-inner{display:inline-flex;background:var(--surface2);border-radius:99px;padding:3px}
     .abtog{padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted2);background:transparent;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px;transition:background .2s,color .2s}
     .abtog.on{background:var(--text);color:var(--bg)}
     .abtog-save{font-size:9px;font-weight:700;background:rgba(74,222,128,.18);color:#4ade80;padding:2px 7px;border-radius:4px}
@@ -164,11 +166,11 @@
       transition:background .15s,border-color .15s,opacity .15s;user-select:none;
     }
     .plan-card:hover{background:var(--surface3)}
-    .plan-card.selected{background:rgba(255,255,255,.06)}
+    .plan-card.selected{background:var(--accent-soft)}
 
     .plan-card.popular::before{
       content:'Best';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-      background:#fff;color:#000;font-size:8px;font-weight:800;letter-spacing:.05em;
+      background:var(--accent);color:#fff;font-size:8px;font-weight:800;letter-spacing:.05em;
       padding:2px 8px;border-radius:99px;white-space:nowrap;
     }
     .plan-dot{
@@ -176,14 +178,14 @@
       position:absolute;top:12px;right:12px;
       display:flex;align-items:center;justify-content:center;transition:all .15s;
     }
-    .plan-card.selected .plan-dot{background:#fff}
+    .plan-card.selected .plan-dot{background:var(--accent)}
     .plan-card.selected .plan-dot::after{content:'';width:6px;height:6px;background:#000;border-radius:50%}
     .plan-name{font-size:11px;font-weight:800;margin-bottom:6px;color:var(--muted3)}
     .plan-card.selected .plan-name{color:var(--text)}
     .plan-price{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1}
     .plan-price .mo{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
     .plan-tag{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4}
-    .plan-card.selected .plan-tag{color:rgba(255,255,255,.4)}
+    .plan-card.selected .plan-tag{color:var(--accent)}
 
     /* ── PAYMENT STEP ── */
     .pay-summary{
@@ -231,7 +233,7 @@
 
 <div class="card" id="mainCard">
   <a href="index.html" class="card-logo" title="Vexium">
-    <img src="vexium_logo.png" alt="Vexium"/>
+    <img src="vertly_mark.svg" alt="Vertly"/>
   </a>
 
   <!-- Step indicator -->

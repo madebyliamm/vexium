@@ -2,7 +2,7 @@
 // Deploy: supabase functions deploy stripe-webhook --no-verify-jwt
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
-import { getProfile, getProfileByCustomerId, updateProfile, insertBillingHistory, getProjectByConnectAccount, insertSiteData } from "../_shared/db.ts";
+import { getProfile, getProfileByCustomerId, updateProfile, insertBillingHistory, insertSiteData, getProjectByConnectAccount } from "../_shared/db.ts";
 import { PRICE_TO_PLAN, PLAN_LABEL } from "../_shared/stripe-plans.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -40,12 +40,15 @@ Deno.serve(async (req) => {
           const projectId = session.metadata?.project_id;
           if (projectId) {
             await insertSiteData(projectId, "transactions", {
+              type: "sale",
               amount: (session.amount_total ?? 0) / 100,
               currency: session.currency,
               status: session.payment_status,
               customer_email: session.customer_details?.email ?? null,
               description: session.metadata?.product_name ?? "Purchase",
+              product_id: session.metadata?.product_id || null,
               stripe_session_id: session.id,
+              stripe_payment_intent: (session.payment_intent as string) ?? null,
             });
           }
           break;
@@ -88,6 +91,26 @@ Deno.serve(async (req) => {
             `Upgraded to ${PLAN_LABEL[plan] || plan} (${period})`,
             session.amount_total ?? 0,
           );
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        // Buyer was refunded on a Vexium-built site — record it so the owner sees it in their sales.
+        if (event.account) {
+          const charge = event.data.object as Stripe.Charge;
+          const project = await getProjectByConnectAccount(event.account);
+          if (project) {
+            await insertSiteData(project.id, "transactions", {
+              type: "refund",
+              amount: -((charge.amount_refunded ?? 0) / 100), // negative so it nets out of total revenue
+              currency: charge.currency,
+              status: "refunded",
+              customer_email: charge.billing_details?.email ?? null,
+              description: "Refund issued",
+              stripe_payment_intent: (charge.payment_intent as string) ?? null,
+            });
+          }
         }
         break;
       }

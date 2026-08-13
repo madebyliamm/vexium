@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Vexium</title>
-  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg"/>
+  <title>Vertly</title>
+  <link rel="icon" type="image/png" href="vertly_icon.png"/>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -86,7 +86,7 @@
 </div>
 
 <div id="notFound">
-  <img src="vertly_mark.svg" alt="Vertly"/>
+  <img src="vertly_icon.png" alt="Vertly"/>
   <p>No project found.</p>
 </div>
 
@@ -261,7 +261,7 @@
     }
     if (!project) { showNotFound(); return; }
 
-    document.title = project.name || 'Vexium';
+    document.title = project.name || 'Vertly';
     fileSystem = project.files || {};
     const mainFile = project.main_file || 'index.html';
     const requestedPage = params.get('page');

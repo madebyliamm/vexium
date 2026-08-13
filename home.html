@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Home — Vexium</title>
-  <link rel="icon" type="image/svg+xml" href="vertly_mark.svg">
+  <title>Home — Vertly</title>
+  <link rel="icon" type="image/png" href="vertly_icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1363,7 +1363,7 @@
     let html='';
     if(projects&&projects.length) html+=sdSection('Your projects')+sdCarousel(projects.slice(0,10).map(sdMyProj));
     const pub=await fetchPublicProjects('');
-    if(pub.length) html+=sdSection('Discover on Vexium')+sdCarousel(pub.map(sdPubProj));
+    if(pub.length) html+=sdSection('Discover on Vertly')+sdCarousel(pub.map(sdPubProj));
     if(!html){hideSearchDrop();return;}
     drop.innerHTML=html;showSearchDrop();
   }
@@ -1376,7 +1376,7 @@
     const mine=(projects||[]).filter(p=>(p.name||'').toLowerCase().includes(ql));
     if(mine.length) html+=sdSection('Your projects')+sdCarousel(mine.slice(0,10).map(sdMyProj));
     const [pub,users]=await Promise.all([fetchPublicProjects(q),searchUsers(q)]);
-    if(pub.length) html+=sdSection('Live on Vexium')+sdCarousel(pub.map(sdPubProj));
+    if(pub.length) html+=sdSection('Live on Vertly')+sdCarousel(pub.map(sdPubProj));
     if(users.length) html+=sdSection('People')+'<div class="sd-users">'+users.map(x=>searchItemHTML(x.u,x.rel)).join('')+'</div>';
     drop.innerHTML=html||('<div class="search-msg">No results for “'+esc(q)+'”</div>');
   }

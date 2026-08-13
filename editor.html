@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Editor — Vexium</title>
-  <link id="favicon" rel="icon" type="image/svg+xml" href="vertly_mark.svg"/>
+  <title>Editor — Vertly</title>
+  <link id="favicon" rel="icon" type="image/png" href="vertly_icon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3569,7 +3569,7 @@ async function loadProject() {
 
   document.getElementById('tbProj').textContent = project.name || 'Untitled';
   document.getElementById('tbEmoji').textContent = project.emoji || '';
-  document.title = (project.name || 'Untitled') + ' — Vexium';
+  document.title = (project.name || 'Untitled') + ' — Vertly';
   document.getElementById('stMode').textContent = sb ? 'Cloud' : 'Local';
   const uname = localStorage.getItem('vexium_username') || '?';
   const avatarEl = document.getElementById('tbAvatar');
@@ -6973,7 +6973,7 @@ let _builderMsgsHtml  = null; // saved builder #aiMessages DOM when in mkt mode
 let _builderStarted   = false; // saved aiStarted state when in mkt mode
 let _builderChatShown = false; // saved #aiChatWrap.show state
 
-const MKT_SYSTEM = `You are a Growth Advisor embedded inside Vexium, a website builder. You know this user's business deeply — their brand, design, product, audience — from the project context provided to you.
+const MKT_SYSTEM = `You are a Growth Advisor embedded inside Vertly, a website builder. You know this user's business deeply — their brand, design, product, audience — from the project context provided to you.
 
 You are a world-class growth strategist who gives specific, actionable advice. You name real tools with real prices. You give real numbers. You don't hedge.
 
@@ -9166,7 +9166,7 @@ function commerceLoadStripeStatus() {
     bar.innerHTML = `
       <div class="csb-left">
         <div class="csb-title">Connect Stripe to accept payments</div>
-        <div class="csb-sub">Customers can pay directly on your site. Vexium takes 1% per transaction.</div>
+        <div class="csb-sub">Customers can pay directly on your site. Vertly takes 1% per transaction.</div>
       </div>
       <button id="commerceConnectBtn" class="csb-connect-btn" onclick="commerceConnectStripe()">Connect Stripe →</button>`;
   }

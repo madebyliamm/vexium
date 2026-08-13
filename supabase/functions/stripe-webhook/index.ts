@@ -1,4 +1,4 @@
-// Vexium Stripe Webhook — syncs subscription state into profiles + billing_history
+// Vertly Stripe Webhook — syncs subscription state into profiles + billing_history
 // Deploy: supabase functions deploy stripe-webhook --no-verify-jwt
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Connect account event — buyer paid on a Vexium-built site
+        // Connect account event — buyer paid on a Vertly-built site
         if (event.account) {
           const projectId = session.metadata?.project_id;
           if (projectId) {
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       }
 
       case "charge.refunded": {
-        // Buyer was refunded on a Vexium-built site — record it so the owner sees it in their sales.
+        // Buyer was refunded on a Vertly-built site — record it so the owner sees it in their sales.
         if (event.account) {
           const charge = event.data.object as Stripe.Charge;
           const project = await getProjectByConnectAccount(event.account);

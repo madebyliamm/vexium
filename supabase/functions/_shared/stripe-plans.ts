@@ -1,4 +1,4 @@
-// Stripe Price IDs for Vexium subscription plans (test mode).
+// Stripe Price IDs for Vertly subscription plans (test mode).
 // Must match the prices configured in the Stripe Dashboard.
 export const PRICE_IDS: Record<string, Record<"monthly" | "annual", string>> = {
   starter: { monthly: "price_1TgccXDRd56Cnoi3iQQJbrgj", annual: "price_1TgccXDRd56Cnoi3nMzVMBDw" },

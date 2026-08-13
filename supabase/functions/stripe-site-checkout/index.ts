@@ -1,4 +1,4 @@
-// Vexium Stripe Site Checkout — public endpoint for buyer-initiated payments on Vexium-built sites
+// Vertly Stripe Site Checkout — public endpoint for buyer-initiated payments on Vertly-built sites
 // 1% platform fee applied via application_fee_amount on the connected account's checkout session
 //
 // Two modes:

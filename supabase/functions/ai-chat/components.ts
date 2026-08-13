@@ -1,4 +1,4 @@
-// Vexium Component Library
+// Vertly Component Library
 // Pre-built, production-quality section HTML the AI adapts (colors/copy/fonts) rather than improvising from scratch.
 // Scoped class names (vxc-XX__) so multiple components can coexist on one page without collisions.
 

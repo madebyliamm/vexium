@@ -1,4 +1,4 @@
-// Vexium Stripe Connect Start — creates/resumes an Express Connect onboarding link for a project
+// Vertly Stripe Connect Start — creates/resumes an Express Connect onboarding link for a project
 // Deploy: supabase functions deploy stripe-connect-start
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";

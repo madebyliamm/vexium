@@ -1,4 +1,4 @@
-// Vexium Stripe Connect Status — checks whether a project's Stripe Connect account is fully onboarded
+// Vertly Stripe Connect Status — checks whether a project's Stripe Connect account is fully onboarded
 // Deploy: supabase functions deploy stripe-connect-status
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";

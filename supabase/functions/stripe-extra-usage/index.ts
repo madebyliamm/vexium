@@ -1,4 +1,4 @@
-// Vexium Stripe Extra Usage — one-time payment Checkout Session for AI credit top-ups
+// Vertly Stripe Extra Usage — one-time payment Checkout Session for AI credit top-ups
 // Deploy: supabase functions deploy stripe-extra-usage
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";

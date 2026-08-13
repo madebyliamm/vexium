@@ -1,4 +1,4 @@
-// Vexium Stripe Checkout — creates a Checkout Session for a subscription plan
+// Vertly Stripe Checkout — creates a Checkout Session for a subscription plan
 // Deploy: supabase functions deploy stripe-checkout
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";

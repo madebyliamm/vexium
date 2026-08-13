@@ -1,4 +1,4 @@
-// Vexium Stripe Billing Portal — lets users manage/cancel their subscription
+// Vertly Stripe Billing Portal — lets users manage/cancel their subscription
 // Deploy: supabase functions deploy stripe-portal
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";

@@ -11,6 +11,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // ─── TOKEN → COST ─────────────────────────────────────────────────────────────
 // Prices in cents per million tokens. Must match actual Anthropic billing.
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  "claude-opus-5":              { input: 500,  output: 2500 }, // $5/$25 per MTok — art-direction step only
   "claude-sonnet-4-6":          { input: 300,  output: 1500 }, // $3/$15 per MTok
   "claude-haiku-4-5-20251001":  { input: 80,   output: 400  }, // $0.80/$4 per MTok
 };
@@ -209,7 +210,7 @@ function formatContextBlock(ctx: Record<string, unknown>): string {
 }
 
 const MODEL_BUILD  = "claude-sonnet-4-6";
-const MODEL_SPEC   = "claude-sonnet-4-6";
+const MODEL_SPEC   = "claude-opus-5"; // art-direction / design-planning step (Opus = design taste, sameness-killer)
 const MODEL_FAST   = "claude-haiku-4-5-20251001";
 
 const CORS = {
@@ -927,16 +928,26 @@ Return ONLY valid JSON, no markdown fences:
 // ─────────────────────────────────────────────────────────────────────────────
 // SPEC SYSTEM PROMPT
 // ─────────────────────────────────────────────────────────────────────────────
-const SPEC_SYSTEM = `You are a world-class creative director making final design decisions for a website build. Given a request and brief, output a precise JSON design spec that will be handed to a developer to execute without further design discussion.
+const SPEC_SYSTEM = `You are a world-class art director with a sharp point of view. Given a build request, output a precise JSON design spec a developer executes verbatim — no further design discussion.
 
-Think carefully — vague specs produce generic sites. Infer the right audience, tone, and aesthetic. Be specific about every choice. The font pairing must be chosen for THIS specific project, not generic. The color palette must feel intentional and distinctive.
+Your ONE job is to kill sameness. The failure mode you must avoid: every AI site becomes the same centered-hero + three-equal-feature-columns + generic-sans layout with a purple gradient. That is banned. Design for THIS business specifically — its industry, its customers, its mood — and commit to a distinctive direction with taste and conviction. A memorable, slightly unexpected design beats a safe one every time.
+
+Rules:
+- Pick a LAYOUT ARCHETYPE that fits this business and is NOT the default. Vary it hard across projects: editorial split-screen, asymmetric bento, full-bleed image + sticky side-nav, oversized-type statement, magazine/serif, brutalist grid, terminal/mono, warm-minimal, product-photography-led, dashboard-preview-led, etc. The structure itself should feel chosen.
+- Invent ONE signature move — the single unexpected, memorable element (a specific hero treatment, an unusual nav, a bold type moment, a distinctive motion idea) that makes the site stick in memory. Be concrete enough to build.
+- Fonts must be chosen for THIS project — a real pairing with contrast (display vs body), never a lone generic sans. Name exact Google Fonts.
+- Palette must feel intentional and owned — a specific mood, not a template. Real contrast, real accent. Only pick a purple/violet accent if it genuinely fits; otherwise choose the color the brand wants.
+- Copy must be specific and confident: a real claim, not "The best way to X."
 
 Return ONLY valid JSON, no markdown fences:
 {
   "category": "one of: tech-saas | agency-creative | professional-services | ecommerce-consumer | startup-launch | hospitality-events | personal-freelancer",
-  "font_display": "exact Google Font name, e.g. Syne",
-  "font_body": "exact Google Font name, e.g. DM Sans",
+  "layout_archetype": "the distinctive structural direction for THIS site (see list above) — NOT default centered-hero + 3 columns",
+  "signature_move": "the single unexpected, memorable design element — concrete enough to build",
+  "font_display": "exact Google Font name, e.g. Fraunces",
+  "font_body": "exact Google Font name, e.g. Inter Tight",
   "font_import": "complete Google Fonts URL with correct weights",
+  "type_treatment": "one sentence: how type is used distinctively (scale jumps, weight/italic contrast, tracking, a statement size)",
   "font_reasoning": "one sentence: why this pairing for this specific project",
   "color_bg": "#hex",
   "color_surface": "#hex",
@@ -945,17 +956,17 @@ Return ONLY valid JSON, no markdown fences:
   "color_accent": "#hex",
   "color_accent_2": "#hex",
   "color_border": "rgba() or #hex",
-  "color_reasoning": "one sentence: why this palette for this specific project",
-  "hero_headline": "the exact headline — 6-10 words, specific claim, active voice",
+  "color_reasoning": "one sentence: why this palette, this mood, for this specific project",
+  "hero_headline": "the exact headline — 6-10 words, specific claim, active voice, no cliches",
   "hero_sub": "the exact subheadline — 1-2 sentences that expand, don't repeat",
   "hero_cta_primary": "exact CTA text",
   "hero_cta_secondary": "exact CTA text",
-  "hero_visual": "specific description of the CSS-only visual element in the hero",
-  "sections": ["for multi-page: actual .html filenames like index.html, shop.html, about.html — for single-page: section names like Hero, Features, Pricing"],
+  "hero_visual": "specific description of the CSS-only hero visual (tied to the signature move)",
+  "sections": ["for multi-page: actual .html filenames like index.html, shop.html, about.html — for single-page: section names, and vary their layout, not three identical columns"],
   "is_multi_page": false,
-  "visual_treatment": "2-3 sentences: the specific aesthetic direction and what makes it distinctive",
-  "reference_sites": "specific sites and exactly what to borrow from each",
-  "one_thing_to_avoid": "the single most important thing NOT to do for this specific project",
+  "visual_treatment": "2-3 sentences: the specific aesthetic and what makes it distinctive vs a generic template",
+  "reference_sites": "specific real sites + exactly what to borrow from each",
+  "one_thing_to_avoid": "the single most important generic pattern NOT to do for this specific project",
   "brand_voice": "3 adjectives + context sentence"
 }`;
 
@@ -1124,8 +1135,11 @@ function specContext(spec: Record<string, unknown>): string {
 
 <spec>
 CATEGORY: ${spec.category || ""}
+LAYOUT ARCHETYPE (commit to this — do NOT default to centered-hero + 3 equal columns): ${spec.layout_archetype || ""}
+SIGNATURE MOVE (build this — it's what makes the site memorable): ${spec.signature_move || ""}
 FONTS: ${spec.font_display} (display, headlines) + ${spec.font_body} (body, UI)
 FONT IMPORT: ${spec.font_import || ""}
+TYPE TREATMENT: ${spec.type_treatment || ""}
 FONT REASONING: ${spec.font_reasoning || ""}
 COLORS:
   --bg: ${spec.color_bg}
@@ -1226,6 +1240,7 @@ function buildAnthropicPayload(
   maxTokens: number,
   stream = false,
   dynamicSuffix = "",
+  extra: Record<string, unknown> = {}, // extra top-level payload fields (e.g. thinking)
 ): Record<string, unknown> {
   // Structure system as array: static cacheable part + optional dynamic suffix
   const systemBlocks: unknown[] = [
@@ -1234,7 +1249,7 @@ function buildAnthropicPayload(
   if (dynamicSuffix) {
     systemBlocks.push({ type: "text", text: dynamicSuffix });
   }
-  return { model, max_tokens: maxTokens, system: systemBlocks, messages, stream };
+  return { model, max_tokens: maxTokens, system: systemBlocks, messages, stream, ...extra };
 }
 
 async function callAnthropic(
@@ -1244,6 +1259,7 @@ async function callAnthropic(
   maxTokens: number,
   stream = false,
   dynamicSuffix = "", // appended after the cache point (not cached)
+  extra: Record<string, unknown> = {},
 ): Promise<Response> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -1255,7 +1271,7 @@ async function callAnthropic(
   return fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers,
-    body: JSON.stringify(buildAnthropicPayload(model, system, messages, maxTokens, stream, dynamicSuffix)),
+    body: JSON.stringify(buildAnthropicPayload(model, system, messages, maxTokens, stream, dynamicSuffix, extra)),
   });
 }
 
@@ -2020,8 +2036,11 @@ ${guide}`;
       MODEL_SPEC,
       SPEC_SYSTEM,
       [{ role: "user", content: specPrompt }],
-      800,
+      1400,
       false,
+      "",
+      // Opus 5 thinks by default; disable it so the response is a single JSON text block (cheap + parseable)
+      { thinking: { type: "disabled" } },
     );
 
     if (!specRes.ok) {
@@ -2031,7 +2050,9 @@ ${guide}`;
     }
 
     const specData = await specRes.json();
-    const specText = (specData.content?.[0]?.text || "{}")
+    // Find the text block (robust even if a thinking block precedes it)
+    const specTextBlock = (specData.content || []).find((b: { type?: string; text?: string }) => b?.type === "text");
+    const specText = (specTextBlock?.text || "{}")
       .replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
     let spec: Record<string, unknown> = {};
     try { spec = JSON.parse(specText); } catch { spec = {}; }

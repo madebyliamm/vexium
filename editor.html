@@ -1625,7 +1625,7 @@
 
     /* File cards */
     /* Edited files summary */
-    .ai-edited-summary { margin-top: 12px; display: inline-flex; flex-direction: column; align-items: stretch; }
+    .ai-edited-summary { margin-top: 12px; display: inline-flex; flex-direction: column; align-items: stretch; align-self: flex-start; }
     .ai-edited-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--surface); box-shadow: 0 2px 8px rgba(30,27,60,.08), inset 0 0 0 1px rgba(30,27,60,.06); border: none; color: var(--text); font-size: 12.5px; font-weight: 600; font-family: var(--sans); cursor: pointer; padding: 8px 13px 8px 9px; border-radius: 12px; transition: box-shadow var(--t-fast), transform var(--t-fast); outline: none; }
     .ai-edited-btn:hover { box-shadow: 0 4px 13px rgba(30,27,60,.13), inset 0 0 0 1px rgba(30,27,60,.09); transform: translateY(-1px); }
     .ai-edited-ico { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; background: rgba(124,58,237,.13); flex-shrink: 0; }
@@ -1674,6 +1674,9 @@
     .ai-tl-step.done .ai-tl-dot::after { content:''; width:4px; height:7px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); margin-top:-1px; }
     .ai-tl-label { font-size:12.5px; color:var(--muted); font-weight:500; transition:color .2s; }
     .ai-tl-step.active .ai-tl-label { color:var(--text); font-weight:600; }
+    .ai-tl-step.pending .ai-tl-dot { border:2px solid rgba(30,27,60,.16); }
+    .ai-tl-step.pending .ai-tl-label { color: rgba(30,27,60,.34); }
+    .ai-tl-step.pending::before { background: rgba(30,27,60,.12); }
     @keyframes tlSpin { to { transform: rotate(360deg); } }
     @keyframes tlStepIn { from { opacity:0; transform: translateY(-3px); } to { opacity:1; transform:none; } }
     /* Finish celebration */
@@ -2010,7 +2013,7 @@
     .ai-suggestions-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
     .ai-suggestions-list { display: flex; flex-wrap: wrap; gap: 7px; }
     .ai-sugg-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text); background:var(--surface); box-shadow: 0 1px 5px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07); border:none; border-radius:99px; padding:7px 13px; cursor:pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); font-family:var(--sans); text-align:left; line-height:1.3; }
-    .ai-sugg-chip::before { content:'+'; color:#7c3aed; font-weight:800; font-size:14px; line-height:1; }
+    .ai-sugg-plus { width:11px; height:11px; stroke:#7c3aed; stroke-width:2.6; stroke-linecap:round; flex-shrink:0; }
     .ai-sugg-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 11px rgba(30,27,60,.14), inset 0 0 0 1px rgba(124,58,237,.32); }
 
     /* ── COLLAB CHAT ── */
@@ -2040,7 +2043,7 @@
     #rightPanel {
       position: relative;
       flex: 0 0 auto;
-      width: 46%;
+      width: 50%;
       max-width: 75%;
       min-width: 0;
       display: flex;
@@ -6345,31 +6348,17 @@ function buildEditedSummary(files, contentWrap) {
     item.className = 'ai-edited-item clickable';
     item.innerHTML = '<svg class="ai-edited-item-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span></span>';
     item.querySelector('span').textContent = pillFriendlyName(name);
-    item.onclick = () => { setDevTab('code'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); summary.classList.remove('open'); };
+    // Open the page in the PREVIEW (not the code editor).
+    item.onclick = () => {
+      summary.classList.remove('open');
+      if (!name.endsWith('.html')) { setDevTab('code'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); return; }
+      showPreviewDock(true); switchPreviewPage(name);
+    };
     list.appendChild(item);
   });
   summary.appendChild(btn);
   summary.appendChild(list);
   contentWrap.appendChild(summary);
-}
-
-// A little payoff when a build lands: "your site is ready" + preview/publish.
-function buildFinishCelebration(files, contentWrap) {
-  const visible = (files || []).map(f => f.name || f)
-    .filter(n => !['_longterm','_shortterm','_pages','_backend'].includes(n));
-  if (!visible.some(n => /\.html$/i.test(n))) return; // only real page builds
-  if (contentWrap.querySelector('.ai-done')) return;  // never stack
-  const card = document.createElement('div');
-  card.className = 'ai-done';
-  card.innerHTML =
-    '<div class="ai-done-check"></div>' +
-    '<div class="ai-done-txt"><div class="ai-done-title">Your site is ready</div>' +
-    '<div class="ai-done-sub">Preview it live, or publish when you’re happy.</div></div>' +
-    '<div class="ai-done-actions">' +
-      '<button type="button" class="ai-done-btn ghost" onclick="showPreviewDock(true)">Preview</button>' +
-      '<button type="button" class="ai-done-btn primary" onclick="openEditorSettings()">Publish →</button>' +
-    '</div>';
-  contentWrap.appendChild(card);
 }
 
 
@@ -6423,7 +6412,9 @@ function renderSuggestions(items, targetEl) {
   // they don't stack on the reused seamless row.
   targetEl.querySelectorAll('.ai-suggestions').forEach(el => el.remove());
   const itemsHtml = improvements.slice(0, 4).map(s =>
-    '<button type="button" class="ai-sugg-chip" onclick="aiApplySingleSuggestion(this)" title="Do this next">' + escHtml(s) + '</button>'
+    '<button type="button" class="ai-sugg-chip" onclick="aiApplySingleSuggestion(this)" title="Do this next">' +
+    '<svg class="ai-sugg-plus" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+    '<span>' + escHtml(s) + '</span></button>'
   ).join('');
   const card = document.createElement('div');
   card.className = 'ai-suggestions';
@@ -6487,17 +6478,12 @@ function liveBuildTick(file, raw) {
   // (we render from the raw partial, so it's fine that fileSystem still holds the skeleton).
   if (!previewVisible) showPreviewDock(true);
 
-  const CURSOR = '<div class="vxlive-cursor"></div>';
   if (_liveBuild.head === null) {
     // First paint: set up the doc once (head/styles stream before <body>, so they're ready here).
     _liveBuild.head = raw.slice(0, raw.indexOf(bm[0])).replace(/<script[\s\S]*?(?:<\/script>|$)/gi, '');
     const doc = '<!doctype html><html><head>' + _lbHeadInner(_liveBuild.head)
-      + '<style>*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}body{opacity:1!important}'
-      + '.vxlive-cursor{height:3px;width:130px;margin:16px 20px 52px;border-radius:3px;'
-      + 'background:linear-gradient(90deg,#7c3aed,#c084fc,#7c3aed);background-size:200% 100%;'
-      + 'animation:vxlivec 1s linear infinite!important;opacity:.9}'
-      + '@keyframes vxlivec{to{background-position:-200% 0}}</style></head><body>'
-      + body + CURSOR + '</body></html>';
+      + '<style>*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}body{opacity:1!important}</style></head><body>'
+      + body + '</body></html>';
     const prev = frame._previewBlob; if (prev) { URL.revokeObjectURL(prev); frame._previewBlob = null; }
     frame.removeAttribute('src');
     frame.srcdoc = doc;
@@ -6508,7 +6494,7 @@ function liveBuildTick(file, raw) {
   try {
     const d = frame.contentDocument;
     if (!d || !d.body) return; // srcdoc still loading — catch up next tick
-    d.body.innerHTML = body + CURSOR;
+    d.body.innerHTML = body;
     frame.contentWindow.scrollTo(0, d.documentElement.scrollHeight);
   } catch (e) { /* not ready yet — skip this tick */ }
 }
@@ -7698,7 +7684,7 @@ async function aiCallAPI() {
       _workingOnEl = document.createElement('div');
       _workingOnEl.className = 'ai-working-on';
       _workingOnEl.style.display = 'none';
-      _workingOnEl.innerHTML = '<div class="ai-tl-head"><span class="ai-tl-head-page"></span><span class="ai-wo-lines"></span></div><div class="ai-timeline"></div>';
+      _workingOnEl.innerHTML = '<div class="ai-tl-head"><span class="ai-tl-head-page"></span></div><div class="ai-timeline"></div>';
       streamContent.appendChild(_workingOnEl);
       _rowInner.appendChild(streamContent);
       row.appendChild(_rowInner);
@@ -7773,62 +7759,56 @@ async function aiCallAPI() {
       [/class=["'][^"']*logo|brand/i,         'placing the branding'],
       [/class=["'][^"']*form[\s"']/i,         'building out the form'],
     ];
-    const _woFallbacks = ['working on the layout','designing the sections','writing the content','refining the details','putting it together'];
+    // Fixed build roadmap — shown in full from the start so there's a clear point of reference.
+    // Steps advance pending → active → done as real content is detected in the stream.
+    const _tlSteps = ['Planning the layout','Building the structure','Writing the content','Styling the visuals','Adding interactions','Final polish'];
+    let _tlIdx = 0;
     let _woContentBuf = '';
     let _woLastDetect = 0;
-    let _woFallbackIdx = 0;
 
-    function _updateAction(action) {
-      if (!_workingOnEl) return;
-      const tl = _workingOnEl.querySelector('.ai-timeline');
+    function _tlRender() {
+      const tl = _workingOnEl && _workingOnEl.querySelector('.ai-timeline');
       if (!tl) return;
-      const active = tl.querySelector('.ai-tl-step.active');
-      if (active && active.dataset.label === action) return; // same step — ignore
-      if (active) { active.classList.remove('active'); active.classList.add('done'); } // check the finished step
-      const step = document.createElement('div');
-      step.className = 'ai-tl-step active';
-      step.dataset.label = action;
-      const cap = action.charAt(0).toUpperCase() + action.slice(1);
-      step.innerHTML = '<span class="ai-tl-dot"></span><span class="ai-tl-label">' + escHtml(cap) + '</span>';
-      tl.appendChild(step);
-      while (tl.children.length > 6) tl.removeChild(tl.firstChild); // keep the list tidy
+      tl.innerHTML = _tlSteps.map((label, i) => {
+        const state = i < _tlIdx ? 'done' : (i === _tlIdx ? 'active' : 'pending');
+        return '<div class="ai-tl-step ' + state + '"><span class="ai-tl-dot"></span><span class="ai-tl-label">' + escHtml(label) + '</span></div>';
+      }).join('');
+    }
+    function _tlBump() {
+      if (_tlIdx >= _tlSteps.length - 1) return; // hold on the last step until the build completes
+      _tlIdx++;
+      _tlRender();
     }
     function _detectAction(chunk) {
       _woContentBuf += chunk;
       const now = Date.now();
       if (now - _woLastDetect < 2200) return; // debounce
       const window = _woContentBuf.slice(-600);
-      for (const [pat, label] of _woDetectors) {
-        if (pat.test(window)) { _updateAction(label); _woLastDetect = now; _woContentBuf = ''; return; }
+      for (const [pat] of _woDetectors) {
+        if (pat.test(window)) { _tlBump(); _woLastDetect = now; _woContentBuf = ''; return; }
       }
     }
     function _startWorkingOn(filename) {
       const page = friendlyPageName(filename);
       if (!page) return;
       _workingOnPage = page;
-      _woContentBuf = ''; _woLastDetect = Date.now(); _woFallbackIdx = 0;
+      _woContentBuf = ''; _woLastDetect = Date.now(); _tlIdx = 0;
       const headEl = _workingOnEl && _workingOnEl.querySelector('.ai-tl-head-page');
-      const tl     = _workingOnEl && _workingOnEl.querySelector('.ai-timeline');
       if (headEl) headEl.textContent = 'Building the ' + page.toLowerCase();
-      if (tl) tl.innerHTML = '';
+      _tlRender();
       if (_workingOnEl) _workingOnEl.style.display = 'flex';
-      // Seed the first step (name the layout direction if the art-director gave us one).
-      _updateAction((_sessionSpec && _sessionSpec.layout_archetype) ? 'designing the layout' : 'setting up the design');
       clearInterval(_workingOnTimer);
+      // Keep it moving even if pattern-detection is quiet, but hold before the last step.
       _workingOnTimer = setInterval(() => {
-        if (Date.now() - _woLastDetect > 7000) {
-          _woFallbackIdx = (_woFallbackIdx + 1) % _woFallbacks.length;
-          _updateAction(_woFallbacks[_woFallbackIdx]);
-        }
-      }, 8500);
+        if (Date.now() - _woLastDetect > 5500) { _tlBump(); _woLastDetect = Date.now(); }
+      }, 5500);
     }
     _stopWorkingOn = function() {
       clearInterval(_workingOnTimer); _workingOnTimer = null;
       if (_workingOnEl) {
-        const active = _workingOnEl.querySelector('.ai-tl-step.active');
-        if (active) { active.classList.remove('active'); active.classList.add('done'); } // check the last step
-        _workingOnEl.style.opacity = '0';
-        setTimeout(() => { if (_workingOnEl) { _workingOnEl.remove(); _workingOnEl = null; } }, 320);
+        _tlIdx = _tlSteps.length; _tlRender(); // check every step
+        const el = _workingOnEl; _workingOnEl = null;
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 480);
       }
     };
 
@@ -7947,7 +7927,6 @@ async function aiCallAPI() {
         // per-round summary would stack duplicates on the reused seamless row).
         if (!_willContinueNow) {
           const target = row._contentWrap || row;
-          buildFinishCelebration(collectedFiles, target);
           buildEditedSummary(collectedFiles, target);
         }
       }

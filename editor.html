@@ -2083,6 +2083,20 @@
     .prev-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
     .prev-url { flex: 1; text-align: center; background: transparent; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: background .12s, color .12s; }
     .prev-url:hover { background: var(--border2); color: var(--text); }
+    /* QR modal (scan-on-phone) */
+    .qr-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(20,18,40,.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: qrFade .2s ease both; }
+    @keyframes qrFade { from { opacity: 0; } to { opacity: 1; } }
+    .qr-card { position: relative; background: var(--surface); border-radius: 20px; padding: 26px 26px 22px; box-shadow: 0 24px 70px rgba(20,18,40,.4); width: min(330px, 92vw); text-align: center; animation: qrPop .28s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes qrPop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+    .qr-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 8px; background: rgba(30,27,60,.06); color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+    .qr-close:hover { background: rgba(30,27,60,.12); color: var(--text); }
+    .qr-title { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -.2px; }
+    .qr-sub { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .qr-img-wrap { margin: 18px auto 14px; width: 220px; height: 220px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px rgba(30,27,60,.08); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .qr-img { width: 100%; height: 100%; display: block; }
+    .qr-fallback { font-size: 12px; color: var(--muted); padding: 0 16px; }
+    .qr-url { max-width: 100%; border: none; background: rgba(124,58,237,.09); color: #7c3aed; font-size: 12px; font-weight: 700; font-family: var(--sans); padding: 8px 14px; border-radius: 99px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background var(--t-fast); }
+    .qr-url:hover { background: rgba(124,58,237,.16); }
     .prev-page-drop { display: none; position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 4px; min-width: 160px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
     .prev-page-drop.show { display: block; }
     .prev-page-opt { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border-radius: 7px; background: none; border: none; color: var(--text); font-size: 12px; font-weight: 500; font-family: var(--sans); cursor: pointer; text-align: left; transition: background .1s; white-space: nowrap; }
@@ -2668,6 +2682,9 @@
             <a class="ep-pub-icon-btn" id="epPubOpenBtn" href="#" target="_blank" title="Open site">
               <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </a>
+            <button class="ep-pub-icon-btn" title="Scan QR to open on phone" onclick="showPublishedQr()">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
+            </button>
           </div>
           <div class="ep-pub-actions-row">
             <button class="ep-pub-action-btn republish inactive" id="epUpdateBtn" onclick="updateSite()">Update</button>
@@ -3322,6 +3339,9 @@
               </div>
             </div>
           </div>
+          <button class="prev-btn" onclick="showPreviewQr()" title="Scan on your phone">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
+          </button>
           <button class="prev-btn" onclick="openInViewer()" title="Open in viewer">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </button>
@@ -4863,6 +4883,50 @@ function openInViewer() {
     const pageParam = currentPage && currentPage !== mainFile ? '&page=' + encodeURIComponent(currentPage) : '';
     win.location.href = 'viewer.html?project=' + project.id + pageParam;
   });
+}
+
+// ── QR CODES (scan on phone) ─────────────────────────────────────────────────
+function showQrModal(url, title, sub) {
+  if (!url) return;
+  const ov = document.createElement('div');
+  ov.className = 'qr-overlay';
+  const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=' + encodeURIComponent(url);
+  ov.innerHTML =
+    '<div class="qr-card">' +
+      '<button class="qr-close" aria-label="Close">&times;</button>' +
+      '<div class="qr-title">' + escHtml(title || 'Scan on your phone') + '</div>' +
+      (sub ? '<div class="qr-sub">' + escHtml(sub) + '</div>' : '') +
+      '<div class="qr-img-wrap"><img class="qr-img" alt="QR code" src="' + qrSrc + '">' +
+        '<div class="qr-fallback" style="display:none">Couldn’t load the QR — use the link below.</div></div>' +
+      '<button class="qr-url" title="Copy link">' + escHtml(url.replace(/^https?:\/\//, '')) + '</button>' +
+    '</div>';
+  ov.querySelector('.qr-card').addEventListener('click', e => e.stopPropagation());
+  ov.addEventListener('click', () => ov.remove());
+  ov.querySelector('.qr-close').addEventListener('click', () => ov.remove());
+  const img = ov.querySelector('.qr-img');
+  img.addEventListener('error', () => { img.style.display = 'none'; img.nextElementSibling.style.display = 'block'; });
+  ov.querySelector('.qr-url').addEventListener('click', e => {
+    e.stopPropagation();
+    try { navigator.clipboard.writeText(url); } catch (_e) {}
+    const b = e.currentTarget, t = b.textContent; b.textContent = 'Copied!'; setTimeout(() => { b.textContent = t; }, 1200);
+  });
+  document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', esc); } });
+  document.body.appendChild(ov);
+}
+
+function showPreviewQr() {
+  if (!project) return;
+  const currentPage = prevHistory[prevHistIdx] || mainFile;
+  const pageParam = currentPage && currentPage !== mainFile ? '&page=' + encodeURIComponent(currentPage) : '';
+  const url = location.origin + '/viewer.html?project=' + project.id + pageParam;
+  saveNow(); // push the latest so a phone sees current work
+  showQrModal(url, 'Preview on your phone', 'Scan to open this site in the Vexium viewer');
+}
+
+async function showPublishedQr() {
+  if (!project || !project.published_slug) { showToast('!', 'Publish the site first'); return; }
+  const url = 'https://' + await _pubUrl(project.published_slug);
+  showQrModal(url, 'Your live site', 'Scan to open ' + url.replace(/^https?:\/\//, ''));
 }
 
 // ── CONSOLE ───────────────────────────────────────────────────────────────────

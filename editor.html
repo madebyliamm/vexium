@@ -1209,12 +1209,14 @@
       min-width: 0;
       border-radius: var(--r-full);
       border: none;
-      background: var(--surface2);
+      background: var(--surface);
+      box-shadow: 0 2px 10px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07);
       padding: 11px 18px;
-      transition: background var(--t-fast), border-radius var(--t-fast);
+      transition: background var(--t-fast), border-radius var(--t-fast), box-shadow var(--t-fast);
     }
     #aiCenterInputField:focus-within {
-      background: var(--surface2);
+      background: var(--surface);
+      box-shadow: 0 3px 16px rgba(30,27,60,.10), inset 0 0 0 1px rgba(124,58,237,.45);
     }
     #aiCenterInputField.multiline {
       border-radius: var(--r-lg);
@@ -1232,6 +1234,7 @@
       overflow: hidden;
       min-height: 22px;
       max-height: 25vh;
+      caret-color: var(--purple);
       transition: opacity .18s ease;
     }
     #aiInput::placeholder { color: var(--muted); }
@@ -1501,8 +1504,8 @@
     .ai-inline-btn-save { background: var(--text); color: var(--bg); }
     .ai-inline-btn-save:hover { opacity: .85; }
     .ai-bubble {
-      background: var(--surface2);
-      color: var(--text);
+      background: #dbd8ea;
+      color: #201f2e;
       padding: 11px 16px;
       border-radius: 20px 20px 4px 20px;
       font-size: clamp(14px, 1.1vw, 16px);
@@ -1519,7 +1522,7 @@
       left: 0;
       right: 0;
       height: 44px;
-      background: linear-gradient(transparent, var(--surface2));
+      background: linear-gradient(transparent, #dbd8ea);
       border-radius: 0 0 4px 20px;
       pointer-events: none;
     }
@@ -1545,10 +1548,10 @@
       gap: 4px;
       padding: 3px 8px;
       border-radius: var(--r-full);
-      background: rgba(255, 255, 255, .14);
+      background: rgba(30, 27, 60, .07);
       font-size: 10px;
       font-weight: 600;
-      color: rgba(255, 255, 255, .7);
+      color: var(--muted);
     }
     .ai-bubble-chip svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
 
@@ -1569,14 +1572,14 @@
     }
 
     /* AI text */
-    .ai-text { font-size: clamp(14px, 1.1vw, 16px); line-height: 1.82; color: var(--text); word-break: break-word; width: 100%; }
+    .ai-text { font-size: clamp(14.5px, 1.05vw, 16px); line-height: 1.72; color: #2b2b38; word-break: break-word; width: 100%; letter-spacing: .003em; }
     .ai-text p { margin: 0 0 10px; }
     .ai-text p:last-child { margin: 0; }
     .ai-text h1 { font-size: 20px; font-weight: 800; margin: 16px 0 8px; letter-spacing: -.3px; }
     .ai-text h2 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; letter-spacing: -.2px; }
     .ai-text h3 { font-size: 14px; font-weight: 700; margin: 12px 0 4px; }
     .ai-text strong { font-weight: 700; color: var(--text); }
-    .ai-text em { font-style: italic; color: rgba(255, 255, 255, .8); }
+    .ai-text em { font-style: italic; color: #2b2b38; }
     .ai-text code { font-family: inherit; font-size: inherit; background: none; border: none; border-radius: 0; padding: 0; color: inherit; }
     .ai-text pre { background: rgba(0, 0, 0, .35); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 14px 16px; overflow-x: auto; margin: 10px 0; }
     .ai-text pre code { background: none; border: none; padding: 0; font-size: 12px; color: #c4b5fd; line-height: 1.65; }
@@ -1585,7 +1588,7 @@
     .ai-text ul li::before { content: '·'; position: absolute; left: 4px; color: var(--text); font-weight: 900; font-size: 16px; line-height: 1.3; }
     .ai-text ol { margin: 6px 0 10px; padding-left: 22px; list-style: decimal; }
     .ai-text li { line-height: 1.65; }
-    .ai-text blockquote { border-left: 3px solid var(--accent); margin: 8px 0; padding: 8px 14px; background: rgba(79, 110, 247, .05); border-radius: 0 var(--r-sm) var(--r-sm) 0; color: rgba(255, 255, 255, .7); font-style: italic; }
+    .ai-text blockquote { border-left: 3px solid var(--purple); margin: 8px 0; padding: 8px 14px; background: rgba(124, 58, 237, .06); border-radius: 0 var(--r-sm) var(--r-sm) 0; color: #55555f; font-style: italic; }
     .ai-text hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
     .ai-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
     .ai-text a:hover { color: var(--accent2); }
@@ -1622,16 +1625,21 @@
 
     /* File cards */
     /* Edited files summary */
-    .ai-edited-summary { margin-top: 10px; display: inline-flex; flex-direction: column; gap: 0; }
-    .ai-edited-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--sans); cursor: pointer; padding: 2px 0; transition: color var(--t-fast); outline: none; }
-    .ai-edited-btn:hover { color: var(--text); }
-    .ai-edited-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.18s ease; flex-shrink: 0; }
-    .ai-edited-summary.open .ai-edited-btn svg { transform: rotate(180deg); }
-    .ai-edited-list { display: none; flex-direction: column; margin-top: 5px; margin-left: 2px; padding-left: 11px; border-left: 1.5px solid rgba(0,0,0,.12); }
-    .ai-edited-summary.open .ai-edited-list { display: flex; }
-    .ai-edited-item { padding: 3px 0; font-size: 12px; font-weight: 400; color: rgba(0,0,0,.45); transition: color var(--t-fast); }
+    .ai-edited-summary { margin-top: 12px; display: inline-flex; flex-direction: column; align-items: stretch; }
+    .ai-edited-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--surface); box-shadow: 0 2px 8px rgba(30,27,60,.08), inset 0 0 0 1px rgba(30,27,60,.06); border: none; color: var(--text); font-size: 12.5px; font-weight: 600; font-family: var(--sans); cursor: pointer; padding: 8px 13px 8px 9px; border-radius: 12px; transition: box-shadow var(--t-fast), transform var(--t-fast); outline: none; }
+    .ai-edited-btn:hover { box-shadow: 0 4px 13px rgba(30,27,60,.13), inset 0 0 0 1px rgba(30,27,60,.09); transform: translateY(-1px); }
+    .ai-edited-ico { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; background: rgba(124,58,237,.13); flex-shrink: 0; }
+    .ai-edited-ico svg { width: 11px; height: 11px; stroke: var(--purple); fill: none; stroke-width: 2.7; stroke-linecap: round; stroke-linejoin: round; }
+    .ai-edited-label { flex: 1; text-align: left; }
+    .ai-edited-chev { width: 12px; height: 12px; stroke: var(--muted); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s ease; flex-shrink: 0; }
+    .ai-edited-summary.open .ai-edited-chev { transform: rotate(180deg); }
+    .ai-edited-list { display: none; flex-direction: column; margin-top: 5px; gap: 1px; }
+    .ai-edited-summary.open .ai-edited-list { display: flex; animation: aiEditedListIn .22s ease both; }
+    @keyframes aiEditedListIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+    .ai-edited-item { display: flex; align-items: center; gap: 8px; padding: 7px 11px; font-size: 12.5px; font-weight: 500; color: var(--muted); border-radius: 9px; transition: background var(--t-fast), color var(--t-fast); }
+    .ai-edited-item-ico { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; opacity: .85; }
     .ai-edited-item.clickable { cursor: pointer; }
-    .ai-edited-item.clickable:hover { color: rgba(0,0,0,.8); }
+    .ai-edited-item.clickable:hover { background: var(--surface2); color: var(--text); }
 
     /* ── LIVE FILE PILLS ── */
     #aiEditingPills { display: none !important; }
@@ -1825,12 +1833,14 @@
       min-width: 0;
       border-radius: var(--r-xl);
       border: none;
-      background: var(--surface2);
+      background: var(--surface);
+      box-shadow: 0 2px 10px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07);
       overflow: hidden;
-      transition: background var(--t-fast);
+      transition: background var(--t-fast), box-shadow var(--t-fast);
     }
     #aiBottomInputArea:focus-within {
-      background: var(--surface2);
+      background: var(--surface);
+      box-shadow: 0 3px 16px rgba(30,27,60,.10), inset 0 0 0 1px rgba(124,58,237,.45);
     }
     #aiAttachChips { display: none; flex-wrap: wrap; gap: 6px; padding: 10px 14px 0; }
     #aiAttachChips.has-chips { display: flex; }
@@ -1872,8 +1882,9 @@
       max-height: 25vh;
       padding: 12px 0;
       align-self: flex-end;
+      caret-color: var(--purple);
     }
-    #aiBottomInput::placeholder { color: var(--border3); }
+    #aiBottomInput::placeholder { color: var(--muted); }
     #aiBottomSend {
       width: 38px;
       height: 38px;
@@ -6282,19 +6293,25 @@ function buildEditedSummary(files, contentWrap) {
   const visible = (files || []).map(f => f.name || f).filter(n => !['_longterm','_shortterm','_pages','_backend'].includes(n));
   if (!visible.length) return;
   const n = visible.length;
-  const label = n === 1 ? '1 file updated' : n + ' files updated';
+  // "page" reads better than "file" for a website builder; fall back to "file" if any
+  // non-page (script/config/etc.) was touched.
+  const noun = visible.every(nm => /\.html$/i.test(nm)) ? 'page' : 'file';
+  const label = n + ' ' + noun + (n === 1 ? '' : 's') + ' updated';
   const summary = document.createElement('div');
   summary.className = 'ai-edited-summary';
   const btn = document.createElement('button');
   btn.className = 'ai-edited-btn';
-  btn.innerHTML = '<span>' + label + '</span><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+  btn.innerHTML = '<span class="ai-edited-ico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>'
+    + '<span class="ai-edited-label">' + label + '</span>'
+    + '<svg class="ai-edited-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
   btn.onclick = e => { e.stopPropagation(); summary.classList.toggle('open'); };
   const list = document.createElement('div');
   list.className = 'ai-edited-list';
   visible.forEach(name => {
     const item = document.createElement('div');
     item.className = 'ai-edited-item clickable';
-    item.textContent = pillFriendlyName(name);
+    item.innerHTML = '<svg class="ai-edited-item-ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span></span>';
+    item.querySelector('span').textContent = pillFriendlyName(name);
     item.onclick = () => { setDevTab('code'); if (!openTabs.includes(name)) openTabs.push(name); renderTabs(); openFile(name); summary.classList.remove('open'); };
     list.appendChild(item);
   });

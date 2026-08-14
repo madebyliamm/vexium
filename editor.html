@@ -4742,6 +4742,7 @@ function refreshPreviewPage(pageName) {
   const blob = new Blob([html], { type: 'text/html' });
   const burl = URL.createObjectURL(blob);
   frame._previewBlob = burl;
+  frame.removeAttribute('srcdoc'); // clear any live-build srcdoc so the real blob load wins
   frame.src = burl;
   setUrl(pageName);
   pushHist(pageName);
@@ -6402,6 +6403,66 @@ function livePreviewUpdate(isHtml) {
   }, 180);
 }
 
+// ── LIVE BUILD PREVIEW ───────────────────────────────────────────────────────
+// While an HTML file streams token-by-token, render the partial page IN PLACE and
+// keep the newest content in view — so you watch the site assemble instead of it
+// popping in fully-formed at the end. Fully isolated: active only during a stream,
+// renders into srcdoc (no blob reload = no flash), strips scripts + freezes the
+// site's own animations so partial DOM can't error or thrash, and on file-complete
+// the normal blob reload (livePreviewUpdate) takes over so the real site runs.
+let _liveBuild = { active: false, file: null, head: null, lastTick: 0 };
+
+function liveBuildStart(file) { _liveBuild = { active: true, file: file, head: null, lastTick: 0 }; }
+function liveBuildStop()      { _liveBuild.active = false; }
+
+function _lbHeadInner(headChunk) {
+  const m = headChunk.match(/<head[^>]*>/i);
+  if (!m) return headChunk.replace(/<!doctype[^>]*>/i, '').replace(/<html[^>]*>/i, '');
+  return headChunk.slice(headChunk.indexOf(m[0]) + m[0].length).replace(/<\/head>/i, '');
+}
+
+function liveBuildTick(file, raw) {
+  if (!_liveBuild.active || _liveBuild.file !== file || !raw) return;
+  const now = performance.now();
+  if (now - _liveBuild.lastTick < 140) return; // throttle repaints
+  const bm = raw.match(/<body[^>]*>/i);
+  if (!bm) return; // <body> not open yet — still streaming <head>
+  _liveBuild.lastTick = now;
+  let body = raw.slice(raw.indexOf(bm[0]) + bm[0].length);
+  const bEnd = body.search(/<\/body>/i); if (bEnd !== -1) body = body.slice(0, bEnd);
+  body = body.replace(/<script[\s\S]*?(?:<\/script>|$)/gi, ''); // partial/late scripts would error mid-DOM
+  const frame = document.getElementById('previewFrame');
+  if (!frame) return;
+  // <body> is already open, so we have real streaming content to show — open the dock
+  // (we render from the raw partial, so it's fine that fileSystem still holds the skeleton).
+  if (!previewVisible) showPreviewDock(true);
+
+  const CURSOR = '<div class="vxlive-cursor"></div>';
+  if (_liveBuild.head === null) {
+    // First paint: set up the doc once (head/styles stream before <body>, so they're ready here).
+    _liveBuild.head = raw.slice(0, raw.indexOf(bm[0])).replace(/<script[\s\S]*?(?:<\/script>|$)/gi, '');
+    const doc = '<!doctype html><html><head>' + _lbHeadInner(_liveBuild.head)
+      + '<style>*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}body{opacity:1!important}'
+      + '.vxlive-cursor{height:3px;width:130px;margin:16px 20px 52px;border-radius:3px;'
+      + 'background:linear-gradient(90deg,#7c3aed,#c084fc,#7c3aed);background-size:200% 100%;'
+      + 'animation:vxlivec 1s linear infinite!important;opacity:.9}'
+      + '@keyframes vxlivec{to{background-position:-200% 0}}</style></head><body>'
+      + body + CURSOR + '</body></html>';
+    const prev = frame._previewBlob; if (prev) { URL.revokeObjectURL(prev); frame._previewBlob = null; }
+    frame.removeAttribute('src');
+    frame.srcdoc = doc;
+    setUrl(file);
+    return;
+  }
+  // Subsequent ticks: patch the body in place (no reload) and pin to the newest content.
+  try {
+    const d = frame.contentDocument;
+    if (!d || !d.body) return; // srcdoc still loading — catch up next tick
+    d.body.innerHTML = body + CURSOR;
+    frame.contentWindow.scrollTo(0, d.documentElement.scrollHeight);
+  } catch (e) { /* not ready yet — skip this tick */ }
+}
+
 // Resize an image dataUrl to max 1568px on longest side (Anthropic's recommended vision cap)
 function resizeForVision(dataUrl) {
   return new Promise(resolve => {
@@ -6975,6 +7036,7 @@ function aiStop() {
 }
 
 function aiSetGenerating(on, keepPills) {
+  if (!on) liveBuildStop(); // never leave the live-build preview running past a build
   const stopBtn   = document.getElementById('aiStopBtn');
   const sendBtn   = document.getElementById('aiBottomSend');
   const topSend   = document.getElementById('aiSend');
@@ -7933,6 +7995,7 @@ async function aiCallAPI() {
           currentStreamingFile = fileKey;
           _woLineCount = 0;
           _startWorkingOn(fileKey);
+          if (fileKey.endsWith('.html')) liveBuildStart(fileKey);
         }
 
         if (eventType === 'file_delta' && data.text && currentStreamingFile) {
@@ -7942,6 +8005,10 @@ async function aiCallAPI() {
           if (lineEl) lineEl.textContent = _woLineCount + ' lines';
           // Accumulate for recovery — if stream drops mid-file we can save what we got
           _partialContent[currentStreamingFile] = (_partialContent[currentStreamingFile] || '') + data.text;
+          if (currentStreamingFile.endsWith('.html')) {
+            const _lbBase = (_continuationBase && _continuationBase.file === currentStreamingFile) ? _continuationBase.content : '';
+            liveBuildTick(currentStreamingFile, _lbBase + _partialContent[currentStreamingFile]);
+          }
           // Checkpoint: persist progress to fileSystem every 50 lines so a drop never loses much.
           // Include base content so chained continuations always see the full accumulated file.
           if (_woLineCount > 0 && _woLineCount % 50 === 0) {
@@ -7974,6 +8041,7 @@ async function aiCallAPI() {
             currentStreamingFile = null;
             delete _partialContent[fileKey]; // file complete — no longer partial
             if (fileKey === '_backend' && _devTab === 'backend') { bkRenderCollSidebar(); bkRenderSchema(); bkRenderAPI(); }
+            liveBuildStop();
             livePreviewUpdate(fileKey.endsWith('.html'));
           }
         }

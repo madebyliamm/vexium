@@ -1164,8 +1164,8 @@
       border-radius: 50%;
       background: conic-gradient(
         from 0deg,
-        #ff6b6b, #ff9f43, #ffd32a, #0be881,
-        #48dbfb, #ff9ff3, #6c5ce7, #fd79a8, #ff6b6b
+        #7c3aed, #9333ea, #c084fc, #a855f7,
+        #6d28d9, #8b5cf6, #a78bfa, #7c3aed
       );
       animation: starSpin 8s linear infinite;
     }
@@ -1175,8 +1175,8 @@
       border-radius: 50%;
       background: conic-gradient(
         from 0deg,
-        #ff6b6b28, #ff9f4328, #ffd32a28, #0be88128,
-        #48dbfb28, #ff9ff328, #6c5ce728, #fd79a828, #ff6b6b28
+        #7c3aed30, #9333ea30, #c084fc30, #a855f730,
+        #6d28d930, #8b5cf630, #a78bfa30, #7c3aed30
       );
       filter: blur(14px);
       animation: starSpin 8s linear infinite;
@@ -1192,7 +1192,7 @@
       80%  { transform: translateY(-18px) translateX(3px); }
       100% { transform: translateY(0px) translateX(0px); }
     }
-    .ai-star svg { width: 30px; height: 30px; fill: #000; position: relative; z-index: 1; }
+    .ai-star svg { width: 30px; height: 30px; fill: #fff; position: relative; z-index: 1; }
     .ai-center-h { font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 22px; }
 
     /* Center input area */
@@ -1239,7 +1239,8 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: var(--border2);
+      background: var(--surface);
+      box-shadow: 0 1.5px 4px rgba(30,27,60,.12), inset 0 0 0 1px rgba(30,27,60,.05);
       border: none;
       border-radius: 50%;
       margin-bottom: 4px;
@@ -1251,22 +1252,23 @@
       position: relative;
       transition: background var(--t-fast), transform var(--t-fast);
     }
-    #aiSend.has-text { background: var(--text); }
+    #aiSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); }
     #aiSend.has-text:hover { background: var(--text); transform: scale(1.08); }
     #aiSend::before {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      background: repeating-linear-gradient(90deg,#f87171,#fb923c 16%,#fbbf24 33%,#4ade80 50%,#60a5fa 66%,#a78bfa 83%,#f472b6 100%);
+      background: repeating-linear-gradient(90deg,#7c3aed,#9333ea 20%,#c084fc 40%,#8b5cf6 60%,#6d28d9 80%,#7c3aed 100%);
       background-size: 200px 100%;
       opacity: 0;
       transition: opacity .2s;
     }
     @keyframes sendRainbowLeft { from{background-position:0 0} to{background-position:-200px 0} }
     #aiSend.has-text:hover::before { opacity: .38; animation: sendRainbowLeft 6s linear infinite; }
-    #aiSend:disabled { opacity: .3; cursor: default; transform: none; }
-    #aiSend svg { width: 13px; height: 13px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+    #aiSend:disabled { opacity: 1; cursor: default; transform: none; }
+    #aiSend svg { width: 13px; height: 13px; fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+    #aiSend.has-text svg { stroke: #fff; }
 
     /* Template chips */
     #aiTemplates {
@@ -1304,9 +1306,10 @@
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: transparent;
+      background: var(--surface);
       border: none;
-      color: rgba(255, 255, 255, .9);
+      color: var(--muted);
+      box-shadow: 0 1.5px 4px rgba(30,27,60,.12), inset 0 0 0 1px rgba(30,27,60,.05);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1317,9 +1320,9 @@
       margin-bottom: 4px;
       position: relative;
     }
-    .ai-attach-btn:hover { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .9); }
+    .ai-attach-btn:hover { background: var(--surface); color: var(--text); box-shadow: 0 2px 7px rgba(30,27,60,.18), inset 0 0 0 1px rgba(30,27,60,.08); }
     .ai-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: round; }
-    .ai-attach-btn.open { transform: rotate(45deg); background: rgba(0,0,0,.08); }
+    .ai-attach-btn.open { transform: rotate(45deg); background: var(--surface2); color: var(--text); }
 
     /* Plus wrapper — provides the positioning context for the menu */
     .ai-plus-wrap { position: relative; flex-shrink: 0; }
@@ -1874,7 +1877,8 @@
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: var(--border2);
+      background: var(--surface);
+      box-shadow: 0 1.5px 4px rgba(30,27,60,.12), inset 0 0 0 1px rgba(30,27,60,.05);
       border: none;
       border-radius: 50%;
       margin-bottom: 4px;
@@ -1886,21 +1890,22 @@
       position: relative;
       transition: background var(--t-fast), transform var(--t-fast);
     }
-    #aiBottomSend.has-text { background: var(--text); }
+    #aiBottomSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); }
     #aiBottomSend.has-text:hover { background: var(--text); transform: scale(1.08); }
     #aiBottomSend::before {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      background: repeating-linear-gradient(90deg,#f87171,#fb923c 16%,#fbbf24 33%,#4ade80 50%,#60a5fa 66%,#a78bfa 83%,#f472b6 100%);
+      background: repeating-linear-gradient(90deg,#7c3aed,#9333ea 20%,#c084fc 40%,#8b5cf6 60%,#6d28d9 80%,#7c3aed 100%);
       background-size: 200px 100%;
       opacity: 0;
       transition: opacity .2s;
     }
     #aiBottomSend.has-text:hover::before { opacity: .38; animation: sendRainbowLeft 6s linear infinite; }
     #aiBottomSend:disabled { opacity: 1; cursor: default; transform: none; }
-    #aiBottomSend svg { width: 14px; height: 14px; fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+    #aiBottomSend svg { width: 14px; height: 14px; fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+    #aiBottomSend.has-text svg { stroke: #fff; }
     #aiStopBtn {
       width: 38px;
       height: 38px;

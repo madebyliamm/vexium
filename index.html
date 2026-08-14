@@ -461,13 +461,13 @@
     .c-card[data-pos="3"]  { transform:translate(-50%,-50%) translateX(min(58vw,760px)) scale(.48) rotateY(-55deg); filter:blur(18px); opacity:0; z-index:3 }
     .c-card[data-pos="-3"] { transform:translate(-50%,-50%) translateX(max(-58vw,-760px)) scale(.48) rotateY(55deg); filter:blur(18px); opacity:0; z-index:3 }
 
-    /* Rainbow card gradients */
-    .c-card[data-idx="0"] { background:linear-gradient(155deg,#7f1d1d,#f87171) }
-    .c-card[data-idx="1"] { background:linear-gradient(155deg,#7c2d12,#fb923c) }
-    .c-card[data-idx="2"] { background:linear-gradient(155deg,#713f12,#fbbf24) }
-    .c-card[data-idx="3"] { background:linear-gradient(155deg,#064e3b,#34d399) }
-    .c-card[data-idx="4"] { background:linear-gradient(155deg,#1e3a8a,#60a5fa) }
-    .c-card[data-idx="5"] { background:linear-gradient(155deg,#3b0764,#a78bfa) }
+    /* Purple card gradients (varied shades keep the coverflow depth without going rainbow) */
+    .c-card[data-idx="0"] { background:linear-gradient(155deg,#3b0764,#a78bfa) }
+    .c-card[data-idx="1"] { background:linear-gradient(155deg,#4c1d95,#c084fc) }
+    .c-card[data-idx="2"] { background:linear-gradient(155deg,#5b21b6,#a855f7) }
+    .c-card[data-idx="3"] { background:linear-gradient(155deg,#6d28d9,#8b5cf6) }
+    .c-card[data-idx="4"] { background:linear-gradient(155deg,#2e1065,#9333ea) }
+    .c-card[data-idx="5"] { background:linear-gradient(155deg,#581c87,#d8b4fe) }
 
     /* Visual area — fills top of card */
     .c-visual {
@@ -817,7 +817,7 @@
       background:rgba(0,0,0,.02);
     }
     .ed-site { display:flex; align-items:center; gap:10px }
-    .ed-fav { width:20px; height:20px; border-radius:5px; background:linear-gradient(135deg,#a78bfa,#60a5fa); flex-shrink:0 }
+    .ed-fav { width:20px; height:20px; border-radius:5px; background:linear-gradient(135deg,#7c3aed,#a78bfa); flex-shrink:0 }
     .ed-domain { font-size:13px; font-weight:600 }
     .ed-live { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:#4ade80; background:rgba(74,222,128,.1); padding:3px 9px; border-radius:99px }
     .ed-live-dot { width:5px; height:5px; border-radius:50%; background:#4ade80; animation:bpulse 2s ease-in-out infinite }

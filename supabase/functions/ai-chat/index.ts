@@ -11,7 +11,8 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // ─── TOKEN → COST ─────────────────────────────────────────────────────────────
 // Prices in cents per million tokens. Must match actual Anthropic billing.
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  "claude-opus-5":              { input: 500,  output: 2500 }, // $5/$25 per MTok — art-direction step only
+  "claude-opus-5":              { input: 500,  output: 2500 }, // $5/$25 per MTok
+  "claude-sonnet-5":            { input: 300,  output: 1500 }, // $3/$15 per MTok — art-direction step (fast + strong design taste)
   "claude-sonnet-4-6":          { input: 300,  output: 1500 }, // $3/$15 per MTok
   "claude-haiku-4-5-20251001":  { input: 80,   output: 400  }, // $0.80/$4 per MTok
 };
@@ -210,7 +211,7 @@ function formatContextBlock(ctx: Record<string, unknown>): string {
 }
 
 const MODEL_BUILD  = "claude-sonnet-4-6";
-const MODEL_SPEC   = "claude-opus-5"; // art-direction / design-planning step (Opus = design taste, sameness-killer)
+const MODEL_SPEC   = "claude-sonnet-5"; // art-direction / design-planning step (Sonnet 5 = strong design taste, ~2-3x faster + ~half the cost of Opus for this JSON-sized output)
 const MODEL_FAST   = "claude-haiku-4-5-20251001";
 
 const CORS = {
@@ -2036,7 +2037,7 @@ ${guide}`;
       MODEL_SPEC,
       SPEC_SYSTEM,
       [{ role: "user", content: specPrompt }],
-      1400,
+      2200,
       false,
       "",
       // Opus 5 thinks by default; disable it so the response is a single JSON text block (cheap + parseable)
@@ -2052,10 +2053,13 @@ ${guide}`;
     const specData = await specRes.json();
     // Find the text block (robust even if a thinking block precedes it)
     const specTextBlock = (specData.content || []).find((b: { type?: string; text?: string }) => b?.type === "text");
-    const specText = (specTextBlock?.text || "{}")
-      .replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    let specText = (specTextBlock?.text || "").trim()
+      .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+    // Pull the outermost {...} in case the model wrapped the JSON in prose
+    const _fb = specText.indexOf("{"), _lb = specText.lastIndexOf("}");
+    if (_fb !== -1 && _lb > _fb) specText = specText.slice(_fb, _lb + 1);
     let spec: Record<string, unknown> = {};
-    try { spec = JSON.parse(specText); } catch { spec = {}; }
+    try { spec = specText ? JSON.parse(specText) : {}; } catch { spec = {}; }
     if (userId) {
       const u = specData.usage || {};
       await incrementUsage(userId, u.input_tokens || 0, u.output_tokens || 0, MODEL_SPEC, u.cache_creation_input_tokens || 0, u.cache_read_input_tokens || 0);

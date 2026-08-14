@@ -6505,7 +6505,8 @@ function aiClosePreview() { document.getElementById('aiAttachPreview').classList
 // ── SEND — with readiness check ───────────────────────────────────────────────
 let _pendingBrief = null;
 let _pendingSpec  = null;
-let _sessionSpec  = null;  // Opus art-direction spec — generated once per fresh session, reused across its build + continuations (module-scoped: resets on page load = new project)
+let _sessionSpec  = null;  // art-direction spec — generated once per fresh session, reused across its build + continuations (module-scoped: resets on page load = new project)
+let _specPromise  = null;  // in-flight background spec fetch (started on the first substantial message, awaited implicitly by the build turn)
 let _aiProjectContext = {};  // cached memory blob — loaded on init, updated after builds
 let _sessionVisionImages = new Set(); // images already sent as vision this browser session
 
@@ -6713,24 +6714,22 @@ async function aiSend(fromBottom) {
   _pendingBrief = null;
   _pendingSpec  = null;
 
-  // ── ART-DIRECTION PASS ──────────────────────────────────────────────────────
-  // For a fresh build, generate an Opus design spec (distinctive layout archetype +
-  // signature move) and feed it into the build so sites don't come out same-y.
-  // NON-BREAKING by construction: fetchJSON returns null on any error, the call is
-  // capped by a 9s timeout, and on any failure _pendingSpec stays null so the build
-  // proceeds EXACTLY as before. Generated once per fresh session, then reused.
-  if (_buildIsFreshSession && !_mktMode && typeof text === 'string' && text.trim().length >= 20) {
-    try {
-      if (!_sessionSpec) {
-        const _spec = await Promise.race([
-          fetchJSON({ spec_mode: true, messages: [{ role: 'user', content: text }] }),
-          new Promise(res => setTimeout(() => res(null), 9000)),
-        ]);
-        if (_spec && typeof _spec === 'object' && (_spec.layout_archetype || _spec.color_bg)) _sessionSpec = _spec;
-      }
-      if (_sessionSpec) _pendingSpec = _sessionSpec;
-    } catch (_e) { /* non-fatal — build without a spec */ }
+  // ── ART-DIRECTION PASS (background) ─────────────────────────────────────────
+  // On the first substantial message of a fresh session, kick off the design spec
+  // (distinctive layout archetype + signature move) IN THE BACKGROUND. The onboarding
+  // gate almost always asks a question or two before it actually builds, so by the
+  // build turn the spec is already done — ZERO added wait. It only misses the rare
+  // fully-specified one-shot prompt that builds on turn 1. Non-breaking by
+  // construction: any failure leaves _sessionSpec null and the build proceeds exactly
+  // as before. Generated once per fresh session, then reused across its continuations.
+  if (_buildIsFreshSession && !_mktMode && typeof text === 'string' && text.trim().length >= 20
+      && !_sessionSpec && !_specPromise) {
+    _specPromise = fetchJSON({ spec_mode: true, messages: [{ role: 'user', content: text }] })
+      .then(s => { if (s && typeof s === 'object' && (s.layout_archetype || s.color_bg)) _sessionSpec = s; })
+      .catch(() => {});
   }
+  // Attach the spec if it's ready (it usually is by the time the gate decides to build).
+  _pendingSpec = _sessionSpec || null;
 
   await aiCallAPI();
 }

@@ -6505,6 +6505,7 @@ function aiClosePreview() { document.getElementById('aiAttachPreview').classList
 // ── SEND — with readiness check ───────────────────────────────────────────────
 let _pendingBrief = null;
 let _pendingSpec  = null;
+let _sessionSpec  = null;  // Opus art-direction spec — generated once per fresh session, reused across its build + continuations (module-scoped: resets on page load = new project)
 let _aiProjectContext = {};  // cached memory blob — loaded on init, updated after builds
 let _sessionVisionImages = new Set(); // images already sent as vision this browser session
 
@@ -6711,6 +6712,25 @@ async function aiSend(fromBottom) {
   });
   _pendingBrief = null;
   _pendingSpec  = null;
+
+  // ── ART-DIRECTION PASS ──────────────────────────────────────────────────────
+  // For a fresh build, generate an Opus design spec (distinctive layout archetype +
+  // signature move) and feed it into the build so sites don't come out same-y.
+  // NON-BREAKING by construction: fetchJSON returns null on any error, the call is
+  // capped by a 9s timeout, and on any failure _pendingSpec stays null so the build
+  // proceeds EXACTLY as before. Generated once per fresh session, then reused.
+  if (_buildIsFreshSession && !_mktMode && typeof text === 'string' && text.trim().length >= 20) {
+    try {
+      if (!_sessionSpec) {
+        const _spec = await Promise.race([
+          fetchJSON({ spec_mode: true, messages: [{ role: 'user', content: text }] }),
+          new Promise(res => setTimeout(() => res(null), 9000)),
+        ]);
+        if (_spec && typeof _spec === 'object' && (_spec.layout_archetype || _spec.color_bg)) _sessionSpec = _spec;
+      }
+      if (_sessionSpec) _pendingSpec = _sessionSpec;
+    } catch (_e) { /* non-fatal — build without a spec */ }
+  }
 
   await aiCallAPI();
 }

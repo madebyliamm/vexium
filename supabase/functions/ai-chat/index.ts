@@ -2584,7 +2584,7 @@ Even if the plan includes other pages (pricing, about, etc.), your first build o
 
 OUTPUT FORMAT:
 When building: use <file name="index.html"> XML delimiters ONLY. Never backtick code blocks.
-When chatting (still gathering): plain text only. Never put file tags in a chat response.`;
+When chatting (still gathering): plain text only. Never put file tags in a chat response.` + (spec ? specContext(spec) : "");
 
     // prepare: hand the build Worker the onboarding payload to run with no timeout (48k headroom).
     if (prepareMode) {

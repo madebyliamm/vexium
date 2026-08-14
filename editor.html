@@ -1252,8 +1252,9 @@
       position: relative;
       transition: background var(--t-fast), transform var(--t-fast);
     }
-    #aiSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); }
-    #aiSend.has-text:hover { background: var(--text); transform: scale(1.08); }
+    @keyframes sendPop { 0% { transform: scale(1); } 55% { transform: scale(1.16); } 100% { transform: scale(1.05); } }
+    #aiSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); transform: scale(1.05); animation: sendPop .32s cubic-bezier(.34,1.56,.64,1); }
+    #aiSend.has-text:hover { background: var(--text); transform: scale(1.1); }
     #aiSend::before {
       content: '';
       position: absolute;
@@ -1890,8 +1891,8 @@
       position: relative;
       transition: background var(--t-fast), transform var(--t-fast);
     }
-    #aiBottomSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); }
-    #aiBottomSend.has-text:hover { background: var(--text); transform: scale(1.08); }
+    #aiBottomSend.has-text { background: var(--text); box-shadow: 0 2px 6px rgba(30,27,60,.20); transform: scale(1.05); animation: sendPop .32s cubic-bezier(.34,1.56,.64,1); }
+    #aiBottomSend.has-text:hover { background: var(--text); transform: scale(1.1); }
     #aiBottomSend::before {
       content: '';
       position: absolute;
@@ -5982,21 +5983,27 @@ function getAllTemplates() {
 }
 
 let tplPromptMap = {};
+let _tplPicks = null; // 4 random quick-starts, fixed for this page load
 
 function renderTemplates() {
   const el = document.getElementById('aiTemplates');
   if (!el) return;
   el.style.display = isDefaultCode(fileSystem) ? '' : 'none';
   tplPromptMap = {};
-  const all = getAllTemplates();
+  // Show exactly 4 quick-start templates, randomly chosen once per page load.
+  // They're fixed presets — no adding, editing, or removing.
+  if (!_tplPicks) {
+    const pool = DEFAULT_TEMPLATES.slice();
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    _tplPicks = pool.slice(0, 4);
+  }
   let html = '';
-  all.forEach(t => {
+  _tplPicks.forEach(t => {
     const key = 'tpl_' + t.id;
     tplPromptMap[key] = t.prompt;
     html += `<button class="ai-tpl" onclick="aiTemplateByKey('${key}')"><span class="ai-tpl-ico">${t.emoji}</span>${escHtml(t.name)}</button>`;
   });
-  html += '<button class="ai-tpl ai-tpl-add" onclick="openTplModal()" title="Edit templates"><span class="ai-tpl-ico">✎</span> Templates</button>';
-  if (el) el.innerHTML = html;
+  el.innerHTML = html;
 }
 
 function aiTemplateByKey(key) { const text = tplPromptMap[key]; if (text) aiTemplate(text); }

@@ -890,7 +890,7 @@
   function openProject(e,id){
     if(e.target.closest('.pc-more')||e.target.closest('.pc-open')||e.target.closest('.pc-invite-actions'))return;
     localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
+    location.href='editor.html?project='+encodeURIComponent(id);
   }
 
   let pendingAcceptId = null; // project id awaiting accept/decline response
@@ -939,7 +939,7 @@
       document.getElementById('acceptOverlay').classList.add('show');
     } else {
       localStorage.setItem('vexium_current_project',id);
-      location.href='editor.html';
+      location.href='editor.html?project='+encodeURIComponent(id);
     }
   }
 
@@ -951,7 +951,7 @@
     if(accept){
       await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
       localStorage.setItem('vexium_current_project',id);
-      location.href='editor.html';
+      location.href='editor.html?project='+encodeURIComponent(id);
     } else {
       await sb.from('project_members').update({status:'declined'}).eq('project_id',id).eq('user_id',session.user.id);
       await loadShared();
@@ -963,7 +963,7 @@
     if(!sb||!session)return;
     await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',session.user.id);
     localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
+    location.href='editor.html?project='+encodeURIComponent(id);
   }
 
   async function quickDecline(e, id){
@@ -1338,7 +1338,7 @@
 
   function sdSection(l){return '<div class="sd-section-label">'+l+'</div>';}
   function sdCarousel(items){return '<div class="sd-carousel">'+items.join('')+'</div>';}
-  function sdMyProj(p){return `<div class="sd-proj" onclick="hideSearchDrop();localStorage.setItem('vexium_current_project','${p.id}');location.href='editor.html'"><div class="sd-proj-thumb">${p.emoji||'💻'}</div><div class="sd-proj-name">${esc(p.name||'Untitled')}</div><div class="sd-proj-sub">Your project</div></div>`;}
+  function sdMyProj(p){return `<div class="sd-proj" onclick="hideSearchDrop();localStorage.setItem('vexium_current_project','${p.id}');location.href='editor.html?project=${encodeURIComponent(p.id)}'"><div class="sd-proj-thumb">${p.emoji||'💻'}</div><div class="sd-proj-name">${esc(p.name||'Untitled')}</div><div class="sd-proj-sub">Your project</div></div>`;}
   function sdPubProj(p){return `<div class="sd-proj" onclick="hideSearchDrop();location.href='viewer.html?project=${p.id}'"><div class="sd-proj-thumb">${p.emoji||'💻'}</div><div class="sd-proj-name">${esc(p.name||'Untitled')}</div><div class="sd-proj-sub">Live site</div></div>`;}
 
   async function fetchPublicProjects(q){
@@ -1460,7 +1460,7 @@
     }
     closeNewModal();
     localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
+    location.href='editor.html?project='+encodeURIComponent(id);
   }
 
   /* ── GLOBAL CLICK ── */

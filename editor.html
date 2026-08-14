@@ -3494,7 +3494,14 @@ function showToast(icon, msg) {
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 async function init() {
-  projectId = localStorage.getItem('vexium_current_project');
+  // Prefer the explicit ?project= id in the URL over the shared localStorage key. The key is a
+  // single mutable slot written by several pages; if a localStorage write ever fails (e.g. the
+  // large `vexium_projects` cache pushes storage to its quota, so setItem throws), the editor
+  // would otherwise read a STALE id and open the wrong project. The URL param is set atomically
+  // at navigation time and can't go stale. Falls back to the key for old links/bookmarks.
+  const _urlPid = new URLSearchParams(location.search).get('project');
+  projectId = _urlPid || localStorage.getItem('vexium_current_project');
+  if (projectId) { try { localStorage.setItem('vexium_current_project', projectId); } catch (e) {} }
   await loadProject();
   const _savedDraft = projectId && localStorage.getItem('vx_prompt_draft_' + projectId);
   if (_savedDraft) {

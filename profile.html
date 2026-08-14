@@ -1233,7 +1233,7 @@
     if(!sb||!session)return;
     await sb.from('project_members').update({status:'accepted'}).eq('project_id',id).eq('user_id',myId);
     localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
+    location.href='editor.html?project='+encodeURIComponent(id);
   }
   async function sharedDecline(e,id){
     e.stopPropagation();
@@ -1245,9 +1245,9 @@
   function cardClick(e,id){
     if(e.target.closest('.pc-more')||e.target.closest('.pc-open')||e.target.closest('.pc-invite-actions'))return;
     localStorage.setItem('vexium_current_project',id);
-    location.href='editor.html';
+    location.href='editor.html?project='+encodeURIComponent(id);
   }
-  function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html';}
+  function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html?project='+encodeURIComponent(id);}
 
   document.addEventListener('click',e=>{
     if(!document.getElementById('bellBtn').contains(e.target)){document.getElementById('notifDrop').classList.remove('show');document.getElementById('bellBtn').classList.remove('active');}
@@ -1550,7 +1550,7 @@
     const dot=document.getElementById('bellDot');
     if(rem>0){dot.textContent=rem>9?'9+':rem;dot.classList.add('show');}else{dot.textContent='';dot.classList.remove('show');}
     if(type==='follow'&&actorUsername){toggleNotifDrop();location.href='profile.html?user='+actorUsername;}
-    else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html';}
+    else if(type==='project_invite'&&projectId){localStorage.setItem('vexium_current_project',projectId);location.href='editor.html?project='+encodeURIComponent(projectId);}
     else toggleNotifDrop();
   }
   async function markAllRead(){

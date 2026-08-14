@@ -1216,7 +1216,7 @@
     }
     #aiCenterInputField:focus-within {
       background: var(--surface);
-      box-shadow: 0 3px 16px rgba(30,27,60,.10), inset 0 0 0 1px rgba(124,58,237,.45);
+      box-shadow: 0 3px 16px rgba(30,27,60,.11), inset 0 0 0 1px rgba(30,27,60,.11);
     }
     #aiCenterInputField.multiline {
       border-radius: var(--r-lg);
@@ -1234,7 +1234,7 @@
       overflow: hidden;
       min-height: 22px;
       max-height: 25vh;
-      caret-color: var(--purple);
+      caret-color: #000;
       transition: opacity .18s ease;
     }
     #aiInput::placeholder { color: var(--muted); }
@@ -1504,7 +1504,7 @@
     .ai-inline-btn-save { background: var(--text); color: var(--bg); }
     .ai-inline-btn-save:hover { opacity: .85; }
     .ai-bubble {
-      background: #dbd8ea;
+      background: #dcdce2;
       color: #201f2e;
       padding: 11px 16px;
       border-radius: 20px 20px 4px 20px;
@@ -1522,7 +1522,7 @@
       left: 0;
       right: 0;
       height: 44px;
-      background: linear-gradient(transparent, #dbd8ea);
+      background: linear-gradient(transparent, #dcdce2);
       border-radius: 0 0 4px 20px;
       pointer-events: none;
     }
@@ -1647,17 +1647,51 @@
     @keyframes woFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
     @keyframes woSpin { to { transform: rotate(360deg); } }
     .ai-working-on {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      padding: 12px 15px;
       margin: 10px 0 4px;
-      border-radius: 99px;
-      background: var(--surface2);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: 0 2px 10px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.06);
       width: fit-content;
+      min-width: 230px;
       animation: woFadeIn .3s cubic-bezier(0.16,1,0.3,1) both;
       transition: opacity .3s ease;
     }
+    /* Build timeline (narrated checklist) */
+    .ai-tl-head { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--text); }
+    .ai-tl-head-page::first-letter { text-transform:uppercase; }
+    .ai-wo-lines { color: rgba(0,0,0,.32); font-size:10px; font-weight:600; margin-left:auto; }
+    .ai-timeline { display:flex; flex-direction:column; }
+    .ai-tl-step { display:flex; align-items:center; gap:9px; padding:3px 0; position:relative; animation: tlStepIn .28s cubic-bezier(.16,1,.3,1) both; }
+    .ai-tl-step::before { content:''; position:absolute; left:8px; top:-5px; width:2px; height:11px; background: rgba(124,58,237,.22); }
+    .ai-tl-step:first-child::before { display:none; }
+    .ai-tl-dot { width:17px; height:17px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+    .ai-tl-step.active .ai-tl-dot { border:2px solid rgba(124,58,237,.25); border-top-color:#7c3aed; animation: tlSpin .7s linear infinite; }
+    .ai-tl-step.done .ai-tl-dot { background:#7c3aed; }
+    .ai-tl-step.done .ai-tl-dot::after { content:''; width:4px; height:7px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); margin-top:-1px; }
+    .ai-tl-label { font-size:12.5px; color:var(--muted); font-weight:500; transition:color .2s; }
+    .ai-tl-step.active .ai-tl-label { color:var(--text); font-weight:600; }
+    @keyframes tlSpin { to { transform: rotate(360deg); } }
+    @keyframes tlStepIn { from { opacity:0; transform: translateY(-3px); } to { opacity:1; transform:none; } }
+    /* Finish celebration */
+    .ai-done { display:flex; align-items:center; gap:11px; margin:12px 0 2px; padding:11px 14px; border-radius:14px; background:var(--surface); box-shadow: 0 3px 14px rgba(30,27,60,.10), inset 0 0 0 1px rgba(30,27,60,.06); animation: aiDoneIn .42s cubic-bezier(.16,1,.3,1) both; }
+    .ai-done-check { position:relative; width:26px; height:26px; border-radius:50%; background:#7c3aed; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .ai-done-check::after { content:''; width:6px; height:11px; border:solid #fff; border-width:0 2.5px 2.5px 0; transform:rotate(45deg); margin-top:-2px; }
+    .ai-done-check::before { content:''; position:absolute; inset:-4px; border-radius:50%; border:2px solid rgba(124,58,237,.5); animation: aiDonePulse 1s ease-out both; }
+    @keyframes aiDonePulse { from { transform:scale(.75); opacity:.7; } to { transform:scale(1.55); opacity:0; } }
+    .ai-done-txt { flex:1; min-width:0; }
+    .ai-done-title { font-size:13px; font-weight:700; color:var(--text); }
+    .ai-done-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+    .ai-done-actions { display:flex; gap:7px; flex-shrink:0; }
+    .ai-done-btn { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; font-family:var(--sans); border:none; border-radius:9px; padding:8px 13px; cursor:pointer; transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast); }
+    .ai-done-btn.primary { background: var(--text); color:#fff; }
+    .ai-done-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,27,60,.22); }
+    .ai-done-btn.ghost { background: rgba(30,27,60,.06); color: var(--text); }
+    .ai-done-btn.ghost:hover { background: rgba(30,27,60,.1); }
+    @keyframes aiDoneIn { from { opacity:0; transform: translateY(7px) scale(.98); } to { opacity:1; transform:none; } }
     .ai-wo-spinner {
       width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
       border: 2.5px solid transparent;
@@ -1840,7 +1874,7 @@
     }
     #aiBottomInputArea:focus-within {
       background: var(--surface);
-      box-shadow: 0 3px 16px rgba(30,27,60,.10), inset 0 0 0 1px rgba(124,58,237,.45);
+      box-shadow: 0 3px 16px rgba(30,27,60,.11), inset 0 0 0 1px rgba(30,27,60,.11);
     }
     #aiAttachChips { display: none; flex-wrap: wrap; gap: 6px; padding: 10px 14px 0; }
     #aiAttachChips.has-chips { display: flex; }
@@ -1882,7 +1916,7 @@
       max-height: 25vh;
       padding: 12px 0;
       align-self: flex-end;
-      caret-color: var(--purple);
+      caret-color: #000;
     }
     #aiBottomInput::placeholder { color: var(--muted); }
     #aiBottomSend {
@@ -1972,14 +2006,12 @@
     .resume-btn.go:hover{opacity:.85}
     .resume-btn.skip{background:transparent;color:var(--muted);font-size:16px;padding:2px 8px;line-height:1}
     .resume-btn.skip:hover{color:#f87171}
-    .ai-suggestions { margin: 14px 0 4px; display: flex; flex-direction: column; gap: 8px; }
-    .ai-suggestions-label { font-size: 11px; font-weight: 700; color: var(--text); }
-    .ai-suggestions-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .ai-suggestions-item { font-size: 11px; line-height: 1.5; color: var(--muted); padding: 9px 11px; background: rgba(0,0,0,.04); border-radius: 10px; transition: background var(--t-fast), color var(--t-fast); cursor: pointer; }
-    .ai-suggestions-item:hover { background: rgba(0,0,0,.08); color: var(--text); }
-    .ai-suggestions-apply { padding: 6px 16px; background: #e8e8e8; border: none; border-radius: 999px; color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--sans); align-self: flex-start; line-height: 1; transition: background var(--t-fast); }
-    .ai-suggestions-apply:hover { background: #fff; }
-    .ai-suggestions-apply:disabled { opacity: .3; cursor: not-allowed; }
+    .ai-suggestions { margin: 12px 0 4px; display: flex; flex-direction: column; gap: 9px; animation: aiDoneIn .42s cubic-bezier(.16,1,.3,1) .12s both; }
+    .ai-suggestions-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .ai-suggestions-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .ai-sugg-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text); background:var(--surface); box-shadow: 0 1px 5px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07); border:none; border-radius:99px; padding:7px 13px; cursor:pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); font-family:var(--sans); text-align:left; line-height:1.3; }
+    .ai-sugg-chip::before { content:'+'; color:#7c3aed; font-weight:800; font-size:14px; line-height:1; }
+    .ai-sugg-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 11px rgba(30,27,60,.14), inset 0 0 0 1px rgba(124,58,237,.32); }
 
     /* ── COLLAB CHAT ── */
     .collab-msg-av {
@@ -6321,6 +6353,25 @@ function buildEditedSummary(files, contentWrap) {
   contentWrap.appendChild(summary);
 }
 
+// A little payoff when a build lands: "your site is ready" + preview/publish.
+function buildFinishCelebration(files, contentWrap) {
+  const visible = (files || []).map(f => f.name || f)
+    .filter(n => !['_longterm','_shortterm','_pages','_backend'].includes(n));
+  if (!visible.some(n => /\.html$/i.test(n))) return; // only real page builds
+  if (contentWrap.querySelector('.ai-done')) return;  // never stack
+  const card = document.createElement('div');
+  card.className = 'ai-done';
+  card.innerHTML =
+    '<div class="ai-done-check"></div>' +
+    '<div class="ai-done-txt"><div class="ai-done-title">Your site is ready</div>' +
+    '<div class="ai-done-sub">Preview it live, or publish when you’re happy.</div></div>' +
+    '<div class="ai-done-actions">' +
+      '<button type="button" class="ai-done-btn ghost" onclick="showPreviewDock(true)">Preview</button>' +
+      '<button type="button" class="ai-done-btn primary" onclick="openEditorSettings()">Publish →</button>' +
+    '</div>';
+  contentWrap.appendChild(card);
+}
+
 
 function friendlyPageName(filename) {
   const map = { 'index.html':'Home page','landing.html':'Landing page','home.html':'Home page','auth.html':'Sign-up page','login.html':'Sign-in page','signup.html':'Sign-up page','register.html':'Sign-up page','dashboard.html':'Dashboard','app.html':'App','about.html':'About page','pricing.html':'Pricing page','contact.html':'Contact page','profile.html':'Profile page','settings.html':'Settings page','blog.html':'Blog page','portfolio.html':'Portfolio page','shop.html':'Shop page','product.html':'Product page','checkout.html':'Checkout page','cart.html':'Cart page','faq.html':'FAQ page','terms.html':'Terms page','privacy.html':'Privacy page','team.html':'Team page','services.html':'Services page' };
@@ -6371,15 +6422,14 @@ function renderSuggestions(items, targetEl) {
   // A build + its continuation(s) each emit a suggestions event — keep only the latest card so
   // they don't stack on the reused seamless row.
   targetEl.querySelectorAll('.ai-suggestions').forEach(el => el.remove());
-  const itemsHtml = improvements.map(s =>
-    '<div class="ai-suggestions-item" onclick="aiApplySingleSuggestion(this)" title="Apply this suggestion">' + escHtml(s) + '</div>'
+  const itemsHtml = improvements.slice(0, 4).map(s =>
+    '<button type="button" class="ai-sugg-chip" onclick="aiApplySingleSuggestion(this)" title="Do this next">' + escHtml(s) + '</button>'
   ).join('');
   const card = document.createElement('div');
   card.className = 'ai-suggestions';
   card.innerHTML =
-    '<div class="ai-suggestions-label">Suggestions</div>' +
-    '<div class="ai-suggestions-list">' + itemsHtml + '</div>' +
-    '<button type="button" class="ai-suggestions-apply" onclick="aiApplySuggestionImprovements(this)">Apply all</button>';
+    '<div class="ai-suggestions-label">What\'s next?</div>' +
+    '<div class="ai-suggestions-list">' + itemsHtml + '</div>';
   targetEl.appendChild(card);
 }
 
@@ -7648,7 +7698,7 @@ async function aiCallAPI() {
       _workingOnEl = document.createElement('div');
       _workingOnEl.className = 'ai-working-on';
       _workingOnEl.style.display = 'none';
-      _workingOnEl.innerHTML = '<div class="ai-wo-spinner"></div><div class="ai-wo-text"><span class="ai-wo-page"></span><span class="ai-wo-sep">—</span><span class="ai-wo-action"></span><span class="ai-wo-lines" style="color:rgba(0,0,0,.3);font-size:10px;margin-left:8px"></span></div>';
+      _workingOnEl.innerHTML = '<div class="ai-tl-head"><span class="ai-tl-head-page"></span><span class="ai-wo-lines"></span></div><div class="ai-timeline"></div>';
       streamContent.appendChild(_workingOnEl);
       _rowInner.appendChild(streamContent);
       row.appendChild(_rowInner);
@@ -7730,10 +7780,18 @@ async function aiCallAPI() {
 
     function _updateAction(action) {
       if (!_workingOnEl) return;
-      const el = _workingOnEl.querySelector('.ai-wo-action');
-      if (!el || el.textContent === action) return;
-      el.style.opacity = '0';
-      setTimeout(() => { if (el) { el.textContent = action; el.style.opacity = '1'; } }, 230);
+      const tl = _workingOnEl.querySelector('.ai-timeline');
+      if (!tl) return;
+      const active = tl.querySelector('.ai-tl-step.active');
+      if (active && active.dataset.label === action) return; // same step — ignore
+      if (active) { active.classList.remove('active'); active.classList.add('done'); } // check the finished step
+      const step = document.createElement('div');
+      step.className = 'ai-tl-step active';
+      step.dataset.label = action;
+      const cap = action.charAt(0).toUpperCase() + action.slice(1);
+      step.innerHTML = '<span class="ai-tl-dot"></span><span class="ai-tl-label">' + escHtml(cap) + '</span>';
+      tl.appendChild(step);
+      while (tl.children.length > 6) tl.removeChild(tl.firstChild); // keep the list tidy
     }
     function _detectAction(chunk) {
       _woContentBuf += chunk;
@@ -7749,11 +7807,13 @@ async function aiCallAPI() {
       if (!page) return;
       _workingOnPage = page;
       _woContentBuf = ''; _woLastDetect = Date.now(); _woFallbackIdx = 0;
-      const pageEl   = _workingOnEl && _workingOnEl.querySelector('.ai-wo-page');
-      const actionEl = _workingOnEl && _workingOnEl.querySelector('.ai-wo-action');
-      if (pageEl) pageEl.textContent = page;
-      if (actionEl) actionEl.textContent = _woFallbacks[0];
-      if (_workingOnEl) _workingOnEl.style.display = 'inline-flex';
+      const headEl = _workingOnEl && _workingOnEl.querySelector('.ai-tl-head-page');
+      const tl     = _workingOnEl && _workingOnEl.querySelector('.ai-timeline');
+      if (headEl) headEl.textContent = 'Building the ' + page.toLowerCase();
+      if (tl) tl.innerHTML = '';
+      if (_workingOnEl) _workingOnEl.style.display = 'flex';
+      // Seed the first step (name the layout direction if the art-director gave us one).
+      _updateAction((_sessionSpec && _sessionSpec.layout_archetype) ? 'designing the layout' : 'setting up the design');
       clearInterval(_workingOnTimer);
       _workingOnTimer = setInterval(() => {
         if (Date.now() - _woLastDetect > 7000) {
@@ -7764,7 +7824,12 @@ async function aiCallAPI() {
     }
     _stopWorkingOn = function() {
       clearInterval(_workingOnTimer); _workingOnTimer = null;
-      if (_workingOnEl) { _workingOnEl.style.opacity = '0'; setTimeout(() => { if (_workingOnEl) { _workingOnEl.remove(); _workingOnEl = null; } }, 320); }
+      if (_workingOnEl) {
+        const active = _workingOnEl.querySelector('.ai-tl-step.active');
+        if (active) { active.classList.remove('active'); active.classList.add('done'); } // check the last step
+        _workingOnEl.style.opacity = '0';
+        setTimeout(() => { if (_workingOnEl) { _workingOnEl.remove(); _workingOnEl = null; } }, 320);
+      }
     };
 
     // Expose cleanup so aiStop() can forcibly clean up even mid-stream
@@ -7882,6 +7947,7 @@ async function aiCallAPI() {
         // per-round summary would stack duplicates on the reused seamless row).
         if (!_willContinueNow) {
           const target = row._contentWrap || row;
+          buildFinishCelebration(collectedFiles, target);
           buildEditedSummary(collectedFiles, target);
         }
       }

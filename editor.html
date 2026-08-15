@@ -4933,10 +4933,12 @@ async function showQrModal(defaultTab) {
       '<div class="qr-sub"></div>' +
       '<div class="qr-img-wrap"><img class="qr-img" alt="QR code"><div class="qr-msg" style="display:none"></div></div>' +
       '<button class="qr-url" title="Copy link"></button>' +
-      '<div class="qr-tabs">' +
-        '<button class="qr-tab" data-tab="preview">Preview</button>' +
-        '<button class="qr-tab" data-tab="live">Live</button>' +
-      '</div>' +
+      // Tabs only make sense once there's a live site to switch to — otherwise just show Preview.
+      (liveUrl ?
+        '<div class="qr-tabs">' +
+          '<button class="qr-tab" data-tab="preview">Preview</button>' +
+          '<button class="qr-tab" data-tab="live">Live</button>' +
+        '</div>' : '') +
     '</div>';
 
   const titleEl = ov.querySelector('.qr-title');
@@ -4973,7 +4975,7 @@ async function showQrModal(defaultTab) {
   ov.querySelector('.qr-close').addEventListener('click', () => ov.remove());
   document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', esc); } });
   document.body.appendChild(ov);
-  render(defaultTab === 'live' ? 'live' : 'preview');
+  render(defaultTab === 'live' && liveUrl ? 'live' : 'preview');
 }
 
 // ── CONSOLE ───────────────────────────────────────────────────────────────────

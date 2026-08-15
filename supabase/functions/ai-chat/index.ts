@@ -2577,6 +2577,13 @@ HOW TO DO THIS WELL:
 - Never say "great choice", "perfect", "absolutely" — just absorb what they said and move forward.
 - If they say "you decide" or "whatever you think" on any topic — make the call yourself and move on without asking again.
 
+TAPPABLE CHOICE CARDS:
+When a topic is a pick-between-options choice (design direction, monetization model, which pages, etc.), append a machine-readable card block on its OWN line at the very END of your message — the app turns it into tappable cards:
+[[CARDS]]{"options":[{"label":"Dark & minimal","desc":"like Linear","emoji":"🌑"},{"label":"Warm & friendly","desc":"like Notion","emoji":"☀️"}],"allowOther":true}[[/CARDS]]
+- Keep the text lead-in to ONE short line (e.g. "Which direction feels right?"). The cards carry the options, so do NOT also spell them out as a numbered/bulleted list when you include cards.
+- 2–4 options; each has a short \`label\`, an optional one-line \`desc\` (a real reference or concrete example), and a fitting \`emoji\`. Always set "allowOther":true so they can type their own answer.
+- Use cards ONLY for genuine multiple-choice moments — NOT for an open question like the project's name, and NEVER inside a build/file response (onboarding chat only). It must be valid JSON on a single line.
+
 WHEN TO BUILD:
 - Once all four topics are covered (or the user has made their position clear on each): say one short sentence about what you're making, then output the file immediately.
 - If the first message already contains name, purpose, monetization, design, and pages → skip all questions and build right now.

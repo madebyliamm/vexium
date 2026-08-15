@@ -2015,6 +2015,23 @@
     .ai-sugg-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text); background:var(--surface); box-shadow: 0 1px 5px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07); border:none; border-radius:99px; padding:7px 13px; cursor:pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); font-family:var(--sans); text-align:left; line-height:1.3; }
     .ai-sugg-plus { width:11px; height:11px; stroke:#7c3aed; stroke-width:2.6; stroke-linecap:round; flex-shrink:0; }
     .ai-sugg-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 11px rgba(30,27,60,.14), inset 0 0 0 1px rgba(124,58,237,.32); }
+    /* Tappable choice cards (onboarding) */
+    .ai-cards { margin: 12px 0 4px; max-width: 470px; display: flex; flex-direction: column; gap: 8px; animation: aiDoneIn .4s cubic-bezier(.16,1,.3,1) both; }
+    .ai-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+    .ai-card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 78px; text-align: left; background: var(--surface); box-shadow: 0 2px 8px rgba(30,27,60,.07), inset 0 0 0 1px rgba(30,27,60,.07); border: none; border-radius: 13px; padding: 13px 14px; cursor: pointer; font-family: var(--sans); transition: transform var(--t-fast), box-shadow var(--t-fast); }
+    .ai-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(30,27,60,.13), inset 0 0 0 1px rgba(124,58,237,.35); }
+    .ai-card-emoji { font-size: 20px; line-height: 1; margin-bottom: 4px; }
+    .ai-card-label { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -.1px; line-height: 1.25; }
+    .ai-card-desc { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+    .ai-card.picked { box-shadow: 0 2px 10px rgba(124,58,237,.25), inset 0 0 0 2px #7c3aed; }
+    .ai-cards.used { opacity: .5; pointer-events: none; }
+    .ai-cards.used .ai-card.picked { opacity: 1; }
+    .ai-card-other { display: flex; gap: 6px; align-items: center; }
+    .ai-card-other-input { flex: 1; min-width: 0; background: var(--surface); box-shadow: inset 0 0 0 1px rgba(30,27,60,.12); border: none; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; color: var(--text); font-family: var(--sans); outline: none; caret-color: #000; transition: box-shadow var(--t-fast); }
+    .ai-card-other-input:focus { box-shadow: inset 0 0 0 1px rgba(124,58,237,.45); }
+    .ai-card-other-input::placeholder { color: var(--muted); }
+    .ai-card-other-send { width: 34px; height: 34px; flex-shrink: 0; border: none; border-radius: 10px; background: var(--text); color: #fff; font-size: 15px; cursor: pointer; transition: transform var(--t-fast); }
+    .ai-card-other-send:hover { transform: translateY(-1px); }
 
     /* ── COLLAB CHAT ── */
     .collab-msg-av {
@@ -6007,6 +6024,9 @@ async function aiLoadHistory() {
 function formatChatText(raw) {
   if (!raw) return '';
   let s = raw;
+  // Hide the machine-readable choice-cards block (rendered separately as tappable cards).
+  // The open-ended match also hides a partial block while it's still streaming.
+  s = s.replace(/\[\[CARDS\]\][\s\S]*?(?:\[\[\/CARDS\]\]|$)/g, '');
   s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) =>
     '<pre><code>' + code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim() + '</code></pre>'
   );
@@ -6486,6 +6506,55 @@ function renderSuggestions(items, targetEl) {
     '<div class="ai-suggestions-label">What\'s next?</div>' +
     '<div class="ai-suggestions-list">' + itemsHtml + '</div>';
   targetEl.appendChild(card);
+}
+
+// ── CHOICE CARDS ─────────────────────────────────────────────────────────────
+// The AI can offer tappable choices during onboarding via a [[CARDS]]{...}[[/CARDS]]
+// block. We parse it out and render square cards + an "other" input.
+function parseChoiceCards(text) {
+  const m = /\[\[CARDS\]\]([\s\S]*?)\[\[\/CARDS\]\]/.exec(text || '');
+  if (!m) return null;
+  try {
+    const data = JSON.parse(m[1].trim());
+    if (data && Array.isArray(data.options) && data.options.length) return data;
+  } catch (_e) {}
+  return null;
+}
+
+function buildChoiceCards(data, contentWrap) {
+  if (!data || !contentWrap || contentWrap.querySelector('.ai-cards')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-cards';
+  const pick = (val) => {
+    if (!val || wrap.classList.contains('used')) return;
+    wrap.classList.add('used');
+    aiSendWithBottomText(val);
+  };
+  const grid = document.createElement('div');
+  grid.className = 'ai-cards-grid';
+  data.options.slice(0, 4).forEach(o => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ai-card';
+    btn.innerHTML =
+      (o.emoji ? '<div class="ai-card-emoji">' + escHtml(o.emoji) + '</div>' : '') +
+      '<div class="ai-card-label">' + escHtml(o.label || '') + '</div>' +
+      (o.desc ? '<div class="ai-card-desc">' + escHtml(o.desc) + '</div>' : '');
+    btn.addEventListener('click', () => { btn.classList.add('picked'); pick(o.label || ''); });
+    grid.appendChild(btn);
+  });
+  wrap.appendChild(grid);
+  if (data.allowOther !== false) {
+    const other = document.createElement('div');
+    other.className = 'ai-card-other';
+    other.innerHTML = '<input type="text" class="ai-card-other-input" placeholder="Something else…" maxlength="200"><button type="button" class="ai-card-other-send" title="Send">→</button>';
+    const inp = other.querySelector('.ai-card-other-input');
+    const sendOther = () => { const v = (inp.value || '').trim(); if (v) pick(v); };
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendOther(); } });
+    other.querySelector('.ai-card-other-send').addEventListener('click', sendOther);
+    wrap.appendChild(other);
+  }
+  contentWrap.appendChild(wrap);
 }
 
 // ── LIVE PREVIEW ──────────────────────────────────────────────────────────────
@@ -7996,6 +8065,7 @@ async function aiCallAPI() {
       }
 
       if (textEl) { _revealLen = fullMessage.length; if (_streamRaf) { cancelAnimationFrame(_streamRaf); _streamRaf = null; } textEl.removeAttribute('data-streaming'); if (fullMessage) { textEl.innerHTML = formatChatText(fullMessage); textEl.className = 'ai-text settling'; requestAnimationFrame(() => requestAnimationFrame(() => { if (textEl) textEl.classList.remove('settling'); })); } }
+      if (fullMessage) { const _cards = parseChoiceCards(fullMessage); if (_cards) buildChoiceCards(_cards, row._contentWrap || row); }
 
       // Early-close recovery check (must run before UI cleanup so we can keep UI alive)
       _stopStarLerp(); // always stop THIS call's avatar lerp loop; the next call starts its own

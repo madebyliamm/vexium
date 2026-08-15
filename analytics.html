@@ -238,10 +238,9 @@
       <div class="stat-label">
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Revenue
-        <span class="coming-pill">Soon</span>
       </div>
-      <div class="stat-value empty">—</div>
-      <div class="stat-meta">Coming soon</div>
+      <div class="stat-value empty" id="statRevenue">—</div>
+      <div class="stat-meta" id="statRevenueMeta">—</div>
     </div>
   </div>
 
@@ -279,6 +278,7 @@
 
   let _projects    = [];
   let _views       = [];
+  let _txns        = []; // site sales/refunds for the owner's projects (revenue)
   let _days        = 7;
   let _metric      = 'visitors';
   let _selectedPid = 'all';
@@ -291,6 +291,13 @@
     if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
     if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'k';
     return String(n);
+  }
+  function fmtMoney(dollars){ // input is in dollars
+    const v = Number(dollars) || 0;
+    const neg = v < 0, a = Math.abs(v);
+    const s = a >= 1000 ? a.toLocaleString('en-US',{maximumFractionDigits:0})
+                        : (a % 1 === 0 ? String(a) : a.toFixed(2));
+    return (neg ? '-$' : '$') + s;
   }
   function setVal(id, val, empty){
     const el = document.getElementById(id);
@@ -419,6 +426,10 @@
     if(_selectedPid==='all') return _views;
     return _views.filter(v=>v.project_id===_selectedPid);
   }
+  function activeTxns(){
+    if(_selectedPid==='all') return _txns;
+    return _txns.filter(t=>t.project_id===_selectedPid);
+  }
 
   // ── bucket helpers ─────────────────────────────────────────────────────────
   function makeDayKeys(days){
@@ -462,6 +473,11 @@
     setVal('statViews', visits ? fmt(visits) : '0', false);
     document.getElementById('statViewsMeta').textContent = visits ? `Last ${rangeLabel}` : 'No data yet';
 
+    // Revenue = sum of site sales (refunds stored negative, so they net out)
+    const at  = activeTxns();
+    const rev = at.reduce((s,t)=>s+(t.amount||0),0);
+    setVal('statRevenue', rev ? fmtMoney(rev) : '$0', rev===0);
+    document.getElementById('statRevenueMeta').textContent = at.length ? `Last ${rangeLabel}` : 'No sales yet';
   }
 
   function renderChart(){
@@ -474,12 +490,28 @@
     if(_metric === 'revenue'){
       document.getElementById('chartControls').innerHTML = '';
       titleEl.textContent = 'Revenue over time';
-      metaEl.textContent  = '';
-      inner.innerHTML = `<div class="chart-empty">
-        <div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.6)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-        <div class="chart-empty-t" style="color:rgba(251,191,36,.7)">Revenue tracking coming soon</div>
-        <div class="chart-empty-s">Connect your payment provider and revenue data will appear here automatically.</div>
-      </div>`;
+      const at = activeTxns();
+      const total = at.reduce((s,t)=>s+(t.amount||0),0);
+      metaEl.textContent = at.length ? fmtMoney(total)+' total' : '';
+      if(!at.length){
+        inner.innerHTML = `<div class="chart-empty">
+          <div class="chart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="chart-empty-t">No sales yet</div>
+          <div class="chart-empty-s">Add a buy button and connect Stripe — sales show up here automatically.</div>
+        </div>`;
+        return;
+      }
+      const {keys,labels,useWeeks} = makeDayKeys(_days);
+      const byDay = {}; keys.forEach(k=>byDay[k]=0);
+      at.forEach(t=>{
+        const d = new Date(t.ts);
+        const k = useWeeks ? `W${Math.ceil(d.getDate()/7)}-${d.getMonth()}` : (t.ts||'').slice(0,10);
+        if(k in byDay) byDay[k] += (t.amount||0);
+      });
+      const counts = keys.map(k=>Math.round((byDay[k]||0)*100)/100);
+      inner.innerHTML = buildLineGraph(counts, labels, METRIC_COLOR.revenue, '');
+      // Show the hover value as currency instead of a raw number.
+      if(_chartZoneData){ Object.keys(_chartZoneData).forEach(i=>{ _chartZoneData[i].tipVal = fmtMoney(counts[i]); }); }
       return;
     }
 
@@ -834,6 +866,27 @@
       _projects = payload.projects || [];
       _views    = payload.views    || [];
     }catch(e){ _projects=[]; _views=[]; }
+
+    // Site sales (revenue) — read the owner's projects' transactions directly.
+    // Refunds are stored as negative amounts, so a plain sum nets them out.
+    try{
+      const pids = _projects.map(p=>p.id);
+      if(pids.length){
+        const { data } = await sb.from('site_data')
+          .select('project_id,data,created_at')
+          .in('project_id', pids)
+          .eq('collection','transactions')
+          .gte('created_at', since);
+        _txns = (data||[]).map(r=>({
+          project_id: r.project_id,
+          ts: r.created_at,
+          amount: Number(r.data?.amount) || 0,
+          type: r.data?.type || 'sale',
+          desc: r.data?.description || '',
+          email: r.data?.customer_email || '',
+        }));
+      } else { _txns = []; }
+    }catch(e){ _txns = []; }
 
     // Rebuild dropdown from fresh project list (public projects only)
     const menu = document.getElementById('projDdMenu');

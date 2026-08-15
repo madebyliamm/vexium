@@ -2032,6 +2032,13 @@
     .ai-card-other-input::placeholder { color: var(--muted); }
     .ai-card-other-send { width: 34px; height: 34px; flex-shrink: 0; border: none; border-radius: 10px; background: var(--text); color: #fff; font-size: 15px; cursor: pointer; transition: transform var(--t-fast); }
     .ai-card-other-send:hover { transform: translateY(-1px); }
+    /* Post-build health check (mobile-readiness / broken images) */
+    .ai-health { display:flex; align-items:center; gap:10px; margin:10px 0 2px; padding:9px 12px 9px 11px; border-radius:12px; background:rgba(245,158,11,.09); box-shadow: inset 0 0 0 1px rgba(245,158,11,.28); align-self:flex-start; animation: aiDoneIn .4s cubic-bezier(.16,1,.3,1) both; }
+    .ai-health-ico { width:15px; height:15px; flex-shrink:0; stroke:#d97706; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    .ai-health-txt { flex:1; font-size:12px; font-weight:600; color:#b45309; }
+    .ai-health-fix { border:none; background:var(--text); color:#fff; font-size:11.5px; font-weight:700; border-radius:8px; padding:6px 13px; cursor:pointer; font-family:var(--sans); flex-shrink:0; transition: transform var(--t-fast); }
+    .ai-health-fix:hover { transform: translateY(-1px); }
+    .ai-health.used { opacity:.5; pointer-events:none; }
 
     /* ── COLLAB CHAT ── */
     .collab-msg-av {
@@ -6478,6 +6485,42 @@ function buildEditedSummary(files, contentWrap) {
   contentWrap.appendChild(summary);
 }
 
+// Best-effort post-build health check. Reads the loaded preview (read-only) for the couple of
+// issues most likely to embarrass a live/phone demo, and offers a one-tap fix. Never blocks or
+// breaks the build — fully wrapped, and the fix is opt-in (costs a build only if clicked).
+function buildHealthCheck(contentWrap) {
+  setTimeout(() => {
+    try {
+      const frame = document.getElementById('previewFrame');
+      const doc = frame && frame.contentDocument;
+      if (!doc || !doc.body || !contentWrap || !contentWrap.isConnected) return;
+      if (contentWrap.querySelector('.ai-health')) return;
+      const issues = [];
+      if (!doc.querySelector('meta[name="viewport" i]')) {
+        issues.push({ label: 'Not mobile-ready', fix: 'The page has no mobile viewport meta tag, so it renders zoomed-out on phones — add a responsive <meta name="viewport"> and make sure the layout works on small screens.' });
+      }
+      const broken = Array.from(doc.images || []).filter(im => im.complete && im.naturalWidth === 0).length;
+      if (broken) {
+        issues.push({ label: broken + ' broken image' + (broken > 1 ? 's' : ''), fix: 'Some images are broken (failing to load). Swap them for working images or build the visuals with CSS/SVG so nothing shows as missing.' });
+      }
+      if (!issues.length) return;
+      const card = document.createElement('div');
+      card.className = 'ai-health';
+      card.innerHTML =
+        '<svg class="ai-health-ico" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<span class="ai-health-txt">' + issues.map(i => escHtml(i.label)).join(' · ') + '</span>' +
+        '<button type="button" class="ai-health-fix">Fix</button>';
+      const fixMsg = 'Please fix these: ' + issues.map(i => i.fix).join(' ');
+      card.querySelector('.ai-health-fix').addEventListener('click', () => {
+        if (card.classList.contains('used')) return;
+        card.classList.add('used');
+        aiSendWithBottomText(fixMsg);
+      });
+      contentWrap.appendChild(card);
+    } catch (_e) { /* best-effort — never let the health check affect the build */ }
+  }, 1600);
+}
+
 
 function friendlyPageName(filename) {
   const map = { 'index.html':'Home page','landing.html':'Landing page','home.html':'Home page','auth.html':'Sign-up page','login.html':'Sign-in page','signup.html':'Sign-up page','register.html':'Sign-up page','dashboard.html':'Dashboard','app.html':'App','about.html':'About page','pricing.html':'Pricing page','contact.html':'Contact page','profile.html':'Profile page','settings.html':'Settings page','blog.html':'Blog page','portfolio.html':'Portfolio page','shop.html':'Shop page','product.html':'Product page','checkout.html':'Checkout page','cart.html':'Cart page','faq.html':'FAQ page','terms.html':'Terms page','privacy.html':'Privacy page','team.html':'Team page','services.html':'Services page' };
@@ -8094,6 +8137,7 @@ async function aiCallAPI() {
         if (!_willContinueNow) {
           const target = row._contentWrap || row;
           buildEditedSummary(collectedFiles, target);
+          if (collectedFiles.some(f => (f.name || f).endsWith('.html'))) buildHealthCheck(target);
         }
       }
 

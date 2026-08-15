@@ -3,7 +3,7 @@
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 import { corsHeaders } from "../_shared/cors.ts";
-import { userIdFromJwt, getProjectById, updateProject } from "../_shared/db.ts";
+import { userIdFromJwt, getProfile, updateProfile } from "../_shared/db.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-11-20.acacia",
@@ -24,20 +24,11 @@ Deno.serve(async (req) => {
     const userId = userIdFromJwt(req.headers.get("Authorization"));
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
-    let project_id: string | null = null;
-    if (req.method === "GET") {
-      project_id = new URL(req.url).searchParams.get("project_id");
-    } else {
-      const body = await req.json().catch(() => ({}));
-      project_id = body.project_id ?? null;
-    }
-    if (!project_id) return json({ error: "project_id required" }, 400);
+    // Account-level: status of the USER's single Connect account (works for all their sites).
+    const profile = await getProfile(userId);
+    if (!profile) return json({ error: "Profile not found" }, 404);
 
-    const project = await getProjectById(project_id);
-    if (!project) return json({ error: "Project not found" }, 404);
-    if (project.user_id !== userId) return json({ error: "Forbidden" }, 403);
-
-    const accountId = project.stripe_connect_account_id as string | null;
+    const accountId = profile.stripe_connect_account_id as string | null;
     if (!accountId) {
       return json({ connected: false, charges_enabled: false });
     }
@@ -46,8 +37,8 @@ Deno.serve(async (req) => {
     const chargesEnabled = account.charges_enabled === true;
 
     // Sync to DB if newly enabled
-    if (chargesEnabled && !project.stripe_connect_charges_enabled) {
-      await updateProject(project_id, { stripe_connect_charges_enabled: true });
+    if (chargesEnabled && !profile.stripe_connect_charges_enabled) {
+      await updateProfile(userId, { stripe_connect_charges_enabled: true });
     }
 
     return json({ connected: true, charges_enabled: chargesEnabled, account_id: accountId });

@@ -99,9 +99,22 @@ Deno.serve(async (req) => {
         // Buyer was refunded on a Vertly-built site — record it so the owner sees it in their sales.
         if (event.account) {
           const charge = event.data.object as Stripe.Charge;
-          const project = await getProjectByConnectAccount(event.account);
-          if (project) {
-            await insertSiteData(project.id, "transactions", {
+          // Prefer the project_id stamped on the PaymentIntent at checkout (an account-level Connect
+          // account is shared across all the owner's sites, so account→project is ambiguous).
+          // Fall back to the legacy 1:1 account→project lookup for older per-project connections.
+          let projectId: string | null = (charge.metadata?.project_id as string) || null;
+          if (!projectId && charge.payment_intent) {
+            try {
+              const pi = await stripe.paymentIntents.retrieve(charge.payment_intent as string, { stripeAccount: event.account });
+              projectId = (pi.metadata?.project_id as string) || null;
+            } catch { /* ignore — fall back below */ }
+          }
+          if (!projectId) {
+            const project = await getProjectByConnectAccount(event.account);
+            projectId = project?.id || null;
+          }
+          if (projectId) {
+            await insertSiteData(projectId, "transactions", {
               type: "refund",
               amount: -((charge.amount_refunded ?? 0) / 100), // negative so it nets out of total revenue
               currency: charge.currency,

@@ -3597,6 +3597,7 @@ async function init() {
   projectId = _urlPid || localStorage.getItem('vexium_current_project');
   if (projectId) { try { localStorage.setItem('vexium_current_project', projectId); } catch (e) {} }
   await loadProject();
+  commerceRefreshConnect(); // account-level Stripe: reflect the connection across every payment indicator
   const _savedDraft = projectId && localStorage.getItem('vx_prompt_draft_' + projectId);
   if (_savedDraft) {
     const _bi = document.getElementById('aiBottomInput');
@@ -9407,12 +9408,14 @@ async function editLoadTransactions() {
 
 // ── COMMERCE TAB ─────────────────────────────────────────────────────────────
 let _commerceTab = 'transactions';
+let _connectSynced = false; // fetch the account-level Connect status once per project load
 
 function commerceSetTab(tab) {
   _commerceTab = tab;
   document.querySelectorAll('#commerceNav .bk-nav-item').forEach(el => el.classList.toggle('active', el.dataset.commerce === tab));
   document.querySelectorAll('.commerce-panel').forEach(el => el.classList.toggle('active', el.id === 'commercePanel' + tab.charAt(0).toUpperCase() + tab.slice(1)));
   commerceLoadStripeStatus();
+  commerceRefreshConnect();
   if (tab === 'customers')          commerceLoadCustomers();
   else if (tab === 'transactions')  commerceLoadTransactions();
   else                              commerceLoadSiteData(tab);
@@ -9500,7 +9503,7 @@ function commerceLoadStripeStatus() {
     bar.innerHTML = `
       <div class="csb-left">
         <div class="csb-title">Connect Stripe to accept payments</div>
-        <div class="csb-sub">Customers can pay directly on your site. Vertly takes 1% per transaction.</div>
+        <div class="csb-sub">Connect once — it works across all your sites. Customers pay you directly; Vertly takes 1% per transaction.</div>
       </div>
       <button id="commerceConnectBtn" class="csb-connect-btn" onclick="commerceConnectStripe()">Connect Stripe →</button>`;
   }
@@ -9588,6 +9591,25 @@ async function commerceCheckConnectReturn() {
     commerceLoadStripeStatus();
     setDevTab('commerce');
   } catch(e) { console.warn('[commerceCheckConnectReturn]', e); }
+}
+
+// Refresh the ACCOUNT-LEVEL Stripe connection (connect once → applies to every project).
+// Populates the current project's in-memory fields for display; the server always resolves the
+// real seller account from the project owner's profile at checkout time.
+async function commerceRefreshConnect() {
+  if (!sb || !project || _connectSynced) return;
+  _connectSynced = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
+    const res = await fetch(`${BK_URL}/functions/v1/stripe-connect-status`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const { connected, charges_enabled, account_id } = await res.json();
+    project.stripe_connect_account_id = account_id || (connected ? project.stripe_connect_account_id : null);
+    project.stripe_connect_charges_enabled = !!charges_enabled;
+    commerceLoadStripeStatus();
+  } catch(e) { /* keep whatever we rendered */ }
 }
 
 // ── Config helpers ────────────────────────────────────────────────────────────

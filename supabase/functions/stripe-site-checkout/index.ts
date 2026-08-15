@@ -9,7 +9,7 @@
 // Deploy: supabase functions deploy stripe-site-checkout --no-verify-jwt
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
-import { getProjectCommerce } from "../_shared/db.ts";
+import { getProjectCommerce, getProfileConnect } from "../_shared/db.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-11-20.acacia",
@@ -74,9 +74,19 @@ Deno.serve(async (req) => {
     if (!cancel_url)   return json({ error: "cancel_url required" }, 400);
 
     const project = await getProjectCommerce(project_id);
-    if (!project)                             return json({ error: "Project not found" }, 404);
-    if (!project.stripe_connect_account_id)   return json({ error: "Stripe not connected for this site" }, 400);
-    if (!project.stripe_connect_charges_enabled) return json({ error: "Stripe account setup incomplete" }, 400);
+    if (!project) return json({ error: "Project not found" }, 404);
+
+    // Resolve the seller's connected account: prefer the owner's ACCOUNT-LEVEL (profile) connection;
+    // fall back to a legacy per-project account so sites connected the old way keep working.
+    const ownerConnect = await getProfileConnect(project.user_id);
+    let connectAccount = ownerConnect.account;
+    let chargesEnabled = ownerConnect.enabled;
+    if (!connectAccount && project.stripe_connect_account_id) {
+      connectAccount = project.stripe_connect_account_id;
+      chargesEnabled = project.stripe_connect_charges_enabled === true;
+    }
+    if (!connectAccount) return json({ error: "Stripe not connected for this site" }, 400);
+    if (!chargesEnabled) return json({ error: "Stripe account setup incomplete" }, 400);
 
     // ── Resolve the price server-side ──────────────────────────────────────────
     if (product_id) {
@@ -110,10 +120,12 @@ Deno.serve(async (req) => {
         }],
         success_url,
         cancel_url,
-        payment_intent_data: { application_fee_amount: platformFee },
+        // project_id on the PI too, so charge.refunded can attribute the refund to the right site
+        // (an account-level Connect account is shared by all of the owner's sites).
+        payment_intent_data: { application_fee_amount: platformFee, metadata: { project_id } },
         metadata: { project_id, product_name: name, product_id: product_id || "" },
       },
-      { stripeAccount: project.stripe_connect_account_id as string },
+      { stripeAccount: connectAccount },
     );
 
     // GET: redirect browser directly to Stripe hosted checkout

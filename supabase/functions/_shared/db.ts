@@ -24,6 +24,14 @@ export async function getProfile(userId: string): Promise<Record<string, any> | 
   return rows[0] || null;
 }
 
+// Account-level Stripe Connect lives on the profile (connect once, use for all the user's sites).
+export async function getProfileConnect(userId: string): Promise<{ account: string | null; enabled: boolean }> {
+  const res = await fetch(`${REST}/profiles?id=eq.${encodeURIComponent(userId)}&select=stripe_connect_account_id,stripe_connect_charges_enabled&limit=1`, { headers: HEADERS });
+  const rows = await res.json();
+  const r = rows[0] || {};
+  return { account: r.stripe_connect_account_id || null, enabled: r.stripe_connect_charges_enabled === true };
+}
+
 export async function getProfileByCustomerId(customerId: string): Promise<Record<string, any> | null> {
   const res = await fetch(`${REST}/profiles?stripe_customer_id=eq.${customerId}&select=*`, { headers: HEADERS });
   const rows = await res.json();

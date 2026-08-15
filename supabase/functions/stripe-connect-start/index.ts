@@ -3,7 +3,7 @@
 
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 import { corsHeaders } from "../_shared/cors.ts";
-import { userIdFromJwt, getProjectById, updateProject } from "../_shared/db.ts";
+import { userIdFromJwt, getProfile, updateProfile } from "../_shared/db.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-11-20.acacia",
@@ -24,19 +24,19 @@ Deno.serve(async (req) => {
     const userId = userIdFromJwt(req.headers.get("Authorization"));
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
-    const { project_id, return_url, refresh_url } = await req.json();
-    if (!project_id) return json({ error: "project_id required" }, 400);
+    // Account-level Connect: one Stripe account per USER, reused across all their sites.
+    // (project_id is still accepted from the client for the return URL, but no longer required.)
+    const { return_url, refresh_url } = await req.json().catch(() => ({}));
 
-    const project = await getProjectById(project_id);
-    if (!project) return json({ error: "Project not found" }, 404);
-    if (project.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    const profile = await getProfile(userId);
+    if (!profile) return json({ error: "Profile not found" }, 404);
 
-    // Create a new Express account if not already set up
-    let accountId = project.stripe_connect_account_id as string | null;
+    // Create a new Express account if this user doesn't have one yet
+    let accountId = profile.stripe_connect_account_id as string | null;
     if (!accountId) {
-      const account = await stripe.accounts.create({ type: "express" });
+      const account = await stripe.accounts.create({ type: "express", metadata: { user_id: userId } });
       accountId = account.id;
-      await updateProject(project_id, { stripe_connect_account_id: accountId });
+      await updateProfile(userId, { stripe_connect_account_id: accountId });
     }
 
     // Generate a fresh onboarding link (account links expire after ~5 min)

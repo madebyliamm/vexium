@@ -70,25 +70,18 @@
       .chart-controls{align-items:flex-start}
       .chart-pill{padding:5px 9px;font-size:10px}
     }
-    .stat-card{border-radius:14px;padding:20px 22px;cursor:pointer;transition:opacity .15s,box-shadow .2s;user-select:none}
-    .stat-card:nth-child(1){background:rgba(96,165,250,.08)}
-    .stat-card:nth-child(2){background:rgba(167,139,250,.08)}
-    .stat-card:nth-child(3){background:rgba(251,191,36,.08)}
-    .stat-card:nth-child(4){background:rgba(251,191,36,.08)}
-    .stat-card.active:nth-child(1){box-shadow:0 0 0 2px rgba(96,165,250,.5)}
-    .stat-card.active:nth-child(2){box-shadow:0 0 0 2px rgba(167,139,250,.5)}
-    .stat-card.active:nth-child(3){box-shadow:0 0 0 2px rgba(251,191,36,.5)}
-    .stat-card.active:nth-child(4){box-shadow:0 0 0 2px rgba(251,191,36,.5)}
-    .stat-card:not(.active){opacity:.5}
-    .stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-    .stat-card:nth-child(1) .stat-label{color:rgba(96,165,250,.9)}
-    .stat-card:nth-child(2) .stat-label{color:rgba(167,139,250,.9)}
-    .stat-card:nth-child(3) .stat-label{color:rgba(251,191,36,.9)}
-    .stat-card:nth-child(4) .stat-label{color:rgba(251,191,36,.9)}
-    .stat-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .stat-value{font-size:clamp(26px,2.4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:6px}
+    .stat-card{background:var(--s1);border-radius:16px;padding:17px 19px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .18s;user-select:none}
+    .stat-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(30,27,60,.13)}
+    .stat-card.active{box-shadow:var(--shadow-sm),inset 0 0 0 2px rgba(124,58,237,.55)}
+    .stat-card.active:hover{box-shadow:0 14px 34px rgba(30,27,60,.13),inset 0 0 0 2px rgba(124,58,237,.55)}
+    .stat-ico{width:46px;height:46px;border-radius:13px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .stat-ico svg{width:22px;height:22px;stroke:#7c3aed;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .stat-body{min-width:0}
+    .stat-value{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--text)}
     .stat-value.empty{color:var(--b3)}
-    .stat-meta{font-size:11px;font-weight:600;color:var(--sub)}
+    .stat-sub{font-size:12px;margin-top:6px;font-weight:600;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stat-sub b{color:var(--text);font-weight:700}
+    .stat-sub b::after{content:'·';color:var(--sub);font-weight:600;margin:0 5px}
 
     /* CHART */
     .chart-section{background:var(--s1);border-radius:16px;padding:24px 28px;margin-bottom:10px}
@@ -132,11 +125,11 @@
     .color-key-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
     /* empty state */
-    .chart-empty{height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-    .chart-empty-icon{width:36px;height:36px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center}
-    .chart-empty-icon svg{width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .chart-empty-t{font-size:13px;font-weight:700;color:var(--sub)}
-    .chart-empty-s{font-size:11px;color:var(--b3);text-align:center;max-width:260px;line-height:1.5}
+    .chart-empty{min-height:184px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:24px 16px}
+    .chart-empty-icon{width:54px;height:54px;border-radius:16px;background:rgba(124,58,237,.1);display:flex;align-items:center;justify-content:center}
+    .chart-empty-icon svg{width:24px;height:24px;stroke:#7c3aed;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .chart-empty-t{font-size:14.5px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+    .chart-empty-s{font-size:12px;color:var(--sub);text-align:center;max-width:290px;line-height:1.55}
 
     /* DETAIL */
     .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -219,28 +212,25 @@
   <!-- Stat cards -->
   <div class="stat-grid">
     <div class="stat-card active" data-metric="visitors" onclick="selectMetric('visitors')">
-      <div class="stat-label">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Unique Visitors
+      <div class="stat-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-value empty" id="statVisitors">—</div>
+        <div class="stat-sub"><b>Visitors</b><span id="statVisitorsMeta">Last 7 days</span></div>
       </div>
-      <div class="stat-value empty" id="statVisitors">—</div>
-      <div class="stat-meta" id="statVisitorsMeta">—</div>
     </div>
     <div class="stat-card" data-metric="views" onclick="selectMetric('views')">
-      <div class="stat-label">
-        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Visits
+      <div class="stat-ico"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-value empty" id="statViews">—</div>
+        <div class="stat-sub"><b>Visits</b><span id="statViewsMeta">Last 7 days</span></div>
       </div>
-      <div class="stat-value empty" id="statViews">—</div>
-      <div class="stat-meta" id="statViewsMeta">—</div>
     </div>
     <div class="stat-card" data-metric="revenue" onclick="selectMetric('revenue')">
-      <div class="stat-label">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Revenue
+      <div class="stat-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="stat-body">
+        <div class="stat-value empty" id="statRevenue">—</div>
+        <div class="stat-sub"><b>Revenue</b><span id="statRevenueMeta">Last 7 days</span></div>
       </div>
-      <div class="stat-value empty" id="statRevenue">—</div>
-      <div class="stat-meta" id="statRevenueMeta">—</div>
     </div>
   </div>
 
@@ -466,18 +456,18 @@
     // Unique Visitors = distinct persistent device IDs (visitor_id from localStorage)
     const uniqueVisitors = new Set(av.map(v=>v.visitor_id).filter(Boolean)).size;
     setVal('statVisitors', uniqueVisitors ? fmt(uniqueVisitors) : '0', false);
-    document.getElementById('statVisitorsMeta').textContent = uniqueVisitors ? `Last ${rangeLabel}` : 'No data yet';
+    document.getElementById('statVisitorsMeta').textContent = `Last ${rangeLabel}`;
 
     // Visits = distinct sessions (session_id from sessionStorage — new each time site is opened)
     const visits = new Set(av.map(v=>v.session_id).filter(Boolean)).size;
     setVal('statViews', visits ? fmt(visits) : '0', false);
-    document.getElementById('statViewsMeta').textContent = visits ? `Last ${rangeLabel}` : 'No data yet';
+    document.getElementById('statViewsMeta').textContent = `Last ${rangeLabel}`;
 
     // Revenue = sum of site sales (refunds stored negative, so they net out)
     const at  = activeTxns();
     const rev = at.reduce((s,t)=>s+(t.amount||0),0);
-    setVal('statRevenue', rev ? fmtMoney(rev) : '$0', rev===0);
-    document.getElementById('statRevenueMeta').textContent = at.length ? `Last ${rangeLabel}` : 'No sales yet';
+    setVal('statRevenue', rev ? fmtMoney(rev) : '$0', false);
+    document.getElementById('statRevenueMeta').textContent = `Last ${rangeLabel}`;
   }
 
   function renderChart(){

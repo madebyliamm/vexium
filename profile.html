@@ -92,62 +92,60 @@
     /* ══ PAGE ══ */
     .page{max-width:clamp(700px,82vw,980px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,40px) 80px}
 
-    /* ══ PROFILE HEADER ══ */
-    .prof-header{display:flex;align-items:flex-start;gap:clamp(20px,3vw,40px);margin-bottom:clamp(32px,4vw,52px)}
+    /* ══ PROFILE CARD — banner + overlapping avatar ══ */
+    .prof-card{background:var(--s1);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:clamp(22px,2.6vw,32px)}
+    .prof-banner{height:clamp(104px,13vw,150px);background:linear-gradient(115deg,#6d28d9 0%,#7c3aed 34%,#9333ea 62%,#c084fc 100%);position:relative}
+    .prof-banner::after{content:'';position:absolute;inset:0;background:radial-gradient(130% 150% at 82% -30%,rgba(255,255,255,.4),transparent 55%)}
+    .prof-card-body{position:relative;padding:0 clamp(20px,3vw,34px) clamp(22px,2.6vw,30px)}
 
-    /* Avatar */
-    .pfp-wrap{position:relative;flex-shrink:0}
+    /* Avatar — overlaps the banner, white ring */
+    .pfp-wrap{position:relative;width:max-content;margin-top:clamp(-56px,-6vw,-46px)}
     .pfp{
-      width:clamp(72px,8vw,100px);height:clamp(72px,8vw,100px);
-      border-radius:50%;
-      background:#8e8e99;
+      width:clamp(88px,9vw,114px);height:clamp(88px,9vw,114px);
+      border-radius:50%;background:#8e8e99;
       display:flex;align-items:center;justify-content:center;
-      font-size:clamp(24px,3vw,38px);font-weight:800;color:#fff;
+      font-size:clamp(30px,3.4vw,42px);font-weight:800;color:#fff;
       position:relative;overflow:hidden;flex-shrink:0;
-      transition:opacity .2s;
+      box-shadow:0 0 0 5px var(--s1),0 12px 30px rgba(30,27,60,.2);
     }
     .pfp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
 
     /* Info */
-    .prof-info{flex:1;min-width:0}
-    .prof-name-row{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap}
-    .prof-name{font-size:clamp(20px,2.2vw,30px);font-weight:800;letter-spacing:-.5px;line-height:1.1}
-    .prof-handle{font-size:clamp(12px,1vw,14px);color:var(--sub);margin-bottom:clamp(8px,1vw,12px)}
-    .prof-bio{font-size:clamp(13px,1.05vw,15px);color:var(--sub);line-height:1.65;max-width:500px;margin-bottom:clamp(14px,1.5vw,20px)}
+    .prof-info{padding-top:clamp(14px,1.6vw,18px);min-width:0}
+    .prof-name-row{display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap}
+    .prof-name{font-size:clamp(22px,2.4vw,32px);font-weight:800;letter-spacing:-.6px;line-height:1.1;color:var(--text)}
+    .prof-handle{font-size:clamp(12px,1vw,14px);color:var(--sub);font-weight:600;margin-bottom:clamp(11px,1.2vw,15px)}
+    .prof-bio{font-size:clamp(13px,1.05vw,15px);color:var(--text);opacity:.85;line-height:1.65;max-width:580px;margin-bottom:clamp(16px,1.8vw,22px)}
 
-    /* Stats */
-    .stats-row{display:flex;gap:clamp(16px,2.5vw,32px);flex-wrap:wrap;margin-bottom:clamp(16px,2vw,24px)}
-    .stat{cursor:pointer;transition:opacity .15s}
-    .stat:hover{opacity:.75}
-    .stat-n{font-size:clamp(15px,1.4vw,20px);font-weight:800;letter-spacing:-.3px}
-    .stat-l{font-size:clamp(10px,0.85vw,12px);color:var(--sub);margin-top:1px}
+    /* Stats — chips */
+    .stats-row{display:flex;gap:clamp(8px,1vw,10px);flex-wrap:wrap;margin-top:2px}
+    .stat{display:inline-flex;align-items:baseline;gap:6px;cursor:pointer;padding:9px 16px;border-radius:12px;background:var(--b1);transition:background .15s,transform .15s}
+    .stat:hover{background:var(--s2);transform:translateY(-1px)}
+    .stat-n{font-size:clamp(15px,1.3vw,18px);font-weight:800;letter-spacing:-.3px;color:var(--text)}
+    .stat-l{font-size:clamp(11px,0.9vw,12.5px);color:var(--sub);font-weight:600}
 
-    /* Action buttons (follow/edit) */
-    .prof-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:2px;flex-shrink:0}
+    /* Action buttons (follow/edit) — top-right of the card body, below the banner */
+    .prof-actions{position:absolute;top:clamp(14px,1.7vw,20px);right:clamp(20px,3vw,34px);display:flex;align-items:center;gap:8px;z-index:2}
     .btn-follow{
-      padding:clamp(8px,0.75vw,11px) clamp(18px,1.8vw,26px);
-      border-radius:9px;
-      background:var(--text);
+      padding:clamp(9px,0.8vw,11px) clamp(18px,1.9vw,26px);
+      border-radius:12px;background:var(--text);
       color:#fff;font-size:clamp(12px,0.9vw,14px);font-weight:700;
       border:none;cursor:pointer;font-family:var(--sans);
-      transition:all .2s;box-shadow:0 4px 14px rgba(24,24,27,.18);
+      transition:all .2s;box-shadow:0 6px 16px rgba(24,24,27,.2);
       white-space:nowrap;
     }
-    .btn-follow:hover{opacity:.88;transform:translateY(-1px)}
-    .btn-follow.unfollow{background:transparent;border:1px solid var(--b2);color:var(--sub);box-shadow:none}
+    .btn-follow:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-follow.unfollow{background:var(--s1);border:1px solid var(--b2);color:var(--sub);box-shadow:0 2px 10px rgba(30,27,60,.08)}
     .btn-follow.unfollow:hover{border-color:var(--err);color:var(--err)}
     .btn-edit{
       display:flex;align-items:center;justify-content:center;
-      width:32px;height:32px;
-      border-radius:8px;background:transparent;border:none;
+      border-radius:11px;background:var(--s1);border:none;
+      box-shadow:0 2px 10px rgba(30,27,60,.1),inset 0 0 0 1px var(--b2);
       color:var(--sub);cursor:pointer;font-family:var(--sans);
-      font-size:15px;font-weight:900;letter-spacing:2px;line-height:1;
-      padding-left:2px; /* offset letter-spacing on last char for true center */
-      padding-bottom:4px; /* middle-dot glyph sits low — nudge it up */
       transition:all .15s;flex-shrink:0;
     }
-    .btn-edit:hover{background:var(--b1);color:var(--text)}
-    body.edit-mode .btn-edit{background:var(--accent-soft);color:var(--accent)}
+    .btn-edit:hover{color:var(--text);transform:translateY(-1px);box-shadow:0 5px 16px rgba(30,27,60,.16),inset 0 0 0 1px var(--b3)}
+    body.edit-mode .btn-edit{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(124,58,237,.3)}
     .edit-mode-only{display:none!important}
     body.edit-mode .edit-mode-only{display:block!important}
 
@@ -264,10 +262,10 @@
     .usage-bar-sub{font-size:11px;color:var(--sub);margin-top:7px;line-height:1.5}
 
     /* ══ TABS ══ */
-    .tabs{display:flex;gap:2px;border-bottom:1px solid var(--b1);margin-bottom:clamp(20px,2.5vw,32px)}
-    .tab{padding:10px 18px;font-size:clamp(12px,0.95vw,14px);font-weight:700;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+    .tabs{display:inline-flex;gap:3px;background:var(--s2);padding:4px;border-radius:13px;margin-bottom:clamp(20px,2.5vw,30px)}
+    .tab{padding:8px 18px;font-size:clamp(12px,0.95vw,13.5px);font-weight:700;color:var(--sub);cursor:pointer;border-radius:10px;transition:all .15s}
     .tab:hover{color:var(--text)}
-    .tab.active{color:var(--text);border-bottom-color:var(--a1)}
+    .tab.active{color:var(--text);background:var(--s1);box-shadow:0 1px 4px rgba(30,27,60,.1)}
 
     /* ══ PROJECT GRID ══ */
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,18vw,260px),1fr));gap:clamp(10px,1vw,14px)}
@@ -357,11 +355,11 @@
     .mbtn-ok:hover{opacity:.82}
 
     /* Empty state */
-    .empty{text-align:center;padding:clamp(48px,7vw,80px) 20px;display:none}
+    .empty{text-align:center;padding:clamp(40px,6vw,72px) 20px;display:none}
     .empty.show{display:block}
-    .empty-ico{font-size:clamp(28px,3vw,40px);margin-bottom:14px;opacity:.5}
-    .empty-t{font-size:clamp(14px,1.2vw,17px);font-weight:700;margin-bottom:6px}
-    .empty-s{font-size:clamp(12px,0.9vw,13px);color:var(--sub)}
+    .empty-ico{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;background:rgba(124,58,237,.09);display:flex;align-items:center;justify-content:center;font-size:30px}
+    .empty-t{font-size:clamp(15px,1.2vw,17px);font-weight:800;letter-spacing:-.2px;margin-bottom:6px;color:var(--text)}
+    .empty-s{font-size:clamp(12px,0.9vw,13.5px);color:var(--sub);line-height:1.55;max-width:340px;margin:0 auto}
 
     /* Loading shimmer */
     .loading-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,18vw,260px),1fr));gap:clamp(10px,1vw,14px)}
@@ -413,15 +411,10 @@
       /* Topbar: shrink search */
       .tb-search{max-width:none;flex:1}
 
-      /* Profile header: center everything */
-      .prof-header{flex-direction:column;align-items:center;text-align:center;gap:14px}
-      .pfp{width:80px;height:80px;font-size:28px}
+      /* Profile card: stays left-aligned; actions remain pinned top-right */
       .prof-info{width:100%}
-      .prof-name-row{justify-content:center}
-      .prof-handle{text-align:center}
-      .prof-bio{max-width:100%;text-align:center;margin-left:auto;margin-right:auto}
-      .stats-row{justify-content:center;gap:20px}
-      .prof-actions{justify-content:center;width:100%}
+      .prof-bio{max-width:100%}
+      .stats-row{gap:8px}
 
       /* Edit fields full width */
       .edit-input{max-width:100%}
@@ -483,70 +476,69 @@
 
 <div class="page">
 
-  <!-- Profile header -->
-  <div class="prof-header">
+  <!-- Profile card -->
+  <div class="prof-card">
+    <div class="prof-banner"></div>
+    <div class="prof-card-body">
 
-    <!-- Avatar -->
-    <div class="pfp-wrap">
-      <div class="pfp" id="pfpEl">
-        <span id="pfpInitial">?</span>
+      <!-- Action buttons (follow / settings gear) -->
+      <div class="prof-actions" id="profActions"></div>
+
+      <!-- Avatar -->
+      <div class="pfp-wrap">
+        <div class="pfp" id="pfpEl">
+          <span id="pfpInitial">?</span>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="prof-info">
+
+        <!-- View mode -->
+        <div class="prof-name-row">
+          <div class="prof-name" id="profName">Loading…</div>
+        </div>
+        <div class="prof-handle" id="profHandle">@—</div>
+        <div class="prof-email" id="profEmail" style="display:none;font-size:12px;color:var(--sub);margin-top:2px;margin-bottom:4px"></div>
+        <div class="prof-bio" id="profBio"></div>
+
+        <!-- Edit mode fields (hidden unless body.edit-mode) -->
+        <div class="edit-field">
+          <div class="edit-label">Display name</div>
+          <input class="edit-input" id="fName" placeholder="Your name" autocomplete="off"/>
+        </div>
+        <div class="edit-field">
+          <div class="edit-label">Username</div>
+          <input class="edit-input" id="fUsername" placeholder="username" autocomplete="off"/>
+        </div>
+        <div class="edit-field">
+          <div class="edit-label">Bio</div>
+          <textarea class="edit-input" id="fBio" rows="3" placeholder="Tell the world what you're building…"></textarea>
+        </div>
+        <div class="edit-save-row">
+          <button class="btn-save" onclick="saveProfile()">Save changes</button>
+          <button class="btn-cancel-edit" onclick="exitEditMode()">Cancel</button>
+          <span class="edit-msg" id="editMsg"></span>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="statsRow">
+          <div class="stat" onclick="openFollowList('followers')">
+            <div class="stat-n" id="statFollowers">0</div>
+            <div class="stat-l">Followers</div>
+          </div>
+          <div class="stat" onclick="openFollowList('following')">
+            <div class="stat-n" id="statFollowing">0</div>
+            <div class="stat-l">Following</div>
+          </div>
+          <div class="stat" onclick="openFollowList('friends')">
+            <div class="stat-n" id="statFriends">0</div>
+            <div class="stat-l">Friends</div>
+          </div>
+        </div>
+
       </div>
     </div>
-
-    <!-- Info -->
-    <div class="prof-info">
-
-      <!-- View mode -->
-      <div class="prof-name-row">
-        <div class="prof-name" id="profName">Loading…</div>
-      </div>
-      <div class="prof-handle" id="profHandle">@—</div>
-      <div class="prof-email" id="profEmail" style="display:none;font-size:12px;color:var(--sub);margin-top:2px;margin-bottom:4px"></div>
-      <div class="prof-bio" id="profBio"></div>
-
-      <!-- Edit mode fields -->
-      <div class="edit-field">
-        <div class="edit-label">Display name</div>
-        <input class="edit-input" id="fName" placeholder="Your name" autocomplete="off"/>
-      </div>
-      <div class="edit-field">
-        <div class="edit-label">Username</div>
-        <input class="edit-input" id="fUsername" placeholder="username" autocomplete="off"/>
-      </div>
-      <div class="edit-field">
-        <div class="edit-label">Bio</div>
-        <textarea class="edit-input" id="fBio" rows="3" placeholder="Tell the world what you're building…"></textarea>
-      </div>
-      <div class="edit-save-row">
-        <button class="btn-save" onclick="saveProfile()">Save changes</button>
-        <button class="btn-cancel-edit" onclick="exitEditMode()">Cancel</button>
-        <span class="edit-msg" id="editMsg"></span>
-      </div>
-
-      <!-- Stats -->
-      <div class="stats-row" id="statsRow">
-        <div class="stat" onclick="openFollowList('followers')">
-          <div class="stat-n" id="statFollowers">0</div>
-          <div class="stat-l">Followers</div>
-        </div>
-        <div class="stat" onclick="openFollowList('following')">
-          <div class="stat-n" id="statFollowing">0</div>
-          <div class="stat-l">Following</div>
-        </div>
-        <div class="stat" onclick="openFollowList('friends')">
-          <div class="stat-n" id="statFriends">0</div>
-          <div class="stat-l">Friends</div>
-        </div>
-      </div>
-
-      <!-- Privacy pill (own profile only) -->
-
-
-    </div>
-
-    <!-- Action buttons -->
-    <div class="prof-actions" id="profActions"></div>
-
   </div>
 
   <!-- Account actions (own profile, edit mode only) -->

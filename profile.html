@@ -90,13 +90,46 @@
     .notif-empty{padding:32px 16px;text-align:center;font-size:12px;color:var(--sub)}
 
     /* ══ PAGE ══ */
-    .page{max-width:clamp(700px,82vw,980px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,40px) 80px}
+    .page{max-width:clamp(700px,82vw,980px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,40px) 80px;transition:max-width .42s var(--ease)}
+    body.panel-open .page{max-width:min(1320px,96vw)}
+
+    /* ══ TWO-COLUMN LAYOUT (profile + slide-in side panel) ══ */
+    .profile-layout{display:flex;gap:clamp(16px,2vw,26px);align-items:flex-start}
+    .profile-col{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:max-width .42s var(--ease),margin .42s var(--ease)}
+    body.panel-open .profile-col{margin:0;max-width:none}
+    .side-panel{width:0;flex-shrink:0;overflow:hidden;opacity:0;background:var(--s1);border-radius:24px;box-shadow:var(--shadow);position:sticky;top:74px;max-height:calc(100vh - 94px);align-self:flex-start;transition:width .42s var(--ease),opacity .3s ease}
+    body.panel-open .side-panel{width:min(440px,44vw);opacity:1;overflow-y:auto}
+    .sp-head{position:sticky;top:0;background:var(--s1);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--b1);z-index:2}
+    .sp-title{font-size:16px;font-weight:800;letter-spacing:-.3px;white-space:nowrap}
+    .sp-close{width:30px;height:30px;border-radius:9px;background:var(--b1);border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .sp-close:hover{background:var(--b2);color:var(--text)}
+    .sp-close svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
+    .sp-body{padding:16px 20px 22px}
+    .sp-empty{padding:20px 4px;font-size:12.5px;color:var(--sub);text-align:center}
+    .sp-tabs{display:flex;gap:3px;background:var(--s2);padding:4px;border-radius:12px;margin-bottom:14px}
+    .sp-tab{flex:1;padding:8px 0;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;border:none;background:transparent;border-radius:9px;font-family:var(--sans);transition:all .15s}
+    .sp-tab:hover{color:var(--text)}
+    .sp-tab.active{color:var(--text);background:var(--s1);box-shadow:0 1px 4px rgba(30,27,60,.1)}
+    .follow-list{display:flex;flex-direction:column;gap:2px}
+    .fi{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:11px;cursor:pointer;transition:background .12s}
+    .fi:hover{background:var(--b1)}
+    .fi-av{width:34px;height:34px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+    .fi-name{font-size:13px;font-weight:700;line-height:1.2}
+    .fi-handle{font-size:11px;color:var(--sub)}
+    /* Settings capsule (own profile, above card) */
+    .settings-cap-wrap{display:flex;justify-content:center;margin-bottom:clamp(14px,1.8vw,20px)}
+    .settings-cap{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:var(--s1);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--b2);color:var(--text);font-size:13.5px;font-weight:700;font-family:var(--sans);cursor:pointer;border:none;transition:all .15s}
+    .settings-cap:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,27,60,.14),inset 0 0 0 1px var(--b3)}
+    .settings-cap.active{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(124,58,237,.3)}
+    .settings-cap svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
     /* ══ PROFILE CARD — banner + overlapping avatar ══ */
     .prof-card{background:var(--s1);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:clamp(22px,2.6vw,32px)}
     .prof-banner{height:clamp(104px,13vw,150px);background:linear-gradient(115deg,#6d28d9 0%,#7c3aed 34%,#9333ea 62%,#c084fc 100%);position:relative}
     .prof-banner::after{content:'';position:absolute;inset:0;background:radial-gradient(130% 150% at 82% -30%,rgba(255,255,255,.4),transparent 55%)}
-    .prof-card-body{position:relative;padding:0 clamp(20px,3vw,34px) clamp(22px,2.6vw,30px)}
+    .prof-card-body{position:relative;padding:0 clamp(20px,3vw,34px) clamp(22px,2.6vw,30px);display:flex;gap:clamp(18px,2.5vw,32px);align-items:flex-start}
+    .prof-left{flex:1;min-width:0}
+    .prof-stats-col{flex-shrink:0;width:clamp(150px,17vw,192px);padding-top:clamp(16px,2vw,22px);display:flex;flex-direction:column;gap:8px}
 
     /* Avatar — overlaps the banner, white ring */
     .pfp-wrap{position:relative;width:max-content;margin-top:clamp(-56px,-6vw,-46px)}
@@ -122,15 +155,17 @@
     .prof-email svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
     .prof-bio{font-size:clamp(13px,1.05vw,15px);color:var(--text);opacity:.85;line-height:1.65;max-width:580px;margin-bottom:clamp(16px,1.8vw,22px)}
 
-    /* Stats — chips */
-    .stats-row{display:flex;gap:clamp(8px,1vw,10px);flex-wrap:wrap;margin-top:2px}
-    .stat{display:inline-flex;align-items:baseline;gap:6px;cursor:pointer;padding:9px 16px;border-radius:12px;background:var(--b1);transition:background .15s,transform .15s}
+    /* Stats — stacked vertically in the right column */
+    .stats-row{display:flex;flex-direction:column;gap:8px}
+    .stat{display:flex;align-items:baseline;gap:7px;cursor:pointer;padding:12px 15px;border-radius:12px;background:var(--b1);transition:background .15s,transform .15s}
     .stat:hover{background:var(--s2);transform:translateY(-1px)}
-    .stat-n{font-size:clamp(15px,1.3vw,18px);font-weight:800;letter-spacing:-.3px;color:var(--text)}
+    .stat-n{font-size:clamp(16px,1.4vw,19px);font-weight:800;letter-spacing:-.3px;color:var(--text)}
     .stat-l{font-size:clamp(11px,0.9vw,12.5px);color:var(--sub);font-weight:600}
 
-    /* Action buttons (follow/edit) — top-right of the card body, below the banner */
-    .prof-actions{position:absolute;top:clamp(14px,1.7vw,20px);right:clamp(20px,3vw,34px);display:flex;align-items:center;gap:8px;z-index:2}
+    /* Action buttons (follow/settings) — top of the right stats column */
+    .prof-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+    .prof-actions:empty{display:none}
+    .prof-stats-col .btn-follow{width:100%;justify-content:center}
     .btn-follow{
       padding:clamp(9px,0.8vw,11px) clamp(18px,1.9vw,26px);
       border-radius:12px;background:var(--text);
@@ -423,10 +458,19 @@
       /* Topbar: shrink search */
       .tb-search{max-width:none;flex:1}
 
-      /* Profile card: stays left-aligned; actions remain pinned top-right */
+      /* Profile card: stack the info + stats columns */
       .prof-info{width:100%}
       .prof-bio{max-width:100%}
-      .stats-row{gap:8px}
+      .prof-card-body{flex-direction:column;gap:14px}
+      .prof-stats-col{width:100%;padding-top:4px}
+      .stats-row{flex-direction:row;flex-wrap:wrap;gap:8px}
+      .stat{flex:1;min-width:120px}
+      /* Side panel becomes a full-screen slide-over */
+      .profile-layout{display:block}
+      .side-panel{position:fixed;inset:0;width:auto;max-height:none;border-radius:0;z-index:400;opacity:1;transform:translateX(100%);transition:transform .34s var(--ease)}
+      body.panel-open{overflow:hidden}
+      body.panel-open .side-panel{width:auto;opacity:1;transform:translateX(0);overflow-y:auto}
+      body.panel-open .profile-col{max-width:none;margin:0}
 
       /* Edit fields full width */
       .edit-input{max-width:100%}
@@ -487,24 +531,27 @@
 </div>
 
 <div class="page">
+ <div class="profile-layout" id="profileLayout">
+  <div class="profile-col">
+
+  <!-- Settings capsule (own profile only, rendered by JS) -->
+  <div class="settings-cap-wrap" id="settingsCapWrap"></div>
 
   <!-- Profile card -->
   <div class="prof-card">
     <div class="prof-banner"></div>
     <div class="prof-card-body">
 
-      <!-- Action buttons (follow / settings gear) -->
-      <div class="prof-actions" id="profActions"></div>
-
-      <!-- Avatar -->
-      <div class="pfp-wrap">
-        <div class="pfp" id="pfpEl">
-          <span id="pfpInitial">?</span>
+      <div class="prof-left">
+        <!-- Avatar -->
+        <div class="pfp-wrap">
+          <div class="pfp" id="pfpEl">
+            <span id="pfpInitial">?</span>
+          </div>
         </div>
-      </div>
 
-      <!-- Info -->
-      <div class="prof-info">
+        <!-- Info -->
+        <div class="prof-info">
 
         <!-- View mode -->
         <div class="prof-name-row">
@@ -538,6 +585,12 @@
           <span class="edit-msg" id="editMsg"></span>
         </div>
 
+      </div><!-- /prof-info -->
+      </div><!-- /prof-left -->
+
+      <div class="prof-stats-col">
+        <!-- Action buttons (follow / settings gear) -->
+        <div class="prof-actions" id="profActions"></div>
         <!-- Stats -->
         <div class="stats-row" id="statsRow">
           <div class="stat" onclick="openFollowList('followers')">
@@ -553,10 +606,9 @@
             <div class="stat-l">Friends</div>
           </div>
         </div>
-
-      </div>
-    </div>
-  </div>
+      </div><!-- /prof-stats-col -->
+    </div><!-- /prof-card-body -->
+  </div><!-- /prof-card -->
 
   <!-- Account actions (own profile, edit mode only) -->
   <div class="account-actions" id="accountActions">
@@ -658,6 +710,17 @@
     </div>
     <div class="proj-grid" id="sharedGrid"></div>
   </div>
+
+  </div><!-- /profile-col -->
+
+  <aside class="side-panel" id="sidePanel">
+    <div class="sp-head">
+      <div class="sp-title" id="spTitle">Settings</div>
+      <button class="sp-close" onclick="closeSidePanel()" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sp-body" id="spBody"></div>
+  </aside>
+ </div><!-- /profile-layout -->
 
 </div>
 
@@ -1475,15 +1538,33 @@
     await refreshCollabList(pid);
   }
 
-  /* ── FOLLOW LIST ── */
+  /* ── SIDE PANEL (slide-in) ── */
+  function openSidePanel(title){
+    document.getElementById('spTitle').textContent=title;
+    document.body.classList.add('panel-open');
+    const sp=document.getElementById('sidePanel'); if(sp) sp.scrollTop=0;
+  }
+  function closeSidePanel(){
+    document.body.classList.remove('panel-open');
+    document.querySelectorAll('.stat.active,.settings-cap.active').forEach(e=>e.classList.remove('active'));
+  }
+
+  /* ── FOLLOW LIST (in the side panel) ── */
   let _followCache=null;
   async function openFollowList(type){
     _followCache=null;
-    document.getElementById('followOverlay').classList.add('show');
+    document.getElementById('spBody').innerHTML=`
+      <div class="sp-tabs">
+        <button class="sp-tab" data-ft="followers" onclick="switchFollowTab('followers')">Followers</button>
+        <button class="sp-tab" data-ft="following" onclick="switchFollowTab('following')">Following</button>
+        <button class="sp-tab" data-ft="friends" onclick="switchFollowTab('friends')">Friends</button>
+      </div>
+      <div class="follow-list" id="followList"></div>`;
+    openSidePanel('People');
     setFollowTab(type);
     const list=document.getElementById('followList');
-    list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Loading…</div>';
-    if(!sb||!viewId){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Sign in to view.</div>';return;}
+    list.innerHTML='<div class="sp-empty">Loading…</div>';
+    if(!sb||!viewId){list.innerHTML='<div class="sp-empty">Sign in to view.</div>';return;}
     try{
       const[{data:fwing},{data:fwers}]=await Promise.all([
         sb.from('follows').select('following_id').eq('follower_id',viewId),
@@ -1498,13 +1579,11 @@
         (profiles||[]).forEach(p=>{profileMap[p.id]=p;});
       }
       _followCache={followingIds,followerIds,profileMap};
-    }catch(e){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">Could not load.</div>';return;}
+    }catch(e){list.innerHTML='<div class="sp-empty">Could not load.</div>';return;}
     renderFollowTab(type);
   }
   function setFollowTab(type){
-    ['followers','following','friends'].forEach(t=>{
-      document.getElementById('ft'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active',t===type);
-    });
+    document.querySelectorAll('.sp-tab[data-ft]').forEach(b=>b.classList.toggle('active',b.dataset.ft===type));
   }
   function switchFollowTab(type){
     setFollowTab(type);
@@ -1512,13 +1591,13 @@
   }
   function renderFollowTab(type){
     const list=document.getElementById('followList');
-    if(!_followCache){return;}
+    if(!list||!_followCache){return;}
     const{followingIds,followerIds,profileMap}=_followCache;
     let ids=[];
     if(type==='following')ids=followingIds;
     else if(type==='followers')ids=followerIds;
     else ids=followingIds.filter(id=>followerIds.includes(id));
-    if(!ids.length){list.innerHTML='<div style="padding:14px;font-size:12px;color:var(--sub)">None yet.</div>';return;}
+    if(!ids.length){list.innerHTML='<div class="sp-empty">None yet.</div>';return;}
     list.innerHTML=ids.map(id=>{
       const p=profileMap[id];if(!p)return'';
       const n=p.display_name||p.username||'?';
@@ -1528,8 +1607,8 @@
       </div>`;
     }).join('');
   }
-  function closeFollowOverlay(){document.getElementById('followOverlay').classList.remove('show');}
-  function goProfile(u){closeFollowOverlay();if(u)location.href='profile.html?user='+u;}
+  function closeFollowOverlay(){closeSidePanel();}
+  function goProfile(u){closeSidePanel();if(u)location.href='profile.html?user='+u;}
 
   /* ── TABS ── */
   function switchTab(t){

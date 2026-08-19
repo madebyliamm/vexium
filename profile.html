@@ -114,7 +114,12 @@
     .prof-info{padding-top:clamp(14px,1.6vw,18px);min-width:0}
     .prof-name-row{display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap}
     .prof-name{font-size:clamp(22px,2.4vw,32px);font-weight:800;letter-spacing:-.6px;line-height:1.1;color:var(--text)}
-    .prof-handle{font-size:clamp(12px,1vw,14px);color:var(--sub);font-weight:600;margin-bottom:clamp(11px,1.2vw,15px)}
+    .prof-handle{font-size:clamp(12px,1vw,14px);color:var(--sub);font-weight:600}
+    .prof-meta-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:clamp(11px,1.2vw,15px)}
+    .prof-email{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:var(--b1);border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:background .15s,color .15s}
+    .prof-email:hover{background:var(--s2);color:var(--text)}
+    .prof-email.copied{background:rgba(22,163,74,.12);color:var(--ok)}
+    .prof-email svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
     .prof-bio{font-size:clamp(13px,1.05vw,15px);color:var(--text);opacity:.85;line-height:1.65;max-width:580px;margin-bottom:clamp(16px,1.8vw,22px)}
 
     /* Stats — chips */
@@ -262,7 +267,7 @@
     .usage-bar-sub{font-size:11px;color:var(--sub);margin-top:7px;line-height:1.5}
 
     /* ══ TABS ══ */
-    .tabs{display:inline-flex;gap:3px;background:var(--s2);padding:4px;border-radius:13px;margin-bottom:clamp(20px,2.5vw,30px)}
+    .tabs{display:flex;width:max-content;margin:0 auto clamp(20px,2.5vw,30px);gap:3px;background:var(--s2);padding:4px;border-radius:13px}
     .tab{padding:8px 18px;font-size:clamp(12px,0.95vw,13.5px);font-weight:700;color:var(--sub);cursor:pointer;border-radius:10px;transition:all .15s}
     .tab:hover{color:var(--text)}
     .tab.active{color:var(--text);background:var(--s1);box-shadow:0 1px 4px rgba(30,27,60,.1)}
@@ -270,25 +275,32 @@
     /* ══ PROJECT GRID ══ */
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,18vw,260px),1fr));gap:clamp(10px,1vw,14px)}
     .proj-card{
-      background:var(--s1);border:none;
-      border-radius:14px;padding:clamp(24px,2.5vw,36px) clamp(16px,1.6vw,22px) clamp(18px,1.8vw,26px);
-      cursor:pointer;transition:all .2s;position:relative;text-align:center;
+      background:var(--s1);border:none;border-radius:16px;overflow:hidden;
+      cursor:pointer;transition:transform .18s var(--ease),box-shadow .18s;position:relative;
+      box-shadow:var(--shadow-sm);
     }
-    .proj-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08);background:var(--s1)}
+    .proj-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(30,27,60,.13)}
+    .pc-thumb{position:relative;height:152px;overflow:hidden;background:var(--s2)}
+    .pc-thumb iframe{position:absolute;top:0;left:0;width:1280px;height:920px;transform:scale(.30);transform-origin:top left;border:0;pointer-events:none}
+    .pc-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,rgba(255,255,255,.5) 82%,var(--s1));pointer-events:none}
+    .pc-thumb-empty{display:flex;align-items:center;justify-content:center;font-size:46px}
+    .pc-info{padding:13px 16px 15px;display:flex;align-items:center;gap:12px}
+    .pc-info-txt{flex:1;min-width:0}
+    .pc-ico{font-size:25px;line-height:1;flex-shrink:0}
     .pc-badge{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;pointer-events:none;display:flex;align-items:center;gap:4px}
     .pc-badge svg{width:8px;height:8px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
     .pc-badge.pub{background:rgba(34,197,94,.1);color:#4ade80}
     .pc-badge.priv{background:rgba(96,96,160,.08);color:var(--sub)}
-    .pc-more{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1.5px;font-weight:900;transition:all .15s;position:absolute;top:10px;right:10px;padding-bottom:2px}
-.proj-card:hover .pc-more{opacity:1}
-    .pc-more:hover{background:var(--b2);color:var(--text)}
-    .pc-open{opacity:0;background:transparent;border:none;color:var(--sub);width:24px;height:24px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:absolute;top:10px;left:10px;text-decoration:none}
+    .pc-more{opacity:0;background:rgba(0,0,0,.55);border:none;color:#fff;width:26px;height:26px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1.5px;font-weight:900;transition:opacity .15s,background .15s;position:absolute;top:10px;right:10px;padding-bottom:2px;z-index:2;backdrop-filter:blur(6px)}
+    .proj-card:hover .pc-more{opacity:1}
+    .pc-more:hover{background:rgba(0,0,0,.8)}
+    .pc-open{opacity:0;background:rgba(0,0,0,.55);border:none;color:#fff;width:26px;height:26px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,background .15s;position:absolute;top:10px;left:10px;text-decoration:none;z-index:2;backdrop-filter:blur(6px)}
     .proj-card:hover .pc-open{opacity:1}
-    .pc-open:hover{background:var(--b2);color:var(--text)}
+    .pc-open:hover{background:rgba(0,0,0,.8)}
     .pc-open svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
     .pc-emoji{font-size:clamp(32px,3.5vw,44px);line-height:1;margin-bottom:clamp(10px,1vw,14px);display:block}
-    .pc-name{font-size:clamp(13px,1.1vw,16px);font-weight:800;letter-spacing:-.3px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pc-meta{font-size:clamp(10px,0.8vw,12px);color:var(--sub);display:flex;align-items:center;justify-content:center;gap:5px}
+    .pc-name{font-size:15px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pc-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:6px;margin-top:4px}
     .pc-dot{width:2px;height:2px;border-radius:50%;background:var(--sub)}
     .pc-invite-actions{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,var(--s1) 90%,transparent);gap:7px;z-index:3}
     .proj-card:hover .pc-invite-actions{display:flex}
@@ -498,8 +510,13 @@
         <div class="prof-name-row">
           <div class="prof-name" id="profName">Loading…</div>
         </div>
-        <div class="prof-handle" id="profHandle">@—</div>
-        <div class="prof-email" id="profEmail" style="display:none;font-size:12px;color:var(--sub);margin-top:2px;margin-bottom:4px"></div>
+        <div class="prof-meta-row">
+          <span class="prof-handle" id="profHandle">@—</span>
+          <button class="prof-email" id="profEmail" style="display:none" onclick="copyEmail()" title="Copy email">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="pe-txt"></span>
+          </button>
+        </div>
         <div class="prof-bio" id="profBio"></div>
 
         <!-- Edit mode fields (hidden unless body.edit-mode) -->
@@ -888,7 +905,7 @@
     const emailEl = document.getElementById('profEmail');
     if(emailEl){
       const showIt = isOwn ? !!p.email : (!!p.show_email && !!p.email);
-      emailEl.textContent = p.email || '';
+      if(showIt && p.email){ emailEl.dataset.email = p.email; emailEl.querySelector('.pe-txt').textContent = p.email; }
       emailEl.style.display = showIt ? '' : 'none';
     }
     document.getElementById('statFollowers').textContent=p.follower_count||0;
@@ -1151,6 +1168,28 @@
     localStorage.clear();location.href='index.html';
   }
 
+  function copyEmail(){
+    const el=document.getElementById('profEmail'); const em=el&&el.dataset.email; if(!em)return;
+    try{navigator.clipboard.writeText(em);}catch(e){}
+    const t=el.querySelector('.pe-txt'); const orig=t.textContent;
+    t.textContent='Copied!'; el.classList.add('copied');
+    setTimeout(()=>{ t.textContent=orig; el.classList.remove('copied'); },1200);
+  }
+
+  function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+  function projThumb(p){
+    const files=(p.published_files||p.files||{});
+    const mainName=p.main_file||'index.html';
+    let html=(files&&(files[mainName]||files['index.html']))||'';
+    if(html && typeof html==='string' && html.length>200){
+      // Frozen, script-less preview so it renders once and never moves.
+      const freeze='<style>*{animation:none!important;transition:none!important;animation-play-state:paused!important}</style>';
+      const doc=/<\/head>/i.test(html)?html.replace(/<\/head>/i,freeze+'</head>'):(freeze+html);
+      return `<div class="pc-thumb"><iframe scrolling="no" sandbox="" loading="lazy" srcdoc="${escAttr(doc)}"></iframe></div>`;
+    }
+    return `<div class="pc-thumb pc-thumb-empty">${p.emoji||'💻'}</div>`;
+  }
+
   /* ── PROJECTS ── */
   async function loadProjects(){
     let data=[];
@@ -1182,9 +1221,8 @@
         <a class="pc-open" href="${openHref}" target="_blank" onclick="event.stopPropagation()" title="${liveUrl?'Open live site':'Open preview'}">
           <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
-        <div class="pc-emoji">${p.emoji||'💻'}</div>
-        <div class="pc-name">${esc(p.name||'Untitled')}</div>
-        <div class="pc-meta"><span>${upd}</span></div>
+        ${projThumb(p)}
+        <div class="pc-info"><div class="pc-info-txt"><div class="pc-name">${esc(p.name||'Untitled')}</div><div class="pc-meta"><span>${upd}</span></div></div><span class="pc-ico">${p.emoji||'💻'}</span></div>
       </div>`;
     }).join('');
   }
@@ -1211,9 +1249,8 @@
           <a class="pc-open" href="viewer.html?project=${p.id}" target="_blank" onclick="event.stopPropagation()" title="Open preview">
             <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
-          <div class="pc-emoji">${p.emoji||'💻'}</div>
-          <div class="pc-name">${esc(p.name||'Untitled')}</div>
-          <div class="pc-meta"><span>${upd}</span></div>
+          ${projThumb(p)}
+          <div class="pc-info"><div class="pc-info-txt"><div class="pc-name">${esc(p.name||'Untitled')}</div><div class="pc-meta"><span>${upd}</span></div></div><span class="pc-ico">${p.emoji||'💻'}</span></div>
           ${inviteActions}
         </div>`;
       }).join('');

@@ -45,13 +45,23 @@
     /* search */
     .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:360px;height:40px;margin:0 auto;background:var(--s2);border-radius:999px;transition:background .18s}
     .tb-search:focus-within{background:var(--s3)}
-    .tb-search-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--sub);font-size:13px;font-weight:500;pointer-events:none;transition:opacity .15s}
-    .tb-search-ph svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
-    .tb-search.has-val .tb-search-ph,.tb-search:focus-within .tb-search-ph{opacity:0}
+    .tb-search-ph{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;color:var(--sub);font-size:13px;font-weight:500;pointer-events:none;white-space:nowrap;transition:left .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1),opacity .18s}
+    .tb-search-ph svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;transition:width .22s cubic-bezier(.16,1,.3,1),opacity .15s}
+    .tb-search:focus-within .tb-search-ph{left:18px;transform:translateX(0);gap:0}
+    .tb-search:focus-within .tb-search-ph svg{width:0;opacity:0}
+    .tb-search.has-val .tb-search-ph{opacity:0}
     .tb-search-input{width:100%;height:100%;background:none;border:none;border-radius:999px;padding:0 18px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;text-align:center}
     .tb-search:focus-within .tb-search-input{text-align:left}
     .search-drop{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);width:min(440px,92vw);background:var(--s1);border-radius:16px;padding:6px;z-index:400;box-shadow:0 20px 50px rgba(30,27,60,.16);display:none;max-height:70vh;overflow-y:auto}
     .search-drop.show{display:block}
+    .sug-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s}
+    .sug-user:hover{background:var(--b2)}
+    .sug-av{width:32px;height:32px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff !important;flex-shrink:0}
+    .sug-info{flex:1;min-width:0}
+    .sug-name{font-size:12.5px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sug-sub{font-size:10.5px;color:var(--sub)}
+    .sug-skel{height:48px;border-radius:10px;background:linear-gradient(90deg,var(--s2) 25%,var(--b1) 50%,var(--s2) 75%);background-size:200% 100%;animation:sugShimmer 1.3s ease infinite;margin:3px 6px}
+    @keyframes sugShimmer{to{background-position:-200% 0}}
     .sd-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:4px 8px 2px;margin-top:2px}
     .search-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
     .search-item:hover{background:var(--b2)}
@@ -66,28 +76,34 @@
 
     /* Bell */
     .tb-bell{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;transition:background .15s;flex-shrink:0}
-    .tb-bell svg{width:16px;height:16px;stroke:var(--sub);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
-    .tb-bell:hover svg,.tb-bell.active svg{stroke:var(--text)}
-    .bell-dot{position:absolute;top:0;right:0;min-width:15px;height:15px;border-radius:8px;background:var(--text);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--bg);padding:0 3px;line-height:1}
+    .tb-bell svg{width:18px;height:18px;fill:#8e8e99;stroke:none;transition:fill .15s}
+    .tb-bell:hover svg,.tb-bell.active svg{fill:var(--text)}
+    .bell-dot{position:absolute;top:0;right:0;min-width:15px;height:15px;border-radius:99px;background:var(--text);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;padding:0 3px;font-family:var(--sans);line-height:1}
     .bell-dot.show{display:flex}
-    .notif-drop{position:absolute;top:calc(100% + 8px);right:0;width:300px;background:var(--bg);border:1px solid var(--b1);border-radius:14px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,.1);display:none;overflow:hidden}
-    .notif-drop.show{display:block}
-    .notif-head{padding:14px 16px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
-    .notif-head-t{font-size:13px;font-weight:800}
+    /* ── NOTIFICATION SIDEBAR (matches home) ── */
+    #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(20,18,40,.4);backdrop-filter:blur(4px)}
+    #notifBackdrop.show{display:block}
+    #notifSidebar{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--s1);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    #notifSidebar.show{transform:translateX(0);box-shadow:-20px 0 60px rgba(30,27,60,.22)}
+    .notif-head{padding:22px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .notif-head-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
+    .notif-head-right{display:flex;align-items:center;gap:10px}
     .notif-mark{font-size:11px;color:var(--sub);cursor:pointer;font-weight:600;transition:color .12s}
     .notif-mark:hover{color:var(--text)}
-    .notif-list{max-height:340px;overflow-y:auto}
-    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(0,0,0,.05)}
-    .notif-item:last-child{border-bottom:none}
+    .notif-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .notif-close:hover{background:var(--b1);color:var(--text)}
+    .notif-close svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+    .notif-list{flex:1;overflow-y:auto;padding:0 8px 16px}
+    .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer;transition:background .1s;border-radius:10px;margin-bottom:2px}
     .notif-item:hover{background:var(--b1)}
-    .notif-item.unread{background:rgba(79,110,247,.04)}
-    .notif-av{width:28px;height:28px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff !important;flex-shrink:0;margin-top:1px}
+    .notif-item.unread{background:var(--s2)}
+    .notif-av{width:32px;height:32px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff !important;flex-shrink:0;margin-top:1px}
     .notif-body{flex:1;min-width:0}
     .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
-    .notif-text b{font-weight:700;color:#fff}
-    .notif-time{font-size:10px;color:var(--sub);margin-top:2px}
-    .notif-unread-dot{width:5px;height:5px;border-radius:50%;background:var(--a1);flex-shrink:0;margin-top:7px}
-    .notif-empty{padding:32px 16px;text-align:center;font-size:12px;color:var(--sub)}
+    .notif-text b{font-weight:700}
+    .notif-time{font-size:10px;color:var(--sub);margin-top:3px}
+    .notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--text);flex-shrink:0;margin-top:7px}
+    .notif-empty{padding:60px 20px;text-align:center;font-size:13px;color:var(--sub)}
 
     /* ══ PAGE ══ */
     .page{max-width:clamp(700px,82vw,980px);margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,40px) 80px;transition:max-width .42s var(--ease)}
@@ -518,18 +534,23 @@
   </div>
   <div class="tb-r">
     <div class="tb-bell" id="bellBtn" onclick="toggleNotifDrop()">
-      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a6 6 0 0 0-6 6c0 3.6-1.2 5.3-2.1 6.3-.5.6-.9 1-.9 1.7 0 .8.7 1.5 1.5 1.5h15c.8 0 1.5-.7 1.5-1.5 0-.7-.4-1.1-.9-1.7C19.2 13.3 18 11.6 18 8a6 6 0 0 0-6-6z"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0z"/></svg>
       <div class="bell-dot" id="bellDot"></div>
-      <div class="notif-drop" id="notifDrop" onclick="event.stopPropagation()">
-        <div class="notif-head">
-          <span class="notif-head-t">Notifications</span>
-          <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
-        </div>
-        <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
-      </div>
     </div>
     <a href="profile.html" class="tb-pfp" id="tbPfp">?</a>
   </div>
+</div>
+
+<div id="notifBackdrop" onclick="hideNotifDrop()"></div>
+<div id="notifSidebar">
+  <div class="notif-head">
+    <span class="notif-head-t">Notifications</span>
+    <div class="notif-head-right">
+      <span class="notif-mark" onclick="markAllRead()">Mark all read</span>
+      <button class="notif-close" onclick="hideNotifDrop()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+  <div class="notif-list" id="notifList"><div class="notif-empty">All caught up ✓</div></div>
 </div>
 
 <div class="page">
@@ -1346,7 +1367,6 @@
   function openShared(id){localStorage.setItem('vexium_current_project',id);location.href='editor.html?project='+encodeURIComponent(id);}
 
   document.addEventListener('click',e=>{
-    if(!document.getElementById('bellBtn').contains(e.target)){document.getElementById('notifDrop').classList.remove('show');document.getElementById('bellBtn').classList.remove('active');}
     document.getElementById('ctxMenu').classList.remove('show');
   });
 
@@ -1682,9 +1702,17 @@
     notifLoaded=false;loadNotifications();
   }
   function toggleNotifDrop(){
-    const bell=document.getElementById('bellBtn'),drop=document.getElementById('notifDrop');
-    drop.classList.toggle('show');bell.classList.toggle('active',drop.classList.contains('show'));
-    if(drop.classList.contains('show')&&!notifLoaded)loadNotifications();
+    const sidebar=document.getElementById('notifSidebar');
+    const opening=!sidebar.classList.contains('show');
+    sidebar.classList.toggle('show');
+    document.getElementById('notifBackdrop').classList.toggle('show',opening);
+    document.getElementById('bellBtn').classList.toggle('active',opening);
+    if(opening&&!notifLoaded)loadNotifications();
+  }
+  function hideNotifDrop(){
+    document.getElementById('notifSidebar').classList.remove('show');
+    document.getElementById('notifBackdrop').classList.remove('show');
+    document.getElementById('bellBtn').classList.remove('active');
   }
 
   /* ── UTILS ── */
@@ -1695,8 +1723,50 @@
 
   /* ── SEARCH ── */
   let searchTimer;
-  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q)doSearch(q);}
-  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();document.getElementById('tbSearchWrap').classList.toggle('has-val',!!q);if(!q){hideSearchDrop();return;}searchTimer=setTimeout(()=>doSearch(q),260);}
+  function onSearchFocus(){const q=document.getElementById('tbSearchInput').value.trim();if(q)doSearch(q);else showSearchSuggestions();}
+  function onSearchInput(){clearTimeout(searchTimer);const q=document.getElementById('tbSearchInput').value.trim();document.getElementById('tbSearchWrap').classList.toggle('has-val',!!q);if(!q){showSearchSuggestions();return;}searchTimer=setTimeout(()=>doSearch(q),260);}
+  async function showSearchSuggestions(){
+    const drop=document.getElementById('searchDrop');
+    drop.innerHTML='<div class="sd-section-label">Suggested people</div>'+'<div class="sug-skel"></div>'.repeat(3);
+    showSearchDrop();
+    const users=await getSuggestedUsers();
+    if(document.getElementById('tbSearchInput').value.trim())return;
+    let html='';
+    if(users.length) html='<div class="sd-section-label">Suggested people</div>'+users.map(sugUserRow).join('');
+    drop.innerHTML=html||'<div class="search-msg">Search for people…</div>';
+    showSearchDrop();
+  }
+  function sugUserRow(p){
+    const n=p.display_name||p.username||'?';
+    const sub=p.mutual?(p.mutual+' mutual'):('@'+(p.username||''));
+    return `<div class="sug-user" onclick="goProfile('${esc(p.username||'')}')"><div class="sug-av">${esc((n[0]||'?').toUpperCase())}</div><div class="sug-info"><div class="sug-name">${esc(n)}</div><div class="sug-sub">${esc(sub)}</div></div></div>`;
+  }
+  async function getSuggestedUsers(){
+    if(!sb) return [];
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      const uid=session&&session.user&&session.user.id;
+      if(uid){
+        const{data:mine}=await sb.from('follows').select('following_id').eq('follower_id',uid);
+        const myFollowing=new Set((mine||[]).map(r=>r.following_id));
+        if(myFollowing.size){
+          const{data:fof}=await sb.from('follows').select('following_id').in('follower_id',[...myFollowing]);
+          const count={};
+          (fof||[]).forEach(r=>{const c=r.following_id;if(c===uid||myFollowing.has(c))return;count[c]=(count[c]||0)+1;});
+          const ranked=Object.keys(count).sort((a,b)=>count[b]-count[a]).slice(0,8);
+          if(ranked.length){
+            const{data:profs}=await sb.from('profiles').select('id,username,display_name').in('id',ranked);
+            const map={};(profs||[]).forEach(p=>map[p.id]=p);
+            return ranked.map(id=>map[id]?{...map[id],mutual:count[id]}:null).filter(p=>p&&p.username).slice(0,6);
+          }
+        }
+        const{data:pop}=await sb.from('profiles').select('id,username,display_name,follower_count').not('username','is',null).order('follower_count',{ascending:false}).limit(12);
+        return (pop||[]).filter(p=>p.username&&p.id!==uid&&!myFollowing.has(p.id)).slice(0,6);
+      }
+      const{data}=await sb.from('profiles').select('id,username,display_name,follower_count').not('username','is',null).order('follower_count',{ascending:false}).limit(6);
+      return (data||[]).filter(p=>p.username);
+    }catch(e){ return []; }
+  }
   function onSearchKey(e){if(e.key==='Escape'){hideSearchDrop();document.getElementById('tbSearchInput').blur();}}
   async function doSearch(q){
     const drop=document.getElementById('searchDrop');

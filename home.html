@@ -51,13 +51,23 @@
     /* search */
     .tb-search{position:relative;display:flex;align-items:center;flex:1;max-width:360px;height:40px;margin:0 auto;background:var(--s2);border-radius:999px;transition:background .18s}
     .tb-search:focus-within{background:var(--s3)}
-    .tb-search-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--sub);font-size:13px;font-weight:500;pointer-events:none;transition:opacity .15s}
-    .tb-search-ph svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
-    .tb-search.has-val .tb-search-ph,.tb-search:focus-within .tb-search-ph{opacity:0}
+    .tb-search-ph{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;color:var(--sub);font-size:13px;font-weight:500;pointer-events:none;white-space:nowrap;transition:left .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1),opacity .18s}
+    .tb-search-ph svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;transition:width .22s cubic-bezier(.16,1,.3,1),opacity .15s}
+    .tb-search:focus-within .tb-search-ph{left:18px;transform:translateX(0);gap:0}
+    .tb-search:focus-within .tb-search-ph svg{width:0;opacity:0}
+    .tb-search.has-val .tb-search-ph{opacity:0}
     .tb-search-input{width:100%;height:100%;background:none;border:none;border-radius:999px;padding:0 18px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;text-align:center}
     .tb-search:focus-within .tb-search-input{text-align:left}
     .search-drop{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);width:min(540px,92vw);background:var(--s1);border-radius:18px;padding:8px 4px 10px;z-index:400;box-shadow:0 22px 55px rgba(30,27,60,.18);display:none;max-height:72vh;overflow-y:auto}
     .search-drop.show{display:block}
+    .sug-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s}
+    .sug-user:hover{background:var(--b2)}
+    .sug-av{width:32px;height:32px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff !important;flex-shrink:0}
+    .sug-info{flex:1;min-width:0}
+    .sug-name{font-size:12.5px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sug-sub{font-size:10.5px;color:var(--sub)}
+    .sug-skel{height:48px;border-radius:10px;background:linear-gradient(90deg,var(--s2) 25%,var(--b1) 50%,var(--s2) 75%);background-size:200% 100%;animation:sugShimmer 1.3s ease infinite;margin:3px 6px}
+    @keyframes sugShimmer{to{background-position:-200% 0}}
     .sd-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);padding:10px 12px 8px}
     .sd-carousel{display:flex;gap:10px;overflow-x:auto;padding:0 12px 12px;scrollbar-width:none}
     .sd-carousel::-webkit-scrollbar{display:none}
@@ -1360,12 +1370,49 @@
 
   async function showSearchSuggestions(){
     const drop=document.getElementById('searchDrop');
+    // Pop immediately with a skeleton so it never feels empty
+    drop.innerHTML='<div class="sd-section-label">Suggested people</div>'+'<div class="sug-skel"></div>'.repeat(3);
+    showSearchDrop();
+    const users=await getSuggestedUsers();
+    if(document.getElementById('tbSearchInput').value.trim())return; // user started typing — let doSearch take over
     let html='';
+    if(users.length) html+='<div class="sd-section-label">Suggested people</div>'+users.map(sugUserRow).join('');
     if(projects&&projects.length) html+=sdSection('Your projects')+sdCarousel(projects.slice(0,10).map(sdMyProj));
-    const pub=await fetchPublicProjects('');
-    if(pub.length) html+=sdSection('Discover on Vertly')+sdCarousel(pub.map(sdPubProj));
-    if(!html){hideSearchDrop();return;}
-    drop.innerHTML=html;showSearchDrop();
+    try{ const pub=await fetchPublicProjects(''); if(pub.length) html+=sdSection('Discover on Vertly')+sdCarousel(pub.map(sdPubProj)); }catch(e){}
+    if(document.getElementById('tbSearchInput').value.trim())return;
+    drop.innerHTML=html||'<div class="search-msg">Search people and sites…</div>';
+    showSearchDrop();
+  }
+  function sugUserRow(p){
+    const n=p.display_name||p.username||'?';
+    const sub=p.mutual?(p.mutual+' mutual'):('@'+(p.username||''));
+    return `<div class="sug-user" onclick="goProfile('${esc(p.username||'')}')"><div class="sug-av">${esc((n[0]||'?').toUpperCase())}</div><div class="sug-info"><div class="sug-name">${esc(n)}</div><div class="sug-sub">${esc(sub)}</div></div></div>`;
+  }
+  async function getSuggestedUsers(){
+    if(!sb) return [];
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      const uid=session&&session.user&&session.user.id;
+      if(uid){
+        const{data:mine}=await sb.from('follows').select('following_id').eq('follower_id',uid);
+        const myFollowing=new Set((mine||[]).map(r=>r.following_id));
+        if(myFollowing.size){
+          const{data:fof}=await sb.from('follows').select('following_id').in('follower_id',[...myFollowing]);
+          const count={};
+          (fof||[]).forEach(r=>{const c=r.following_id;if(c===uid||myFollowing.has(c))return;count[c]=(count[c]||0)+1;});
+          const ranked=Object.keys(count).sort((a,b)=>count[b]-count[a]).slice(0,8);
+          if(ranked.length){
+            const{data:profs}=await sb.from('profiles').select('id,username,display_name').in('id',ranked);
+            const map={};(profs||[]).forEach(p=>map[p.id]=p);
+            return ranked.map(id=>map[id]?{...map[id],mutual:count[id]}:null).filter(p=>p&&p.username).slice(0,6);
+          }
+        }
+        const{data:pop}=await sb.from('profiles').select('id,username,display_name,follower_count').not('username','is',null).order('follower_count',{ascending:false}).limit(12);
+        return (pop||[]).filter(p=>p.username&&p.id!==uid&&!myFollowing.has(p.id)).slice(0,6);
+      }
+      const{data}=await sb.from('profiles').select('id,username,display_name,follower_count').not('username','is',null).order('follower_count',{ascending:false}).limit(6);
+      return (data||[]).filter(p=>p.username);
+    }catch(e){ return []; }
   }
 
   async function doSearch(q){

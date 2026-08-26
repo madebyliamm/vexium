@@ -97,14 +97,16 @@
     .profile-layout{display:flex;gap:clamp(16px,2vw,26px);align-items:flex-start}
     .profile-col{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:max-width .42s var(--ease),margin .42s var(--ease)}
     body.panel-open .profile-col{margin:0;max-width:none}
-    .side-panel{width:0;flex-shrink:0;overflow:hidden;opacity:0;background:var(--s1);border-radius:24px;box-shadow:var(--shadow);position:sticky;top:74px;max-height:calc(100vh - 94px);align-self:flex-start;transition:width .42s var(--ease),opacity .3s ease}
-    body.panel-open .side-panel{width:min(440px,44vw);opacity:1;overflow-y:auto}
-    .sp-head{position:sticky;top:0;background:var(--s1);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--b1);z-index:2}
+    .side-panel{width:0;flex-shrink:0;overflow:hidden;opacity:0;background:var(--s1);border-radius:24px;box-shadow:var(--shadow);position:sticky;top:74px;max-height:calc(100vh - 94px);align-self:flex-start;display:flex;flex-direction:column;transition:width .42s var(--ease),opacity .3s ease}
+    body.panel-open .side-panel{width:min(440px,44vw);opacity:1}
+    .sp-head{flex-shrink:0;background:var(--s1);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--b1);z-index:2}
     .sp-title{font-size:16px;font-weight:800;letter-spacing:-.3px;white-space:nowrap}
     .sp-close{width:30px;height:30px;border-radius:9px;background:var(--b1);border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .sp-close:hover{background:var(--b2);color:var(--text)}
     .sp-close svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
-    .sp-body{padding:16px 20px 22px}
+    .sp-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 22px}
+    .sp-body.settings{padding:0;overflow:hidden}
+    .sp-settings{width:100%;height:100%;border:0;display:block;background:var(--bg)}
     .sp-empty{padding:20px 4px;font-size:12.5px;color:var(--sub);text-align:center}
     .sp-tabs{display:flex;gap:3px;background:var(--s2);padding:4px;border-radius:12px;margin-bottom:14px}
     .sp-tab{flex:1;padding:8px 0;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;border:none;background:transparent;border-radius:9px;font-family:var(--sans);transition:all .15s}
@@ -985,10 +987,12 @@
       document.getElementById('fUsername').value=p.username||'';
       document.getElementById('fBio').value=p.bio||'';
       loadUsageBar();
-      document.getElementById('profActions').innerHTML=`
-        <a href="settings.html" class="btn-edit" title="Settings" style="text-decoration:none;width:38px;height:38px;padding:0">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </a>`;
+      document.getElementById('profActions').innerHTML='';
+      document.getElementById('settingsCapWrap').innerHTML=`
+        <button class="settings-cap" id="settingsCap" onclick="openSettings()">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings</button>`;
+      const _spq=new URLSearchParams(location.search); if(_spq.get('settings')!==null) openSettings(_spq.get('tab')||'');
     }else{
       checkFollowing().then(f=>renderFollowBtn(f));
     }
@@ -1549,10 +1553,20 @@
     document.querySelectorAll('.stat.active,.settings-cap.active').forEach(e=>e.classList.remove('active'));
   }
 
+  /* ── SETTINGS (embedded in the side panel) ── */
+  function openSettings(tab){
+    const body=document.getElementById('spBody');
+    body.classList.add('settings');
+    body.innerHTML=`<iframe class="sp-settings" src="settings.html?embed=1${tab?'&tab='+encodeURIComponent(tab):''}" title="Settings"></iframe>`;
+    openSidePanel('Settings');
+    const cap=document.getElementById('settingsCap'); if(cap)cap.classList.add('active');
+  }
+
   /* ── FOLLOW LIST (in the side panel) ── */
   let _followCache=null;
   async function openFollowList(type){
     _followCache=null;
+    document.getElementById('spBody').classList.remove('settings');
     document.getElementById('spBody').innerHTML=`
       <div class="sp-tabs">
         <button class="sp-tab" data-ft="followers" onclick="switchFollowTab('followers')">Followers</button>

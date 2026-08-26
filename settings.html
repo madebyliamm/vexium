@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Settings — Vertly</title>
   <link rel="icon" type="image/png" href="vertly_icon.png"/>
+  <!-- Settings now lives as a slide-in panel on the profile page. Direct visits redirect there;
+       the profile embeds this page with ?embed=1 (topbar hidden) inside the panel. -->
+  <script>(function(){try{var p=new URLSearchParams(location.search);if(p.get('embed')!==null){document.documentElement.classList.add('embed');}else{var t=p.get('tab');location.replace('profile.html?settings=1'+(t?'&tab='+encodeURIComponent(t):''));}}catch(e){}})();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -63,6 +66,9 @@
 
     /* ── PAGE FRAME ── */
     .page{display:flex;max-width:860px;margin:0 auto;padding:48px 24px 80px;gap:0}
+    /* Embedded in the profile side panel: hide the topbar, tighten spacing */
+    html.embed #topbar{display:none}
+    html.embed .page{padding:20px 18px 60px;max-width:none}
 
     /* ── SIDEBAR ── */
     .sidebar{width:200px;flex-shrink:0;padding:0 8px;position:sticky;top:48px;align-self:flex-start}

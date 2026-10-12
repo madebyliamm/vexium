@@ -57,7 +57,7 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 - Dead stuff noticed: table `plan_messages` (unused), function `log_usage` (references missing columns).
 - **Next action (Step 2):** present the lockdown SQL from `docs/SECURITY_FINDINGS.md` to Liam for one-batch approval, apply it, verify with rolled-back catalog tests.
 
-### Step 2 — Security lockdown (CRITICAL, do before anything else) — `TODO`
+### Step 2 — Security lockdown (CRITICAL, do before anything else) — `IN PROGRESS`
 **Goal:** close the holes in `docs/SECURITY_FINDINGS.md` #1–3, #9, #11 and the cheap parts of #5 on production, without breaking the old editor/home/settings pages.
 **Start checks:** read `docs/SECURITY_FINDINGS.md`; `supabase db query --linked` works.
 **Do:**

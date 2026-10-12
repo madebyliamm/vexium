@@ -778,8 +778,11 @@
   async function loadMyProfile(){
     if(!sb||!session)return;
     try{
-      const{data}=await sb.from('profiles').select('id,username,display_name,plan,avatar_url').eq('id',session.user.id).maybeSingle();
-      myProfile=data||null;
+      const[{data},{data:bill}]=await Promise.all([
+        sb.from('profiles').select('id,username,display_name,avatar_url').eq('id',session.user.id).maybeSingle(),
+        sb.from('account_billing').select('plan').eq('user_id',session.user.id).maybeSingle()
+      ]);
+      myProfile=data?{...data,plan:(bill&&bill.plan)||'trial'}:null;
       if(myProfile&&myProfile.avatar_url){
         const tb=document.getElementById('tbPfp');
         if(tb){let img=tb.querySelector('img');if(!img){img=document.createElement('img');img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%';tb.style.position='relative';tb.appendChild(img);}img.src=myProfile.avatar_url;}

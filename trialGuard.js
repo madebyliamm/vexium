@@ -93,9 +93,9 @@
   window.checkTrialGuard = async function (sb, userId) {
     if (!sb || !userId) return;
     try {
-      const { data } = await sb.from('profiles')
+      const { data } = await sb.from('account_billing')
         .select('plan, trial_ends_at')
-        .eq('id', userId).single();
+        .eq('user_id', userId).single();
       if (!data || data.plan !== 'trial') return;
       if (!data.trial_ends_at) return;
       if (new Date(data.trial_ends_at) > new Date()) return;

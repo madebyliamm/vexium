@@ -887,6 +887,10 @@
 <script src="config.js" onerror="window._noConfig=true"></script>
 <script>
   let sb=null, session=null, myId=null, myProfile=null;
+  // profiles is column-restricted: no SELECT *, and email is private. Others' email arrives only as public_email
+  // (set by a DB trigger when they turn on "show email"); your own comes from your auth session.
+  const PROFILE_COLS='id,username,display_name,bio,avatar_url,banner,follower_count,following_count,created_at,updated_at,show_email,public_email,show_usage_warning,advanced_mode';
+  function withEmail(p){ if(p) p.email=(p.id&&p.id===myId)?(session?.user?.email||''):(p.public_email||''); return p; }
 
   // ── Custom confirm modal ──────────────────────────────────────────────────
   let _confirmResolve = null;
@@ -956,8 +960,8 @@
   async function loadOwnProfile(){
     if(sb&&myId){
       try{
-        const{data}=await sb.from('profiles').select('*').eq('id',myId).single();
-        if(data){viewProfile=data;myProfile=data;return;}
+        const{data}=await sb.from('profiles').select(PROFILE_COLS).eq('id',myId).single();
+        if(data){withEmail(data);viewProfile=data;myProfile=data;return;}
       }catch(e){}
     }
     const u=localStorage.getItem('vexium_username')||'guest';
@@ -968,9 +972,9 @@
   async function loadByUsername(username){
     if(!sb){location.href='home.html';return;}
     try{
-      const{data}=await sb.from('profiles').select('*').eq('username',username).single();
+      const{data}=await sb.from('profiles').select(PROFILE_COLS).eq('username',username).single();
       if(!data){showToast('✗','User not found');setTimeout(()=>history.back(),1500);return;}
-      viewProfile=data;viewId=data.id;
+      withEmail(data);viewProfile=data;viewId=data.id;
       isOwn=myId===data.id;
       if(isOwn)myProfile=data;
     }catch(e){location.href='home.html';}
@@ -1183,7 +1187,7 @@
   async function loadUsageBar(){
     if(!sb||!myId) return;
     try{
-      const{data}=await sb.from('profiles').select('credits_used_cents,usage_month').eq('id',myId).single();
+      const{data}=await sb.from('account_billing').select('credits_used_cents,usage_month').eq('user_id',myId).single();
       const rawCents = Number(data?.credits_used_cents || 0);
       const usageMonth = data?.usage_month || '';
       renderUsageBar(rawCents, usageMonth);
@@ -1606,8 +1610,8 @@
   async function refreshAfterSettingsSave(){
     if(!sb||!myId)return;
     try{
-      const{data}=await sb.from('profiles').select('*').eq('id',myId).single();
-      if(data){viewProfile=isOwn?data:viewProfile;myProfile=data;renderHero();if(isOwn)renderTopbarAvatar(data.avatar_url);}
+      const{data}=await sb.from('profiles').select(PROFILE_COLS).eq('id',myId).single();
+      if(data){withEmail(data);viewProfile=isOwn?data:viewProfile;myProfile=data;renderHero();if(isOwn)renderTopbarAvatar(data.avatar_url);}
     }catch(e){}
   }
 

@@ -18,34 +18,67 @@ export function userIdFromJwt(authHeader: string | null): string | null {
   } catch { return null; }
 }
 
-export async function getProfile(userId: string): Promise<Record<string, any> | null> {
-  const res = await fetch(`${REST}/profiles?id=eq.${userId}&select=*`, { headers: HEADERS });
+// Billing / usage / Stripe state lives in public.account_billing (service-role writes only; a signed-in user can
+// merely SELECT their own row). The helpers below keep returning one "profile" object — the public.profiles row
+// merged with the account_billing row — so callers can keep reading profile.stripe_customer_id, profile.email,
+// profile.plan, profile.id, etc. updateProfile() routes each field to the table that owns it.
+const BILLING_COLUMNS = new Set([
+  "plan", "selected_plan", "trial_ends_at", "credits_used_cents", "extra_credits_cents",
+  "extra_credits_purchased_cents", "plan_cycle_start", "billing_period", "tokens_used_this_month", "usage_month",
+  "stripe_customer_id", "stripe_subscription_id", "stripe_connect_account_id", "stripe_connect_charges_enabled",
+]);
+
+async function fetchRow(path: string): Promise<Record<string, any> | null> {
+  const res = await fetch(`${REST}/${path}`, { headers: HEADERS });
   const rows = await res.json();
-  return rows[0] || null;
+  return Array.isArray(rows) ? (rows[0] || null) : null;
 }
 
-// Account-level Stripe Connect lives on the profile (connect once, use for all the user's sites).
+export async function getProfile(userId: string): Promise<Record<string, any> | null> {
+  const [profile, billing] = await Promise.all([
+    fetchRow(`profiles?id=eq.${encodeURIComponent(userId)}&select=id,username,display_name,email&limit=1`),
+    fetchRow(`account_billing?user_id=eq.${encodeURIComponent(userId)}&select=*&limit=1`),
+  ]);
+  if (!profile) return null;
+  return { ...(billing || {}), ...profile };
+}
+
+// Account-level Stripe Connect lives with the billing state (connect once, use for all the user's sites).
 export async function getProfileConnect(userId: string): Promise<{ account: string | null; enabled: boolean }> {
-  const res = await fetch(`${REST}/profiles?id=eq.${encodeURIComponent(userId)}&select=stripe_connect_account_id,stripe_connect_charges_enabled&limit=1`, { headers: HEADERS });
-  const rows = await res.json();
-  const r = rows[0] || {};
+  const r = await fetchRow(`account_billing?user_id=eq.${encodeURIComponent(userId)}&select=stripe_connect_account_id,stripe_connect_charges_enabled&limit=1`) || {};
   return { account: r.stripe_connect_account_id || null, enabled: r.stripe_connect_charges_enabled === true };
 }
 
 export async function getProfileByCustomerId(customerId: string): Promise<Record<string, any> | null> {
-  const res = await fetch(`${REST}/profiles?stripe_customer_id=eq.${customerId}&select=*`, { headers: HEADERS });
-  const rows = await res.json();
-  return rows[0] || null;
+  const billing = await fetchRow(`account_billing?stripe_customer_id=eq.${encodeURIComponent(customerId)}&select=user_id&limit=1`);
+  return billing ? getProfile(billing.user_id) : null;
 }
 
 export async function updateProfile(userId: string, fields: Record<string, unknown>): Promise<void> {
-  const res = await fetch(`${REST}/profiles?id=eq.${userId}`, {
-    method: "PATCH",
-    headers: { ...HEADERS, "Prefer": "return=minimal" },
-    body: JSON.stringify(fields),
-  });
-  if (!res.ok) {
-    console.error("[db] updateProfile failed", res.status, await res.text().catch(() => ""));
+  const billing: Record<string, unknown> = {};
+  const profile: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(fields)) (BILLING_COLUMNS.has(k) ? billing : profile)[k] = v;
+
+  if (Object.keys(billing).length) {
+    // Upsert, not PATCH: a PATCH on a missing row would silently drop e.g. a paid upgrade.
+    const res = await fetch(`${REST}/account_billing?on_conflict=user_id`, {
+      method: "POST",
+      headers: { ...HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ user_id: userId, ...billing }),
+    });
+    if (!res.ok) {
+      console.error("[db] updateProfile(account_billing) failed", res.status, await res.text().catch(() => ""));
+    }
+  }
+  if (Object.keys(profile).length) {
+    const res = await fetch(`${REST}/profiles?id=eq.${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      headers: { ...HEADERS, "Prefer": "return=minimal" },
+      body: JSON.stringify(profile),
+    });
+    if (!res.ok) {
+      console.error("[db] updateProfile(profiles) failed", res.status, await res.text().catch(() => ""));
+    }
   }
 }
 

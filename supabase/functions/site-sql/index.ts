@@ -12,11 +12,18 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function userIdFromJwt(h: string | null): string | null {
+// Verify the caller with GoTrue. This function stays on --no-verify-jwt (the project signs tokens with ES256, which the
+// edge gateway can't always verify), so the signature check happens here — decoding `sub` without verifying it let
+// anyone forge a token for any user id.
+async function verifiedUserId(h: string | null): Promise<string | null> {
   if (!h?.startsWith("Bearer ")) return null;
   try {
-    const p = h.slice(7).split(".")[1];
-    return JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/"))).sub ?? null;
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: h },
+    });
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user?.id ?? null;
   } catch { return null; }
 }
 
@@ -31,7 +38,7 @@ const BLOCKED = /\b(drop|delete|update|insert|create|alter|truncate|grant|revoke
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
-  const userId = userIdFromJwt(req.headers.get("Authorization"));
+  const userId = await verifiedUserId(req.headers.get("Authorization"));
   if (!userId) return err("unauthorized", 401);
 
   let body: { project_id: string; query: string };

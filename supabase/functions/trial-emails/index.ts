@@ -3,11 +3,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const RESEND_KEY = Deno.env.get('RESEND_API_KEY')!;
 const FROM = 'Vertly <hello@vexium.ai>';
 
-Deno.serve(async (_req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
+Deno.serve(async (req) => {
+  // Deployed with --no-verify-jwt and has no other auth: only the scheduler (service role key) may trigger sends,
+  // otherwise anyone could re-send trial emails to users in the window on demand.
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  if (req.headers.get('Authorization') !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
 
   const now = new Date();
 
@@ -19,31 +23,38 @@ Deno.serve(async (_req) => {
   const expiredFrom = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
   const expiredTo   = now.toISOString();
 
-  const [{ data: reminderUsers }, { data: expiredUsers }] = await Promise.all([
-    supabase
+  // Billing state (plan / trial_ends_at) lives in account_billing; names + emails live in profiles.
+  const trialUsers = async (from: string, to: string) => {
+    const { data: due } = await supabase
+      .from('account_billing')
+      .select('user_id')
+      .eq('plan', 'trial')
+      .gte('trial_ends_at', from)
+      .lte('trial_ends_at', to);
+    const ids = (due || []).map((r: { user_id: string }) => r.user_id);
+    if (!ids.length) return [];
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('id, email, display_name, username')
-      .eq('plan', 'trial')
-      .gte('trial_ends_at', reminderFrom)
-      .lte('trial_ends_at', reminderTo),
-    supabase
-      .from('profiles')
-      .select('id, email, display_name, username')
-      .eq('plan', 'trial')
-      .gte('trial_ends_at', expiredFrom)
-      .lte('trial_ends_at', expiredTo),
+      .in('id', ids);
+    return profiles || [];
+  };
+
+  const [reminderUsers, expiredUsers] = await Promise.all([
+    trialUsers(reminderFrom, reminderTo),
+    trialUsers(expiredFrom, expiredTo),
   ]);
 
   const results: string[] = [];
 
-  for (const user of (reminderUsers || [])) {
+  for (const user of reminderUsers) {
     const name = user.display_name || user.username || 'there';
     if (!user.email) continue;
     await sendEmail(user.email, `Your Vertly trial ends tomorrow`, reminderHtml(name));
     results.push(`reminder: ${user.email}`);
   }
 
-  for (const user of (expiredUsers || [])) {
+  for (const user of expiredUsers) {
     const name = user.display_name || user.username || 'there';
     if (!user.email) continue;
     await sendEmail(user.email, `Your Vertly free trial has ended`, expiredHtml(name));

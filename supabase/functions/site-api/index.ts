@@ -88,8 +88,14 @@ async function handleLogin(project_id: string, email: string, password: string) 
   return ok({ success: true, token: user.id, user: { id: user.id, email: user.email } });
 }
 
+// Collections that only the Stripe webhook (service role) may write, and only the project owner may read.
+// Analytics sums `transactions` as revenue, so a public write would let anyone forge sales. Interim guard until the
+// per-collection access rules land in REVAMP Step 4.
+const RESERVED_COLLECTIONS = new Set(["transactions"]);
+
 async function handleSubmit(project_id: string, collection: string, data: unknown, token?: string) {
   if (!collection) return err("collection required");
+  if (RESERVED_COLLECTIONS.has(collection.toLowerCase())) return err("collection is reserved", 403);
 
   let site_user_id: string | null = null;
   if (token) {
@@ -104,6 +110,7 @@ async function handleSubmit(project_id: string, collection: string, data: unknow
 
 async function handleGetData(project_id: string, collection: string, token?: string) {
   if (!collection) return err("collection required");
+  if (RESERVED_COLLECTIONS.has(collection.toLowerCase())) return err("collection is reserved", 403);
 
   // If token provided, verify it belongs to this project
   let filterByUser = "";

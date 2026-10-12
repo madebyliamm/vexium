@@ -35,13 +35,26 @@ function tokensToCents(
   );
 }
 
-// Extract userId from Bearer JWT without full verification (Supabase already verified it)
-function userIdFromJwt(authHeader: string | null): string | null {
-  if (!authHeader?.startsWith("Bearer ")) return null;
+// Resolve the signed-in user from the Bearer token by asking GoTrue (auth.getUser equivalent). This function is
+// deployed with --no-verify-jwt (the project signs tokens with ES256, which the edge gateway can't always verify),
+// so it must NOT trust an undecoded/unsigned `sub`: a missing/forged token would skip the usage gate + billing
+// and let anyone run unmetered Anthropic calls. Verified results are cached briefly per isolate.
+const _verifiedTokens = new Map<string, { userId: string; exp: number }>();
+async function verifiedUserId(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ") || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
+  const token = authHeader.slice(7);
+  const hit = _verifiedTokens.get(token);
+  if (hit && hit.exp > Date.now()) return hit.userId;
   try {
-    const payload = authHeader.slice(7).split(".")[1];
-    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-    return decoded.sub || null;
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const user = await res.json();
+    if (!user?.id) return null;
+    if (_verifiedTokens.size > 500) _verifiedTokens.clear();
+    _verifiedTokens.set(token, { userId: user.id, exp: Date.now() + 60_000 });
+    return user.id;
   } catch { return null; }
 }
 
@@ -1840,7 +1853,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS });
 
-  const userId = userIdFromJwt(req.headers.get("Authorization"));
+  const userId = await verifiedUserId(req.headers.get("Authorization"));
+  if (!userId) {
+    return new Response(JSON.stringify({ error: "Please sign in to use AI." }), {
+      status: 401, headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
 
   let body: {
     messages?: { role: string; content: unknown }[];
@@ -2388,7 +2406,7 @@ Talk like a real person. Ask what you actually need, nothing more. If you realiz
   if (userId && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
     try {
       const usageRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=plan,credits_used_cents,trial_ends_at,extra_credits_cents`,
+        `${SUPABASE_URL}/rest/v1/account_billing?user_id=eq.${userId}&select=plan,credits_used_cents,trial_ends_at,extra_credits_cents`,
         { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
       );
       if (usageRes.ok) {

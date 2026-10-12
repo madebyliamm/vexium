@@ -580,7 +580,17 @@
   const PLAN_LABELS   = { trial: 'Free Trial', starter: 'Starter', pro: 'Pro', max: 'Max' };
   const PLAN_DOT_CLS  = { trial: 'trial-dot', starter: 'starter-dot', pro: 'pro-dot', max: 'max-dot' };
   const PLAN_RANK     = { trial: 0, starter: 1, pro: 2, max: 3 };
-  const PROFILE_SELECT = 'username,display_name,bio,avatar_url,banner,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,extra_credits_cents,extra_credits_purchased_cents,stripe_customer_id,stripe_subscription_id';
+  // Profile fields (public table) and billing state (private account_billing table, own row only) are fetched
+  // separately and merged: the rest of this page works with one object.
+  const PROFILE_SELECT = 'username,display_name,bio,avatar_url,banner,show_email';
+  const BILLING_SELECT = 'plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,extra_credits_cents,extra_credits_purchased_cents,stripe_customer_id,stripe_subscription_id';
+  async function fetchMyProfile() {
+    const [p, b] = await Promise.all([
+      sb.from('profiles').select(PROFILE_SELECT).eq('id', myId).single(),
+      sb.from('account_billing').select(BILLING_SELECT).eq('user_id', myId).maybeSingle(),
+    ]);
+    return p.data ? { ...p.data, ...(b.data || {}) } : null;
+  }
 
   const SUPABASE_FN_BASE = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
     ? SUPABASE_URL.trim().replace(/\/+$/, '')
@@ -633,9 +643,7 @@
     if (!session) { loaderDone(); window.location.href = 'auth.html'; return; }
     myId = session.user.id;
 
-    const { data } = await sb.from('profiles')
-      .select(PROFILE_SELECT)
-      .eq('id', myId).single();
+    const data = await fetchMyProfile();
     loaderDone();
     if (!data) return;
     myProfile = data;
@@ -670,7 +678,7 @@
   // poll briefly so the new plan shows up without a manual refresh.
   async function pollForPlanUpdate(maxTries = 6) {
     for (let i = 0; i < maxTries; i++) {
-      const { data } = await sb.from('profiles').select(PROFILE_SELECT).eq('id', myId).single();
+      const data = await fetchMyProfile();
       if (data) {
         myProfile = data;
         if (data.stripe_subscription_id) { renderBilling(myProfile); return; }
@@ -683,7 +691,7 @@
   async function pollForExtraUpdate(maxTries = 6) {
     const prev = Number(myProfile?.extra_credits_purchased_cents || 0);
     for (let i = 0; i < maxTries; i++) {
-      const { data } = await sb.from('profiles').select(PROFILE_SELECT).eq('id', myId).single();
+      const data = await fetchMyProfile();
       if (data) {
         myProfile = data;
         if (Number(data.extra_credits_purchased_cents || 0) > prev) { renderBilling(myProfile); return; }
@@ -1338,10 +1346,9 @@
     const lbl = document.getElementById('deleteLabel');
     lbl.innerHTML = '<span class="spin" style="border-top-color:var(--err)"></span>';
     try {
-      // Delete projects, then profile, then auth user
+      // Delete projects, then the auth user (profile + billing rows cascade from it)
       await sb.from('projects').delete().eq('user_id', myId);
-      await sb.from('profiles').delete().eq('id', myId);
-      const { error } = await sb.rpc('delete_user');
+      const { error } = await sb.rpc('delete_own_account');
       if (error) throw error;
     } catch(e) {}
     await sb.auth.signOut();

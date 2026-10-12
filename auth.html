@@ -652,7 +652,6 @@
       }
       if (session) {
         _currentSession = session;
-        await savePlanToProfile(session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', _pendingUser || session.user.user_metadata?.username || '');
         await startPlanCheckout(session);
@@ -702,22 +701,6 @@
     el.className = 'msg' + (type ? ' ' + type : '');
   }
 
-  async function savePlanToProfile(userId) {
-    if (!sb || !userId) return;
-    const trialEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    try {
-      await sb.from('profiles').update({
-        // Paid plans only take effect once Stripe checkout completes (webhook
-        // flips this to the chosen plan) — start everyone on the free trial.
-        plan: 'trial',
-        selected_plan: _selectedPlan === 'trial' ? null : _selectedPlan,
-        trial_ends_at: trialEnds,
-        credits_used_cents: 0,
-        usage_month: new Date().toISOString().slice(0, 7),
-      }).eq('id', userId);
-    } catch(e) {}
-  }
-
   function toEmail(username) {
     return username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '') + FAKE_DOMAIN;
   }
@@ -748,14 +731,15 @@
       const { data, error } = await sb.auth.signUp({
         email: realEmail,
         password: pass,
-        options: { data: { username: user, display_name: user } }
+        // selected_plan is only the signup choice (a DB trigger validates it); the 7-day trial and the plan itself
+        // are set server-side — paid plans only take effect once the Stripe webhook confirms payment.
+        options: { data: { username: user, display_name: user, selected_plan: _selectedPlan } }
       });
       if (error) { setMsg(error.message, 'err'); if (payBtn) { payBtn.disabled = false; payLbl.textContent = 'Send verification email'; } return; }
       _pendingUser = user; _pendingEmail = realEmail; _pendingPass = pass;
       if (data.session) {
         // Email already confirmed (confirmation disabled in Supabase settings)
         _currentSession = data.session;
-        await savePlanToProfile(data.session.user.id);
         localStorage.removeItem('vexium_guest');
         localStorage.setItem('vexium_username', user);
         await startPlanCheckout(data.session);

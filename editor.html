@@ -6876,9 +6876,9 @@ async function loadUserPlan() {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
-    const { data } = await sb.from('profiles')
+    const { data } = await sb.from('account_billing')
       .select('plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,extra_credits_cents')
-      .eq('id', session.user.id).single();
+      .eq('user_id', session.user.id).single();
     if (!data) return;
     _userPlan        = data.plan || 'trial';
     _trialEndsAt     = data.trial_ends_at;

@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Settings — Vertly</title>
   <link rel="icon" type="image/png" href="vertly_icon.png"/>
-  <!-- Settings now lives as a slide-in panel on the profile page. Direct visits redirect there;
-       the profile embeds this page with ?embed=1 (topbar hidden) inside the panel. -->
-  <script>(function(){try{var p=new URLSearchParams(location.search);if(p.get('embed')!==null){document.documentElement.classList.add('embed');}else{var t=p.get('tab');location.replace('profile.html?settings=1'+(t?'&tab='+encodeURIComponent(t):''));}}catch(e){}})();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -41,7 +38,7 @@
     .tb-bell:hover svg{stroke:var(--text)}
     .bell-dot{position:absolute;top:2px;right:2px;min-width:14px;height:14px;border-radius:99px;background:var(--text);border:2px solid var(--bg);display:none;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;padding:0 2px;font-family:var(--sans)}
     .bell-dot.show{display:flex}
-    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
+    .tb-pfp{width:28px;height:28px;border-radius:50%;background:#a3a3ad;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;text-decoration:none}
     /* notification sidebar */
     #notifBackdrop{display:none;position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
     #notifBackdrop.show{display:block}
@@ -56,7 +53,7 @@
     .notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer;border-radius:10px;transition:background .1s;margin-bottom:2px}
     .notif-item:hover{background:rgba(0,0,0,.05)}
     .notif-item.unread{background:rgba(0,0,0,.04)}
-    .notif-av{width:32px;height:32px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+    .notif-av{width:32px;height:32px;border-radius:50%;background:#a3a3ad;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
     .notif-body{flex:1;min-width:0}
     .notif-text{font-size:12px;line-height:1.5;color:var(--text)}
     .notif-text b{font-weight:700}
@@ -66,9 +63,6 @@
 
     /* ── PAGE FRAME ── */
     .page{display:flex;max-width:860px;margin:0 auto;padding:48px 24px 80px;gap:0}
-    /* Embedded in the profile side panel: hide the topbar, tighten spacing */
-    html.embed #topbar{display:none}
-    html.embed .page{padding:20px 18px 60px;max-width:none}
 
     /* ── SIDEBAR ── */
     .sidebar{width:200px;flex-shrink:0;padding:0 8px;position:sticky;top:48px;align-self:flex-start}
@@ -137,7 +131,7 @@
       .extra-presets{flex-wrap:wrap}
 
       /* Billing history */
-      #billingHistory .bh-row{flex-wrap:wrap;gap:4px}
+      #bhList .bh-row{flex-wrap:wrap;gap:4px}
     }
 
     /* ── SECTIONS ── */
@@ -162,12 +156,45 @@
     .inp::placeholder{color:var(--muted)}
     .inp-wide{width:100%;margin-top:8px}
     .inp-block{display:block;width:100%}
+    .at-input{display:flex;align-items:center;background:var(--surface);border-radius:8px;padding:0 12px;width:220px;transition:background .15s}
+    .at-input:focus-within{background:var(--surface2)}
+    .at-input span{color:var(--muted);font-size:13px;flex-shrink:0}
+    .at-input-field{border:none;background:none;padding:8px 0 8px 2px;flex:1;min-width:0;font-size:13px;font-family:var(--sans);color:var(--text);outline:none}
+    .autosave-row{display:flex;justify-content:flex-end;padding-top:6px;min-height:18px}
+    .autosave-status{font-size:11.5px;font-weight:600;color:var(--ok);opacity:0;transition:opacity .25s}
+    .autosave-status.show{opacity:1}
+    .autosave-status.err{color:var(--err)}
 
     /* ── STACKED ROW (label above full-width input) ── */
     .row-stack{padding:14px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .row-stack:last-child{border-bottom:none}
     .row-stack-label{font-size:14px;font-weight:500;margin-bottom:8px}
     .row-stack-sub{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+
+    /* ── PROFILE PHOTO / BANNER ── */
+    .pm-wrap{padding:14px 0 26px;border-bottom:1px solid rgba(0,0,0,.05)}
+    .pm-banner{position:relative;height:96px;border-radius:14px;overflow:hidden;background:linear-gradient(115deg,#6d28d9 0%,#7c3aed 34%,#9333ea 62%,#c084fc 100%)}
+    .pm-avatar-row{display:flex;align-items:center;gap:13px;margin-top:16px}
+    .pm-avatar-wrap{position:relative;flex-shrink:0}
+    .pm-avatar{width:52px;height:52px;border-radius:50%;background:#a3a3ad;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;position:relative;overflow:hidden;cursor:pointer}
+    .pm-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .pm-avatar-edit{position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--text);border:2px solid var(--bg);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .15s}
+    .pm-avatar-edit:hover{opacity:.85}
+    .pm-avatar-edit svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+    .pm-avatar-info{display:flex;flex-direction:column;gap:3px}
+    .pm-avatar-label{font-size:13px;font-weight:700;color:var(--text)}
+    .pm-avatar-change{font-size:11.5px;font-weight:600;color:var(--accent);cursor:pointer;background:none;border:none;padding:0;font-family:var(--sans);text-align:left}
+    .pm-avatar-change:hover{text-decoration:underline}
+    .pm-spin-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+    .pm-spin-overlay.show{display:flex}
+    .pm-grad-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 10px}
+    .pm-grad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:8px}
+    .pm-grad-swatch{aspect-ratio:1;border-radius:8px;cursor:pointer;transition:border-color .15s;border:2px solid transparent;box-sizing:border-box}
+    .pm-grad-swatch:hover{border-color:rgba(0,0,0,.18)}
+    .pm-grad-swatch.sel{border-color:var(--accent)}
+    .pm-grad-upload{aspect-ratio:1;border-radius:10px;cursor:pointer;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .15s,color .15s}
+    .pm-grad-upload:hover{background:rgba(0,0,0,.1);color:var(--text)}
+    .pm-grad-upload svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
 
     /* ── BUTTONS ── */
     .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;border:none;transition:opacity .15s}
@@ -222,31 +249,40 @@
     #customExtraAmt::-webkit-outer-spin-button,#customExtraAmt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
     /* billing history */
-    .bh-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
-    .bh-table th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:0 0 10px;border-bottom:1px solid rgba(0,0,0,.06)}
-    .bh-table td{padding:12px 0;border-bottom:1px solid rgba(0,0,0,.04);color:var(--text);vertical-align:middle}
-    .bh-table td:last-child{text-align:right;font-weight:700}
-    .bh-table tr:last-child td{border-bottom:none}
-    .bh-type-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
+    .bh-chart{display:flex;height:38px;border-radius:14px;overflow:hidden;background:rgba(0,0,0,.05);margin-top:4px}
+    .bh-seg{height:100%;min-width:3px;transition:opacity .15s;cursor:default}
+    .bh-seg:hover{opacity:.75}
+    .bh-seg.sub{background:#a78bfa}
+    .bh-seg.extra{background:#60a5fa}
+    .bh-legend{display:flex;gap:16px;margin-top:10px}
+    .bh-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+    .bh-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .bh-legend-dot.sub{background:#a78bfa}
+    .bh-legend-dot.extra{background:#60a5fa}
+    .bh-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.04);font-size:13px}
+    .bh-row:last-child{border-bottom:none}
+    .bh-row-date{color:var(--muted);width:78px;flex-shrink:0}
+    .bh-row-desc{flex:1;min-width:0;color:var(--text)}
+    .bh-type-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
     .bh-type-sub{background:rgba(167,139,250,.15);color:#a78bfa}
     .bh-type-extra{background:rgba(96,165,250,.15);color:#60a5fa}
+    .bh-row-amt{font-weight:700;flex-shrink:0;width:56px;text-align:right}
     .bh-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--muted)}
 
     .trial-note-row{font-size:12px;color:var(--muted);padding:12px 0;border-bottom:1px solid rgba(0,0,0,.05)}
     .trial-days{font-weight:600;color:#facc15}
 
     .plans-wrap{padding-top:28px}
-    .billing-toggle{display:inline-flex;background:rgba(0,0,0,.06);border-radius:99px;padding:4px;margin-bottom:16px;align-self:center}
-    .billing-toggle-wrap{display:flex;justify-content:center;margin-bottom:0}
-    .btog-opt{padding:7px 18px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:7px;transition:background .2s,color .2s}
+    .billing-toggle{display:inline-flex;background:rgba(0,0,0,.06);border-radius:99px;padding:4px}
+    .billing-toggle-wrap{display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:0}
+    .btog-opt{padding:7px 18px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:var(--sans);transition:background .2s,color .2s}
     .btog-opt.on{background:var(--text);color:var(--bg)}
-    .btog-save{font-size:9px;font-weight:700;background:rgba(74,222,128,.18);color:#4ade80;padding:2px 7px;border-radius:4px}
-    .btog-opt.on .btog-save{background:rgba(20,180,80,.18);color:#16a34a}
+    .btog-save-note{font-size:11px;font-weight:700;color:var(--ok);text-align:center}
     .plans-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
     .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
     .plan-card{border-radius:12px;padding:18px 16px;background:var(--surface);position:relative;transition:background .15s}
-    .plan-card.current{background:var(--accent-soft)}
-    .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+    .plan-card.current{background:rgba(0,0,0,.055)}
+    .plan-card.current::after{content:'Current';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#54545c;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
     .plan-card-name{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px}
     .plan-card-price{font-size:22px;font-weight:800;letter-spacing:-.5px}
     .plan-card-price .mo{font-size:11px;font-weight:500;color:var(--muted)}
@@ -321,37 +357,42 @@
       <div class="group">
         <div class="group-title">Profile</div>
 
+        <div class="pm-wrap">
+          <div class="pm-banner" id="pmBanner"></div>
+          <div class="pm-avatar-row">
+            <div class="pm-avatar-wrap">
+              <div class="pm-avatar" id="pmAvatar" onclick="document.getElementById('avatarFileInput').click()" title="Change photo"><span id="pmAvatarInitial">?</span></div>
+              <button class="pm-avatar-edit" onclick="document.getElementById('avatarFileInput').click()" title="Change photo" type="button">
+                <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
+            </div>
+            <div class="pm-avatar-info">
+              <div class="pm-avatar-label">Profile photo</div>
+              <button class="pm-avatar-change" onclick="document.getElementById('avatarFileInput').click()" type="button">Change photo</button>
+            </div>
+          </div>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(event)"/>
+          <div class="pm-grad-label">Banner</div>
+          <div class="pm-grad-grid" id="pmGradGrid"></div>
+          <input type="file" id="bannerFileInput" accept="image/*" style="display:none" onchange="onBannerFileChosen(event)"/>
+        </div>
+
         <div class="row">
           <div class="row-label"><div class="row-label-text">Display name</div></div>
-          <div class="row-control"><input class="inp" type="text" id="fDisplayName" placeholder="Your name"/></div>
+          <div class="row-control"><input class="inp" type="text" id="fDisplayName" placeholder="Your name" oninput="scheduleAutosaveProfile()"/></div>
         </div>
         <div class="row">
-          <div class="row-label"><div class="row-label-text">Username</div><div class="row-label-sub">Used for sign in and your public profile.</div></div>
-          <div class="row-control"><input class="inp" type="text" id="fUsername" placeholder="username" autocomplete="off" spellcheck="false"/></div>
+          <div class="row-label"><div class="row-label-text">Username</div></div>
+          <div class="row-control">
+            <div class="at-input"><span>@</span><input class="at-input-field" type="text" id="fUsername" placeholder="username" autocomplete="off" spellcheck="false" oninput="scheduleAutosaveProfile()"/></div>
+          </div>
         </div>
         <div class="row-stack">
           <div class="row-stack-label">Bio</div>
-          <input class="inp inp-block" type="text" id="fBio" placeholder="A short bio (optional)"/>
+          <input class="inp inp-block" type="text" id="fBio" placeholder="A short bio (optional)" oninput="scheduleAutosaveProfile()"/>
         </div>
-        <div class="save-row">
-          <button class="btn btn-primary" onclick="saveProfile()"><span id="saveProfileLabel">Save changes</span></button>
-          <span class="save-msg" id="saveProfileMsg"></span>
-        </div>
-      </div>
-
-      <div class="group">
-        <div class="group-title">Preferences</div>
-        <div class="row">
-          <div class="row-label">
-            <div class="row-label-text">Advanced mode</div>
-            <div class="row-label-sub">Unlocks the full editor with code, backend, and commerce tools.</div>
-          </div>
-          <div class="row-control">
-            <label class="toggle">
-              <input type="checkbox" id="toggleAdvanced" onchange="saveAdvancedMode()"/>
-              <div class="toggle-track"></div>
-            </label>
-          </div>
+        <div class="autosave-row">
+          <span class="autosave-status" id="autosaveStatus"></span>
         </div>
       </div>
 
@@ -449,8 +490,9 @@
         <div class="billing-toggle-wrap">
           <div class="billing-toggle">
             <button class="btog-opt on" id="sBillingMonthly" onclick="setSettingsBilling(false)">Monthly</button>
-            <button class="btog-opt" id="sBillingAnnual" onclick="setSettingsBilling(true)">Annual <span class="btog-save">Save 20%</span></button>
+            <button class="btog-opt" id="sBillingAnnual" onclick="setSettingsBilling(true)">Annual</button>
           </div>
+          <div class="btog-save-note" id="btogSaveNote" style="display:none">Saves 20%</div>
         </div>
         <div class="plans-grid">
           <div class="plan-card" id="planCardStarter">
@@ -511,7 +553,12 @@
       <!-- billing history -->
       <div class="group" style="margin-top:32px">
         <div class="group-title">Billing history</div>
-        <div id="billingHistory"><div class="bh-empty">Loading…</div></div>
+        <div class="bh-chart" id="bhChart" style="display:none"></div>
+        <div class="bh-legend" id="bhLegend" style="display:none">
+          <div class="bh-legend-item"><span class="bh-legend-dot sub"></span>Subscription</div>
+          <div class="bh-legend-item"><span class="bh-legend-dot extra"></span>Extra usage</div>
+        </div>
+        <div id="bhList"><div class="bh-empty">Loading…</div></div>
       </div>
 
     </div>
@@ -533,7 +580,7 @@
   const PLAN_LABELS   = { trial: 'Free Trial', starter: 'Starter', pro: 'Pro', max: 'Max' };
   const PLAN_DOT_CLS  = { trial: 'trial-dot', starter: 'starter-dot', pro: 'pro-dot', max: 'max-dot' };
   const PLAN_RANK     = { trial: 0, starter: 1, pro: 2, max: 3 };
-  const PROFILE_SELECT = 'username,display_name,bio,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,advanced_mode,extra_credits_cents,extra_credits_purchased_cents,stripe_customer_id,stripe_subscription_id';
+  const PROFILE_SELECT = 'username,display_name,bio,avatar_url,banner,plan,selected_plan,trial_ends_at,credits_used_cents,plan_cycle_start,billing_period,show_email,extra_credits_cents,extra_credits_purchased_cents,stripe_customer_id,stripe_subscription_id';
 
   const SUPABASE_FN_BASE = (typeof SUPABASE_URL === 'string' && SUPABASE_URL.trim()
     ? SUPABASE_URL.trim().replace(/\/+$/, '')
@@ -597,7 +644,11 @@
     document.getElementById('fUsername').value       = data.username     || '';
     document.getElementById('fBio').value            = data.bio          || '';
     document.getElementById('toggleShowEmail').checked  = !!data.show_email;
-    document.getElementById('toggleAdvanced').checked   = !!data.advanced_mode;
+
+    document.getElementById('pmAvatarInitial').textContent = (data.display_name || data.username || '?').charAt(0).toUpperCase();
+    if (data.avatar_url) applyAvatarPreview(data.avatar_url);
+    buildGradGrid(data.banner || 'grad:1');
+    applyBannerPreview(data.banner || 'grad:1');
 
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
@@ -659,13 +710,6 @@
     if (myProfile) myProfile.show_email = val;
   }
 
-  async function saveAdvancedMode() {
-    if (!sb || !myId) return;
-    const val = document.getElementById('toggleAdvanced').checked;
-    await sb.from('profiles').update({ advanced_mode: val }).eq('id', myId);
-    if (myProfile) myProfile.advanced_mode = val;
-    try { localStorage.setItem('vexium_advanced_mode', val ? '1' : '0'); } catch(e) {}
-  }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   // ── BILLING ──────────────────────────────────────────────────────────────
@@ -794,30 +838,39 @@
   }
 
   async function loadBillingHistory() {
-    const el = document.getElementById('billingHistory');
-    if (!sb || !myId || !el) return;
+    const chartEl = document.getElementById('bhChart');
+    const legendEl = document.getElementById('bhLegend');
+    const listEl = document.getElementById('bhList');
+    if (!sb || !myId || !listEl) return;
     try {
       const { data } = await sb.from('billing_history')
         .select('type,description,amount_paid_cents,created_at')
         .eq('user_id', myId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(50);
       if (!data?.length) {
-        el.innerHTML = '<div class="bh-empty">No billing history yet.</div>';
+        chartEl.style.display = 'none'; legendEl.style.display = 'none';
+        listEl.innerHTML = '<div class="bh-empty">No billing history yet.</div>';
         return;
       }
-      el.innerHTML = `<table class="bh-table">
-        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
-        <tbody>${data.map(r => {
-          const d = new Date(r.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-          const badge = r.type === 'subscription'
-            ? `<span class="bh-type-badge bh-type-sub">Subscription</span>`
-            : `<span class="bh-type-badge bh-type-extra">Extra usage</span>`;
-          return `<tr><td style="color:var(--muted)">${d}</td><td>${r.description}</td><td>${badge}</td><td>$${(r.amount_paid_cents/100).toFixed(2)}</td></tr>`;
-        }).join('')}</tbody>
-      </table>`;
+      chartEl.style.display = 'flex'; legendEl.style.display = 'flex';
+      const total = data.reduce((s, r) => s + Math.max(0, Number(r.amount_paid_cents || 0)), 0) || 1;
+      chartEl.innerHTML = data.map(r => {
+        const pct = Math.max(1.5, (Math.max(0, Number(r.amount_paid_cents || 0)) / total) * 100);
+        const cls = r.type === 'subscription' ? 'sub' : 'extra';
+        const d = new Date(r.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+        return `<div class="bh-seg ${cls}" style="width:${pct}%" title="${esc(r.description)} — $${(r.amount_paid_cents/100).toFixed(2)} — ${d}"></div>`;
+      }).join('');
+      listEl.innerHTML = [...data].reverse().map(r => {
+        const d = new Date(r.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+        const badge = r.type === 'subscription'
+          ? `<span class="bh-type-badge bh-type-sub">Subscription</span>`
+          : `<span class="bh-type-badge bh-type-extra">Extra usage</span>`;
+        return `<div class="bh-row"><span class="bh-row-date">${d}</span><span class="bh-row-desc">${esc(r.description)}</span>${badge}<span class="bh-row-amt">$${(r.amount_paid_cents/100).toFixed(2)}</span></div>`;
+      }).join('');
     } catch(e) {
-      el.innerHTML = '<div class="bh-empty">Could not load billing history.</div>';
+      chartEl.style.display = 'none'; legendEl.style.display = 'none';
+      listEl.innerHTML = '<div class="bh-empty">Could not load billing history.</div>';
     }
   }
 
@@ -827,6 +880,7 @@
     _sBillingAnnual = annual;
     document.getElementById('sBillingMonthly').classList.toggle('on', !annual);
     document.getElementById('sBillingAnnual').classList.toggle('on', annual);
+    document.getElementById('btogSaveNote').style.display = annual ? '' : 'none';
     const p = annual ? S_PRICES.annual : S_PRICES.monthly;
     document.getElementById('sPriceStarter').textContent = p.starter;
     document.getElementById('sPricePro').textContent     = p.pro;
@@ -905,30 +959,181 @@
     }
   }
 
-  // ── PROFILE ──────────────────────────────────────────────────────────────
-  async function saveProfile() {
-    if (!sb || !myId) return;
-    const lbl = document.getElementById('saveProfileLabel');
-    const msg = document.getElementById('saveProfileMsg');
-    lbl.innerHTML   = '<span class="spin"></span>';
-    msg.textContent = '';
-    try {
-      const display_name = document.getElementById('fDisplayName').value.trim();
-      const username     = document.getElementById('fUsername').value.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,'');
-      const bio          = document.getElementById('fBio').value.trim();
-      if (!username) { flash(lbl, msg, 'Save changes', 'Username required.', true); return; }
+  // ── PROFILE (autosave) ──────────────────────────────────────────────────
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-      // Check if username is taken by someone else
+  let _autosaveTimer = null, _autosaveHideTimer = null;
+  function scheduleAutosaveProfile() {
+    clearTimeout(_autosaveTimer);
+    _autosaveTimer = setTimeout(autosaveProfile, 700);
+  }
+  function showAutosaveStatus(text, isErr) {
+    const el = document.getElementById('autosaveStatus');
+    if (!el) return;
+    clearTimeout(_autosaveHideTimer);
+    el.textContent = text;
+    el.className = 'autosave-status show' + (isErr ? ' err' : '');
+    if (!isErr) _autosaveHideTimer = setTimeout(() => { el.classList.remove('show'); }, 1800);
+  }
+  async function autosaveProfile() {
+    if (!sb || !myId) return;
+    const display_name = document.getElementById('fDisplayName').value.trim();
+    const username     = document.getElementById('fUsername').value.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,'');
+    const bio          = document.getElementById('fBio').value.trim();
+    if (!username) return;
+    showAutosaveStatus('Saving…');
+    try {
       if (username !== (myProfile?.username || '').toLowerCase()) {
         const { data: existing } = await sb.from('profiles')
           .select('id').eq('username', username).neq('id', myId).maybeSingle();
-        if (existing) { flash(lbl, msg, 'Save changes', 'That username is already taken.', true); return; }
+        if (existing) { showAutosaveStatus('That username is taken', true); return; }
       }
-
       await sb.from('profiles').update({ display_name, username, bio }).eq('id', myId);
-      if (myProfile) myProfile.username = username;
-      flash(lbl, msg, 'Save changes', 'Saved!', false);
-    } catch(e) { flash(lbl, msg, 'Save changes', 'Could not save.', true); }
+      if (myProfile) { myProfile.display_name = display_name; myProfile.username = username; myProfile.bio = bio; }
+      showAutosaveStatus('Saved');
+      notifyParentProfileUpdated();
+    } catch(e) { showAutosaveStatus('Could not save', true); }
+  }
+
+  // ── PROFILE PHOTO / BANNER ──────────────────────────────────────────────
+  function notifyParentProfileUpdated() {
+    try { if (window.opener && !window.opener.closed) window.opener.postMessage({ type: 'vertly:profile-updated' }, '*'); } catch(e) {}
+  }
+
+  const BANNER_GRADIENTS = {
+    1: 'linear-gradient(115deg,#6d28d9 0%,#7c3aed 34%,#9333ea 62%,#c084fc 100%)',
+    2: 'linear-gradient(120deg,#7c3aed,#db2777,#f472b6)',
+    3: 'linear-gradient(120deg,#e11d48,#f43f5e,#fb7185)',
+    4: 'linear-gradient(120deg,#f97316,#fb923c,#fbbf24)',
+    5: 'linear-gradient(120deg,#059669,#10b981,#6ee7b7)',
+    6: 'linear-gradient(120deg,#0ea5e9,#38bdf8,#7dd3fc)',
+    7: 'linear-gradient(120deg,#475569,#64748b,#94a3b8)',
+    8: 'linear-gradient(120deg,#111827,#1f2937,#374151)',
+  };
+  const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
+
+  function buildGradGrid(selected) {
+    const grid = document.getElementById('pmGradGrid');
+    if (!grid) return;
+    let html = '';
+    for (let i = 1; i <= 8; i++) {
+      html += `<div class="pm-grad-swatch${selected === ('grad:' + i) ? ' sel' : ''}" data-g="${i}" style="background:${BANNER_GRADIENTS[i]}" onclick="pickGradientBanner(${i})" title="Gradient ${i}"></div>`;
+    }
+    html += `<div class="pm-grad-upload" onclick="document.getElementById('bannerFileInput').click()" title="Upload your own">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>`;
+    grid.innerHTML = html;
+  }
+
+  function applyBannerPreview(val) {
+    const el = document.getElementById('pmBanner');
+    if (!el) return;
+    if (val && val.indexOf('grad:') === 0) {
+      el.style.backgroundImage = BANNER_GRADIENTS[val.split(':')[1]] || BANNER_GRADIENTS[1];
+      el.style.backgroundSize = ''; el.style.backgroundPosition = '';
+    } else if (val) {
+      const parts = val.split('#');
+      el.style.backgroundImage = `url("${parts[0]}")`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = `center ${parts[1] !== undefined ? parts[1] + '%' : '50%'}`;
+    } else {
+      el.style.backgroundImage = BANNER_GRADIENTS[1];
+      el.style.backgroundSize = ''; el.style.backgroundPosition = '';
+    }
+  }
+
+  function applyAvatarPreview(url) {
+    const avatarEl = document.getElementById('pmAvatar');
+    if (!avatarEl) return;
+    let img = avatarEl.querySelector('img');
+    if (!img) { img = document.createElement('img'); avatarEl.insertBefore(img, avatarEl.firstChild); }
+    img.src = url;
+    const initSpan = document.getElementById('pmAvatarInitial'); if (initSpan) initSpan.style.display = 'none';
+  }
+
+  async function pickGradientBanner(n) {
+    if (!sb || !myId) return;
+    const val = 'grad:' + n;
+    document.querySelectorAll('.pm-grad-swatch').forEach(el => el.classList.toggle('sel', el.dataset.g === String(n)));
+    applyBannerPreview(val);
+    try {
+      await sb.from('profiles').update({ banner: val }).eq('id', myId);
+      if (myProfile) myProfile.banner = val;
+      notifyParentProfileUpdated();
+    } catch(e) {}
+  }
+
+  async function onAvatarFileChosen(e) {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f || !sb || !myId) return;
+    if (f.size > MAX_MEDIA_BYTES) { alert('Image must be under 8MB.'); return; }
+    const avatarEl = document.getElementById('pmAvatar');
+    let overlay = avatarEl.querySelector('.pm-spin-overlay');
+    if (!overlay) { overlay = document.createElement('div'); overlay.className = 'pm-spin-overlay'; overlay.innerHTML = '<span class="spin" style="border-top-color:#fff"></span>'; avatarEl.appendChild(overlay); }
+    overlay.classList.add('show');
+    try {
+      const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const path = `${myId}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('profile-media').upload(path, f, { upsert: true, contentType: f.type || 'image/jpeg' });
+      if (upErr) throw upErr;
+      const { data: pub } = sb.storage.from('profile-media').getPublicUrl(path);
+      await sb.from('profiles').update({ avatar_url: pub.publicUrl }).eq('id', myId);
+      if (myProfile) myProfile.avatar_url = pub.publicUrl;
+      applyAvatarPreview(pub.publicUrl);
+      notifyParentProfileUpdated();
+    } catch(e2) {
+      alert(e2.message || 'Could not upload photo.');
+    } finally {
+      overlay.classList.remove('show');
+    }
+  }
+
+  let _bannerFile = null, _bannerPos = 50;
+  function onBannerFileChosen(e) {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > MAX_MEDIA_BYTES) { alert('Image must be under 8MB.'); return; }
+    _bannerFile = f;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('bannerRepoImg').src = ev.target.result;
+      _bannerPos = 50;
+      document.getElementById('bannerRepoSlider').value = 50;
+      document.getElementById('bannerRepoImg').style.objectPosition = 'center 50%';
+      document.getElementById('bannerRepoOverlay').style.display = 'flex';
+    };
+    reader.readAsDataURL(f);
+  }
+  function onBannerRepoSlide(v) {
+    _bannerPos = v;
+    document.getElementById('bannerRepoImg').style.objectPosition = 'center ' + v + '%';
+  }
+  function closeBannerRepoModal() {
+    document.getElementById('bannerRepoOverlay').style.display = 'none';
+    _bannerFile = null;
+  }
+  async function saveBannerReposition() {
+    if (!_bannerFile || !sb || !myId) return;
+    const lbl = document.getElementById('bannerRepoSaveLabel');
+    lbl.innerHTML = '<span class="spin" style="border-top-color:#fff"></span>';
+    try {
+      const ext = (_bannerFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const path = `${myId}/banner-${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('profile-media').upload(path, _bannerFile, { upsert: true, contentType: _bannerFile.type || 'image/jpeg' });
+      if (upErr) throw upErr;
+      const { data: pub } = sb.storage.from('profile-media').getPublicUrl(path);
+      const bannerVal = pub.publicUrl + '#' + _bannerPos;
+      await sb.from('profiles').update({ banner: bannerVal }).eq('id', myId);
+      if (myProfile) myProfile.banner = bannerVal;
+      applyBannerPreview(bannerVal);
+      document.querySelectorAll('.pm-grad-swatch').forEach(el => el.classList.remove('sel'));
+      closeBannerRepoModal();
+      notifyParentProfileUpdated();
+    } catch(e) {
+      alert(e.message || 'Could not upload banner.');
+    } finally {
+      lbl.textContent = 'Save banner';
+    }
   }
 
   async function changePassword() {
@@ -1143,6 +1348,25 @@
     localStorage.clear();
     window.location.href = 'auth.html';
   }
+</script>
+
+<!-- Banner reposition modal -->
+<div id="bannerRepoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:460px;padding:22px">
+    <div style="font-size:15px;font-weight:800;margin-bottom:6px">Position your banner</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Drag the slider to center it the way you like.</div>
+    <div id="bannerRepoFrame" style="position:relative;width:100%;height:150px;border-radius:12px;overflow:hidden;background:#111">
+      <img id="bannerRepoImg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 50%"/>
+    </div>
+    <input type="range" id="bannerRepoSlider" min="0" max="100" value="50" style="width:100%;margin-top:16px;accent-color:var(--accent)" oninput="onBannerRepoSlide(this.value)"/>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeBannerRepoModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveBannerReposition()"><span id="bannerRepoSaveLabel">Save banner</span></button>
+    </div>
+  </div>
+</div>
+<script>
+  document.getElementById('bannerRepoOverlay').addEventListener('click', e => { if (e.target === document.getElementById('bannerRepoOverlay')) closeBannerRepoModal(); });
 </script>
 
 <!-- Stripe embedded checkout modal -->

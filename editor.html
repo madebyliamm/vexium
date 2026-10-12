@@ -254,7 +254,7 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #8e8e99;
+      background: #a3a3ad;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2042,7 +2042,7 @@
 
     /* ── COLLAB CHAT ── */
     .collab-msg-av {
-      width: 22px; height: 22px; border-radius: 50%; background: #8e8e99;
+      width: 22px; height: 22px; border-radius: 50%; background: #a3a3ad;
       display: flex; align-items: center; justify-content: center;
       font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
       cursor: default; align-self: flex-end; margin-right: 6px;
@@ -5892,7 +5892,7 @@ function startPresence() {
       el.innerHTML = others.map(u => {
         const name = u.name || '?';
         const init = name.charAt(0).toUpperCase();
-        return `<div title="${escHtml(name)}" style="width:24px;height:24px;border-radius:50%;background:#8e8e99;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;border:2px solid var(--bg);margin-left:-6px">${escHtml(init)}</div>`;
+        return `<div title="${escHtml(name)}" style="width:24px;height:24px;border-radius:50%;background:#a3a3ad;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;border:2px solid var(--bg);margin-left:-6px">${escHtml(init)}</div>`;
       }).join('');
     });
     presenceCh.subscribe(async (status) => {
@@ -10087,7 +10087,6 @@ function bkCopyCode(id, btn) {
 
 <!-- Chart tooltip -->
 <div id="chartTip"><div id="chartTipName"></div><div id="chartTipVal"></div></div>
-
 
 </body>
 </html>

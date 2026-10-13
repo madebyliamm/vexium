@@ -242,6 +242,35 @@ CREATE POLICY "owners can manage backups" ON public."project_backups" AS PERMISS
    FROM projects
   WHERE (projects.user_id = auth.uid()))));
 
+-- ── project_deploys  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."project_deploys" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "project_id" text NOT NULL,
+  "version" integer NOT NULL,
+  "status" text NOT NULL DEFAULT 'uploading'::text,
+  "created_by" uuid,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "main_file" text NOT NULL DEFAULT 'index.html'::text,
+  "file_count" integer NOT NULL DEFAULT 0,
+  "total_bytes" bigint NOT NULL DEFAULT 0,
+  "backend" jsonb,
+  CONSTRAINT "project_deploys_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL,
+  CONSTRAINT "project_deploys_pkey" PRIMARY KEY (id),
+  CONSTRAINT "project_deploys_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "project_deploys_project_id_version_key" UNIQUE (project_id, version),
+  CONSTRAINT "project_deploys_status_check" CHECK ((status = ANY (ARRAY['uploading'::text, 'ready'::text, 'failed'::text]))),
+  CONSTRAINT "project_deploys_version_check" CHECK ((version > 0))
+);
+CREATE UNIQUE INDEX project_deploys_pkey ON public.project_deploys USING btree (id);
+CREATE UNIQUE INDEX project_deploys_project_id_version_key ON public.project_deploys USING btree (project_id, version);
+CREATE INDEX project_deploys_project_idx ON public.project_deploys USING btree (project_id, version DESC);
+ALTER TABLE public."project_deploys" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "project_deploys_select" ON public."project_deploys" AS PERMISSIVE FOR SELECT TO authenticated USING (((project_id IN ( SELECT p.id
+   FROM projects p
+  WHERE (p.user_id = auth.uid()))) OR (project_id IN ( SELECT pm.project_id
+   FROM project_members pm
+  WHERE ((pm.user_id = auth.uid()) AND (pm.status = 'accepted'::text))))));
+
 -- ── project_members  (~0 rows, RLS ON) ──────────
 CREATE TABLE public."project_members" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -296,19 +325,27 @@ CREATE TABLE public."projects" (
   "ai_lock_name" text,
   "stripe_connect_account_id" text,
   "stripe_connect_charges_enabled" boolean DEFAULT false,
+  "published_version" integer,
   CONSTRAINT "projects_pkey" PRIMARY KEY (id),
   CONSTRAINT "projects_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
+CREATE UNIQUE INDEX projects_custom_domain_uidx ON public.projects USING btree (lower(custom_domain)) WHERE ((custom_domain IS NOT NULL) AND (custom_domain <> ''::text));
 CREATE UNIQUE INDEX projects_pkey ON public.projects USING btree (id);
 CREATE UNIQUE INDEX projects_published_slug_user_idx ON public.projects USING btree (user_id, published_slug) WHERE (published_slug IS NOT NULL);
 ALTER TABLE public."projects" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anyone can delete projects" ON public."projects" AS PERMISSIVE FOR DELETE TO public USING (true);
-CREATE POLICY "anyone can update projects" ON public."projects" AS PERMISSIVE FOR UPDATE TO public USING (true);
+CREATE POLICY "projects_delete_owner" ON public."projects" AS PERMISSIVE FOR DELETE TO authenticated USING ((user_id = auth.uid()));
 CREATE POLICY "projects_insert_own" ON public."projects" AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
 CREATE POLICY "projects_published_anon_read" ON public."projects" AS PERMISSIVE FOR SELECT TO anon USING ((published_slug IS NOT NULL));
 CREATE POLICY "projects_select" ON public."projects" AS PERMISSIVE FOR SELECT TO public USING (((user_id = auth.uid()) OR (is_public = true) OR (id IN ( SELECT project_members.project_id
    FROM project_members
   WHERE ((project_members.user_id = auth.uid()) AND (project_members.status = ANY (ARRAY['pending'::text, 'accepted'::text])))))));
+CREATE POLICY "projects_update_owner_or_member" ON public."projects" AS PERMISSIVE FOR UPDATE TO authenticated USING (((user_id = auth.uid()) OR (id IN ( SELECT pm.project_id
+   FROM project_members pm
+  WHERE ((pm.user_id = auth.uid()) AND (pm.status = 'accepted'::text)))))) WITH CHECK (((user_id = auth.uid()) OR (id IN ( SELECT pm.project_id
+   FROM project_members pm
+  WHERE ((pm.user_id = auth.uid()) AND (pm.status = 'accepted'::text))))));
+CREATE TRIGGER projects_guard_hosting_columns BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_hosting_columns();
+CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_owner();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- ── site_data  (~1 rows, RLS ON) ──────────
@@ -632,6 +669,62 @@ begin
   new.public_email := case when new.show_email then new.email end;
   return new;
 end;
+$function$;
+
+-- projects_guard_hosting_columns
+CREATE OR REPLACE FUNCTION public.projects_guard_hosting_columns()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF coalesce(auth.role(), 'postgres') IN ('anon', 'authenticated') AND (
+       NEW.published_version        IS DISTINCT FROM OLD.published_version
+    OR NEW.custom_domain            IS DISTINCT FROM OLD.custom_domain
+    OR NEW.custom_domain_cf_id      IS DISTINCT FROM OLD.custom_domain_cf_id
+    OR NEW.custom_domain_verified   IS DISTINCT FROM OLD.custom_domain_verified
+  ) THEN
+    RAISE EXCEPTION 'hosting columns are managed by the platform' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $function$;
+
+-- projects_guard_owner
+CREATE OR REPLACE FUNCTION public.projects_guard_owner()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF NEW.user_id IS DISTINCT FROM OLD.user_id AND coalesce(auth.role(), 'postgres') IN ('anon', 'authenticated') THEN
+    RAISE EXCEPTION 'project ownership cannot be changed' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $function$;
+
+-- resolve_published_site  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.resolve_published_site(p_username text DEFAULT NULL::text, p_slug text DEFAULT NULL::text, p_host text DEFAULT NULL::text)
+ RETURNS TABLE(project_id text, version integer, main_file text, legacy boolean)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT p.id,
+         p.published_version,
+         coalesce(d.main_file, nullif(p.main_file, ''), 'index.html'),
+         (p.published_version IS NULL)
+  FROM public.projects p
+  LEFT JOIN public.project_deploys d
+         ON d.project_id = p.id AND d.version = p.published_version AND d.status = 'ready'
+  WHERE p.published_slug IS NOT NULL
+    AND (p.published_version IS NULL OR d.id IS NOT NULL)
+    AND CASE
+          WHEN p_host IS NOT NULL THEN p.custom_domain <> '' AND lower(p.custom_domain) = lower(p_host)
+          ELSE p.published_slug = p_slug
+               AND p.user_id = (SELECT pr.id FROM public.profiles pr WHERE pr.username = p_username)
+        END
+  ORDER BY p.custom_domain_verified DESC NULLS LAST
+  LIMIT 1
 $function$;
 
 -- set_updated_at

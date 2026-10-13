@@ -20,7 +20,7 @@ Step 1 found these by READING source and catalog definitions. Step 2 fixed the c
 | 13 | `ai-chat` accepted unauthenticated / forged callers → unmetered Anthropic spend | **FIXED** (new) |
 | 14 | `trial-emails` had no auth | **FIXED** (new; service key required) |
 | 15 | Account deletion never worked (`delete_user` RPC doesn't exist) | **FIXED** (new; page now calls `delete_own_account`) |
-| 16 | **`projects` UPDATE/DELETE open to everyone** (`USING (true)` for role public + anon table grants) — anyone with the anon key could overwrite/delete any PUBLISHED project (defacement, `custom_domain` hijack) | **FIX READY, NOT YET APPLIED** — `supabase/migrations/20261012130000_projects_rls.sql`, verified 18/18 by `supabase/tests/step3_projects_rls.sql` (before: 12 FAIL on prod, i.e. exploitable). Awaiting Liam's OK |
+| 16 | **`projects` UPDATE/DELETE open to everyone** (`USING (true)` for role public + anon table grants) — anyone with the anon key could overwrite/delete any PUBLISHED project (defacement, `custom_domain` hijack) | **FIXED 2026-10-13** — `supabase/migrations/20261012130000_projects_rls.sql` applied to prod; 18/18 by `supabase/tests/step3_projects_rls.sql`; black-box: anon PATCH/DELETE on `projects` → 401, anon SELECT + Worker RPC still 200 |
 | 17 | `notifications` INSERT is `WITH CHECK (true)` — anyone can push a notification to any user (spam/phishing links) | **OPEN, MEDIUM** — needs the notification senders moved into triggers/RPCs first (Step 14 at the latest) |
 
 ## New in Step 2
@@ -30,7 +30,7 @@ Step 1 found these by READING source and catalog definitions. Step 2 fixed the c
 **Why not gateway `verify_jwt`?** The project signs user tokens with ES256, which the edge gateway has rejected before, so `site-sql`/`ai-chat` verify in-function. See `docs/INFRA.md`.
 
 ## Found in Step 3
-**16. `projects` write policies (HIGH, found while designing hosting).** `anyone can update projects` / `anyone can delete projects` were `USING (true)` for role `public`, and `anon` held UPDATE/DELETE/TRUNCATE on the table. UPDATE/DELETE still need the row to be visible through the SELECT policies, so the exposed rows were every PUBLISHED / public project (exactly the live sites): `files`, `published_files`, `custom_domain`, even `user_id`. Confirmed read-only on prod via `pg_policies` and a rolled-back test that ran `UPDATE`/`DELETE` as `anon` ("ok rows=1"). Fix: owner-or-accepted-collaborator UPDATE, owner-only DELETE, a trigger that stops API roles changing `user_id`, anon write privileges revoked. No page/function redeploy needed.
+**16. `projects` write policies (HIGH, found while designing hosting).** `anyone can update projects` / `anyone can delete projects` were `USING (true)` for role `public`, and `anon` held UPDATE/DELETE/TRUNCATE on the table. UPDATE/DELETE still need the row to be visible through the SELECT policies, so the exposed rows were every PUBLISHED / public project (exactly the live sites): `files`, `published_files`, `custom_domain`, even `user_id`. Confirmed read-only on prod via `pg_policies` and a rolled-back test that ran `UPDATE`/`DELETE` as `anon` ("ok rows=1"). Fix: owner-or-accepted-collaborator UPDATE, owner-only DELETE, a trigger that stops API roles changing `user_id`, anon write privileges revoked. No page/function redeploy needed. **Applied to prod 2026-10-13.**
 **17. `notifications` INSERT `WITH CHECK (true)`** (and `feedback`, which is fine). Medium: spam/phishing in the in-app bell.
 
 ## OPEN — highest priority next

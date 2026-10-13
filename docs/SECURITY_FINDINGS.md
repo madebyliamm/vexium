@@ -20,12 +20,18 @@ Step 1 found these by READING source and catalog definitions. Step 2 fixed the c
 | 13 | `ai-chat` accepted unauthenticated / forged callers → unmetered Anthropic spend | **FIXED** (new) |
 | 14 | `trial-emails` had no auth | **FIXED** (new; service key required) |
 | 15 | Account deletion never worked (`delete_user` RPC doesn't exist) | **FIXED** (new; page now calls `delete_own_account`) |
+| 16 | **`projects` UPDATE/DELETE open to everyone** (`USING (true)` for role public + anon table grants) — anyone with the anon key could overwrite/delete any PUBLISHED project (defacement, `custom_domain` hijack) | **FIX READY, NOT YET APPLIED** — `supabase/migrations/20261012130000_projects_rls.sql`, verified 18/18 by `supabase/tests/step3_projects_rls.sql` (before: 12 FAIL on prod, i.e. exploitable). Awaiting Liam's OK |
+| 17 | `notifications` INSERT is `WITH CHECK (true)` — anyone can push a notification to any user (spam/phishing links) | **OPEN, MEDIUM** — needs the notification senders moved into triggers/RPCs first (Step 14 at the latest) |
 
 ## New in Step 2
 **13. `ai-chat` (verify_jwt off) derived the user from an UNDECODED-SIGNATURE JWT and skipped everything when there was none.** No `Authorization` header (or the public anon key) ⇒ `userId = null` ⇒ no usage gate, no billing ⇒ anyone with the function URL could run unmetered Anthropic calls on Liam's key; a forged `sub` could burn another user's credits. Fix: `verifiedUserId()` asks GoTrue (`/auth/v1/user`); no valid user ⇒ 401. Confirmed live: no auth / anon key / forged unsigned JWT all → 401.
 **14. `trial-emails`** had `verify_jwt` off and no check — anyone could trigger sends. Now requires the service-role key. (Nothing in the repo or DB schedules it; wire a scheduler with that key before relying on it.)
 **15. Settings → Delete account** called a non-existent RPC, swallowed the error and just signed the user out. Now calls `delete_own_account` (cascades profile + billing). Not exercised on a real account.
 **Why not gateway `verify_jwt`?** The project signs user tokens with ES256, which the edge gateway has rejected before, so `site-sql`/`ai-chat` verify in-function. See `docs/INFRA.md`.
+
+## Found in Step 3
+**16. `projects` write policies (HIGH, found while designing hosting).** `anyone can update projects` / `anyone can delete projects` were `USING (true)` for role `public`, and `anon` held UPDATE/DELETE/TRUNCATE on the table. UPDATE/DELETE still need the row to be visible through the SELECT policies, so the exposed rows were every PUBLISHED / public project (exactly the live sites): `files`, `published_files`, `custom_domain`, even `user_id`. Confirmed read-only on prod via `pg_policies` and a rolled-back test that ran `UPDATE`/`DELETE` as `anon` ("ok rows=1"). Fix: owner-or-accepted-collaborator UPDATE, owner-only DELETE, a trigger that stops API roles changing `user_id`, anon write privileges revoked. No page/function redeploy needed.
+**17. `notifications` INSERT `WITH CHECK (true)`** (and `feedback`, which is fine). Medium: spam/phishing in the in-app bell.
 
 ## OPEN — highest priority next
 **10 (HIGH). `get_email_by_username(text)` is callable by anon and returns the account's REAL email** (auth.html signs up with the real address; the old "pseudo-address" assumption was wrong). Anyone who knows or guesses a username can harvest its email. Used only for username login (auth.html). Fix: do username login server-side (an edge function that resolves + signs in and returns the session, rate-limited) then revoke the RPC from anon/authenticated. Do before launch; natural home is the studio auth work (Step 6) or Step 4.

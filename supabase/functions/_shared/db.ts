@@ -118,10 +118,22 @@ export async function getProjectByConnectAccount(accountId: string): Promise<Rec
 
 // Full commerce view of a project — includes the files blob so the checkout endpoint can read the
 // owner's product catalog (and its SERVER-SIDE prices) instead of trusting client-supplied amounts.
+// Hosting v2 sites (published_version set) keep their published `_backend` on the live project_deploys row, not
+// in published_files: expose it as `published_files._backend` and drop the draft `files`, so only what is actually
+// live can be bought. Legacy sites (no version) keep the old published_files -> files lookup.
 export async function getProjectCommerce(projectId: string): Promise<Record<string, any> | null> {
-  const res = await fetch(`${REST}/projects?id=eq.${encodeURIComponent(projectId)}&select=id,user_id,stripe_connect_account_id,stripe_connect_charges_enabled,files,published_files&limit=1`, { headers: HEADERS });
+  const id = encodeURIComponent(projectId);
+  const res = await fetch(`${REST}/projects?id=eq.${id}&select=id,user_id,stripe_connect_account_id,stripe_connect_charges_enabled,files,published_files,published_version&limit=1`, { headers: HEADERS });
   const rows = await res.json();
-  return rows[0] || null;
+  const project = rows[0] || null;
+  if (project && project.published_version != null) {
+    const d = await fetch(`${REST}/project_deploys?project_id=eq.${id}&version=eq.${project.published_version}&select=backend&limit=1`, { headers: HEADERS });
+    const deploys = await d.json();
+    const backend = Array.isArray(deploys) && deploys[0] ? deploys[0].backend : null;
+    project.published_files = backend ? { _backend: backend } : {};
+    project.files = null;
+  }
+  return project;
 }
 
 export async function insertSiteData(projectId: string, collection: string, data: Record<string, unknown>): Promise<void> {

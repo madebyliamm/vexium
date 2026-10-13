@@ -5,8 +5,9 @@ No secrets here — names only.
 ## Request paths
 ```
 Vertly app (static pages)  →  GitHub Pages (repo madebyliamm/vexium, workflow .github/workflows/static.yml, deploys on push to main)
-Published site  *.vexium.ai/<slug>  →  Cloudflare Worker `vexium-publisher` (worker.js) → reads project row from Supabase REST on every request (no cache) → inlines CSS/JS/images → HTML
+Published site  *.vexium.ai/<slug>  →  Cloudflare Worker `vexium-publisher` (publisher/) → ONE cached RPC `resolve_published_site` (host or username+slug → project + live version) → file from R2 `p/<project_id>/v<n>/<path>` (+ <base>, project id, tracker injected) — v2, after the Step 3 deploy. Before it / for sites never republished: the old path (project row from Supabase REST on every request, CSS/JS/images inlined from `published_files`), kept as the Worker's `legacy` fallback.
 Published site on a custom domain  →  DNS CNAME cname.vercel-dns.com → Vercel project `vexium` (vercel-proxy/api/proxy.js, edge fn) → forwards to vexium-publisher.startafter.workers.dev with x-forwarded-host → same Worker
+Publish / Rollback / Unpublish (editor)  →  POST vexium-publisher.startafter.workers.dev/__vx/{publish,rollback,unpublish} with the user's Supabase access token → Worker verifies it with GoTrue, checks owner/accepted-collaborator, writes R2, flips `projects.published_version`
 AI builds   →  Cloudflare Worker `vexium-ai-build` (cf-worker/) → asks Supabase `ai-chat` to PREPARE the prompt → streams Anthropic → SSE to the editor
 Everything else (auth, DB, AI prompts, Stripe, analytics, site backend)  →  Supabase project ciuqhxrxcznmgorjeumz
 ```
@@ -39,8 +40,12 @@ Build Worker secrets: `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (vars: `S
 Public (by design): Supabase anon key in `config.js`, `worker.js`, `cf-worker/wrangler.toml`, a few pages — must stay identical everywhere.
 
 ## Cloudflare Workers
-- `vexium-publisher` — `wrangler.toml` at repo root, `main = worker.js`, URL `vexium-publisher.startafter.workers.dev`. Deploy: `npx wrangler deploy` (root). Serves published sites (see above).
+- `vexium-publisher` — **`publisher/`** (`wrangler.toml`, `src/*.ts`, tests in `publisher/test`), URL `vexium-publisher.startafter.workers.dev`. R2 binding `SITES` → bucket `vertly-sites`; var `SUPABASE_URL`/`SUPABASE_ANON_KEY`; secret `SUPABASE_SERVICE_ROLE_KEY`. Deploy: `npx wrangler deploy --config publisher/wrangler.toml`. Tests: `node --test 'publisher/test/*.test.ts'` (Node ≥ 22.18, no install needed; fake R2 + fake Supabase). The previous implementation (root `worker.js` + `wrangler.toml`) is superseded; recover it from git history (`git show 06fd480:worker.js`) to roll the Worker back — v2 sites would then not serve, so only do that before anyone republishes.
+  - Serving: `*.vexium.ai/<slug>/…` and custom domains. HTML is revalidated on every load (ETag/304); CSS/JS/JSON 5 min; images/fonts 1 h. Unknown paths are real 404s (the site's own `404.html` if it has one) — the legacy path still falls back to the main page. `_`-prefixed files (e.g. `_backend`) are never published; the parsed `_backend` is stored on `project_deploys.backend`.
+  - Route cache: 10 s in the Worker isolate (3 s for misses). A publish/rollback/unpublish clears it in the isolate that handled it and reaches every other isolate within ~10 s. (The Cache API does not work on `workers.dev`, which custom-domain traffic goes through, so there is deliberately no zone-cache layer yet — measure first.)
+  - API limits: 30 MB body, 25 MB total, 8 MB per file, 500 files; keeps the newest 20 versions per project.
 - `vexium-ai-build` — `cf-worker/wrangler.toml`, `main = worker.ts`, URL `vexium-ai-build.startafter.workers.dev`. Deploy: `npx wrangler deploy --config cf-worker/wrangler.toml`. `cf-worker/core.ts` is byte-extracted from `ai-chat/index.ts`; re-extract if the stream parser changes. Revert builds to Supabase by setting `AI_BUILD_URL = AI_EDGE_URL` in `editor.html`.
+- **Routes / DNS / account details: still UNVERIFIED** (needs `npx wrangler login`; record the real `*.vexium.ai/*` route and zone here before the first deploy of `publisher/`, because deploying from a config without `routes` leaves dashboard routes alone but a typo'd Worker name would orphan them).
 
 ## Vercel
 Project `vexium` (id in `vercel-proxy/.vercel/project.json`) exists only to terminate TLS for customers' custom domains and forward to the publisher Worker. The `custom-domain` function hardcodes the project id and calls the Vercel API with `VERCEL_TOKEN_KEY`. Note: Cloudflare for SaaS (custom hostnames) could remove this hop — evaluate in Step 3.

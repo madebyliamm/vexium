@@ -1,0 +1,18 @@
+name = "vexium-publisher"          # same Worker name as before, so the existing routes/custom-domain proxy keep pointing at it
+main = "src/worker.ts"
+compatibility_date = "2024-11-01"
+
+# Published files: immutable versions at p/<project_id>/v<n>/<path>.
+# One-time:  npx wrangler r2 bucket create vertly-sites
+[[r2_buckets]]
+binding = "SITES"
+bucket_name = "vertly-sites"
+
+# Public config. The secret is set out-of-band:
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config publisher/wrangler.toml
+[vars]
+SUPABASE_URL = "https://ciuqhxrxcznmgorjeumz.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdXFoeHJ4Y3pubWdvcmpldW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDYxODUsImV4cCI6MjA4ODMyMjE4NX0.54fc-rv6tLCE-6BM6eFFy3HjPcPnus69NckKjIKNJCY"
+
+# Routes (*.vexium.ai/* etc.) are currently configured in the Cloudflare dashboard and are NOT managed here.
+# After `wrangler login`, record the real ones in docs/INFRA.md before the first deploy from this file.

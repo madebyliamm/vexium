@@ -4279,31 +4279,60 @@ function _relTime(d) {
   return Math.floor(s/86400) + 'd ago';
 }
 
+// Hosting v2: Publish / Update / Unpublish go through the publisher Worker, which stores the files in R2 as an
+// immutable version and flips the live pointer (a failed publish leaves the current version live).
+const PUBLISH_API = 'https://vexium-publisher.startafter.workers.dev/__vx';
+async function _pubApi(action, payload) {
+  async function send(forceRefresh) {
+    const { data } = forceRefresh ? await sb.auth.refreshSession() : await sb.auth.getSession();
+    const session = data && data.session;
+    if (!session) { const e = new Error('Sign in again to publish.'); e.code = 'unauthorized'; throw e; }
+    return fetch(PUBLISH_API + '/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(payload),
+    });
+  }
+  let res = await send(false);
+  if (res.status === 401) res = await send(true);
+  let out = {};
+  try { out = await res.json(); } catch (e) {}
+  if (!res.ok || !out.ok) {
+    const err = new Error(out.message || ('Publish failed (' + res.status + ')'));
+    err.code = out.error || 'failed';
+    throw err;
+  }
+  return out;
+}
+
 async function publishSite() {
   if (!project) return;
   const btn = document.getElementById('epPublishBtn');
+  const idleHtml = btn.innerHTML;
   btn.classList.add('loading');
   btn.textContent = 'Publishing…';
 
-  const slug = _pubSlugFrom(project.name);
+  let slug = project.published_slug || _pubSlugFrom(project.name);
   const now = new Date().toISOString();
 
   if (sb) {
     try {
-      await sb.from('projects').update({
-        published_slug: slug,
-        published_at: now,
-        published_files: fileSystem,
-        is_public: true,
-      }).eq('id', project.id);
-    } catch(e) {}
+      const out = await _pubApi('publish', { projectId: project.id, files: fileSystem, mainFile, slug });
+      slug = out.slug;
+      project.published_version = out.version;
+    } catch (e) {
+      btn.classList.remove('loading');
+      btn.innerHTML = idleHtml;
+      showToast('!', e.message || 'Could not publish');
+      return;
+    }
   }
   project.published_slug  = slug;
   project.published_at    = now;
-  project.published_files = fileSystem;
   project.is_public       = true;
 
   btn.classList.remove('loading');
+  btn.innerHTML = idleHtml;
   renderPublishSection();
   _startLivePoll('launching');
   showToast('🚀', 'Published!');
@@ -4319,14 +4348,14 @@ async function _confirmUpdate() {
   const now = new Date().toISOString();
   if (sb) {
     try {
-      await sb.from('projects').update({
-        published_at: now,
-        published_files: fileSystem,
-      }).eq('id', project.id);
-    } catch(e) {}
+      const out = await _pubApi('publish', { projectId: project.id, files: fileSystem, mainFile, slug: project.published_slug });
+      project.published_version = out.version;
+    } catch (e) {
+      showToast('!', e.message || 'Could not update the live site');
+      return;
+    }
   }
-  project.published_at    = now;
-  project.published_files = fileSystem;
+  project.published_at = now;
   renderPublishSection();
   _startLivePoll('updating');
   showToast('🚀', 'Updated!');
@@ -4341,11 +4370,13 @@ async function _confirmUnpublish() {
   document.getElementById('pubConfirmOverlay').classList.remove('show');
   if (!project) return;
   if (sb) {
-    try { await sb.from('projects').update({ published_slug: null, published_at: null, is_public: false }).eq('id', project.id); } catch(e) {}
+    try { await _pubApi('unpublish', { projectId: project.id }); }
+    catch (e) { showToast('!', e.message || 'Could not unpublish'); return; }
   }
-  project.published_slug = null;
-  project.published_at   = null;
-  project.is_public      = false;
+  project.published_slug    = null;
+  project.published_at      = null;
+  project.published_version = null;
+  project.is_public         = false;
   closePubSettings();
   renderPublishSection();
   showToast('✓', 'Unpublished');

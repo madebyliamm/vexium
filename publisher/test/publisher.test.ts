@@ -1,7 +1,9 @@
 // Run:  node --test publisher/test/      (Node ≥ 22.18 runs the .ts files directly)
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import worker from '../src/worker.ts';
+import { SDK_V1_HASH, SDK_V1_SOURCE } from '../src/sdk.generated.ts';
 import { candidates, requestPath, safeKey } from '../src/paths.ts';
 import { prepareFiles, slugFrom } from '../src/publish.ts';
 import { COLLAB, get, makeWorld, OWNER, PNG_B64, post, SAMPLE_FILES, STRANGER, type World } from './harness.ts';
@@ -202,6 +204,10 @@ describe('serving v2 sites', () => {
     assert.ok(!html.includes('{{VEXIUM_PROJECT_ID}}'));
     assert.ok(html.includes('/functions/v1/track') && html.indexOf('/functions/v1/track') < html.lastIndexOf('</body>'));
     assert.equal(res.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
+    // SDK: site id first, then the script, both before </body>
+    const cfg = html.indexOf('window.__VX={site:"proj_1"}');
+    const tag = html.indexOf(`<script src="/__vx/sdk/v1.js?v=${SDK_V1_HASH}"></script>`);
+    assert.ok(cfg > 0 && tag > cfg && tag < html.lastIndexOf('</body>'));
   });
 
   it('custom domains are served from the root without <base>', async () => {
@@ -327,5 +333,46 @@ describe('misc', () => {
     const w = makeWorld();
     const res = await call(w, get('https://liam.vexium.ai/__vexium_ping'));
     assert.deepEqual(await res.json(), { ok: true });
+  });
+});
+
+describe('Vertly SDK', () => {
+  const sdk = (headers: Record<string, string> = {}, path = '/__vx/sdk/v1.js', method = 'GET') =>
+    worker.fetch(get('https://liam.vexium.ai' + path, headers, method), makeWorld().env, makeWorld().ctx);
+
+  it('the committed generated module matches sdk/v1.js (run `node scripts/build-sdk.mjs` after editing the SDK)', () => {
+    const src = readFileSync(new URL('../../sdk/v1.js', import.meta.url), 'utf8');
+    assert.equal(SDK_V1_SOURCE, src);
+  });
+  it('is served as JavaScript with a year-long immutable cache for the hashed URL', async () => {
+    const res = await sdk({}, `/__vx/sdk/v1.js?v=${SDK_V1_HASH}`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('content-type')!, /^application\/javascript/);
+    assert.equal(res.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+    assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(res.headers.get('access-control-allow-origin'), '*');
+    assert.equal(await res.text(), SDK_V1_SOURCE);
+  });
+  it('a bare or stale URL gets the short cache; ETag gives 304; HEAD has no body', async () => {
+    for (const p of ['/__vx/sdk/v1.js', '/__vx/sdk/v1.js?v=old']) {
+      assert.equal((await sdk({}, p)).headers.get('cache-control'), 'public, max-age=300, stale-while-revalidate=86400');
+    }
+    const etag = (await sdk()).headers.get('etag')!;
+    assert.equal((await sdk({ 'if-none-match': etag })).status, 304);
+    const head = await sdk({}, '/__vx/sdk/v1.js', 'HEAD');
+    assert.equal(head.status, 200);
+    assert.equal(await head.text(), '');
+  });
+  it('is the same on a custom domain (x-forwarded-host) and does not need a published site', async () => {
+    const res = await sdk({ 'x-forwarded-host': 'www.example.com' });
+    assert.equal(res.status, 200);
+  });
+  it('defines the public API surface and the old aliases', () => {
+    for (const name of ['signup', 'login', 'logout', 'user', 'token', 'onChange', 'submit', 'list', 'update', 'remove', 'bind', 'buy', 'buyAmount', 'page']) {
+      assert.ok(SDK_V1_SOURCE.includes(name + ':'), name);
+    }
+    for (const alias of ['vxCall', 'vxSignup', 'vxLogin', 'vxLogout', 'vxCurrentUser', 'vxGetToken', 'vxCheckout', 'vxBuy', 'vxBuyAmount']) {
+      assert.ok(SDK_V1_SOURCE.includes('w.' + alias + ' ='), alias);
+    }
   });
 });

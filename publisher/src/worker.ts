@@ -7,6 +7,7 @@
 // v2 (published_version NULL) still render from projects.published_files until their next publish.
 //
 // Publish API (see publish.ts):  POST /__vx/publish | /__vx/rollback | /__vx/unpublish
+// SDK (see sdk.ts):              GET  /__vx/sdk/v1.js   (injected into every page next to the tracker)
 //
 // Config: publisher/wrangler.toml.  Secret:  SUPABASE_SERVICE_ROLE_KEY
 // Deploy: npx wrangler deploy --config publisher/wrangler.toml
@@ -15,6 +16,7 @@
 import { handleApi } from './publish.ts';
 import { handleSite } from './serve.ts';
 import { notFoundPage } from './html.ts';
+import { SDK_PATH, serveSdk } from './sdk.ts';
 import type { Ctx, Env } from './types.ts';
 
 export default {
@@ -28,6 +30,9 @@ export default {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' },
       });
     }
+
+    // The Vertly SDK that is injected into every published page (see sdk/v1.js). Same path on *.vexium.ai and custom domains.
+    if (url.pathname === SDK_PATH && (req.method === 'GET' || req.method === 'HEAD')) return serveSdk(req);
 
     if (url.pathname.startsWith('/__vx/')) return handleApi(req, env, ctx);
 

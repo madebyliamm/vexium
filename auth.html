@@ -685,12 +685,23 @@
     setMsg('', '');
   }
 
+  // Server-side (auth-gate): the browser no longer reads the user table / RPCs directly (SECURITY_FINDINGS #10).
+  async function authGate(payload) {
+    const res = await fetch(SUPABASE_FN_BASE + '/auth-gate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify(payload),
+    });
+    const out = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, out };
+  }
+
   async function checkAvailability(username, email) {
     try {
-      const { data, error } = await sb.rpc('check_signup_availability', { p_username: username, p_email: email.toLowerCase() });
-      if (error) return 'error';
-      if (data?.username_taken) return 'username';
-      if (data?.email_taken)    return 'email';
+      const { ok, out } = await authGate({ action: 'availability', username, email: email.toLowerCase() });
+      if (!ok) return 'error';
+      if (out.username_taken) return 'username';
+      if (out.email_taken)    return 'email';
       return 'ok';
     } catch(e) { return 'error'; }
   }
@@ -826,18 +837,21 @@
     const lbl = document.getElementById('signinLabel');
     btn.disabled = true; lbl.innerHTML = '<div class="spin"></div>'; setMsg('', '');
     try {
-      let authEmail, username;
+      let sessionUser;
       if (input.includes('@')) {
-        authEmail = input;
-        username  = input;
+        // Email sign-in goes straight to Supabase Auth.
+        const { data, error } = await sb.auth.signInWithPassword({ email: input, password: pass });
+        if (error) { setMsg('Wrong username or password.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; return; }
+        sessionUser = data.user;
       } else {
-        const { data: emailData } = await sb.rpc('get_email_by_username', { p_username: input });
-        authEmail = emailData || toEmail(input);
-        username  = input;
+        // Username sign-in is resolved server-side so the account's email is never sent to the browser.
+        const { ok, out } = await authGate({ action: 'login', identifier: input, password: pass });
+        if (!ok || !out.session) { setMsg(out.error || 'Wrong username or password.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; return; }
+        const { error: sessErr } = await sb.auth.setSession({ access_token: out.session.access_token, refresh_token: out.session.refresh_token });
+        if (sessErr) { setMsg('Wrong username or password.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; return; }
+        sessionUser = out.session.user;
       }
-      const { data, error } = await sb.auth.signInWithPassword({ email: authEmail, password: pass });
-      if (error) { setMsg('Wrong username or password.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; return; }
-      localStorage.setItem('vexium_username', data.user?.user_metadata?.username || username);
+      localStorage.setItem('vexium_username', sessionUser?.user_metadata?.username || input);
       window.location.href = 'home.html';
     } catch(e) { setMsg('Something went wrong.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; }
   }

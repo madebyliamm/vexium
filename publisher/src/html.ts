@@ -1,3 +1,5 @@
+import { sdkSnippet } from './sdk.ts';
+
 const SUPABASE_FUNCTIONS = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1';
 
 /** Bump when the tracking snippet changes: it is part of every HTML ETag so browsers re-fetch. */
@@ -11,7 +13,7 @@ export function trackerSnippet(projectId: string): string {
 
 /**
  * Per-request HTML changes: substitute the project-id placeholder, add <base> when the site lives under /slug/,
- * append the tracker. Everything else is served exactly as published.
+ * append the SDK + tracker. Everything else is served exactly as published.
  */
 export function prepareHtml(html: string, opts: { projectId: string; baseHref: string }): string {
   let out = html.split('{{VEXIUM_PROJECT_ID}}').join(opts.projectId);
@@ -22,7 +24,7 @@ export function prepareHtml(html: string, opts: { projectId: string; baseHref: s
     out = /<head[^>]*>/i.test(out) ? out.replace(/(<head[^>]*>)/i, `$1${baseTag}`) : baseTag + out;
   }
 
-  const tracker = trackerSnippet(opts.projectId);
+  const tracker = sdkSnippet(opts.projectId) + trackerSnippet(opts.projectId);
   const close = out.toLowerCase().lastIndexOf('</body>');
   return close >= 0 ? out.slice(0, close) + tracker + out.slice(close) : out + tracker;
 }

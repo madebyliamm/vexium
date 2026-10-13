@@ -1,6 +1,7 @@
 import { cacheControlFor, isHtml, mimeFor } from './mime.ts';
 import { candidates, deployPrefix, requestPath } from './paths.ts';
 import { hash, notFoundPage, prepareHtml, TRACKER_VERSION } from './html.ts';
+import { SDK_HASH } from './sdk.ts';
 import { fetchLegacyProject, resolveRoute } from './supabase.ts';
 import { serveLegacy } from './legacy.ts';
 import type { Env, Route } from './types.ts';
@@ -86,8 +87,8 @@ async function respond(
   const isHead = req.method === 'HEAD';
 
   if (isHtml(contentType)) {
-    // Output depends on the base path + tracker, so the ETag does too.
-    const etag = `"${obj.httpEtag.replace(/"/g, '')}-${hash(baseHref)}-t${TRACKER_VERSION}"`;
+    // Output depends on the base path + tracker + SDK build, so the ETag does too.
+    const etag = `"${obj.httpEtag.replace(/"/g, '')}-${hash(baseHref)}-t${TRACKER_VERSION}-s${SDK_HASH}"`;
     if (status === 200) {
       headers.set('ETag', etag);
       if (matches(req, etag)) return new Response(null, { status: 304, headers });

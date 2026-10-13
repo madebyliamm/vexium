@@ -235,7 +235,9 @@ try:
     st, _, g = gate({'action': 'login', 'identifier': username, 'password': password})
     ok = st == 200 and g.get('session', {}).get('access_token')
     check('auth-gate: username + password → session', ok, st)
-    check('auth-gate: response does not contain the account email', email not in json.dumps(g), '')
+    # The session (GoTrue's own object) legitimately carries the signed-in user's own email — they just proved the
+    # password. What must never happen is the email leaking anywhere else, or in any failed/anonymous response.
+    check('auth-gate: email appears only inside the authenticated session', email not in json.dumps({k: v for k, v in g.items() if k != 'session'}), '')
     if ok:
         st, _, me = http('GET', SB + '/auth/v1/user', {'apikey': ANON, 'Authorization': 'Bearer ' + g['session']['access_token']})
         check('auth-gate: returned session is a real, working Supabase session', st == 200 and me.get('id') == uid, st)
@@ -244,6 +246,7 @@ try:
     st, _, w1 = gate({'action': 'login', 'identifier': username, 'password': 'wrong-password'})
     st2, _, w2 = gate({'action': 'login', 'identifier': 'no-such-user-' + stamp, 'password': 'wrong-password'})
     check('auth-gate: wrong password and unknown user are indistinguishable', st == 401 and st2 == 401 and w1 == w2, (st, st2))
+    check('auth-gate: a failed login never reveals the email', email not in json.dumps(w1) and email not in json.dumps(w2), '')
     codes = [gate({'action': 'login', 'identifier': username, 'password': 'wrong-%d' % i})[0] for i in range(5)]
     st, hd, _ = gate({'action': 'login', 'identifier': username, 'password': password})
     check('auth-gate: brute force on one account → 429 even with the right password', st == 429, (codes, st))

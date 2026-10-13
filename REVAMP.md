@@ -11,7 +11,7 @@
 6. When *Done when* is verified: commit locally (no push) with a clear message, set the step to DONE, fill in its *Handoff notes* (what changed, files touched, decisions, gotchas, the next step's first action), bump "Current step", update memory file summaries if structure changed.
 7. Finish by telling Liam: what was done, anything *he* must do or test (concrete clicks), and "start a new chat and say **continue**".
 
-**Current step: 2** (update this line at the end of each step)
+**Current step: 3** (update this line at the end of each step)
 
 ## Goal
 Turn Vertly from "a chat box that builds a site" into a guided **business creator**:
@@ -39,7 +39,10 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 - Stripe is TEST mode until Step 14.
 - `supabase/functions/ai-chat` deploys via `supabase functions deploy ai-chat --no-verify-jwt`; build Worker via `npx wrangler deploy --config cf-worker/wrangler.toml`.
 - Deployed `ai-chat` (v199) is byte-identical to the repo as of 2026-10-12 — the soft-defaults / "build real products" prompt edits ARE live.
-- **The production Supabase project has critical security holes (see `docs/SECURITY_FINDINGS.md`) — Step 2 fixes them before any real user arrives. Don't build new features on top of `site-api`, `site-sql`, `increment_usage` or `profiles` billing columns until then.**
+- **Security state after Step 2 (`docs/SECURITY_FINDINGS.md` has the status board):** the critical holes (#1–3, 9, 11, 13) are fixed and re-verified by `supabase/tests/step2_security_lockdown.sql`. STILL OPEN and blocking launch: **`get_email_by_username` leaks real emails to anyone (#10, HIGH)** and the `site-api` holes #4–6, 8 (Step 4). Don't build new features on `site-api` until Step 4.
+- **Billing/plan/credits/Stripe ids live in `public.account_billing`, NOT `profiles`** (own-row SELECT for clients, service-role writes). `profiles` is public data with column-level grants: no `select('*')`, no `email` (use `public_email` / the auth session), and a new profile column is invisible to clients until added to the GRANT lists in a new migration. Server code reads/writes billing only via `supabase/functions/_shared/db.ts`.
+- **Auth model for edge functions:** the project signs tokens with ES256, so functions that need the user stay `--no-verify-jwt` and verify in-function via GoTrue (`/auth/v1/user`). `ai-chat` and `site-sql` now do; `ai-chat` returns 401 for anyone not signed in. Never trust an undecoded JWT `sub`; never treat the anon key as a user. (`docs/INFRA.md`)
+- Migrations are applied by hand (`supabase db query --linked -f supabase/migrations/<file>`) and committed as the record; a test script with a final `RAISE EXCEPTION` (see `supabase/tests/`) is the safe way to dry-run + verify against prod.
 - CLI recipes that work without Docker: `supabase functions download --use-api <fn>`; `supabase db query --linked -o json "<sql>"` (or `-f file.sql`); `python3 scripts/export-schema.py` refreshes `supabase/schema.sql`. Wrangler is NOT installed (`npx wrangler` needs a download + `wrangler login`).
 
 ---
@@ -57,7 +60,7 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 - Dead stuff noticed: table `plan_messages` (unused), function `log_usage` (references missing columns).
 - **Next action (Step 2):** present the lockdown SQL from `docs/SECURITY_FINDINGS.md` to Liam for one-batch approval, apply it, verify with rolled-back catalog tests.
 
-### Step 2 — Security lockdown (CRITICAL, do before anything else) — `IN PROGRESS`
+### Step 2 — Security lockdown (CRITICAL, do before anything else) — `DONE` (2026-10-12)
 **Goal:** close the holes in `docs/SECURITY_FINDINGS.md` #1–3, #9, #11 and the cheap parts of #5 on production, without breaking the old editor/home/settings pages.
 **Start checks:** read `docs/SECURITY_FINDINGS.md`; `supabase db query --linked` works.
 **Do:**
@@ -70,8 +73,15 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 - Verify with ROLLED-BACK transactions via `supabase db query --linked` (e.g. `BEGIN; SET LOCAL ROLE authenticated; … UPDATE profiles SET plan='max' …; ROLLBACK;`) and catalog checks (`has_function_privilege`). Never attack prod for real.
 - Re-run `supabase db advisors --linked`; regenerate `supabase/schema.sql`; mark each finding FIXED/OPEN in `docs/SECURITY_FINDINGS.md`.
 **Done when:** `anon` and `authenticated` cannot execute the revoked functions; a signed-in user cannot change plan/credits/Stripe ids on their own row; public profile reads expose no email/billing; old home/profile/settings/editor still load, show plan + credits, and a build still bills usage; findings doc updated.
-**Needs Liam:** approve the SQL + the function redeploys in ONE batch; open the old app afterward and click through home → profile → settings → a build.
-**Handoff notes:** _(fill in)_
+**Needs Liam:** approve the SQL + the function redeploys in ONE batch; open the old app afterward and click through home → profile → settings → a build. *(Approved and deployed; Liam's click-through is the one remaining human check.)*
+**Handoff notes:**
+- **Deployed (all verified live):** migration `supabase/migrations/20261012120000_security_lockdown.sql`; 11 functions (`ai-chat`, `site-sql`, `site-api`, `trial-emails`, `stripe-webhook`, `stripe-site-checkout` with `--no-verify-jwt`; `stripe-checkout/-portal/-extra-usage/-connect-start/-connect-status` with JWT on); pages pushed (`24348b6`). No Cloudflare deploy was needed. Verification: 85/85 checks pass against prod (`supabase/tests/step2_security_lockdown.sql`), plus black-box curl checks with only the anon key (RPCs → 401 permission denied; `profiles?select=email|*|plan` denied; `account_billing` denied; `ai-chat`/`site-sql` reject no-auth, anon-key and forged-JWT callers; `site-api` refuses `transactions`).
+- **What changed:** (1) `increment_usage`/`vexium_site_query` service-role only; `log_usage` dropped. (2) New `account_billing` (billing + usage + Stripe ids moved out of `profiles`, columns dropped from `profiles`); `profiles` column-grants; `public_email` trigger. (3) `vexium_site_query` rewritten: runs the owner's SELECT in `vx_sandbox.run()` owned by no-privilege role `vexium_sql_ro`, on TEMP copies of that project's rows, single statement, 8s timeout. (4) `billing_history` webhook-only; `site_users.password_hash` hidden from clients. (5) `handle_new_user` also creates the billing row with a server-side 7-day trial. (6) `ai-chat` now verifies the user via GoTrue and 401s otherwise (it was skipping the credit gate + billing for unauthenticated callers). (7) `site-sql` verifies the caller via GoTrue. (8) `site-api` blocks the `transactions` collection (both submit and get_data). (9) `trial-emails` needs the service key and reads `account_billing`. (10) Pages: `trialGuard.js`, `home`, `profile`, `settings`, `editor` read billing from `account_billing`; `profile`/`settings` list profile columns explicitly; `auth.html` no longer writes billing at signup (sends `selected_plan` as signup metadata); `settings.html` account deletion now calls the real RPC `delete_own_account`.
+- **Deviation from the plan:** the plan said redeploy `site-sql` with gateway JWT verification ON. Not done: tokens are ES256 and the gateway has rejected those before, so verification happens inside the function instead (docs/INFRA.md explains). Also pulled forward from Step 4: the SQL-tab sandbox (otherwise any signed-up user could still `SELECT * FROM auth.users` through `site-sql`).
+- **Advisors:** anon-callable SECURITY DEFINER 17→7 (the rest are intentional RLS helpers + public lookups), search_path-mutable 16→0. `supabase/schema.sql` regenerated (does not show the `vx_sandbox` schema / `vexium_sql_ro` role — they're in the migration).
+- **Still open / for Liam:** (a) `#10 get_email_by_username` leaks REAL emails (see findings; fix = server-side username login) — do before launch; (b) enable "leaked password protection" in the Supabase dashboard (Auth → Passwords, free); (c) accounts "Nick" and "daveSquirrel" have `trial_ends_at = NULL` so their trial never expires — left untouched; (d) `trial-emails` has no scheduler; (e) account deletion now points at a real RPC but wasn't exercised on a real account.
+- **Gotchas for later steps:** a `statement_timeout` cancel can't be caught in PL/pgSQL (aborts the whole request) — fine for prod, but don't test it via try/except. `SET ROLE` inside SECURITY DEFINER checks the SESSION user (`authenticator` under PostgREST), which is why the sandbox uses a function *owned by* the low-privilege role instead of switching roles. The `supabase` CLI DB session is `postgres` but can't `SET ROLE supabase_auth_admin`.
+- **Next action (Step 3):** run its Start checks — `npx wrangler login` (ask Liam: it needs a download + browser login), record the real Worker routes / DNS / Vercel setup into `docs/INFRA.md`, then design the R2 publish endpoint. Ask Liam to enable R2 on the Cloudflare account first (may need billing on file).
 
 ### Step 3 — Hosting v2 (R2 versioned deploys) — `TODO`
 **Goal:** published sites are fast, cached, versioned, and roll-back-able.
@@ -90,7 +100,8 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 **Do:**
 - Enforce the project's declared `_backend` server-side: per-collection access rules (read: public | owner | user-own; write: public-submit | user | owner), unknown collections rejected, size limits, `transactions` writable only by the webhook.
 - Real site-user auth: PBKDF2/argon2 with per-user salt (or Supabase Auth), signed expiring session tokens (not the row id), rate limiting on login/signup/submit.
-- Replace the SQL tab's `vexium_site_query` approach with a read-only role + per-project views (no string-concatenated user SQL).
+- Replace the SQL tab's `vexium_site_query` sandbox (Step 2 interim: TEMP-table copies + `vexium_sql_ro`) with per-project views/read-only access that scales (no row copying, no string-concatenated user SQL).
+- Also close SECURITY_FINDINGS **#10**: server-side username login (edge fn resolves + signs in, rate-limited), then revoke `get_email_by_username` from anon/authenticated — unless it was already done in the studio auth work.
 - Capabilities: forms→email (Resend), plus whatever the plan needs (bookings/newsletter can wait).
 - `sdk/v1.js` (`vx.auth`, `vx.data`, `vx.pay`, `vx.forms`, `vx.track`) served by the publisher Worker; keep `vxCall`/`vxBuy` as aliases.
 **Done when:** scripted abuse tests against a throwaway project fail as intended (can't read a private collection, can't forge `transactions`, can't brute-force logins, can't exceed limits) and the SDK works from a published site.

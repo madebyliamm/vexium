@@ -1,36 +1,42 @@
-# Security findings from Step 1 recon (2026-10-12)
+# Security findings (Step 1 recon 2026-10-12 → Step 2 lockdown 2026-10-12)
 
-Found by READING source and catalog definitions only. **Nothing was exploited or tested against production.** Severity is my judgment from the code; items marked *appears* should be confirmed on a throwaway project before/while fixing. Context: the app is pre-launch with ~5 accounts, Stripe in test mode — but the Supabase URL and anon key are public (they ship in every page), so all of this is reachable by anyone.
+Step 1 found these by READING source and catalog definitions. Step 2 fixed the critical ones and verified them with `supabase/tests/step2_security_lockdown.sql` (85 checks; always rolls back; re-run any time with `supabase db query --linked -f supabase/tests/step2_security_lockdown.sql` — the "error" it ends with is the report) plus black-box HTTP checks with only the public anon key. Context: the app is pre-launch with ~5 accounts, Stripe in test mode — but the Supabase URL and anon key ship in every page, so everything here was reachable by anyone.
 
-## CRITICAL — fix before anything else (Step 2)
+## Status board
+| # | finding | status |
+|---|---|---|
+| 1 | `vexium_site_query` — anonymous SQL | **FIXED** (service-role only; owner's SELECT now runs in a no-privilege sandbox on temp copies of that project's rows) |
+| 2 | `increment_usage` / `log_usage` — anyone edits anyone's credits | **FIXED** (revoked; `log_usage` dropped) |
+| 3 | `profiles` — self-promotion + everything world-readable | **FIXED** (billing moved to private `account_billing`; column-level grants on `profiles`; email private) |
+| 4 | `site-api get_data` returns any collection to anyone | **OPEN → Step 4** (only `transactions` is blocked so far) |
+| 5 | `site-api submit` writes anywhere, unauthenticated, unlimited | **PARTIAL** — `transactions` blocked (can't forge sales). Still open: other collections, size limits, rate limits → Step 4 |
+| 6 | Site-user "tokens" are the row UUID | **OPEN → Step 4** |
+| 7 | Site-user passwords SHA-256 + constant salt | **PARTIAL** — hashes no longer readable by clients (column privileges) and the SQL sandbox can't see them. KDF fix → Step 4 |
+| 8 | No rate limiting | **OPEN → Step 4** |
+| 9 | `site-sql` trusted an unverified JWT | **FIXED** (verifies the caller with GoTrue; project ownership still checked) |
+| 10 | `get_email_by_username` anon-callable | **OPEN — upgraded to HIGH** (see below) |
+| 11 | `billing_history` client INSERT | **FIXED** (webhook/service role only) |
+| 12 | Anon key + project ids committed | by design; safe now that 1–3 are fixed |
+| 13 | `ai-chat` accepted unauthenticated / forged callers → unmetered Anthropic spend | **FIXED** (new) |
+| 14 | `trial-emails` had no auth | **FIXED** (new; service key required) |
+| 15 | Account deletion never worked (`delete_user` RPC doesn't exist) | **FIXED** (new; page now calls `delete_own_account`) |
 
-**1. `vexium_site_query()` — anonymous SQL access (appears: read AND write of any table).**
-`SECURITY DEFINER`, executable by `anon`, no caller/ownership check, and it concatenates the caller's text into `WITH … _user_query AS (<p_query>)`. The ownership check, SELECT-only check and keyword blocklist all live in the `site-sql` edge function, which an attacker bypasses by calling `POST /rest/v1/rpc/vexium_site_query` directly with the public anon key. The "scoping" only shadows the *unqualified* names `site_data`/`site_users`; `public.profiles`, `public.site_users` (incl. `password_hash`), `auth.users`, other projects' data are reachable with qualified names, and closing the parenthesis allows data-modifying CTEs.
-Fix: `REVOKE EXECUTE ON FUNCTION public.vexium_site_query(text,text) FROM PUBLIC, anon, authenticated;` (the edge function uses the service role and keeps working). Then redesign (Step 4): read-only role + per-project views, no string concatenation.
+## New in Step 2
+**13. `ai-chat` (verify_jwt off) derived the user from an UNDECODED-SIGNATURE JWT and skipped everything when there was none.** No `Authorization` header (or the public anon key) ⇒ `userId = null` ⇒ no usage gate, no billing ⇒ anyone with the function URL could run unmetered Anthropic calls on Liam's key; a forged `sub` could burn another user's credits. Fix: `verifiedUserId()` asks GoTrue (`/auth/v1/user`); no valid user ⇒ 401. Confirmed live: no auth / anon key / forged unsigned JWT all → 401.
+**14. `trial-emails`** had `verify_jwt` off and no check — anyone could trigger sends. Now requires the service-role key. (Nothing in the repo or DB schedules it; wire a scheduler with that key before relying on it.)
+**15. Settings → Delete account** called a non-existent RPC, swallowed the error and just signed the user out. Now calls `delete_own_account` (cascades profile + billing). Not exercised on a real account.
+**Why not gateway `verify_jwt`?** The project signs user tokens with ES256, which the edge gateway has rejected before, so `site-sql`/`ai-chat` verify in-function. See `docs/INFRA.md`.
 
-**2. `increment_usage(uuid,int)` and `log_usage(...)` — anyone can edit anyone's credits.**
-Both `SECURITY DEFINER`, executable by `anon`/`authenticated`, no `auth.uid()` check. Anyone can call `rpc/increment_usage` with any user id and any cents value (negative = free credits for yourself; large = lock another user out). `log_usage` is also dead/broken (references missing columns).
-Fix: `REVOKE EXECUTE … FROM PUBLIC, anon, authenticated` on both; edge functions call them with the service role. Drop `log_usage`.
+## OPEN — highest priority next
+**10 (HIGH). `get_email_by_username(text)` is callable by anon and returns the account's REAL email** (auth.html signs up with the real address; the old "pseudo-address" assumption was wrong). Anyone who knows or guesses a username can harvest its email. Used only for username login (auth.html). Fix: do username login server-side (an edge function that resolves + signs in and returns the session, rate-limited) then revoke the RPC from anon/authenticated. Do before launch; natural home is the studio auth work (Step 6) or Step 4.
+**`check_signup_availability(username, email)`** (anon) lets anyone test whether an email/username is registered — standard signup enumeration; revisit with rate limiting.
+**4–6, 8 (site-api)** — Step 4.
 
-**3. `profiles` — users can promote themselves, and everyone can read everything.**
-`profiles_update_own` allows a signed-in user to UPDATE their whole row from the browser: `plan`, `credits_used_cents`, `extra_credits_cents`, `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`, `stripe_connect_account_id`. That defeats the entire pricing model. Separately `profiles_select` (to `public`) and `profiles_anon_read` expose every column — including `email` and the Stripe ids — to anyone, regardless of `show_email`.
-Fix: column-level grants (REVOKE UPDATE on all columns from `authenticated`, GRANT UPDATE only on display_name, bio, avatar_url, banner, show_*, advanced_mode…) or move billing state to a private `account_billing` table the client can't write; expose a public view with only public columns.
+## Remaining advisor items (reviewed, intentional)
+After Step 2: `supabase db advisors --linked` → 0 `function_search_path_mutable`; anon-executable SECURITY DEFINER: `check_signup_availability`, `get_email_by_username` (see above), `get_follow_counts`, `get_user_id_by_username` (public lookups), `is_following`, `is_project_member`, `is_project_owner` (RLS policy helpers — must stay executable by the calling role; they only answer yes/no for ids the caller already has). Still warned, low priority: `auth_leaked_password_protection` (enable in Supabase dashboard → Auth → Passwords, a free toggle), `auth_rls_initplan` / `multiple_permissive_policies` (performance, not security — clean up in Step 14).
 
-## HIGH — fix in Step 4 (site-api v2), required before real customers
-
-**4. `site-api` `get_data` returns any collection to anyone.** With no token it returns the last 100 rows of ANY collection for the project; with an *invalid* token it silently falls back to the same. Project ids are public (they're substituted into every published page). So every contact-form submission, waitlist email, order and `transactions` row is world-readable.
-**5. `site-api` `submit` writes to any collection, unauthenticated, unlimited size** — including `transactions`, which Analytics sums as revenue ⇒ anyone can forge sales on someone's dashboard. No rate limiting, no validation against the `_backend` declaration.
-**6. Site-user sessions are not sessions.** `token` = the user's row UUID: non-secret, never expires, not signed.
-**7. Site-user passwords:** SHA-256 of `password + ":vexium"` — fast hash, constant salt. Needs a real KDF (PBKDF2/argon2) with per-user salt, or delegate to Supabase Auth.
-**8. No rate limiting** on login/signup/submit.
-
-## MEDIUM
-
-**9. `site-sql` edge function has `verify_jwt=off` and decodes the JWT without verifying its signature** — a forged token with any `sub` passes. (Moot until #1 is fixed; then fix by enabling `verify_jwt` or using `auth.getUser`.) `analytics` is fine (`verify_jwt` on).
-**10. `get_email_by_username(text)` is anon-callable** → username→email lookup (used for username login). Acceptable only if emails are pseudo-addresses; revisit in the studio auth work.
-**11. `billing_history` lets users INSERT their own rows** (forgeable receipts). Should be service-role only.
-**12. The anon key and project ids are committed in several files (by design — they also ship in every page).** That is only safe once the RLS/grant issues above are fixed; until then the anon key is effectively an admin key for those paths.
-
-## Notes
-- `custom-domain` correctly verifies the user (`auth.getUser`) and ownership; `analytics`, `stripe-*` (jwt on) are fine. `stripe-webhook` verifies signatures.
-- After Step 2, re-run `supabase db advisors --linked` and refresh `supabase/schema.sql`.
+## Low / notes
+- Every `public` table grants full table privileges (incl. TRUNCATE) to `anon`/`authenticated`; RLS is the only gate. PostgREST can't TRUNCATE, so not exploitable via the API, but tighten per table when touched (done so far: profiles, account_billing, billing_history, site_users).
+- `custom-domain` correctly verifies the user and ownership; `analytics` verifies via gateway; `stripe-webhook` verifies signatures; `stripe-*` user functions rely on gateway `verify_jwt` + `userIdFromJwt` (revisit if the gateway ES256 problem resurfaces — they'd then see an anon token and refuse, which fails closed).
+- Projects' `stripe_connect_account_id` columns are readable wherever a project row is (Connect account ids are not secrets).
+- Step 2 changed the shape of the API: clients cannot `select('*')` from `profiles`, and `profiles` has no plan/credit/Stripe columns any more.

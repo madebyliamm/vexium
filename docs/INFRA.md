@@ -13,22 +13,25 @@ Everything else (auth, DB, AI prompts, Stripe, analytics, site backend)  →  Su
 Liam confirms `*.vexium.ai` routes and custom domains work in production. Worker routes / DNS records were **not** inspected from the CLI (wrangler not installed, not logged in) — UNVERIFIED in detail; Step 3 should `npx wrangler login` and record them here.
 
 ## Supabase edge functions (project `ciuqhxrxcznmgorjeumz`) — all source now in `supabase/functions/`
-| function | verify_jwt | version (updated) | purpose |
+| function | gateway verify_jwt | auth inside the function | purpose |
 |---|---|---|---|
-| ai-chat | off | 199 (2026-09-07) | prompts, onboarding gate, spec pass, prepare/suggest modes for the build Worker, usage tracking. **Deployed == repo** (checked 2026-10-12) |
-| site-api | off | 9 (2026-04-23) | backend for generated sites: signup/login/submit/get_data (public, project_id-scoped) |
-| site-sql | **off** | 8 (2026-04-26) | owner's read-only SQL tab → RPC `vexium_site_query`. Trusts an UNVERIFIED JWT (see SECURITY_FINDINGS) |
-| track | off | 10 (2026-04-23) | page-view collector → `page_views` |
-| analytics | on | 10 (2026-05-06) | owner's projects + page views (gateway verifies JWT) |
-| custom-domain | off | 12 (2026-05-26) | adds/removes/checks domains on the Vercel project; verifies user with `auth.getUser` |
-| stripe-checkout / -portal / -extra-usage | on | 4 / 3 / 2 | platform billing |
-| stripe-connect-start / -status | on | 4 / 4 | Connect onboarding (account-level) |
-| stripe-site-checkout | off | 4 | public buyer checkout for generated sites |
-| stripe-webhook | off | 9 | platform + Connect webhooks (signature-verified) |
-| trial-emails | off | 1 | trial reminder emails (Resend) |
+| ai-chat | off | **GoTrue-verified user required** (401 otherwise; 60s per-isolate token cache) | prompts, onboarding gate, spec pass, prepare/suggest modes for the build Worker, usage gate + tracking (reads `account_billing`) |
+| site-api | off | none (public, project_id-scoped) — `transactions` collection blocked; full rules in Step 4 | backend for generated sites: signup/login/submit/get_data |
+| site-sql | off | **GoTrue-verified owner** (`auth/v1/user`), then project ownership check | owner's read-only SQL tab → RPC `vexium_site_query` (sandboxed) |
+| track | off | none (public collector) | page-view collector → `page_views` |
+| analytics | on | gateway | owner's projects + page views |
+| custom-domain | off | `auth.getUser` + ownership | adds/removes/checks domains on the Vercel project |
+| stripe-checkout / -portal / -extra-usage | on | gateway + `userIdFromJwt` | platform billing |
+| stripe-connect-start / -status | on | gateway + `userIdFromJwt` | Connect onboarding (account-level) |
+| stripe-site-checkout | off | none (public buyer checkout) | buyer checkout for generated sites |
+| stripe-webhook | off | Stripe signature | platform + Connect webhooks |
+| trial-emails | off | **service-role key required** (no caller exists yet — nothing schedules it) | trial reminder emails (Resend) |
+
+**Why in-function auth instead of gateway `verify_jwt`:** the project signs user tokens with **ES256** (see `/auth/v1/.well-known/jwks.json`); the edge gateway has rejected ES256 tokens before (the editor even has an anon-bearer fallback for it). So functions that must know the user stay `--no-verify-jwt` and verify the token with GoTrue themselves. Never trust `sub` from an undecoded JWT, and never treat the anon key as a user. All functions that read/write billing go through `supabase/functions/_shared/db.ts`, which merges `profiles` + `account_billing` and routes writes to the owning table.
+Function versions: run `supabase functions list`.
 
 Deploy: `supabase functions deploy <name>` (add `--no-verify-jwt` ONLY for those marked off). Download a deployed copy without Docker: `supabase functions download --use-api <name>`.
-Drift check 2026-10-12: repo == deployed for every function except 3 comment-only diffs ("Vexium"→"Vertly" in stripe-checkout/portal/extra-usage headers).
+Drift check 2026-10-12 (after Step 2 deploy): repo == deployed (spot-checked stripe-checkout, stripe-connect-status via `functions download --use-api`).
 
 ## Secrets in use (names only)
 Supabase function secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `RESEND_API_KEY`, `VERCEL_TOKEN_KEY`.

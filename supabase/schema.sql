@@ -2,6 +2,35 @@
 -- Generated 2026-10-12 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
 -- Extensions: pg_stat_statements, pgcrypto, plpgsql, supabase_vault, uuid-ossp
 
+-- ── account_billing  (~5 rows, RLS ON) ──────────
+CREATE TABLE public."account_billing" (
+  "user_id" uuid NOT NULL,
+  "plan" text NOT NULL DEFAULT 'trial'::text,
+  "selected_plan" text NOT NULL DEFAULT 'pro'::text,
+  "trial_ends_at" timestamp with time zone,
+  "credits_used_cents" bigint NOT NULL DEFAULT 0,
+  "extra_credits_cents" integer NOT NULL DEFAULT 0,
+  "extra_credits_purchased_cents" integer NOT NULL DEFAULT 0,
+  "plan_cycle_start" timestamp with time zone NOT NULL DEFAULT now(),
+  "billing_period" text DEFAULT 'monthly'::text,
+  "tokens_used_this_month" bigint DEFAULT 0,
+  "usage_month" text DEFAULT to_char(now(), 'YYYY-MM'::text),
+  "stripe_customer_id" text,
+  "stripe_subscription_id" text,
+  "stripe_connect_account_id" text,
+  "stripe_connect_charges_enabled" boolean NOT NULL DEFAULT false,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "account_billing_pkey" PRIMARY KEY (user_id),
+  CONSTRAINT "account_billing_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX account_billing_pkey ON public.account_billing USING btree (user_id);
+CREATE INDEX idx_account_billing_stripe_customer_id ON public.account_billing USING btree (stripe_customer_id);
+ALTER TABLE public."account_billing" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "account_billing_select_own" ON public."account_billing" AS PERMISSIVE FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) = user_id));
+CREATE TRIGGER set_account_billing_updated_at BEFORE UPDATE ON public.account_billing FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_zero_tiny_extra_credits BEFORE INSERT OR UPDATE OF extra_credits_cents ON public.account_billing FOR EACH ROW EXECUTE FUNCTION zero_tiny_extra_credits();
+
 -- ── ai_messages  (~213 rows, RLS ON) ──────────
 CREATE TABLE public."ai_messages" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -46,8 +75,7 @@ CREATE TABLE public."billing_history" (
 );
 CREATE UNIQUE INDEX billing_history_pkey ON public.billing_history USING btree (id);
 ALTER TABLE public."billing_history" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can insert own billing history" ON public."billing_history" AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
-CREATE POLICY "Users can read own billing history" ON public."billing_history" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
+CREATE POLICY "Users can read own billing history" ON public."billing_history" AS PERMISSIVE FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) = user_id));
 
 -- ── build_jobs  (~118 rows, RLS ON) ──────────
 CREATE TABLE public."build_jobs" (
@@ -178,38 +206,22 @@ CREATE TABLE public."profiles" (
   "created_at" timestamp with time zone DEFAULT now(),
   "updated_at" timestamp with time zone DEFAULT now(),
   "show_usage_warning" boolean DEFAULT true,
-  "tokens_used_this_month" bigint DEFAULT 0,
-  "usage_month" text DEFAULT to_char(now(), 'YYYY-MM'::text),
-  "credits_used_cents" bigint DEFAULT 0,
   "advanced_mode" boolean DEFAULT false,
   "email" text,
   "show_email" boolean DEFAULT false,
-  "plan" text NOT NULL DEFAULT 'trial'::text,
-  "trial_ends_at" timestamp with time zone,
-  "selected_plan" text NOT NULL DEFAULT 'pro'::text,
-  "extra_credits_cents" integer NOT NULL DEFAULT 0,
-  "extra_credits_purchased_cents" integer NOT NULL DEFAULT 0,
-  "plan_cycle_start" timestamp with time zone NOT NULL DEFAULT now(),
-  "billing_period" text DEFAULT 'monthly'::text,
-  "stripe_customer_id" text,
-  "stripe_subscription_id" text,
-  "stripe_connect_account_id" text,
-  "stripe_connect_charges_enabled" boolean NOT NULL DEFAULT false,
   "banner" text,
+  "public_email" text,
   CONSTRAINT "profiles_id_fkey" FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE,
   CONSTRAINT "profiles_pkey" PRIMARY KEY (id),
   CONSTRAINT "profiles_username_key" UNIQUE (username)
 );
-CREATE INDEX idx_profiles_stripe_customer_id ON public.profiles USING btree (stripe_customer_id);
 CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id);
 CREATE UNIQUE INDEX profiles_username_key ON public.profiles USING btree (username);
 ALTER TABLE public."profiles" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "profiles_anon_read" ON public."profiles" AS PERMISSIVE FOR SELECT TO anon USING (true);
-CREATE POLICY "profiles_insert_own" ON public."profiles" AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = id));
-CREATE POLICY "profiles_select" ON public."profiles" AS PERMISSIVE FOR SELECT TO public USING (true);
-CREATE POLICY "profiles_update_own" ON public."profiles" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = id)) WITH CHECK ((auth.uid() = id));
+CREATE POLICY "profiles_public_read" ON public."profiles" AS PERMISSIVE FOR SELECT TO anon,authenticated USING (true);
+CREATE POLICY "profiles_update_own" ON public."profiles" AS PERMISSIVE FOR UPDATE TO authenticated USING ((( SELECT auth.uid() AS uid) = id)) WITH CHECK ((( SELECT auth.uid() AS uid) = id));
 CREATE TRIGGER set_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-CREATE TRIGGER trg_zero_tiny_extra_credits BEFORE INSERT OR UPDATE OF extra_credits_cents ON public.profiles FOR EACH ROW EXECUTE FUNCTION zero_tiny_extra_credits();
+CREATE TRIGGER trg_profiles_public_email BEFORE INSERT OR UPDATE OF email, show_email ON public.profiles FOR EACH ROW EXECUTE FUNCTION profiles_sync_public_email();
 
 -- ── project_backups  (~2 rows, RLS ON) ──────────
 CREATE TABLE public."project_backups" (
@@ -402,6 +414,7 @@ CREATE OR REPLACE FUNCTION public.get_follow_counts(p_user_id uuid)
  RETURNS TABLE(followers bigint, following bigint)
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   select
     (select count(*) from public.follows where following_id = p_user_id) as followers,
@@ -413,6 +426,7 @@ CREATE OR REPLACE FUNCTION public.get_my_member_project_ids()
  RETURNS SETOF text
  LANGUAGE sql
  STABLE
+ SET search_path TO 'public'
 AS $function$
   SELECT project_id FROM project_members
   WHERE user_id = auth.uid()
@@ -424,6 +438,7 @@ CREATE OR REPLACE FUNCTION public.get_my_page_views(since_ts timestamp with time
  RETURNS TABLE(project_id text, session_id text, device text, referrer text, ts timestamp with time zone)
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   SELECT pv.project_id, pv.session_id, pv.device, pv.referrer, pv.ts
   FROM public.page_views pv
@@ -438,6 +453,7 @@ CREATE OR REPLACE FUNCTION public.get_my_projects()
  RETURNS TABLE(id text, name text, is_public boolean)
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   SELECT id, name, is_public
   FROM public.projects
@@ -450,6 +466,7 @@ CREATE OR REPLACE FUNCTION public.get_user_id_by_username(uname text)
  RETURNS uuid
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   select id from public.profiles where lower(username) = lower(uname) limit 1;
 $function$;
@@ -459,6 +476,7 @@ CREATE OR REPLACE FUNCTION public.handle_follow_delete()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 begin
   update public.profiles set following_count = greatest(following_count - 1, 0) where id = old.follower_id;
@@ -471,6 +489,7 @@ CREATE OR REPLACE FUNCTION public.handle_follow_insert()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 begin
   update public.profiles set following_count = following_count + 1 where id = new.follower_id;
@@ -483,6 +502,7 @@ CREATE OR REPLACE FUNCTION public.handle_follow_notify()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 begin
   insert into public.notifications (user_id, actor_id, type)
@@ -495,6 +515,7 @@ CREATE OR REPLACE FUNCTION public.handle_invite_notify()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 begin
   insert into public.notifications (user_id, actor_id, type, project_id)
@@ -509,6 +530,8 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
+declare
+  v_choice text := new.raw_user_meta_data->>'selected_plan';
 begin
   insert into public.profiles (id, username, display_name, email)
   values (
@@ -518,6 +541,15 @@ begin
     new.email
   )
   on conflict (id) do nothing;
+
+  insert into public.account_billing (user_id, selected_plan, trial_ends_at)
+  values (
+    new.id,
+    case when v_choice in ('trial', 'starter', 'pro', 'max') then v_choice else 'trial' end,
+    now() + interval '7 days'
+  )
+  on conflict (user_id) do nothing;
+
   return new;
 end;
 $function$;
@@ -527,6 +559,7 @@ CREATE OR REPLACE FUNCTION public.increment_usage(p_user_id uuid, p_cents intege
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_cycle_start TIMESTAMPTZ;
@@ -534,7 +567,7 @@ DECLARE
   v_cycle_ms    INTERVAL    := INTERVAL '30 days';
 BEGIN
   SELECT plan_cycle_start INTO v_cycle_start
-  FROM profiles WHERE id = p_user_id;
+  FROM account_billing WHERE user_id = p_user_id;
 
   IF v_cycle_start IS NULL THEN
     v_cycle_start := v_now;
@@ -545,13 +578,13 @@ BEGIN
     v_cycle_start := v_cycle_start + v_cycle_ms;
   END LOOP;
 
-  UPDATE profiles SET
+  UPDATE account_billing SET
     credits_used_cents = CASE
       WHEN v_cycle_start > plan_cycle_start THEN p_cents
       ELSE credits_used_cents + p_cents
     END,
     plan_cycle_start = v_cycle_start
-  WHERE id = p_user_id;
+  WHERE user_id = p_user_id;
 END;
 $function$;
 
@@ -560,6 +593,7 @@ CREATE OR REPLACE FUNCTION public.is_following(follower uuid, following uuid)
  RETURNS boolean
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   select exists (select 1 from public.follows where follower_id = follower and following_id = following);
 $function$;
@@ -569,6 +603,7 @@ CREATE OR REPLACE FUNCTION public.is_project_member(p_project_id text, p_user_id
  RETURNS boolean
  LANGUAGE sql
  STABLE SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   select exists (
     select 1 from public.project_members where project_id = p_project_id and user_id = p_user_id
@@ -580,34 +615,22 @@ CREATE OR REPLACE FUNCTION public.is_project_owner(p_project_id text, p_user_id 
  RETURNS boolean
  LANGUAGE sql
  STABLE SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
   select exists (
     select 1 from public.projects where id = p_project_id and user_id = p_user_id
   );
 $function$;
 
--- log_usage  [SECURITY DEFINER]
-CREATE OR REPLACE FUNCTION public.log_usage(p_user_id uuid, p_project_id uuid, p_action text, p_tokens_input integer, p_tokens_output integer)
- RETURNS void
+-- profiles_sync_public_email
+CREATE OR REPLACE FUNCTION public.profiles_sync_public_email()
+ RETURNS trigger
  LANGUAGE plpgsql
- SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
-declare
-  v_total integer := p_tokens_input + p_tokens_output;
-  v_limit bigint; v_used bigint; v_is_overage boolean := false;
 begin
-  select tokens_monthly_limit, tokens_used_this_month
-  into v_limit, v_used from profiles where id = p_user_id;
-
-  if (v_used + v_total) > v_limit then
-    v_is_overage := true;
-    update profiles set overage_tokens = overage_tokens + v_total, updated_at = now() where id = p_user_id;
-  else
-    update profiles set tokens_used_this_month = tokens_used_this_month + v_total, updated_at = now() where id = p_user_id;
-  end if;
-
-  insert into usage_log (user_id, project_id, action, tokens_input, tokens_output, tokens_total, is_overage)
-  values (p_user_id, p_project_id, p_action, p_tokens_input, p_tokens_output, v_total, v_is_overage);
+  new.public_email := case when new.show_email then new.email end;
+  return new;
 end;
 $function$;
 
@@ -615,6 +638,7 @@ $function$;
 CREATE OR REPLACE FUNCTION public.set_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public'
 AS $function$
 begin new.updated_at = now(); return new; end; $function$;
 
@@ -623,30 +647,29 @@ CREATE OR REPLACE FUNCTION public.vexium_site_query(p_project_id text, p_query t
  RETURNS json
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public'
+ SET search_path TO 'pg_catalog', 'pg_temp'
 AS $function$
 DECLARE
+  v_q      text := btrim(p_query, E' \t\r\n;');
   v_result json;
-  v_cte text;
-  v_full_query text;
 BEGIN
-  IF NOT (lower(trim(p_query)) LIKE 'select%') THEN
+  IF v_q !~* '^select\y' THEN
     RAISE EXCEPTION 'Only SELECT queries are allowed';
   END IF;
+  IF position(';' IN v_q) > 0 THEN
+    RAISE EXCEPTION 'Only a single statement is allowed';
+  END IF;
 
-  -- Build CTE that exposes site_data and site_users scoped to this project,
-  -- plus each collection as a named virtual table
-  v_cte := format(
-    'WITH _data AS (SELECT * FROM public.site_data WHERE project_id = %L),
-          _users AS (SELECT id, email, created_at, metadata FROM public.site_users WHERE project_id = %L),
-          site_data AS (SELECT * FROM _data),
-          site_users AS (SELECT * FROM _users)',
-    p_project_id, p_project_id
-  );
+  DROP TABLE IF EXISTS pg_temp.site_data;
+  DROP TABLE IF EXISTS pg_temp.site_users;
+  CREATE TEMP TABLE site_data ON COMMIT DROP AS
+    SELECT * FROM public.site_data WHERE project_id = p_project_id ORDER BY created_at DESC LIMIT 50000;
+  CREATE TEMP TABLE site_users ON COMMIT DROP AS
+    SELECT id, project_id, email, created_at, metadata FROM public.site_users WHERE project_id = p_project_id LIMIT 50000;
+  GRANT SELECT ON pg_temp.site_data, pg_temp.site_users TO vexium_sql_ro;
 
-  v_full_query := v_cte || ', _user_query AS (' || p_query || ') SELECT json_agg(row_to_json(_user_query)) FROM _user_query';
-
-  EXECUTE v_full_query INTO v_result;
+  SET LOCAL statement_timeout = '8s';
+  v_result := vx_sandbox.run(v_q);
   RETURN COALESCE(v_result, '[]'::json);
 EXCEPTION WHEN OTHERS THEN
   RAISE EXCEPTION '%', SQLERRM;
@@ -657,6 +680,7 @@ $function$;
 CREATE OR REPLACE FUNCTION public.zero_tiny_extra_credits()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public'
 AS $function$
 BEGIN
   IF NEW.extra_credits_cents IS NOT NULL AND NEW.extra_credits_cents > 0 AND NEW.extra_credits_cents <= 10 THEN

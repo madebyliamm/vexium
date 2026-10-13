@@ -4,7 +4,8 @@ Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not
 
 | table | rows | purpose |
 |---|---|---|
-| profiles | 5 | one per account: username, display name, bio, avatar/banner, **plan + credits + Stripe ids** (billing state lives here), follower counts |
+| profiles | 5 | one per account, PUBLIC data only: username, display name, bio, avatar/banner, follower counts, prefs. `email` is private (column-revoked); `public_email` mirrors it only while `show_email` is on |
+| account_billing | 5 | **private** per-account billing/usage state: plan, trial_ends_at, credits, extra credits, billing period, Stripe customer/subscription/Connect ids. Own-row SELECT only; every write is service-role (webhook, ai-chat usage, `handle_new_user`) |
 | projects | 9 | a user's site: `files` jsonb (working copy), `published_files` jsonb + `published_slug`/`published_at` (live copy), `main_file`, `custom_domain*`, `ai_context`, AI edit lock (`ai_lock_*`), legacy per-project Stripe Connect cols. `id` is TEXT (`proj_<ts>_<rand>`) |
 | project_members | 0 | collaborators (role, status) |
 | project_backups | 2 | named restore slots (`files` jsonb) |
@@ -21,6 +22,9 @@ Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not
 Storage: 1 bucket (see schema.sql). Extensions listed at top of schema.sql.
 
 ## Things to know
-- `profiles` is both the PUBLIC profile and the PRIVATE billing record — see SECURITY_FINDINGS #3.
+- Public vs private split (since REVAMP Step 2, migration `20261012120000_security_lockdown.sql`): `profiles` = public, `account_billing` = private. Clients may only UPDATE `username, display_name, bio, avatar_url, banner, show_email, show_usage_warning, advanced_mode` on their own profile and SELECT the columns granted in the migration — **there is no `SELECT *` on `profiles`, and a NEW profile column is invisible to clients until it is added to the GRANT lists.**
+- Signup: the auth.users trigger `handle_new_user` creates the `profiles` row AND the `account_billing` row (7-day trial set server-side; `selected_plan` taken from signup metadata only if it is one of trial/starter/pro/max).
+- `vexium_site_query` (SQL tab) is service-role only and runs the owner's SELECT in `vx_sandbox.run()`, owned by the no-privilege role `vexium_sql_ro`, against TEMP copies of that project's `site_data` / `site_users` (no password_hash). Step 4 replaces this with per-project views.
+- Migrations live in `supabase/migrations/` (applied by hand with `supabase db query --linked -f`); verification scripts in `supabase/tests/`. `schema.sql` only covers the `public` schema + storage, so it does not show the `vx_sandbox` schema or the `vexium_sql_ro` role.
 - `log_usage()` references columns/tables that don't exist (`tokens_monthly_limit`, `overage_tokens`, `usage_log`) → dead; real usage tracking is `increment_usage()` writing `credits_used_cents`.
 - The generated-site backend (`site_data`/`site_users`) is a generic JSON store keyed by `project_id`; the `_backend` file in a project's `files` declares collections/products but the server does NOT currently enforce it.

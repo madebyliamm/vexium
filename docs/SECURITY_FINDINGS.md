@@ -8,13 +8,13 @@ Step 1 found these by READING source and catalog definitions. Step 2 fixed the c
 | 1 | `vexium_site_query` — anonymous SQL | **FIXED** (service-role only; owner's SELECT now runs in a no-privilege sandbox on temp copies of that project's rows) |
 | 2 | `increment_usage` / `log_usage` — anyone edits anyone's credits | **FIXED** (revoked; `log_usage` dropped) |
 | 3 | `profiles` — self-promotion + everything world-readable | **FIXED** (billing moved to private `account_billing`; column-level grants on `profiles`; email private) |
-| 4 | `site-api get_data` returns any collection to anyone | **FIXED in code (Step 4) — pending deploy.** Per-collection `read` rules from `_backend`; default = owner-only (or own rows with accounts on) |
-| 5 | `site-api submit` writes anywhere, unauthenticated, unlimited | **FIXED in code (Step 4) — pending deploy.** Unknown collections 404, `transactions`/`_*` reserved, field allowlist, 16 KB rows, 64 KB bodies, `max_rows`, rate limits |
-| 6 | Site-user "tokens" are the row UUID | **FIXED in code (Step 4) — pending deploy.** Opaque 256-bit session tokens, only the sha256 stored, project-bound, 30-day expiry, revocable |
-| 7 | Site-user passwords SHA-256 + constant salt | **FIXED in code (Step 4) — pending deploy.** PBKDF2-SHA256 600 000 iterations, per-user salt, constant-time compare, dummy verify for unknown emails (0 site users existed, so nothing to migrate) |
-| 8 | No rate limiting | **FIXED in code (Step 4) — pending deploy.** `vx_rate_hit` counters: login failures, signup, submit, reads, owner mail; auth-gate logins/availability; fails closed |
+| 4 | `site-api get_data` returns any collection to anyone | **FIXED 2026-10-12 (Step 4, deployed; live abuse suite 70/70).** Per-collection `read` rules from `_backend`; default = owner-only (or own rows with accounts on) |
+| 5 | `site-api submit` writes anywhere, unauthenticated, unlimited | **FIXED 2026-10-12 (Step 4, deployed; live abuse suite 70/70).** Unknown collections 404, `transactions`/`_*` reserved, field allowlist, 16 KB rows, 64 KB bodies, `max_rows`, rate limits |
+| 6 | Site-user "tokens" are the row UUID | **FIXED 2026-10-12 (Step 4, deployed; live abuse suite 70/70).** Opaque 256-bit session tokens, only the sha256 stored, project-bound, 30-day expiry, revocable |
+| 7 | Site-user passwords SHA-256 + constant salt | **FIXED 2026-10-12 (Step 4, deployed; live abuse suite 70/70).** PBKDF2-SHA256 600 000 iterations, per-user salt, constant-time compare, dummy verify for unknown emails (0 site users existed, so nothing to migrate) |
+| 8 | No rate limiting | **FIXED 2026-10-12 (Step 4, deployed; live abuse suite 70/70).** `vx_rate_hit` counters: login failures, signup, submit, reads, owner mail; auth-gate logins/availability; fails closed |
 | 9 | `site-sql` trusted an unverified JWT | **FIXED** (verifies the caller with GoTrue; project ownership still checked) |
-| 10 | `get_email_by_username` anon-callable | **FIXED in code (Step 4) — pending deploy + revoke.** `auth-gate` does username login server-side; migration `20261012141000` revokes both enumeration RPCs from anon/authenticated AFTER auth-gate + the new auth.html are live |
+| 10 | `get_email_by_username` anon-callable | **FIXED 2026-10-12 (deployed + revoked; `step4_abuse.py` 70/70 with `E2E_EXPECT_REVOKED=1`).** `auth-gate` does username login server-side; migration `20261012141000` revokes both enumeration RPCs from anon/authenticated AFTER auth-gate + the new auth.html are live |
 | 11 | `billing_history` client INSERT | **FIXED** (webhook/service role only) |
 | 12 | Anon key + project ids committed | by design; safe now that 1–3 are fixed |
 | 13 | `ai-chat` accepted unauthenticated / forged callers → unmetered Anthropic spend | **FIXED** (new) |
@@ -34,7 +34,7 @@ Step 1 found these by READING source and catalog definitions. Step 2 fixed the c
 **17. `notifications` INSERT `WITH CHECK (true)`** (and `feedback`, which is fine). Medium: spam/phishing in the in-app bell.
 
 ## Step 4 notes
-- Found while checking prod: the live Webre site's `admin.html` reads its `bookings` collection with an unauthenticated `get_data` (so every customer's name/email/phone was world-readable — finding #4 in the wild). Under the new defaults that call returns 403; Webre's admin page needs a sign-in (or the owner reads bookings in the Vertly dashboard).
+- Found while checking prod: the live Webre site's `admin.html` reads its `bookings` collection with an unauthenticated `get_data` (so every customer's name/email/phone was world-readable — finding #4 in the wild). Under the new defaults that call returns 403; Webre's admin page needs a sign-in (or the owner reads bookings in the Vertly dashboard). Checked at deploy: Webre's public `schedule.html` never used `site-api` at all — it POSTs to the placeholder `https://your-endpoint.com/bookings`, so no bookings were ever captured (the Step 10 launch verifier exists to catch exactly this).
 - Known limits: a site-user lockout is possible (5 failed logins on an email lock that email for 15 min); sessions live in `localStorage` (XSS on the owner's own page could read them); no password reset / email verification for site users yet (needs the email capability — Step 12/14); `auth-gate` forwards the client IP to GoTrue in `X-Forwarded-For`, but GoTrue's own per-IP limits may still see the function's egress IP when many users log in by username at once.
 
 ## OPEN — highest priority next

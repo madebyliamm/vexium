@@ -153,7 +153,7 @@ CREATE POLICY "notif_insert" ON public."notifications" AS PERMISSIVE FOR INSERT 
 CREATE POLICY "notif_select" ON public."notifications" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 CREATE POLICY "notif_update" ON public."notifications" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = user_id));
 
--- ── page_views  (~904 rows, RLS ON) ──────────
+-- ── page_views  (~907 rows, RLS ON) ──────────
 CREATE TABLE public."page_views" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -348,6 +348,16 @@ CREATE TRIGGER projects_guard_hosting_columns BEFORE UPDATE ON public.projects F
 CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_owner();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- ── rate_limits  (~81 rows, RLS ON) ──────────
+CREATE TABLE public."rate_limits" (
+  "key" text NOT NULL,
+  "window_start" timestamp with time zone NOT NULL,
+  "hits" integer NOT NULL DEFAULT 0,
+  CONSTRAINT "rate_limits_pkey" PRIMARY KEY (key, window_start)
+);
+CREATE UNIQUE INDEX rate_limits_pkey ON public.rate_limits USING btree (key, window_start);
+ALTER TABLE public."rate_limits" ENABLE ROW LEVEL SECURITY;
+
 -- ── site_data  (~1 rows, RLS ON) ──────────
 CREATE TABLE public."site_data" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -356,12 +366,15 @@ CREATE TABLE public."site_data" (
   "data" jsonb NOT NULL DEFAULT '{}'::jsonb,
   "site_user_id" uuid,
   "created_at" timestamp with time zone DEFAULT now(),
+  CONSTRAINT "site_data_collection_chk" CHECK ((collection ~ '^[a-z0-9_-]{1,40}$'::text)),
   CONSTRAINT "site_data_pkey" PRIMARY KEY (id),
   CONSTRAINT "site_data_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-  CONSTRAINT "site_data_site_user_id_fkey" FOREIGN KEY (site_user_id) REFERENCES site_users(id) ON DELETE SET NULL
+  CONSTRAINT "site_data_site_user_id_fkey" FOREIGN KEY (site_user_id) REFERENCES site_users(id) ON DELETE SET NULL,
+  CONSTRAINT "site_data_size_chk" CHECK ((octet_length((data)::text) <= 16384))
 );
 CREATE UNIQUE INDEX site_data_pkey ON public.site_data USING btree (id);
 CREATE INDEX site_data_project_collection_idx ON public.site_data USING btree (project_id, collection, created_at DESC);
+CREATE INDEX site_data_user_idx ON public.site_data USING btree (project_id, collection, site_user_id, created_at DESC);
 ALTER TABLE public."site_data" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "owners can delete their site data" ON public."site_data" AS PERMISSIVE FOR DELETE TO public USING ((project_id IN ( SELECT projects.id
    FROM projects
@@ -369,6 +382,22 @@ CREATE POLICY "owners can delete their site data" ON public."site_data" AS PERMI
 CREATE POLICY "owners can read their site data" ON public."site_data" AS PERMISSIVE FOR SELECT TO public USING ((project_id IN ( SELECT projects.id
    FROM projects
   WHERE (projects.user_id = auth.uid()))));
+
+-- ── site_sessions  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."site_sessions" (
+  "token_hash" text NOT NULL,
+  "project_id" text NOT NULL,
+  "site_user_id" uuid NOT NULL,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "expires_at" timestamp with time zone NOT NULL,
+  CONSTRAINT "site_sessions_pkey" PRIMARY KEY (token_hash),
+  CONSTRAINT "site_sessions_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "site_sessions_site_user_id_fkey" FOREIGN KEY (site_user_id) REFERENCES site_users(id) ON DELETE CASCADE
+);
+CREATE INDEX site_sessions_expires_idx ON public.site_sessions USING btree (expires_at);
+CREATE UNIQUE INDEX site_sessions_pkey ON public.site_sessions USING btree (token_hash);
+CREATE INDEX site_sessions_user_idx ON public.site_sessions USING btree (site_user_id);
+ALTER TABLE public."site_sessions" ENABLE ROW LEVEL SECURITY;
 
 -- ── site_users  (~0 rows, RLS ON) ──────────
 CREATE TABLE public."site_users" (
@@ -378,6 +407,8 @@ CREATE TABLE public."site_users" (
   "password_hash" text NOT NULL,
   "metadata" jsonb DEFAULT '{}'::jsonb,
   "created_at" timestamp with time zone DEFAULT now(),
+  CONSTRAINT "site_users_email_chk" CHECK (((email = lower(email)) AND ((char_length(email) >= 3) AND (char_length(email) <= 254)))),
+  CONSTRAINT "site_users_metadata_chk" CHECK (((metadata IS NULL) OR (octet_length((metadata)::text) <= 4096))),
   CONSTRAINT "site_users_pkey" PRIMARY KEY (id),
   CONSTRAINT "site_users_project_id_email_key" UNIQUE (project_id, email),
   CONSTRAINT "site_users_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -766,6 +797,40 @@ BEGIN
   RETURN COALESCE(v_result, '[]'::json);
 EXCEPTION WHEN OTHERS THEN
   RAISE EXCEPTION '%', SQLERRM;
+END;
+$function$;
+
+-- vx_rate_hit  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.vx_rate_hit(p_key text, p_window_seconds integer, p_limit integer, p_cost integer DEFAULT 1)
+ RETURNS TABLE(allowed boolean, hits integer, retry_after integer)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_window timestamptz;
+  v_hits   integer;
+BEGIN
+  IF p_window_seconds < 1 OR p_limit < 1 OR p_cost < 0 THEN
+    RAISE EXCEPTION 'bad rate-limit arguments';
+  END IF;
+  v_window := to_timestamp(floor(extract(epoch FROM now()) / p_window_seconds) * p_window_seconds);
+
+  INSERT INTO public.rate_limits AS r (key, window_start, hits)
+  VALUES (left(p_key, 200), v_window, p_cost)
+  ON CONFLICT (key, window_start) DO UPDATE SET hits = r.hits + p_cost
+  RETURNING r.hits INTO v_hits;
+
+  -- Opportunistic cleanup (~2% of calls) so the table stays small without a scheduler.
+  IF random() < 0.02 THEN
+    DELETE FROM public.rate_limits WHERE window_start < now() - interval '2 days';
+    DELETE FROM public.site_sessions WHERE expires_at < now() - interval '1 day';
+  END IF;
+
+  allowed     := CASE WHEN p_cost > 0 THEN v_hits <= p_limit ELSE v_hits < p_limit END;
+  hits        := v_hits;
+  retry_after := GREATEST(1, ceil(extract(epoch FROM (v_window + make_interval(secs => p_window_seconds) - now())))::integer);
+  RETURN NEXT;
 END;
 $function$;
 

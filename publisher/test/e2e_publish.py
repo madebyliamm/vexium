@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end publish test against a running Worker (default: wrangler dev on :8787). Real deploy:  e2e_publish.py https://vexium-publisher.startafter.workers.dev real using a THROWAWAY user/project.
 Prod Supabase is used for auth/rows; R2 is whatever the Worker is bound to. Everything created is deleted in `finally`.
-Keys are read from files and never printed."""
+The service key comes from publisher/.dev.vars if present, else `supabase projects api-keys`; never printed."""
 import base64, json, os, re, statistics, subprocess, sys, time, urllib.request, urllib.error
 
 WORKER = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8787'
@@ -9,7 +9,13 @@ REAL = len(sys.argv) > 2 and sys.argv[2] == 'real'   # fetch sites via the publi
 REPO = '/Users/liam/Desktop/vexium/vexium'
 SB = 'https://ciuqhxrxcznmgorjeumz.supabase.co'
 ANON = re.search(r'SUPABASE_ANON_KEY = "([^"]+)"', open(REPO + '/publisher/wrangler.toml').read()).group(1)
-SVC = open(REPO + '/publisher/.dev.vars').read().split('SUPABASE_SERVICE_ROLE_KEY=')[1].strip()
+def _service_key():
+    f = REPO + '/publisher/.dev.vars'          # optional (wrangler dev); otherwise fetched on demand — the repo is on iCloud, so don't leave the key in a file
+    if os.path.exists(f):
+        return open(f).read().split('SUPABASE_SERVICE_ROLE_KEY=')[1].strip()
+    out = subprocess.run(['supabase', 'projects', 'api-keys', '--project-ref', 'ciuqhxrxcznmgorjeumz', '-o', 'json'], capture_output=True, text=True).stdout
+    return [k['api_key'] for k in json.loads(out) if k.get('name') == 'service_role' or k.get('id') == 'service_role'][0]
+SVC = _service_key()
 
 results = []
 def check(name, ok, detail=''):
@@ -133,6 +139,29 @@ try:
                 o = subprocess.run(['curl', '-s', '-o', '/dev/null', '-w', '%{time_starttransfer}', f'https://{username}.vexium.ai{pth}'], capture_output=True, text=True).stdout
                 xs.append(float(o))
             print(f'BENCH v2 {label} TTFB  median {statistics.median(xs):.3f}s  min {min(xs):.3f}s  max {max(xs):.3f}s  (n=10)')
+
+    # ── custom domain (v2): the Vercel proxy forwards the customer's host as x-forwarded-host ──
+    dom = f'smoke-{stamp}.example.test'
+    st, _, _ = http('PATCH', SB + f'/rest/v1/projects?id=eq.{pid}', {**svc, 'Prefer': 'return=minimal'}, {'custom_domain': dom})
+    check('setup: custom domain set (service role)', st in (200, 204), st)
+    def cd_get(host, path='/'):
+        return http('GET', WORKER + path, {'x-forwarded-host': host}, raw=True)
+    t0 = time.time()
+    while True:
+        s_, h_, b_ = cd_get(dom)
+        if (s_ == 200 and b'Smoke ONE' in b_) or time.time() - t0 > 30 or not REAL: break
+        time.sleep(1)
+    check('custom domain serves the v2 site', s_ == 200 and b'Smoke ONE' in b_ and h_.get('x-vertly-version') == '1', f"{s_} v{h_.get('x-vertly-version')} after {round(time.time()-t0,1)}s")
+    s_, _, b_ = cd_get(dom.upper(), '/about.html')
+    check('custom domain: sub-page + host match is case-insensitive', s_ == 200 and b'About ONE' in b_, s_)
+    s_, _, b_ = cd_get(dom, '/_backend')
+    check('custom domain: _backend not served', s_ == 404 and b'SHOULD-NOT' not in b_, s_)
+    s_, _, _ = cd_get('not-' + dom)
+    check('custom domain: unknown host -> 404', s_ == 404, s_)
+    if REAL and os.environ.get('E2E_BENCH'):
+        xs = [float(subprocess.run(['curl', '-s', '-o', '/dev/null', '-w', '%{time_starttransfer}', '-H', f'x-forwarded-host: {dom}', WORKER + '/'], capture_output=True, text=True).stdout) for _ in range(10)]
+        print(f'BENCH custom-domain path (Worker only, no Vercel hop) TTFB median {statistics.median(xs):.3f}s min {min(xs):.3f}s (n=10)')
+    http('PATCH', SB + f'/rest/v1/projects?id=eq.{pid}', {**svc, 'Prefer': 'return=minimal'}, {'custom_domain': None})
 
     # ── v2 ──
     st, _, b = http('POST', WORKER + '/__vx/publish', auth, {'projectId': pid, 'files': files('TWO')})

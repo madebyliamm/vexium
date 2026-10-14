@@ -179,6 +179,12 @@ try {
   check('Sign out clears the stored session', (await chrome.eval(`localStorage.getItem(${JSON.stringify(STORAGE_KEY)})`)) === null);
   await chrome.goto(base + '/studio/');
   check('after sign-out the studio bounces to /auth.html again', await chrome.waitFor(`location.pathname === '/auth.html'`, 10000));
+
+  // ── 8. the full loop through the REAL sign-in form (username → auth-gate → session) and back to the studio ─────
+  await chrome.eval(`switchTab('signin'); true`);
+  await chrome.eval(`document.getElementById('signinUser').value = ${JSON.stringify(username)}; document.getElementById('signinPass').value = ${JSON.stringify(password)}; document.getElementById('btnSignin').click(); true`);
+  check('signing in on auth.html (by username) returns to the studio URL the guard remembered', await chrome.waitFor(`location.pathname === '/studio/'`, 20000), await chrome.eval('location.href'));
+  check('…and the studio shows the signed-in user', await chrome.waitFor(`!!document.querySelector('.avatar')`, 10000));
   void live;
 } catch (e) {
   fail++;

@@ -187,7 +187,7 @@ Finished = a brand-new user can go idea → live URL on `*.vexium.ai` (launch-re
 
 # PHASE B — New app foundation
 
-### Step 6 — Scaffold Vite + TypeScript + Preact — `TODO`
+### Step 6 — Scaffold Vite + TypeScript + Preact — `IN PROGRESS` (started 2026-10-14)
 **Goal:** a real app skeleton that deploys alongside the old static pages.
 **Do:** new app dir (decide name, e.g. `studio/`); single `tokens.css` (the canonical light-theme block from design memory); one Supabase client/config module; auth guard; router; typed API client for ai-chat/build-worker; tiny state store; GitHub Actions workflow builds the app and publishes it together with the legacy static pages; `tsc` typecheck in CI.
 **Done when:** push to `main` deploys old pages unchanged + a working `/studio` route behind login, using shared tokens; CI typechecks.

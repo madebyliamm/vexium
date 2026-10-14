@@ -7,3 +7,8 @@ supabase/.temp/
 # local Worker secrets (wrangler dev)
 .dev.vars
 publisher/.dev.vars
+
+# Step 6: studio build output + assembled Pages artifact
+_site/
+studio/dist/
+*.nosync

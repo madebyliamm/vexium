@@ -1,0 +1,14 @@
+/* THE token source for the studio — the canonical light-theme block (memory: project_vexium_design). Light page, white
+   raised surfaces, depth from shade + soft shadow (never borders), ONE purple accent used sparingly. Change a value here
+   and every studio screen follows; components must reference these variables, never raw colors. */
+:root {
+  --bg: #f1f1f4; --s1: #ffffff; --s2: #e7e7ee; --s3: #dcdce6;
+  --b1: #edeef3; --b2: #e4e4ec; --b3: #d6d6e0;
+  --a1: #18181b; --a2: #6b6b76;
+  --accent: #7c3aed; --accent-h: #6d28d9; --accent-soft: rgba(124, 58, 237, .10);
+  --text: #191922; --sub: #6a6a76;
+  --ok: #16a34a; --err: #dc2626;
+  --r-sm: 10px; --r: 16px; --r-lg: 22px; --r-full: 999px;
+  --shadow: 0 14px 34px rgba(30, 27, 60, .10); --shadow-sm: 0 4px 16px rgba(30, 27, 60, .06);
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}

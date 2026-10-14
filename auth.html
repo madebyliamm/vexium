@@ -444,6 +444,16 @@
     return _stripeJs;
   }
 
+  // Where to go after signing in. The studio sends people here with ?next=<its own URL>; only a same-site /studio/ path
+  // is honoured (never an absolute or protocol-relative URL — that would be an open redirect). Everything else: home.
+  function postAuthDest() {
+    try {
+      const n = new URLSearchParams(location.search).get('next');
+      if (n && /^\/studio\/[\w\-.~%!$&'()*+,;=:@\/?#]*$/.test(n) && !n.includes('//')) return n;
+    } catch (e) {}
+    return 'home.html';
+  }
+
   (async()=>{
     if (!sb) return;
     try {
@@ -462,7 +472,7 @@
           showConfirmStep(true);
           return;
         }
-        window.location.href = 'home.html';
+        window.location.href = postAuthDest();
       }
     } catch(e) {}
     const p = new URLSearchParams(location.search);
@@ -852,7 +862,7 @@
         sessionUser = out.session.user;
       }
       localStorage.setItem('vexium_username', sessionUser?.user_metadata?.username || input);
-      window.location.href = 'home.html';
+      window.location.href = postAuthDest();
     } catch(e) { setMsg('Something went wrong.', 'err'); btn.disabled = false; lbl.textContent = 'Sign in'; }
   }
 

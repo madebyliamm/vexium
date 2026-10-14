@@ -4,7 +4,7 @@ No secrets here — names only.
 
 ## Request paths
 ```
-Vertly app (static pages)  →  GitHub Pages (repo madebyliamm/vexium, workflow .github/workflows/static.yml, deploys on push to main)
+Vertly app (static pages + the studio)  →  GitHub Pages (repo madebyliamm/vexium — PUBLIC repo; workflow .github/workflows/static.yml: studio typecheck/test/build → scripts/assemble-site.mjs allowlist → `_site/` → deploy, on push to main). Legacy pages at the root, new Vite/Preact app at /studio/ (docs/STUDIO.md). Only allowlisted files are served — docs/, supabase/, REVAMP.md etc. are not.
 Published site  *.vexium.ai/<slug>  →  Cloudflare Worker `vexium-publisher` (publisher/) → ONE cached RPC `resolve_published_site` (host or username+slug → project + live version) → file from R2 `p/<project_id>/v<n>/<path>` (+ <base>, project id, tracker injected) — v2, after the Step 3 deploy. Before it / for sites never republished: the old path (project row from Supabase REST on every request, CSS/JS/images inlined from `published_files`), kept as the Worker's `legacy` fallback.
 Published site on a custom domain  →  DNS CNAME cname.vercel-dns.com → Vercel project `vexium` (vercel-proxy/api/proxy.js, edge fn) → forwards to vexium-publisher.startafter.workers.dev with x-forwarded-host → same Worker
 Publish / Rollback / Unpublish (editor)  →  POST vexium-publisher.startafter.workers.dev/__vx/{publish,rollback,unpublish} with the user's Supabase access token → Worker verifies it with GoTrue, checks owner/accepted-collaborator, writes R2, flips `projects.published_version`

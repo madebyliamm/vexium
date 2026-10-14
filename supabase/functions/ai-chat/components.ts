@@ -2411,11 +2411,18 @@ function seededShuffle<T>(arr: T[], seed: string): T[] {
  * `seed` should be something stable for the lifetime of one build (e.g. project_id) —
  * see the seededShuffle comment for why this can't be Math.random().
  */
+/** Pieces whose whole point is invented proof (fake logos, counters, ratings, milestones, competitor claims) — never offered to the
+ *  AI: Vertly sites carry only real, owner-supplied facts (docs/PROJECT_FORMAT.md §7). */
+export const FAKE_PROOF_COMPONENT_IDS = new Set([
+  'hero-trust-first', 'feat-stat-band', 'accent-logo-cloud', 'accent-live-toast', 'accent-trust-badges',
+  'accent-counter-stats', 'accent-world-map', 'accent-comparison-table', 'accent-timeline',
+]);
+
 export function buildComponentLibraryPrompt(categories: string[], seed = "", maxPerCategory = 2): string {
   const wanted = new Set(categories);
   const byCategory = new Map<string, VxComponent[]>();
   for (const c of ALL_COMPONENTS) {
-    if (!wanted.has(c.category)) continue;
+    if (!wanted.has(c.category) || FAKE_PROOF_COMPONENT_IDS.has(c.id)) continue;
     if (!byCategory.has(c.category)) byCategory.set(c.category, []);
     byCategory.get(c.category)!.push(c);
   }
@@ -2431,9 +2438,9 @@ export function buildComponentLibraryPrompt(categories: string[], seed = "", max
     '<component-library>',
     'Your library has two types of entries — use them differently:',
     '',
-    'ACCENT COMPONENTS (id starts with "accent-"): Visual patterns with specific flair that the AI would not naturally produce — scrolling logo strips, numbered step flows, animated counters, live toast notifications, tab switchers, trust badges, world connection maps. For these: preserve the structural technique and interaction pattern exactly. Only substitute copy, colors, and brand specifics. The pattern itself is why they are here — do not simplify it into a plain list or static block.',
+    'ACCENT COMPONENTS (id starts with "accent-"): Visual patterns with specific flair that the AI would not naturally produce — numbered step flows, FAQ accordions, tab switchers, product mockups, alternating feature rows, bento grids, video frames. For these: preserve the structural technique and interaction pattern exactly. Only substitute copy, colors, and brand specifics. The pattern itself is why they are here — do not simplify it into a plain list or static block.',
     '',
-    'STRUCTURAL SECTIONS (hero, features, pricing, testimonials, cta, nav, footer): Design-language references. Study these for TECHNIQUES: how ambient orbs are layered, how bento grids break equal-card patterns, how scroll animations are staged, how sections contrast light vs dark. Use these to inform your own composition — do not copy-paste blindly. Adapt the technique to this specific brand.',
+    'STRUCTURAL SECTIONS (hero, features, pricing, cta): Design-language references. Study these for TECHNIQUES: how ambient orbs are layered, how bento grids break equal-card patterns, how scroll animations are staged, how sections contrast light vs dark. Use these to inform your own composition — do not copy-paste blindly. Adapt the technique to this specific brand.',
     '',
     'DATA-VIZ + FLAIR (id starts with "dataviz-" / "flair-"): high-craft signature pieces the AI builds badly from scratch — animated charts (line/bar/donut/gauge/heatmap), stat cards, bento grids, gradient-mesh sections, animated borders. These are what make a site feel like a real PRODUCT instead of a brochure. Keep the structural + animation technique intact; recolor to the brand and swap in realistic data/copy. A chart only belongs where it makes sense (SaaS/fintech/analytics/dashboards) — never bolt one onto a site that wouldn\'t really have data.',
     '',
@@ -2443,8 +2450,9 @@ export function buildComponentLibraryPrompt(categories: string[], seed = "", max
     '- Vary the composition per site. Two sites should not share the same section order or rhythm.',
     '',
     'In all cases:',
-    '- Replace every color with this project\'s actual design tokens',
-    '- Rewrite ALL copy — headlines, body text, names, companies — to be specific to this business. Never ship placeholder copy.',
+    '- Replace every color with var(--token) from this project\'s styles.css (add a token to :root if one is missing) — no raw colors outside :root',
+    '- Rewrite ALL copy — headlines, body text — to be specific to this business. Components show sample names, numbers and logos: replace each with a real fact the owner gave you, or drop that part. Never ship placeholder copy or invented proof.',
+    '- Nav and footer are NOT in this library: the page uses <header data-vx-nav> / <footer data-vx-footer> (see SHARED-FILE RULES)',
     '- Swap fonts to the spec\'s font pairing',
     '- Class names are scoped (vxc-XX__) — keep them unique per section',
     '',
@@ -2461,21 +2469,18 @@ export function buildComponentLibraryPrompt(categories: string[], seed = "", max
  *  'flair' is broadly useful (signature visual sections); 'dataviz' (charts/metrics) only goes to
  *  data-heavy industries so a bakery never gets a stock chart. */
 export function categoriesForBuild(siteCategory: string | undefined): string[] {
+  // No 'testimonials' (invented quotes), 'nav' or 'footer' (rendered by the SDK from site.js): see FAKE_PROOF_COMPONENT_IDS.
   const base = ['hero', 'cta', 'accent', 'flair'];
   switch (siteCategory) {
     case 'tech-saas':
     case 'startup-launch':
-      return [...base, 'dataviz', 'features', 'pricing', 'testimonials', 'nav', 'footer'];
+      return [...base, 'dataviz', 'features', 'pricing'];
     case 'ecommerce-consumer':
-      return [...base, 'features', 'testimonials', 'nav', 'footer'];
     case 'agency-creative':
     case 'personal-freelancer':
-      return [...base, 'features', 'testimonials', 'footer'];
-    case 'professional-services':
-      return [...base, 'dataviz', 'features', 'testimonials', 'nav', 'footer'];
     case 'hospitality-events':
-      return [...base, 'testimonials', 'footer'];
-    default:
-      return [...base, 'dataviz', 'features', 'testimonials', 'nav', 'footer'];
+      return [...base, 'features'];
+    default: // professional-services and anything unknown
+      return [...base, 'dataviz', 'features'];
   }
 }

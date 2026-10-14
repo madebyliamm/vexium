@@ -123,6 +123,8 @@
     document.getElementById('notFound').classList.add('show');
   }
 
+  const VX_SDK_URL = (/^https?:$/.test(location.protocol) ? location.origin : 'https://vexium.ai') + '/sdk/v1.js?r=2';
+
   function buildPageHtml(pageName) {
     let html = fileSystem[pageName] || '';
 
@@ -141,13 +143,13 @@
         const inlined = fc.replace(/<\/style>/gi, '<\\/style>');
         html = html.replace(
           new RegExp(`<link[^>]+href=["']${safe}["'][^>]*/?>`, 'gi'),
-          '<style>' + inlined + '<' + '/style>'
+          () => '<style>' + inlined + '<' + '/style>'
         );
       } else if (fn.endsWith('.js')) {
         const inlined = fc.replace(/<\/script>/gi, '<\\/script>');
         html = html.replace(
           new RegExp(`<script[^>]+src=["']${safe}["'][^>]*>[\\s\\S]*?<\\/script>`, 'gi'),
-          '<script>' + inlined + '<' + '/script>'
+          () => '<script>' + inlined + '<' + '/script>'
         );
       }
     });
@@ -159,6 +161,14 @@
       const safe = escRe(fn);
       html = html.replace(new RegExp(`(src=["'])${safe}(["'])`, 'gi'), `$1${fc}$2`);
       html = html.replace(new RegExp(`url\\(["']?${safe}["']?\\)`, 'gi'), `url(${fc})`);
+    });
+
+    // Pass 3: JS-rendered images — a quoted filename inside the inlined scripts (site.js `logo: "logo.png"`) becomes the data URL
+    Object.entries(fileSystem).forEach(([fn, fc]) => {
+      if (!fc || !isImgFile(fn) || typeof fc !== 'string' || !fc.startsWith('data:')) return;
+      const safe = escRe(fn);
+      html = html.replace(/(<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>)/gi, blk =>
+        blk.replace(new RegExp('(["\'])' + safe + '\\1', 'g'), () => JSON.stringify(fc)));
     });
 
     // Rewrite anchor links to use hash navigation — same approach as editor preview
@@ -173,7 +183,12 @@
 
     // Inject JS nav interceptor for window.location.href = '...' navigation
     const interceptor = `(function(){if(!location.href.startsWith('blob:'))return;function _nav(u){var s=String(u||'');if(!s||s.startsWith('http')||s.startsWith('//')||s.startsWith('#')||s.startsWith('blob:')||s.startsWith('javascript:'))return false;var p=s.split('?')[0].split('#')[0];while(p.startsWith('./'))p=p.slice(2);while(p.startsWith('/'))p=p.slice(1);if(!p)return false;if(p.indexOf('.')===-1)p=p+'.html';location.hash='vexnav='+p;return true;}try{var d=Object.getOwnPropertyDescriptor(Location.prototype,'href');if(d&&d.set)Object.defineProperty(Location.prototype,'href',{get:d.get,set:function(u){if(!_nav(u))d.set.call(this,u);}});}catch(e){}})();`;
-    const bridge = '<script>' + interceptor + '<' + '/script>';
+    // Links produced by JS (the SDK's nav/footer) can't resolve against a blob: URL: route relative page links through __VX.navigate.
+    const clicks = `(function(){if(!location.href.startsWith('blob:'))return;window.addEventListener('click',function(e){if(e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey)return;var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.getAttribute('href')||'';if(!h||h.charAt(0)==='#'||/^(https?:)?\\/\\/|^(mailto|tel|javascript|blob|data):/i.test(h)||a.target==='_blank'||a.hasAttribute('download'))return;e.preventDefault();if(window.__VX&&window.__VX.navigate)window.__VX.navigate(h);},false);})();`;
+    // The Vertly SDK, as on a published site (vx.* + nav/footer rendering + data-vx-* hooks); __VX = site id, page, preview navigation.
+    const vxNav = 'function(u){var s=String(u||"");if(/^(https?:)?\\/\\/|^(mailto|tel|javascript):/i.test(s)){location.href=s;return}var p=s.split("#")[0].split("?")[0];while(p.indexOf("./")===0)p=p.slice(2);while(p.charAt(0)==="/")p=p.slice(1);if(!p)return;if(p.indexOf(".")===-1)p+=".html";location.hash="vexnav="+p}';
+    const vxBoot = '<script>window.__VX={site:' + JSON.stringify(projectId || '') + ',page:' + JSON.stringify(pageName) + ',navigate:' + vxNav + '}<' + '/script><script src="' + VX_SDK_URL + '"><' + '/script>';
+    const bridge = '<script>' + interceptor + clicks + '<' + '/script>' + vxBoot;
     if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
     } else {
@@ -188,7 +203,7 @@
     const html = buildPageHtml(pageName);
     const prev = frame._blob;
     if (prev) URL.revokeObjectURL(prev);
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const burl = URL.createObjectURL(blob);
     frame._blob = burl;
     frame.src = burl;
@@ -197,13 +212,15 @@
     // Re-attach hash navigation listener after each page load
     frame.onload = function() {
       try {
-        frame.contentWindow.addEventListener('hashchange', function() {
+        const go = function() {
           const h = frame.contentWindow.location.hash || '';
           if (h.startsWith('#vexnav=')) {
             const pg = decodeURIComponent(h.slice(8));
             if (pg && fileSystem[pg]) renderPage(pg);
           }
-        });
+        };
+        frame.contentWindow.addEventListener('hashchange', go);
+        go(); // a redirect fired while the page was still loading (e.g. an auth guard) set the hash before this listener existed
       } catch(e) {}
     };
   }

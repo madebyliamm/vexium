@@ -1298,6 +1298,11 @@
     const files=(p.published_files||p.files||{});
     const mainName=p.main_file||'index.html';
     let html=(files&&(files[mainName]||files['index.html']))||'';
+    // v2 projects keep their design in a shared styles.css: inline it (the thumbnail has no network context for relative files)
+    if(typeof html==='string' && typeof files['styles.css']==='string'){
+      const css=files['styles.css'].replace(/<\/style/gi,'<\\/style');
+      html=html.replace(/<link[^>]+href=["']styles\.css["'][^>]*>/i,()=>'<style>'+css+'</style>');
+    }
     if(html && typeof html==='string' && html.length>200){
       // Frozen, script-less preview so it renders once and never moves.
       const freeze='<style>*{animation:none!important;transition:none!important;animation-play-state:paused!important}</style>';

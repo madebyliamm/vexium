@@ -3,7 +3,7 @@ import { sdkSnippet } from './sdk.ts';
 const SUPABASE_FUNCTIONS = 'https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1';
 
 /** Bump when the tracking snippet changes: it is part of every HTML ETag so browsers re-fetch. */
-export const TRACKER_VERSION = 1;
+export const TRACKER_VERSION = 2; // v2: the SDK moved from the end of <body> to the start of <head>
 
 // Page-view collector for published sites (`track` edge function). Injected at serve time so tracking changes
 // reach every live site without a republish.
@@ -13,18 +13,19 @@ export function trackerSnippet(projectId: string): string {
 
 /**
  * Per-request HTML changes: substitute the project-id placeholder, add <base> when the site lives under /slug/,
- * append the SDK + tracker. Everything else is served exactly as published.
+ * put the SDK first in <head> (so any page script, wherever it sits, can call vx.*), append the tracker.
+ * Everything else is served exactly as published.
  */
 export function prepareHtml(html: string, opts: { projectId: string; baseHref: string }): string {
   let out = html.split('{{VEXIUM_PROJECT_ID}}').join(opts.projectId);
 
   // Relative links (href="schedule.html") must resolve under /slug/ on *.vexium.ai; custom domains are at the root.
-  if (opts.baseHref && opts.baseHref !== '/') {
-    const baseTag = `<base href="${opts.baseHref}">`;
-    out = /<head[^>]*>/i.test(out) ? out.replace(/(<head[^>]*>)/i, `$1${baseTag}`) : baseTag + out;
-  }
+  // <base> has to precede every URL-bearing element, so base + SDK go straight after <head>.
+  const baseTag = opts.baseHref && opts.baseHref !== '/' ? `<base href="${opts.baseHref}">` : '';
+  const headStart = baseTag + sdkSnippet(opts.projectId);
+  out = /<head[^>]*>/i.test(out) ? out.replace(/(<head[^>]*>)/i, `$1${headStart}`) : headStart + out;
 
-  const tracker = sdkSnippet(opts.projectId) + trackerSnippet(opts.projectId);
+  const tracker = trackerSnippet(opts.projectId);
   const close = out.toLowerCase().lastIndexOf('</body>');
   return close >= 0 ? out.slice(0, close) + tracker + out.slice(close) : out + tracker;
 }

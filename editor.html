@@ -4773,6 +4773,7 @@ document.getElementById('bkRestoreOverlay').addEventListener('click', e => {
 });
 
 // ── PREVIEW ───────────────────────────────────────────────────────────────────
+const VX_SDK_URL = (/^https?:$/.test(location.protocol) ? location.origin : 'https://vexium.ai') + '/sdk/v1.js?r=2';
 function buildPageHtml(pageName) {
   let html = fileSystem[pageName] || '';
 
@@ -4788,10 +4789,10 @@ function buildPageHtml(pageName) {
     const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (fn.endsWith('.css')) {
       const safe = fc.replace(/<\/style>/gi, '<\\/style>');
-      html = html.replace(new RegExp('<link[^>]+href=["\']' + safeFn + '["\'][^>]*/?>','gi'), '<style>' + safe + '<\/style>');
+      html = html.replace(new RegExp('<link[^>]+href=["\']' + safeFn + '["\'][^>]*/?>','gi'), () => '<style>' + safe + '<\/style>');
     } else if (fn.endsWith('.js')) {
       const safe2 = fc.replace(/<\/script>/gi, '<\\/script>');
-      html = html.replace(new RegExp('<script[^>]+src=["\']' + safeFn + '["\'][^>]*><\/script>','gi'), '<script>' + safe2 + '<\/script>');
+      html = html.replace(new RegExp('<script[^>]+src=["\']' + safeFn + '["\'][^>]*><\/script>','gi'), () => '<script>' + safe2 + '<\/script>');
     }
   });
   // Pass 2: substitute image data URLs (now sees url() refs that were inside inlined CSS)
@@ -4801,6 +4802,13 @@ function buildPageHtml(pageName) {
     const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     html = html.replace(new RegExp('(src=["\'])' + safeFn + '(["\'])','gi'), '$1' + fc + '$2');
     html = html.replace(new RegExp('url\\(["\']?' + safeFn + '["\']?\\)','gi'), 'url(' + fc + ')');
+  });
+  // Pass 3: JS-rendered images — a quoted filename inside the inlined scripts (site.js `logo: "logo.png"`) becomes the data URL
+  Object.entries(fileSystem).forEach(([fn, fc]) => {
+    if (!fc || !isImageFile(fn) || typeof fc !== 'string' || !fc.startsWith('data:')) return;
+    const safeFn = fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    html = html.replace(new RegExp('(<script(?![^>]*\\bsrc=)[^>]*>[\\s\\S]*?<\\/script>)', 'gi'), blk =>
+      blk.replace(new RegExp('(["\'])' + safeFn + '\\1', 'g'), () => JSON.stringify(fc)));
   });
   const _trackPid = projectId || '';
   const navInterceptor = [
@@ -4818,11 +4826,19 @@ function buildPageHtml(pageName) {
     // Both patches are active only in the editor (blob: URL context).
     // JS navigation interceptor — catches window.location.href = 'page.html' and redirects to hash navigation
     '(function(){if(!location.href.startsWith("blob:"))return;function _nav(url){var s=String(url||"");if(!s||s.startsWith("http")||s.startsWith("//")||s.startsWith("#")||s.startsWith("blob:")||s.startsWith("javascript:")||s.startsWith("mailto:")||s.startsWith("tel:"))return false;var page=s.split("?")[0].split("#")[0];while(page.startsWith("./"))page=page.slice(2);while(page.startsWith("/"))page=page.slice(1);if(!page)return false;if(page.indexOf(".")===-1)page=page+".html";location.hash="vexnav="+page;return true;}try{var _hd=Object.getOwnPropertyDescriptor(Location.prototype,"href");if(_hd&&_hd.set)Object.defineProperty(Location.prototype,"href",{get:_hd.get,set:function(u){if(!_nav(u))_hd.set.call(this,u);}});}catch(e){}try{var _oa=location.assign.bind(location);Object.defineProperty(location,"assign",{value:function(u){if(!_nav(u))_oa(u);}});}catch(e){}try{var _or=location.replace.bind(location);Object.defineProperty(location,"replace",{value:function(u){if(!_nav(u))_or(u);}});}catch(e){}var _U=window.URL;function _SU(u,b){var us=String(u||"");if(us.startsWith("blob:"))us="http://vexium.preview/"+us.split("/").pop();try{return b?new _U(us,b):new _U(us);}catch(e){return new _U(us,"http://vexium.preview/");}}try{_SU.prototype=_U.prototype;["createObjectURL","revokeObjectURL","canParse"].forEach(function(k){if(_U[k])try{_SU[k]=_U[k].bind(_U);}catch(e){}});window.URL=_SU;}catch(e){}})();',
+    // Click interceptor — links in JS-rendered markup (the SDK's nav/footer) can't resolve against a blob: URL, so route
+    // relative page links through the same navigation hook (window.__VX.navigate). Bubble phase on window so the SDK's own
+    // same-page anchor scrolling (document level) gets first refusal via defaultPrevented.
+    '(function(){if(!location.href.startsWith("blob:"))return;window.addEventListener("click",function(e){if(e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey)return;var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";if(!h||h.charAt(0)==="#"||/^(https?:)?\\/\\/|^(mailto|tel|javascript|blob|data):/i.test(h)||a.target==="_blank"||a.hasAttribute("download"))return;e.preventDefault();if(window.__VX&&window.__VX.navigate)window.__VX.navigate(h);},false);})();',
     // Tracking: skip blob: URLs (editor preview) — only fires on real published deployments
     '(function(){var pid="' + _trackPid.replace(/"/g, '') + '";if(!pid||location.href.startsWith("blob:"))return;var sid=sessionStorage.getItem("_vsid")||Math.random().toString(36).slice(2);sessionStorage.setItem("_vsid",sid);var vid=localStorage.getItem("_vvid")||Math.random().toString(36).slice(2);localStorage.setItem("_vvid",vid);fetch("https://ciuqhxrxcznmgorjeumz.supabase.co/functions/v1/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:pid,page:location.pathname||"/",referrer:document.referrer,session_id:sid,visitor_id:vid})}).catch(function(){});})();',
     '})();'
   ].join('');
-  const bridge = '<script>' + navInterceptor + '<\/script>';
+  // The Vertly SDK, exactly as on a published site (vx.* + nav/footer rendering + data-vx-* hooks). It comes from the repo
+  // copy served next to this page; __VX tells it the site id, which page this is and how to navigate inside the preview.
+  const vxNav = 'function(u){var s=String(u||"");if(/^(https?:)?\\/\\/|^(mailto|tel|javascript):/i.test(s)){location.href=s;return}var p=s.split("#")[0].split("?")[0];while(p.indexOf("./")===0)p=p.slice(2);while(p.charAt(0)==="/")p=p.slice(1);if(!p)return;if(p.indexOf(".")===-1)p+=".html";location.hash="vexnav="+p}';
+  const vxBoot = '<script>window.__VX={site:' + JSON.stringify(projectId || '') + ',page:' + JSON.stringify(pageName) + ',navigate:' + vxNav + '}<\/script><script src="' + VX_SDK_URL + '"><\/script>';
+  const bridge = '<script>' + navInterceptor + '<\/script>' + vxBoot;
   if (/<head[^>]*>/i.test(html)) {
     html = html.replace(/(<head[^>]*>)/i, '$1' + bridge);
   } else {
@@ -4855,7 +4871,7 @@ function refreshPreviewPage(pageName) {
   const html = buildPageHtml(pageName);
   const prev = frame._previewBlob;
   if (prev) URL.revokeObjectURL(prev);
-  const blob = new Blob([html], { type: 'text/html' });
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const burl = URL.createObjectURL(blob);
   frame._previewBlob = burl;
   frame.removeAttribute('srcdoc'); // clear any live-build srcdoc so the real blob load wins
@@ -4865,13 +4881,15 @@ function refreshPreviewPage(pageName) {
   // Re-attach hash navigation listener after each page load
   frame.onload = function() {
     try {
-      frame.contentWindow.addEventListener('hashchange', function() {
+      const go = function() {
         const h = frame.contentWindow.location.hash || '';
         if (h.startsWith('#vexnav=')) {
           const pg = decodeURIComponent(h.slice(8));
           if (pg && fileSystem[pg]) { mainFile = pg; refreshPreviewPage(pg); }
         }
-      });
+      };
+      frame.contentWindow.addEventListener('hashchange', go);
+      go(); // a redirect fired while the page was still loading (e.g. an auth guard) set the hash before this listener existed
     } catch(e) {}
   };
 }
@@ -5450,6 +5468,7 @@ const AI_MAX_MESSAGES = 28;
 /** Full file content budget for main / active / recently mentioned paths. */
 const AI_MAX_FILE_CHARS_PRIORITY = 20000;
 const AI_MAX_FILE_CHARS_OTHER    = 4000;
+const AI_SHARED_FILES            = ['styles.css', 'site.js', 'manifest.json'];
 let _compactMode = false; // set by aiCompactChat — forces minimal file payload on next request
 let aiTyping  = false;
 let aiStarted = false;
@@ -6721,6 +6740,10 @@ function liveBuildTick(file, raw) {
   if (_liveBuild.head === null) {
     // First paint: set up the doc once (head/styles stream before <body>, so they're ready here).
     _liveBuild.head = raw.slice(0, raw.indexOf(bm[0])).replace(/<script[\s\S]*?(?:<\/script>|$)/gi, '');
+    // shared stylesheet: styles.css streams out first, so by now it is in fileSystem — inline it (srcdoc can't fetch relative files)
+    if (typeof fileSystem['styles.css'] === 'string') {
+      _liveBuild.head = _liveBuild.head.replace(/<link[^>]+href=["']styles\.css["'][^>]*\/?>/gi, () => '<style>' + fileSystem['styles.css'].replace(/<\/style>/gi, '<\\/style>') + '<\/style>');
+    }
     const doc = '<!doctype html><html><head>' + _lbHeadInner(_liveBuild.head)
       + '<style>*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}body{opacity:1!important}</style></head><body>'
       + body + '</body></html>';
@@ -7606,6 +7629,8 @@ function buildAiFilesPayload() {
   const primary = new Set();
   if (mainFile) primary.add(mainFile);
   if (activeFile) primary.add(activeFile);
+  // v2 shared files (tokens, nav/footer config, manifest) always travel in full — patches to them must apply to the real text
+  AI_SHARED_FILES.forEach(f => { if (fs.hasOwnProperty(f)) primary.add(f); });
   // Only pull in mentioned files when there's no _pages index (small/early projects)
   if (!hasPageIndex) gatherMentionedFilenames().forEach(f => primary.add(f));
 
@@ -7622,7 +7647,9 @@ function buildAiFilesPayload() {
     // For truly massive files (>150k chars) send a structural summary; the full content
     // is available server-side via full_files for patch application.
     // Compact mode still reduces payload but never inserts a recoverable-looking marker.
-    if (_compactMode && s.length > 30000) {
+    if (AI_SHARED_FILES.includes(name)) {
+      // never summarised or truncated — see above
+    } else if (_compactMode && s.length > 30000) {
       s = _extractHtmlSummary(name, s);
     } else if (s.length > 150000) {
       s = _extractHtmlSummary(name, s);
@@ -10059,19 +10086,22 @@ function bkToggleAuth(on) {
 function bkRenderAPI() {
   const cfg  = getBackendConfig();
   const el   = document.getElementById('bkApiContent');
-  const base = `const SITE_ID = '{{VEXIUM_PROJECT_ID}}';\nconst VX_API = '${BK_URL}/functions/v1/site-api';\nasync function vxCall(action, payload = {}) {\n  const res = await fetch(VX_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: SITE_ID, action, ...payload }) });\n  return res.json();\n}`;
+  const base = `// Nothing to set up: the Vertly client (vx) is already loaded on every page of your site.\n// Use the HTML attributes below, or the vx.* calls when you need your own logic.`;
 
-  let html = bkApiBlock('Setup', 'JS', base);
+  let html = bkApiBlock('Setup', 'INFO', base);
 
   cfg.collections.forEach(c => {
-    const submitSnippet = `// Submit to ${c.label||c.id}\nawait vxCall('submit', {\n  collection: '${c.id}',\n  data: { ${(c.fields||[]).map(f=>`${f.key}: '...'`).join(', ')} }\n});`;
-    const getSnippet    = `// Get ${c.label||c.id} data\nconst result = await vxCall('get_data', { collection: '${c.id}' });\nconsole.log(result.rows);`;
+    const fields = c.fields || [];
+    const formSnippet = `<!-- Form that saves to ${c.label||c.id} -->\n<form data-vx-form="${c.id}" data-vx-success="Thanks — we got it.">\n${fields.map(f=>`  <input name="${f.key}" type="${f.type === 'email' ? 'email' : 'text'}" placeholder="${f.label||f.key}" />`).join('\n')}\n  <button type="submit">Send</button>\n  <p data-vx-message></p>\n</form>`;
+    const submitSnippet = `// Submit to ${c.label||c.id} from your own code\nawait vx.data.submit('${c.id}', { ${fields.map(f=>`${f.key}: '...'`).join(', ')} });`;
+    const getSnippet    = `// Read ${c.label||c.id} (needs "read": "user" or "public" in the collection rules)\nconst result = await vx.data.list('${c.id}');\nconsole.log(result.rows);`;
+    html += bkApiBlock(c.label||c.id, 'FORM', formSnippet);
     html += bkApiBlock(c.label||c.id, 'SUBMIT', submitSnippet);
     html += bkApiBlock(c.label||c.id, 'GET', getSnippet);
   });
 
   if (cfg.auth?.enabled) {
-    const authSnippet = `// Sign up\nconst signup = await vxCall('signup', { email, password });\nif (signup.token) localStorage.setItem('vx_token', signup.token);\n\n// Log in\nconst login = await vxCall('login', { email, password });\nif (login.token) localStorage.setItem('vx_token', login.token);`;
+    const authSnippet = `<!-- Sign-up form (use data-vx-auth="login" for log in) -->\n<form data-vx-auth="signup" data-vx-redirect="dashboard.html">\n  <input name="email" type="email" required />\n  <input name="password" type="password" required />\n  <button type="submit">Create account</button>\n  <p data-vx-message></p>\n</form>\n\n<!-- Log out, and show things by sign-in state -->\n<button data-vx-logout data-vx-redirect="index.html">Log out</button>\n<div data-vx-show="in">Signed in as <span data-vx-user="email"></span></div>\n<div data-vx-show="out">Please log in.</div>\n\n// Or in code\nconst r = await vx.auth.login(email, password);   // r.success / r.error\nconst user = vx.auth.user();                       // null when signed out`;
     html += bkApiBlock('User Auth', 'AUTH', authSnippet);
   }
 

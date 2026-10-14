@@ -99,6 +99,8 @@ function applyPatches(
         removed += patch.delete.split("\n").length;
         result = replaced;
       } else { failed++; }
+    } else {
+      failed++; // incomplete operation (e.g. <find> without <replace>): never report it as applied
     }
   }
   return { result, added, removed, failed };
@@ -106,30 +108,35 @@ function applyPatches(
 
 function parsePatchOps(body: string): PatchOp[] {
   const ops: PatchOp[] = [];
-  const tags: { open: string; close: string; key: keyof PatchOp }[] = [
-    { open: "<find>", close: "</find>", key: "find" },
-    { open: "<replace>", close: "</replace>", key: "replace" },
-    { open: "<insert_after>", close: "</insert_after>", key: "insert_after" },
-    { open: "<content>", close: "</content>", key: "content" },
-    { open: "<delete>", close: "</delete>", key: "delete" },
+  // Opening tags are matched leniently ("<find>", "<find >", and the stray-quote typo "<find\">" models sometimes emit);
+  // closing tags are exact. A strict match used to turn a typo'd block into zero operations that "succeeded" as a no-op.
+  const tags: { name: string; key: keyof PatchOp }[] = [
+    { name: "find", key: "find" },
+    { name: "replace", key: "replace" },
+    { name: "insert_after", key: "insert_after" },
+    { name: "content", key: "content" },
+    { name: "delete", key: "delete" },
   ];
 
   let cur: PatchOp = {};
   let pos = 0;
 
   while (pos < body.length) {
-    let earliest: { idx: number; tag: typeof tags[0] } | null = null;
+    let earliest: { idx: number; openLen: number; tag: typeof tags[0] } | null = null;
     for (const tag of tags) {
-      const idx = body.indexOf(tag.open, pos);
-      if (idx !== -1 && (earliest === null || idx < earliest.idx)) {
-        earliest = { idx, tag };
+      const re = new RegExp(`<${tag.name}(?![A-Za-z_-])[^>]*>`, "g");
+      re.lastIndex = pos;
+      const m = re.exec(body);
+      if (m && (earliest === null || m.index < earliest.idx)) {
+        earliest = { idx: m.index, openLen: m[0].length, tag };
       }
     }
     if (!earliest) break;
 
-    const { idx, tag } = earliest;
-    const start = idx + tag.open.length;
-    const endIdx = body.indexOf(tag.close, start);
+    const { idx, openLen, tag } = earliest;
+    const start = idx + openLen;
+    const close = `</${tag.name}>`;
+    const endIdx = body.indexOf(close, start);
     if (endIdx === -1) break;
 
     const val = body.slice(start, endIdx);
@@ -143,7 +150,7 @@ function parsePatchOps(body: string): PatchOp[] {
       }
     }
 
-    pos = endIdx + tag.close.length;
+    pos = endIdx + close.length;
   }
 
   return ops;
@@ -181,7 +188,7 @@ interface ParseEvent {
 
 interface DelimiterMatch { type: string; name?: string; index: number; end: number; }
 
-function makeParse(existingFiles: Record<string, string>): ParseState {
+export function makeParse(existingFiles: Record<string, string>): ParseState {
   return {
     phase: "message", buf: "", msgText: "",
     curFileName: "", curFileContent: "", curCritique: "", curPlan: "",
@@ -230,7 +237,15 @@ function findDelimiter(text: string, from: number): DelimiterMatch | null {
   return best;
 }
 
-function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
+// A closing tag can be split across stream chunks ("</fi" + "le>"). When no complete closing tag is in `s`, this returns how
+// many characters at its end could still turn into one, so the caller holds them back for the next chunk instead of treating
+// them as content (a missed </file> silently merges every following file into the current one).
+function partialTagTail(s: string, tag: string): number {
+  for (let k = Math.min(s.length, tag.length - 1); k > 0; k--) if (tag.startsWith(s.slice(s.length - k))) return k;
+  return 0;
+}
+
+export function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
   const events: ParseEvent[] = [];
   (state as any)._carry = ((state as any)._carry || "") + chunk;
   let text: string = (state as any)._carry;
@@ -293,10 +308,12 @@ function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
       const closeLen = xmlCloseMatch ? xmlCloseMatch[0].length : 0;
 
       if (closeIdx === -1) {
-        const content = text.slice(pos);
+        const rest = text.slice(pos);
+        const hold = partialTagTail(rest, "</file>");
+        const content = rest.slice(0, rest.length - hold);
         state.curFileContent += content;
-        events.push({ type: "file_delta", text: content });
-        (state as any)._carry = "";
+        if (content) events.push({ type: "file_delta", text: content });
+        (state as any)._carry = rest.slice(rest.length - hold);
         break;
       }
       const content = text.slice(pos, closeIdx);
@@ -313,7 +330,10 @@ function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
     else if ((state.phase as string) === "in_patch_body") {
       const closeIdx = text.indexOf("</patch>", pos);
       if (closeIdx === -1) {
-        (state as any)._patchBuf += text.slice(pos);
+        const rest = text.slice(pos);
+        const hold = partialTagTail(rest, "</patch>");
+        (state as any)._patchBuf += rest.slice(0, rest.length - hold);
+        (state as any)._carry = rest.slice(rest.length - hold);
         break;
       }
       (state as any)._patchBuf += text.slice(pos, closeIdx);
@@ -321,7 +341,7 @@ function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
       const original = state.existingFiles[state.curFileName] || "";
       const { result, failed } = applyPatches(original, ops);
       // If ALL patches failed, emit patch_failed so frontend can retry as full rewrite
-      if (ops.length > 0 && failed === ops.length) {
+      if (ops.length === 0 || failed === ops.length) {
         events.push({ type: "patch_done", name: state.curFileName, content: null as any, encoding: "failed" });
       } else {
         const encoded = safeBase64(result);
@@ -339,7 +359,13 @@ function processStreamBlock(chunk: string, state: ParseState): ParseEvent[] {
 
     else if (state.phase === "in_critique") {
       const closeIdx = text.indexOf("</critique>", pos);
-      if (closeIdx === -1) { state.curCritique += text.slice(pos); break; }
+      if (closeIdx === -1) {
+        const rest = text.slice(pos);
+        const hold = partialTagTail(rest, "</critique>");
+        state.curCritique += rest.slice(0, rest.length - hold);
+        (state as any)._carry = rest.slice(rest.length - hold);
+        break;
+      }
       state.curCritique += text.slice(pos, closeIdx);
       try {
         const parsed = JSON.parse(state.curCritique.trim());
@@ -493,8 +519,12 @@ export async function streamBuild(
           // responses get cut off mid-sentence.
           const carry = (state as any)._carry || "";
           if (carry) {
-            state.msgText += carry;
-            if (carry.trim()) await emit("delta", { text: carry });
+            if (state.phase === "in_file") {
+              state.curFileContent += carry; // an unterminated file keeps the tail that was held back for a possible </file>
+            } else if (state.phase === "message") {
+              state.msgText += carry;
+              if (carry.trim()) await emit("delta", { text: carry });
+            }
             (state as any)._carry = "";
           }
           finalMessage = state.msgText.trim();

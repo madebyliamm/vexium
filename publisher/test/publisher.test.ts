@@ -204,10 +204,11 @@ describe('serving v2 sites', () => {
     assert.ok(!html.includes('{{VEXIUM_PROJECT_ID}}'));
     assert.ok(html.includes('/functions/v1/track') && html.indexOf('/functions/v1/track') < html.lastIndexOf('</body>'));
     assert.equal(res.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
-    // SDK: site id first, then the script, both before </body>
+    // SDK: <base> first, then the site id, then the script — all inside <head>, before any page script can run
+    const base = html.indexOf('<base href="/my-bakery/">');
     const cfg = html.indexOf('window.__VX={site:"proj_1"}');
     const tag = html.indexOf(`<script src="/__vx/sdk/v1.js?v=${SDK_V1_HASH}"></script>`);
-    assert.ok(cfg > 0 && tag > cfg && tag < html.lastIndexOf('</body>'));
+    assert.ok(base > 0 && cfg > base && tag > cfg && tag < html.indexOf('</head>'));
   });
 
   it('custom domains are served from the root without <base>', async () => {
@@ -374,5 +375,14 @@ describe('Vertly SDK', () => {
     for (const alias of ['vxCall', 'vxSignup', 'vxLogin', 'vxLogout', 'vxCurrentUser', 'vxGetToken', 'vxCheckout', 'vxBuy', 'vxBuyAmount']) {
       assert.ok(SDK_V1_SOURCE.includes('w.' + alias + ' ='), alias);
     }
+  });
+});
+
+describe('mime', async () => {
+  const { mimeFor } = await import('../src/mime.ts');
+  it('serves manifest.json as a web-app manifest and other .json as json', () => {
+    assert.match(mimeFor('manifest.json'), /^application\/manifest\+json/);
+    assert.match(mimeFor('data/manifest.json'), /^application\/manifest\+json/);
+    assert.match(mimeFor('menu.json'), /^application\/json/);
   });
 });

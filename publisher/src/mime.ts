@@ -40,6 +40,7 @@ export function extOf(path: string): string {
 
 /** Content-Type for a file path; `fallback` (e.g. the mime of a data: URL) is used for unknown extensions. */
 export function mimeFor(path: string, fallback?: string): string {
+  if (/(^|\/)manifest\.json$/i.test(path)) return TYPES.webmanifest; // the PWA manifest every v2 site ships
   return TYPES[extOf(path)] || fallback || 'application/octet-stream';
 }
 

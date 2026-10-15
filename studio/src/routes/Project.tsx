@@ -1,18 +1,86 @@
-import { getProject } from '../api/data.ts';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
 import { Splash } from '../components/Splash.tsx';
+import { StagePanel } from '../components/StagePanel.tsx';
+import { StageStepper } from '../components/StageStepper.tsx';
 import { LEGACY } from '../lib/config.ts';
-import { useAsync } from '../lib/use-async.ts';
+import { buildSteps, jobFailedRecently, jobIsLive, type Step } from '../lib/stage-view.ts';
+import { STAGE_LABELS, describeBlocker, type ArtifactKind, type Stage } from '../lib/stages.ts';
 
-/** The business-creator journey, in order. Stage screens arrive with the stage engine; this page is their frame. */
-const STAGES = ['Plan', 'Example', 'Full build', 'Tweaks', 'Launch', 'Business'] as const;
+const POLL_MS = 4000;
+
+type Load = { status: 'loading' } | { status: 'error'; error: string } | { status: 'ready'; state: StageState | null };
 
 export function Project({ id }: { id: string }) {
-  const project = useAsync(() => getProject(id), [id]);
-  if (project.status === 'loading') return <Splash />;
-  if (project.status === 'error') {
-    return <main class="page"><div class="error" role="alert">Couldn't load this project: {project.error}</div></main>;
+  const [load, setLoad] = useState<Load>({ status: 'loading' });
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const alive = useRef(true);
+
+  /** Re-read everything WITHOUT going back to the loading screen (an action shouldn't flash the page). */
+  const refresh = useCallback(async () => {
+    try {
+      const state = await getStageState(id);
+      if (alive.current) setLoad({ status: 'ready', state });
+    } catch (e) {
+      if (alive.current) setLoad({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    alive.current = true;
+    setLoad({ status: 'loading' });
+    setNotice(null);
+    void refresh();
+    return () => {
+      alive.current = false;
+    };
+  }, [refresh]);
+
+  // A stage run is going (started before a refresh, or in another tab): poll the job until it ends, then reload what it saved.
+  const state = load.status === 'ready' ? load.state : null;
+  const runningJobId = state && jobIsLive(state.job) ? state.job?.id : undefined;
+  useEffect(() => {
+    if (!runningJobId) return;
+    const timer = setInterval(() => {
+      getLatestStageJob(id).then((job) => {
+        if (!jobIsLive(job) || job?.id !== runningJobId) void refresh();
+      }, () => {});
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  }, [runningJobId, id, refresh]);
+
+  const act = useCallback(async (work: () => Promise<string | null>) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      setNotice(await work());
+    } catch (e) {
+      setNotice(e instanceof StageError || e instanceof Error ? e.message : String(e));
+    }
+    await refresh();
+    if (alive.current) setBusy(false);
+  }, [refresh]);
+
+  const move = (stage: Stage) =>
+    act(async () => {
+      const r = await moveToStage(id, stage);
+      return r.ok ? null : `${STAGE_LABELS[stage]}: ${r.blockedBy.map(describeBlocker).join('. ')}.`;
+    });
+  const keep = (kind: ArtifactKind) => act(async () => (await keepArtifact(id, kind), null));
+  const stop = (jobId: string) => act(async () => (await cancelStageRun(jobId), null));
+
+  const pick = (step: Step) => {
+    if (busy || step.state === 'current') return;
+    if (step.state === 'blocked') setNotice(`${step.label}: ${step.blockedBy.map(describeBlocker).join('. ')}.`);
+    else void move(step.stage);
+  };
+
+  if (load.status === 'loading') return <Splash />;
+  if (load.status === 'error') {
+    return <main class="page"><div class="error" role="alert">Couldn't load this project: {load.error}</div></main>;
   }
-  if (!project.data) {
+  if (!state) {
     return (
       <main class="page">
         <div class="crumbs"><a href="#/">Projects</a></div>
@@ -21,26 +89,37 @@ export function Project({ id }: { id: string }) {
       </main>
     );
   }
-  const p = project.data;
+
+  const { project, artifacts, job } = state;
+  const steps = buildSteps(project.stage, artifacts, project.published);
   return (
     <main class="page">
-      <div class="crumbs"><a href="#/">Projects</a> / {p.name || 'Untitled'}</div>
+      <div class="crumbs"><a href="#/">Projects</a> / {project.name || 'Untitled'}</div>
       <div class="page-head">
-        <h1>{p.emoji || '💻'} {p.name || 'Untitled'}</h1>
-        <a class="btn" href={LEGACY.editor(p.id)}>Open in editor</a>
+        <h1>{project.emoji || '💻'} {project.name || 'Untitled'}</h1>
+        <a class="btn" href={LEGACY.editor(project.id)}>Open in editor</a>
       </div>
       <div class="stack">
-        <ol class="stages" aria-label="Stages" style="list-style:none">
-          {STAGES.map((label, i) => (
-            <li key={label} class={'stage' + (i === 0 ? ' active' : '')} aria-current={i === 0 ? 'step' : undefined}>
-              <span class="n">{i + 1}</span>{label}
-            </li>
-          ))}
-        </ol>
-        <div class="card">
-          <h2>The guided builder is coming to this page</h2>
-          <p class="sub" style="margin-top:8px">Until then, keep building in the editor — everything you make there carries over.</p>
-        </div>
+        {runningJobId && job && (
+          <div class="notice" role="status" data-testid="job-running">
+            <span class="spinner inline" aria-hidden="true" /> Still working on your {STAGE_LABELS[job.stage].toLowerCase()} step — you can leave this page, it will be here when you come back.
+            <button type="button" class="btn small ghost" disabled={busy} data-testid="job-stop" onClick={() => void stop(job.id)}>Stop</button>
+          </div>
+        )}
+        {!runningJobId && jobFailedRecently(job) && (
+          <div class="error" role="status" data-testid="job-failed">The last {STAGE_LABELS[job!.stage].toLowerCase()} run didn't finish: {job!.error}</div>
+        )}
+        {notice && <div class="error" role="alert" data-testid="stage-notice">{notice}</div>}
+        <StageStepper steps={steps} busy={busy} onPick={pick} />
+        <StagePanel
+          projectId={project.id}
+          stage={project.stage}
+          artifacts={artifacts}
+          published={project.published}
+          busy={busy}
+          onKeep={(k) => void keep(k)}
+          onMove={(s) => void move(s)}
+        />
       </div>
     </main>
   );

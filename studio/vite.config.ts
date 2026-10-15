@@ -45,6 +45,7 @@ function legacyStatic(): Plugin {
 export default defineConfig({
   base: BASE,
   plugins: [preact(), legacyStatic()],
-  server: { port: 5173, open: false },
+  // The studio shares pure modules with the edge functions (supabase/functions/_shared); let the dev server read outside studio/.
+  server: { port: 5173, open: false, fs: { allow: [REPO_ROOT] } },
   build: { outDir: 'dist', sourcemap: false, target: 'es2022' },
 });

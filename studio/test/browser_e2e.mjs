@@ -133,6 +133,89 @@ try {
   check('"Open in editor" links to the legacy editor', (await chrome.eval(`[...document.querySelectorAll('a')].find(a => a.textContent.includes('Open in editor'))?.getAttribute('href')`)) === `/editor.html?project=${PID}`);
   await chrome.screenshot(`${OUT}/project.png`);
 
+
+  // ── 3b. the stage engine in the real UI (Step 7) ──────────────────────────────────────────────────────
+  const rpcSvc = (name, body) => jfetch(`${SB}/rest/v1/rpc/${name}`, { method: 'POST', headers: { ...svc, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const dbStage = async () => (await jfetch(`${SB}/rest/v1/projects?id=eq.${PID}&select=stage`, { headers: svc })).json?.[0]?.stage;
+  const stepState = (stage) => chrome.eval(`document.querySelector('.stage[data-stage=${stage}]')?.dataset.state`);
+  const reloadProject = async () => { await chrome.eval(`location.reload(); true`); await chrome.waitFor(`!!document.querySelector('[data-testid=stage-panel]')`, 15000); };
+  const click = (sel) => chrome.eval(`document.querySelector(${JSON.stringify(sel)}).click(); true`);
+  const text = (sel) => chrome.eval(`document.querySelector(${JSON.stringify(sel)})?.textContent ?? null`);
+  const PLAN = { schema: 1, name: PROJECT_NAME, kind: 'site', one_liner: 'x', audience: 'y', offer: 'z', pricing: { model: 'none', items: [] }, pages: [{ file: 'index.html', title: 'Home', purpose: 'p' }], backend: { collections: [], products: [], forms: [], auth: false }, launch_checklist: [], scenario: null };
+  const STYLE = { schema: 1, locked: true, vibe: { theme: 'light', density: 'comfortable', tone: 'warm' }, tokens: { '--accent': '#7c3aed' }, fonts: { display: 'Fraunces', body: 'Inter' } };
+  const put = (kind, data) => rpcSvc('put_project_artifact', { p_project: PID, p_kind: kind, p_data: data });
+
+  await chrome.waitFor(`!!document.querySelector('[data-testid=stage-panel]')`, 10000);
+  check('new project starts at PLAN: panel shows Plan, stepper marks it current', (await chrome.eval(`document.querySelector('[data-testid=stage-panel]').dataset.stage`)) === 'plan' && (await stepState('plan')) === 'current');
+  check('every later stage is blocked (nothing saved yet)', (await Promise.all(['example', 'build', 'tweaks', 'launch', 'business'].map(stepState))).every((x) => x === 'blocked'));
+  check('"Continue" is disabled and says why', (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-why]')).includes('Needs your plan first'), await text('[data-testid=stage-why]'));
+  await click('.stage[data-stage=build]');
+  check('clicking a blocked stage explains what is missing and does not move', await chrome.waitFor(`document.querySelector('[data-testid=stage-notice]')?.textContent.includes('Needs your plan first')`, 3000) && (await dbStage()) === 'plan', await text('[data-testid=stage-notice]'));
+  await chrome.screenshot(`${OUT}/stage-plan-empty.png`);
+
+  await put('plan', PLAN);
+  await reloadProject();
+  check('after a plan is saved, EXAMPLE opens (state "open")', (await stepState('example')) === 'open', await stepState('example'));
+  check('the plan card shows "Up to date · v1"', (await text('.artifact[data-kind=plan]')).includes('Up to date · v1'), await text('.artifact[data-kind=plan]'));
+  await click('[data-testid=stage-continue]');
+  check('Continue moves to EXAMPLE (UI + database agree)', await chrome.waitFor(`document.querySelector('.stage[data-stage=example]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'example', await dbStage());
+  check('earlier stage is marked "past"', (await stepState('plan')) === 'past');
+  check('EXAMPLE panel lists the plan (from an earlier step) and the style (not made yet)', (await text('.artifact[data-kind=style_spec]')).includes('Not made yet') && (await text('.artifact[data-kind=plan]')).includes('from an earlier step'));
+  check('Continue is blocked on the style', (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-why]')).includes('Needs your style first'), await text('[data-testid=stage-why]'));
+  await chrome.screenshot(`${OUT}/stage-example.png`);
+
+  await put('style_spec', { ...STYLE, locked: false });
+  await reloadProject();
+  check('an UNLOCKED style still blocks the full build ("Lock your style first")', (await text('[data-testid=stage-why]')).includes('Lock your style first'), await text('[data-testid=stage-why]'));
+  await put('style_spec', STYLE);
+  await put('manifest', { schema: 1, built_at: '2026-10-14T10:00:00Z', pages: [{ file: 'index.html', title: 'Home' }], shared_files: ['styles.css'], backend: { collections: [], products: [], forms: [], auth: false } });
+  await put('launch_checks', { schema: 1, checked_at: '2026-10-14T10:05:00Z', manifest_version: 1, ok: true, open_items: [], checks: [] });
+  await reloadProject();
+  check('with a locked style, manifest and verifier result, LAUNCH opens straight from EXAMPLE', (await stepState('launch')) === 'open', await stepState('launch'));
+  await click('.stage[data-stage=launch]');
+  check('clicking an open stage moves there', await chrome.waitFor(`document.querySelector('.stage[data-stage=launch]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'launch', await dbStage());
+  await click('[data-testid=stage-back]');
+  check('Back goes to TWEAKS', await chrome.waitFor(`document.querySelector('.stage[data-stage=tweaks]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'tweaks', await dbStage());
+  check('BUSINESS stays blocked until something is published', (await stepState('business')) === 'blocked');
+  await chrome.screenshot(`${OUT}/stage-tweaks.png`);
+
+  // editing the plan makes everything built from it stale — flagged in the stepper, the cards, and the way forward
+  await put('plan', { ...PLAN, name: PROJECT_NAME + ' (edited)' });
+  await reloadProject();
+  check('after a plan edit the stepper flags the stages whose result is out of date', (await chrome.eval(`[...document.querySelectorAll('.stage.attention')].map(e => e.dataset.stage).sort().join()`)) === 'build,example,tweaks', await chrome.eval(`[...document.querySelectorAll('.stage.attention')].map(e => e.dataset.stage).join()`));
+  check('the TWEAKS panel shows the built site as "Out of date" with a "Keep as is" button', (await text('.artifact[data-kind=manifest]')).includes('Out of date') && (await text('.artifact[data-kind=manifest]')).includes('Keep as is'), await text('.artifact[data-kind=manifest]'));
+  check('LAUNCH is blocked again ("out of date")', (await stepState('launch')) === 'blocked' && (await text('[data-testid=stage-why]')).includes('out of date'), await text('[data-testid=stage-why]'));
+  check('the current stage was NOT yanked away from the user', (await dbStage()) === 'tweaks');
+  await chrome.screenshot(`${OUT}/stage-stale.png`);
+  await chrome.eval(`document.querySelector('.artifact[data-kind=style_spec] button').click(); true`);
+  check('"Keep as is" on the style clears its flag in the UI and the database', await chrome.waitFor(`!document.querySelector('.artifact[data-kind=style_spec]')?.textContent.includes('Out of date')`, 8000)
+    && (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.style_spec&select=stale`, { headers: svc })).json?.[0]?.stale === false);
+
+  // a stage run in progress (started before this page load) — shown, stoppable; a dead one is not shown as live
+  const nowIso = () => new Date().toISOString();
+  let jr = await jfetch(`${SB}/rest/v1/build_jobs`, { method: 'POST', headers: { ...svc, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ project_id: PID, user_id: uid, status: 'running', prompt: 'e2e run', stage: 'plan', artifact_kind: 'plan', heartbeat_at: nowIso() }) });
+  const liveJobId = jr.json?.[0]?.id;
+  await reloadProject();
+  check('a running stage job (fresh heartbeat) shows "Still working…" with a Stop button', await chrome.waitFor(`!!document.querySelector('[data-testid=job-running]') && !!document.querySelector('[data-testid=job-stop]')`, 8000), `insert ${jr.status} ${jr.text.slice(0, 160)} | page: ${(await chrome.eval(`document.querySelector('main')?.innerText.slice(0, 200)`))}`);
+  await chrome.screenshot(`${OUT}/stage-running.png`);
+  await click('[data-testid=job-stop]');
+  check('Stop calls ai-chat; the job is closed as "Stopped" and the banner goes away', await chrome.waitFor(`!document.querySelector('[data-testid=job-running]')`, 10000)
+    && (await jfetch(`${SB}/rest/v1/build_jobs?id=eq.${liveJobId}&select=status,error`, { headers: svc })).json?.[0]?.error === 'Stopped');
+  check('…and the failed run is mentioned once', await chrome.waitFor(`document.querySelector('[data-testid=job-failed]')?.textContent.includes('Stopped')`, 8000), await text('[data-testid=job-failed]'));
+  await jfetch(`${SB}/rest/v1/build_jobs?id=eq.${liveJobId}`, { method: 'DELETE', headers: svc });
+  await jfetch(`${SB}/rest/v1/build_jobs`, { method: 'POST', headers: { ...svc, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: PID, user_id: uid, status: 'running', prompt: 'dead run', stage: 'plan', artifact_kind: 'plan', created_at: new Date(Date.now() - 600000).toISOString(), heartbeat_at: new Date(Date.now() - 120000).toISOString() }) });
+  await reloadProject();
+  check('a "running" job whose Worker went silent (no heartbeat for 2 min) is NOT shown as live', !(await chrome.eval(`!!document.querySelector('[data-testid=job-running]')`)));
+  await jfetch(`${SB}/rest/v1/build_jobs?project_id=eq.${PID}`, { method: 'DELETE', headers: svc });
+
+  // a stranger's view of the same URL
+  await chrome.viewport(390, 800, true);
+  await reloadProject();
+  const pm = await chrome.eval(`(() => ({ sw: document.documentElement.scrollWidth, wide: [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 390.5).map((e) => e.tagName + '.' + e.className).slice(0, 5) }))()`);
+  check('project page has no horizontal overflow at 390px', pm.sw <= 390 && pm.wide.length === 0, JSON.stringify(pm));
+  await chrome.screenshot(`${OUT}/stage-mobile.png`);
+  await chrome.viewport(1280, 800);
+
   await chrome.eval(`location.hash = '#/p/does-not-exist'; true`);
   check('unknown project id → "Project not found"', await chrome.waitFor(`document.body.textContent.includes('Project not found')`, 8000));
   await chrome.eval(`location.hash = '#/nope/nope'; true`);

@@ -7,7 +7,7 @@
   --a1: #18181b; --a2: #6b6b76;
   --accent: #7c3aed; --accent-h: #6d28d9; --accent-soft: rgba(124, 58, 237, .10);
   --text: #191922; --sub: #6a6a76;
-  --ok: #16a34a; --err: #dc2626;
+  --ok: #16a34a; --err: #dc2626; --warn: #b45309; --warn-soft: rgba(217, 119, 6, .12);
   --r-sm: 10px; --r: 16px; --r-lg: 22px; --r-full: 999px;
   --shadow: 0 14px 34px rgba(30, 27, 60, .10); --shadow-sm: 0 4px 16px rgba(30, 27, 60, .06);
   --sans: 'Plus Jakarta Sans', sans-serif;

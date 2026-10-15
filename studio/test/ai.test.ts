@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  applyBuildEvent, collectBuild, decodeBase64Utf8, emptyBuildResult, streamBuild, toBuildEvent,
-  type BuildEvent, type BuildRequest,
+  applyBuildEvent, collectBuild, decodeBase64Utf8, emptyBuildResult, streamBuild, streamStage, toBuildEvent,
+  type BuildEvent, type BuildRequest, type StageRunRequest,
 } from '../src/api/ai.ts';
 import { ApiError, authedFetch, errorMessage, postJson, type AuthDeps } from '../src/api/http.ts';
 
@@ -168,4 +168,43 @@ test('errorMessage understands the shapes the backends use', () => {
   assert.equal(errorMessage('<html>' + 'x'.repeat(400) + '</html>', 'fallback'), 'fallback');
   assert.equal(errorMessage('', 'fallback'), 'fallback');
   assert.equal(errorMessage('{}', 'fallback'), 'fallback');
+});
+
+// ── stage runs (guided flow) ──────────────────────────────────────────────────────────────────────────────
+const STAGE_REQUEST: StageRunRequest = { stage: 'plan', project_id: 'proj_1', messages: [{ role: 'user', content: 'candles' }], stream: true };
+const STAGE_RUN =
+  sse('stage_job', { job_id: 'job-1', stage: 'plan' }) +
+  sse('start', {}) +
+  sse('delta', { text: 'Here is a plan. ' }) +
+  sse('message', { message: 'Here is a plan.' }) +
+  sse('done', { count: 0 }) +
+  sse('stage_done', { ok: true, artifact: { kind: 'plan', version: 3, staled: ['style_spec', 7] } });
+
+test('toBuildEvent understands stage_job and stage_done (incl. a failed run and junk artifacts)', () => {
+  assert.deepEqual(toBuildEvent({ event: 'stage_job', data: '{"job_id":"j","stage":"plan"}' }), { type: 'stage_job', job_id: 'j', stage: 'plan' });
+  assert.deepEqual(toBuildEvent({ event: 'stage_done', data: JSON.stringify({ ok: true, artifact: { kind: 'plan', version: 2, staled: ['manifest', 5] } }) }), { type: 'stage_done', ok: true, artifact: { kind: 'plan', version: 2, staled: ['manifest'] } });
+  assert.deepEqual(toBuildEvent({ event: 'stage_done', data: JSON.stringify({ ok: false, artifact: null, error: 'Stopped' }) }), { type: 'stage_done', ok: false, artifact: null, error: 'Stopped' });
+  assert.deepEqual(toBuildEvent({ event: 'stage_done', data: JSON.stringify({ ok: true, artifact: { kind: 'plan' } }) }), { type: 'stage_done', ok: true, artifact: null });
+  assert.deepEqual(toBuildEvent({ event: 'stage_done', data: '{}' }), { type: 'stage_done', ok: false, artifact: null });
+});
+
+test('streamStage posts the stage request to the build Worker and folds the run into a result (any chunking)', async () => {
+  const seen: Request[] = [];
+  const r = await collectBuild(streamStage(STAGE_REQUEST, deps(fakeFetch(STAGE_RUN, { size: 5, seen }), 'user-token')));
+  assert.equal(seen[0]!.url, 'https://vexium-ai-build.startafter.workers.dev/');
+  assert.equal(seen[0]!.headers.get('authorization'), 'Bearer user-token');
+  assert.deepEqual(await seen[0]!.json(), STAGE_REQUEST);
+  assert.equal(r.jobId, 'job-1');
+  assert.equal(r.message, 'Here is a plan.');
+  assert.equal(r.completed, true);
+  assert.deepEqual(r.stageDone, { ok: true, artifact: { kind: 'plan', version: 3, staled: ['style_spec'] } });
+  assert.deepEqual(r.files, {});
+});
+
+test('stage_done is the last event of a run; a refused run (409) throws ApiError carrying the plain-English reason', async () => {
+  const events = await all(streamStage(STAGE_REQUEST, deps(fakeFetch(STAGE_RUN))));
+  assert.equal(events.at(-1)?.type, 'stage_done');
+  assert.equal(events[0]?.type, 'stage_job');
+  const refused = fakeFetch(JSON.stringify({ error: 'Needs your plan first.', code: 'stage_inputs', blocked_by: [{ kind: 'plan', reason: 'missing' }] }), { status: 409 });
+  await assert.rejects(all(streamStage({ ...STAGE_REQUEST, stage: 'example' }, deps(refused))), (e: unknown) => e instanceof ApiError && e.status === 409 && e.message === 'Needs your plan first.');
 });

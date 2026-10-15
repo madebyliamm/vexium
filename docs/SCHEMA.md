@@ -1,4 +1,4 @@
-# Database overview (snapshot 2026-10-12)
+# Database overview (snapshot 2026-10-12; Step 7 additions 2026-10-14)
 
 Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not a migration — regenerate with `python3 scripts/export-schema.py`). All tables have RLS ON. Row counts are approximate and tiny: the DB is effectively pre-launch (5 profiles, 9 projects).
 
@@ -6,13 +6,14 @@ Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not
 |---|---|---|
 | profiles | 5 | one per account, PUBLIC data only: username, display name, bio, avatar/banner, follower counts, prefs. `email` is private (column-revoked); `public_email` mirrors it only while `show_email` is on |
 | account_billing | 5 | **private** per-account billing/usage state: plan, trial_ends_at, credits, extra credits, billing period, Stripe customer/subscription/Connect ids. Own-row SELECT only; every write is service-role (webhook, ai-chat usage, `handle_new_user`) |
-| projects | 9 | a user's site: `files` jsonb (working copy), `published_files` jsonb + `published_slug`/`published_at` (live copy), `main_file`, `custom_domain*`, `ai_context`, AI edit lock (`ai_lock_*`), legacy per-project Stripe Connect cols. `id` is TEXT (`proj_<ts>_<rand>`) |
+| projects | 9 | a user's site (Step 7: `stage` = where the user is in plan→example→build→tweaks→launch→business; changed only via `set_project_stage()`): `files` jsonb (working copy), `published_files` jsonb + `published_slug`/`published_at` (live copy), `main_file`, `custom_domain*`, `ai_context`, AI edit lock (`ai_lock_*`), legacy per-project Stripe Connect cols. `id` is TEXT (`proj_<ts>_<rand>`) |
 | project_members | 0 | collaborators (role, status) |
 | project_deploys | – | **(Hosting v2, migration `20261012131000`)** one row per publish: `version` (unique per project), `status` (`uploading`/`ready`/`failed`), `main_file`, `file_count`, `total_bytes`, and the parsed `_backend` (never served; read by `stripe-site-checkout`, later `site-api`). The files themselves are in R2 at `p/<project_id>/v<version>/…`. Clients may only SELECT (owner / accepted collaborator); all writes are the publisher Worker (service role) |
 | project_backups | 2 | named restore slots (`files` jsonb) |
 | ai_messages | 213 | chat history per project (+ sender name for collab) |
 | plan_messages | 0 | **unused** (looks like an earlier planning-chat attempt) |
-| build_jobs | 118 | persisted AI build requests so a refresh can resume |
+| build_jobs | 118 | persisted AI build requests so a refresh can resume. **Step 7** adds the stage-run columns `stage`, `artifact_kind`, `finished_at`, `error`, `heartbeat_at` (platform-only: clients may INSERT only `project_id,user_id,status,prompt` and UPDATE only `status`, which is all the old editor does) and `status` ∈ running/complete/failed |
+| project_artifacts | – | **Step 7.** Versioned stage artifacts `(project_id, kind, version, data jsonb, stale, created_by)`; kinds plan / style_spec / manifest / launch_checks / business_state. Clients SELECT only (owner / accepted collaborator); every write is `put_project_artifact()` / `keep_project_artifact()`. View `project_artifacts_latest` = newest per kind. See `docs/STAGES.md` |
 | site_data | 1 | generated sites' data: rows of `(project_id, collection, data jsonb, site_user_id)` — forms, orders, `transactions` (Stripe sales) |
 | site_users | 0 | end-customers of generated sites (lower-cased email + `pbkdf2$sha256$<iters>$<salt>$<hash>` + metadata ≤ 4 KB); `password_hash` is hidden from clients |
 | site_sessions | 0 | **Step 4.** Site-user login sessions: `token_hash` (sha256 of an opaque `vxs_…` token), project, user, `expires_at` (30 days). Service role only (RLS on, no policies); cascades with the site user / project |

@@ -3,6 +3,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildComponentLibraryPrompt, categoriesForBuild } from "./components.ts";
+import { beginStage, cancelStageRun, finishStageRun, isHttpError, type JobRow, type StageDeps } from "./stage-handler.ts";
+import type { ArtifactKind, LatestArtifacts } from "../_shared/stages.ts";
 
 const ANTHROPIC_API_KEY  = Deno.env.get("ANTHROPIC_API_KEY")!;
 const SUPABASE_URL        = Deno.env.get("SUPABASE_URL")!;
@@ -1872,6 +1874,140 @@ async function generateSuggestions(
   return [];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STAGE MODE — the studio's guided flow (REVAMP Step 7). Logic: stage-handler.ts + stages.ts (unit-tested); this is only the wiring.
+//   { stage, project_id, messages, prepare:true }  → access/input/credit checks, a build_jobs row, and the payload for the build Worker
+//   { stage_done:{ job_id, ok, message, error } }  → the Worker reporting a finished run: parse, validate, save the artifact, close the job
+// Additive: it never touches the legacy build/onboarding paths below.
+// ─────────────────────────────────────────────────────────────────────────────
+const CREDIT_LIMITS_CENTS: Record<string, number> = { trial: 300, starter: 1500, pro: 4000, max: 12000 };
+
+// Same rule as the live usage gate in BUILD MODE (fails open if the lookup itself fails — usage is billed by the Worker regardless).
+async function usageGateMessage(userId: string): Promise<string | null> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/account_billing?user_id=eq.${encodeURIComponent(userId)}&select=plan,credits_used_cents,trial_ends_at,extra_credits_cents`,
+      { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } },
+    );
+    if (!res.ok) return null;
+    const p = (await res.json())?.[0];
+    if (!p) return null;
+    const limit = (CREDIT_LIMITS_CENTS[p.plan as string] || 1500) + ((p.extra_credits_cents as number) || 0);
+    const used = (p.credits_used_cents as number) || 0;
+    const trialExpired = p.plan === "trial" && p.trial_ends_at && new Date(p.trial_ends_at as string) < new Date();
+    if (trialExpired) return "Your free trial has ended. Upgrade to keep building.";
+    if (used >= limit) return "You've used all your AI credits for this month. Upgrade your plan to continue.";
+  } catch { /* non-blocking */ }
+  return null;
+}
+
+// Constant-time comparison of the build Worker's shared secret (the service key it already holds) with ours.
+function sameSecret(given: string | null, expected: string): boolean {
+  if (!given || !expected || given.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= given.charCodeAt(i) ^ expected.charCodeAt(i);
+  return diff === 0;
+}
+
+function stageDeps(): StageDeps {
+  const rest = `${SUPABASE_URL}/rest/v1`;
+  const read = { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` };
+  const write = { ...read, "Content-Type": "application/json" };
+  const enc = encodeURIComponent;
+  const rows = async (path: string): Promise<Record<string, unknown>[]> => {
+    const r = await fetch(`${rest}/${path}`, { headers: read });
+    if (!r.ok) throw new Error(`${path.split("?")[0]} ${r.status}`);
+    return await r.json();
+  };
+  return {
+    async getProjectAccess(projectId, userId) {
+      const p = (await rows(`projects?id=eq.${enc(projectId)}&select=id,name,user_id,stage&limit=1`))[0];
+      if (!p) return null;
+      if (p.user_id !== userId) {
+        const m = (await rows(`project_members?project_id=eq.${enc(projectId)}&user_id=eq.${enc(userId)}&status=eq.accepted&select=id&limit=1`))[0];
+        if (!m) return null;
+      }
+      return { name: String(p.name ?? ""), stage: String(p.stage ?? "plan") };
+    },
+    async getLatestArtifacts(projectId) {
+      const out: LatestArtifacts = {};
+      for (const r of await rows(`project_artifacts_latest?project_id=eq.${enc(projectId)}&select=kind,version,stale,data`)) {
+        out[r.kind as ArtifactKind] = { version: r.version as number, stale: r.stale === true, data: (r.data ?? {}) as Record<string, unknown> };
+      }
+      return out;
+    },
+    usageGate: usageGateMessage,
+    async createJob(job) {
+      // One live stage run per project: anything still 'running' is superseded.
+      await fetch(`${rest}/build_jobs?project_id=eq.${enc(job.project_id)}&stage=not.is.null&status=eq.running`, {
+        method: "PATCH", headers: { ...write, Prefer: "return=minimal" },
+        body: JSON.stringify({ status: "failed", error: "Superseded by a newer run", finished_at: new Date().toISOString() }),
+      });
+      const r = await fetch(`${rest}/build_jobs`, {
+        method: "POST", headers: { ...write, Prefer: "return=representation" },
+        body: JSON.stringify({ ...job, status: "running" }),
+      });
+      if (!r.ok) throw new Error(`build_jobs insert ${r.status}`);
+      return (await r.json())[0].id as string;
+    },
+    async getJob(jobId) {
+      return ((await rows(`build_jobs?id=eq.${enc(jobId)}&select=id,project_id,user_id,stage,status&limit=1`))[0] as unknown as JobRow | undefined) ?? null;
+    },
+    async finishJob(jobId, patch) {
+      await fetch(`${rest}/build_jobs?id=eq.${enc(jobId)}&status=eq.running`, {
+        method: "PATCH", headers: { ...write, Prefer: "return=minimal" },
+        body: JSON.stringify({ ...patch, finished_at: new Date().toISOString() }),
+      });
+    },
+    async saveArtifact(projectId, kind, data) {
+      const r = await fetch(`${rest}/rpc/put_project_artifact`, {
+        method: "POST", headers: write, body: JSON.stringify({ p_project: projectId, p_kind: kind, p_data: data }),
+      });
+      if (!r.ok) throw new Error(`put_project_artifact ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+      const out = await r.json();
+      return { version: out.version as number, staled: (out.staled ?? []) as string[] };
+    },
+  };
+}
+
+async function handleStageMode(
+  body: { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; project_id?: string; messages?: unknown },
+  userId: string,
+  prepareMode: boolean,
+  workerKey: string | null,
+): Promise<Response> {
+  const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+  const deps = stageDeps();
+  try {
+    if (body.stage_done !== undefined) {
+      const r = await finishStageRun(body.stage_done ?? {}, userId, deps, sameSecret(workerKey, SUPABASE_SERVICE_KEY));
+      return json(r.body, r.status);
+    }
+    if (body.stage_cancel !== undefined) {
+      const r = await cancelStageRun(body.stage_cancel ?? {}, userId, deps);
+      return json(r.body, r.status);
+    }
+    // Stage runs execute in the build Worker (no wall-clock limit); this function only prepares them.
+    if (!prepareMode) return json({ error: "Stage runs go through the build Worker.", code: "use_worker" }, 400);
+    const run = await beginStage(body, userId, deps);
+    if (isHttpError(run)) return json(run.body, run.status);
+    const model = run.prompt.model === "fast" ? MODEL_FAST : MODEL_BUILD;
+    return json({
+      kind: "run",
+      payload: buildAnthropicPayload(model, run.prompt.system, run.messages, run.prompt.maxTokens, true, run.prompt.suffix),
+      files_for_patching: {},
+      user_id: userId,
+      category: "",
+      job: { id: run.jobId, stage: run.stage },
+      want_suggestions: false,
+    });
+  } catch (e) {
+    console.error("[ai-chat] stage mode failed", e);
+    return json({ error: "Something went wrong starting this step. Please try again.", code: "stage_failed" }, 500);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS });
@@ -1910,6 +2046,9 @@ serve(async (req) => {
     marketing_guide?: boolean;
     marketing_answers?: string;
     marketing_chat?: boolean;
+    stage?: unknown;                         // studio stage run (REVAMP Step 7) — see stage-handler.ts
+    stage_done?: Record<string, unknown>;    // build Worker → us: a stage run finished (reply to parse + save)
+    stage_cancel?: Record<string, unknown>;  // the studio's Stop button: close a running stage job
   };
   try { body = await req.json(); }
   catch {
@@ -1922,6 +2061,11 @@ serve(async (req) => {
   // prompt logic) but NOT call it — so the Worker can run it with no wall-clock timeout. The two
   // streaming sites below (onboarding gate + main build) return the payload as JSON when set.
   const prepareMode = body.prepare === true;
+
+  // ── STAGE MODE (the studio's guided flow; the old editor never sends these fields) ──
+  if (body.stage !== undefined || body.stage_done !== undefined || body.stage_cancel !== undefined) {
+    return await handleStageMode(body as { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; project_id?: string; messages?: unknown }, userId, prepareMode, req.headers.get("x-vx-worker-key"));
+  }
 
   // ── SUGGEST MODE (build Worker → us, after a build, to fetch follow-up suggestions) ──
   if (body.suggest) {
@@ -2436,7 +2580,7 @@ Talk like a real person. Ask what you actually need, nothing more. If you realiz
         const rows = await usageRes.json();
         const p = rows?.[0];
         if (p) {
-          const LIMITS: Record<string, number> = { trial: 300, starter: 1500, pro: 4000, max: 12000 };
+          const LIMITS = CREDIT_LIMITS_CENTS;
           const basLimit = LIMITS[p.plan as string] || 1500;
           const extra   = (p.extra_credits_cents as number) || 0;
           const limit   = basLimit + extra;

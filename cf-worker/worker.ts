@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { streamBuild, tokensToCents } from "./core.ts";
+import { judgeRun, reportStageDone, touchJob } from "./stage-report.ts";
 
 interface Env {
   ANTHROPIC_API_KEY: string;
@@ -102,6 +103,8 @@ export default {
     const filesForPatching = prep.files_for_patching || {};
     const userId: string = prep.user_id || "";
     const model: string = payload.model || "";
+    // Studio stage run (REVAMP Step 7): ai-chat created a build_jobs row; after streaming we report the outcome so it can save the artifact.
+    const job: { id: string; stage: string } | undefined = prep.job && typeof prep.job.id === "string" ? prep.job : undefined;
 
     // 2. Stream Anthropic → client (Vexium SSE events), tracking usage incrementally.
     const { readable, writable } = new TransformStream();
@@ -115,10 +118,31 @@ export default {
     const usageAcc: UsageAcc = { in: 0, out: 0, cacheWrite: 0, cacheRead: 0 };
     const flushUsage = makeUsageFlusher(env, userId, model, usageAcc);
 
+    // Stage runs outlive the browser: a refresh/disconnect must NOT cancel generation (that is what makes them resumable — the result
+    // is saved server-side), so they are aborted only when their job row is closed (explicit Stop, or a newer run). The legacy
+    // build path keeps its Stop-on-disconnect behaviour. NB ctx.waitUntil only extends a disconnected request by 30 s (Cloudflare
+    // limit), so this carries short runs (PLAN); the long stages need a Queue/Durable Object (see docs/STAGES.md).
+    const runAbort = new AbortController();
+    const runSignal: AbortSignal = job ? runAbort.signal : req.signal;
+    let pulsing = false;
+    const pulse = async (): Promise<void> => {
+      if (!job || pulsing) return;
+      pulsing = true;
+      try {
+        if ((await touchJob(fetch, env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, job.id)) === "closed") runAbort.abort();
+      } finally { pulsing = false; }
+    };
+
     const task = (async () => {
-      const heartbeat = setInterval(() => { safeWrite(encoder.encode(": hb\n\n")); flushUsage(); }, 8000);
+      const heartbeat = setInterval(() => { safeWrite(encoder.encode(": hb\n\n")); flushUsage(); void pulse(); }, 8000);
+      let apiError: string | null = null;
+      let replyText = "";
       try {
         if (prep.category) await emit("build_meta", { category: prep.category });
+        if (job) {
+          await emit("stage_job", { job_id: job.id, stage: job.stage });
+          await pulse(); // first heartbeat before the (long) Anthropic call, so the studio sees a live run straight away
+        }
 
         const aRes = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -129,13 +153,15 @@ export default {
             "anthropic-beta": "prompt-caching-2024-07-31,output-128k-2025-02-19",
           },
           body: JSON.stringify(payload),
-          signal: req.signal,
+          signal: runSignal,
         });
 
         if (!aRes.ok) {
           await emit("error", { error: await aRes.text().catch(() => "Anthropic error") });
+          apiError = "The AI service had a problem. Please try again.";
         } else {
-          const result = await streamBuild(aRes, filesForPatching, emit, usageAcc, req.signal);
+          const result = await streamBuild(aRes, filesForPatching, emit, usageAcc, runSignal);
+          replyText = result.message;
 
           // Follow-up suggestions — ask the edge function (keeps that prompt + Haiku call on Supabase).
           if (prep.want_suggestions && !req.signal.aborted) {
@@ -154,9 +180,15 @@ export default {
         }
       } catch (e) {
         try { await emit("error", { error: String(e) }); } catch {}
+        apiError = apiError || "The run failed. Please try again.";
       } finally {
         clearInterval(heartbeat);
         flushUsage();
+        if (job) {
+          // Save the result server-side even if the browser is gone (refresh/close) — that is what makes stage runs resumable.
+          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.SUPABASE_SERVICE_ROLE_KEY }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText }));
+          await emit("stage_done", outcome);
+        }
         await safeClose();
       }
     })();

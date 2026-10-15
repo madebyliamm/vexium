@@ -1,5 +1,5 @@
 -- Vertly / Vexium — Supabase schema SNAPSHOT (reference only, NOT a migration)
--- Generated 2026-10-12 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
+-- Generated 2026-10-14 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
 -- Extensions: pg_stat_statements, pgcrypto, plpgsql, supabase_vault, uuid-ossp
 
 -- ── account_billing  (~5 rows, RLS ON) ──────────
@@ -85,11 +85,20 @@ CREATE TABLE public."build_jobs" (
   "status" text NOT NULL DEFAULT 'running'::text,
   "prompt" text NOT NULL DEFAULT ''::text,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "stage" text,
+  "artifact_kind" text,
+  "finished_at" timestamp with time zone,
+  "error" text,
+  "heartbeat_at" timestamp with time zone,
+  CONSTRAINT "build_jobs_artifact_kind_check" CHECK (((artifact_kind IS NULL) OR (artifact_kind = ANY (ARRAY['plan'::text, 'style_spec'::text, 'manifest'::text, 'launch_checks'::text, 'business_state'::text])))),
   CONSTRAINT "build_jobs_pkey" PRIMARY KEY (id),
   CONSTRAINT "build_jobs_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "build_jobs_stage_check" CHECK (((stage IS NULL) OR (stage = ANY (ARRAY['plan'::text, 'example'::text, 'build'::text, 'tweaks'::text, 'launch'::text, 'business'::text])))),
+  CONSTRAINT "build_jobs_status_check" CHECK ((status = ANY (ARRAY['running'::text, 'complete'::text, 'failed'::text]))),
   CONSTRAINT "build_jobs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX build_jobs_pkey ON public.build_jobs USING btree (id);
+CREATE INDEX build_jobs_project_idx ON public.build_jobs USING btree (project_id, created_at DESC);
 ALTER TABLE public."build_jobs" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users manage own build jobs" ON public."build_jobs" AS PERMISSIVE FOR ALL TO public USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
 
@@ -153,7 +162,7 @@ CREATE POLICY "notif_insert" ON public."notifications" AS PERMISSIVE FOR INSERT 
 CREATE POLICY "notif_select" ON public."notifications" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 CREATE POLICY "notif_update" ON public."notifications" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = user_id));
 
--- ── page_views  (~907 rows, RLS ON) ──────────
+-- ── page_views  (~908 rows, RLS ON) ──────────
 CREATE TABLE public."page_views" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -222,6 +231,33 @@ CREATE POLICY "profiles_public_read" ON public."profiles" AS PERMISSIVE FOR SELE
 CREATE POLICY "profiles_update_own" ON public."profiles" AS PERMISSIVE FOR UPDATE TO authenticated USING ((( SELECT auth.uid() AS uid) = id)) WITH CHECK ((( SELECT auth.uid() AS uid) = id));
 CREATE TRIGGER set_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_profiles_public_email BEFORE INSERT OR UPDATE OF email, show_email ON public.profiles FOR EACH ROW EXECUTE FUNCTION profiles_sync_public_email();
+
+-- ── project_artifacts  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."project_artifacts" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "project_id" text NOT NULL,
+  "kind" text NOT NULL,
+  "version" integer NOT NULL,
+  "data" jsonb NOT NULL,
+  "stale" boolean NOT NULL DEFAULT false,
+  "created_by" uuid,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "project_artifacts_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL,
+  CONSTRAINT "project_artifacts_data_check" CHECK (((jsonb_typeof(data) = 'object'::text) AND (octet_length((data)::text) <= 262144))),
+  CONSTRAINT "project_artifacts_kind_check" CHECK ((kind = ANY (ARRAY['plan'::text, 'style_spec'::text, 'manifest'::text, 'launch_checks'::text, 'business_state'::text]))),
+  CONSTRAINT "project_artifacts_pkey" PRIMARY KEY (id),
+  CONSTRAINT "project_artifacts_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "project_artifacts_version_check" CHECK ((version > 0)),
+  CONSTRAINT "project_artifacts_version_key" UNIQUE (project_id, kind, version)
+);
+CREATE UNIQUE INDEX project_artifacts_pkey ON public.project_artifacts USING btree (id);
+CREATE UNIQUE INDEX project_artifacts_version_key ON public.project_artifacts USING btree (project_id, kind, version);
+ALTER TABLE public."project_artifacts" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "project_artifacts_select" ON public."project_artifacts" AS PERMISSIVE FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM projects p
+  WHERE ((p.id = project_artifacts.project_id) AND ((p.user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM project_members m
+          WHERE ((m.project_id = p.id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND (m.status = 'accepted'::text)))))))));
 
 -- ── project_backups  (~2 rows, RLS ON) ──────────
 CREATE TABLE public."project_backups" (
@@ -326,7 +362,9 @@ CREATE TABLE public."projects" (
   "stripe_connect_account_id" text,
   "stripe_connect_charges_enabled" boolean DEFAULT false,
   "published_version" integer,
+  "stage" text NOT NULL DEFAULT 'plan'::text,
   CONSTRAINT "projects_pkey" PRIMARY KEY (id),
+  CONSTRAINT "projects_stage_check" CHECK ((stage = ANY (ARRAY['plan'::text, 'example'::text, 'build'::text, 'tweaks'::text, 'launch'::text, 'business'::text]))),
   CONSTRAINT "projects_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX projects_custom_domain_uidx ON public.projects USING btree (lower(custom_domain)) WHERE ((custom_domain IS NOT NULL) AND (custom_domain <> ''::text));
@@ -346,9 +384,10 @@ CREATE POLICY "projects_update_owner_or_member" ON public."projects" AS PERMISSI
   WHERE ((pm.user_id = auth.uid()) AND (pm.status = 'accepted'::text))))));
 CREATE TRIGGER projects_guard_hosting_columns BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_hosting_columns();
 CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_owner();
+CREATE TRIGGER projects_guard_stage BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_stage();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- ── rate_limits  (~81 rows, RLS ON) ──────────
+-- ── rate_limits  (~135 rows, RLS ON) ──────────
 CREATE TABLE public."rate_limits" (
   "key" text NOT NULL,
   "window_start" timestamp with time zone NOT NULL,
@@ -690,6 +729,38 @@ AS $function$
   );
 $function$;
 
+-- keep_project_artifact  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.keep_project_artifact(p_project text, p_kind text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  rules   jsonb := public.vx_stage_rules();
+  trusted boolean;
+  latest  integer;
+  cleared boolean := false;
+BEGIN
+  trusted := public.vx_stage_access(p_project);
+  IF p_kind IS NULL OR NOT ((rules -> 'kinds') ? p_kind) THEN
+    RAISE EXCEPTION 'unknown artifact kind: %', coalesce(p_kind, '(null)') USING ERRCODE = '22023';
+  END IF;
+  IF NOT trusted AND NOT ((rules -> 'client_keepable') ? p_kind) THEN
+    RAISE EXCEPTION 'artifact kind % must be regenerated by the platform', p_kind USING ERRCODE = '42501';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended('vx_artifacts:' || p_project, 0));
+
+  SELECT max(version) INTO latest FROM public.project_artifacts WHERE project_id = p_project AND kind = p_kind;
+  IF latest IS NOT NULL THEN
+    UPDATE public.project_artifacts SET stale = false
+     WHERE project_id = p_project AND kind = p_kind AND version = latest AND stale;
+    cleared := FOUND;
+  END IF;
+  RETURN jsonb_build_object('kind', p_kind, 'version', latest, 'cleared', cleared);
+END $function$;
+
 -- profiles_sync_public_email
 CREATE OR REPLACE FUNCTION public.profiles_sync_public_email()
  RETURNS trigger
@@ -733,6 +804,82 @@ BEGIN
   RETURN NEW;
 END $function$;
 
+-- projects_guard_stage
+CREATE OR REPLACE FUNCTION public.projects_guard_stage()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF current_user IN ('anon', 'authenticated') THEN
+    IF TG_OP = 'INSERT' AND NEW.stage IS DISTINCT FROM 'plan' THEN
+      RAISE EXCEPTION 'a new project starts at the plan stage' USING ERRCODE = '42501';
+    ELSIF TG_OP = 'UPDATE' AND NEW.stage IS DISTINCT FROM OLD.stage THEN
+      RAISE EXCEPTION 'the project stage is changed with set_project_stage()' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $function$;
+
+-- put_project_artifact  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.put_project_artifact(p_project text, p_kind text, p_data jsonb, p_expected_version integer DEFAULT NULL::integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  rules   jsonb := public.vx_stage_rules();
+  trusted boolean;
+  cur     integer;
+  v       integer;
+  staled  text[];
+BEGIN
+  trusted := public.vx_stage_access(p_project);
+  IF p_kind IS NULL OR NOT ((rules -> 'kinds') ? p_kind) THEN
+    RAISE EXCEPTION 'unknown artifact kind: %', coalesce(p_kind, '(null)') USING ERRCODE = '22023';
+  END IF;
+  IF NOT trusted AND NOT ((rules -> 'client_writable') ? p_kind) THEN
+    RAISE EXCEPTION 'artifact kind % is written by the platform', p_kind USING ERRCODE = '42501';
+  END IF;
+  IF p_data IS NULL OR jsonb_typeof(p_data) <> 'object' THEN
+    RAISE EXCEPTION 'artifact data must be a JSON object' USING ERRCODE = '22023';
+  END IF;
+  IF octet_length(p_data::text) > (rules ->> 'max_bytes')::integer THEN
+    RAISE EXCEPTION 'artifact is too large (max % bytes)', rules ->> 'max_bytes' USING ERRCODE = '54000';
+  END IF;
+
+  -- One writer per project at a time: version numbers and stale flags stay consistent.
+  PERFORM pg_advisory_xact_lock(hashtextextended('vx_artifacts:' || p_project, 0));
+
+  SELECT coalesce(max(version), 0) INTO cur FROM public.project_artifacts WHERE project_id = p_project AND kind = p_kind;
+  IF p_expected_version IS NOT NULL AND p_expected_version <> cur THEN
+    RAISE EXCEPTION 'version conflict: % is at version % (expected %)', p_kind, cur, p_expected_version USING ERRCODE = 'PT409';
+  END IF;
+  v := cur + 1;
+
+  INSERT INTO public.project_artifacts (project_id, kind, version, data, created_by)
+  VALUES (p_project, p_kind, v, p_data, CASE WHEN trusted THEN NULL ELSE auth.uid() END);
+
+  WITH latest AS (
+    SELECT DISTINCT ON (a.kind) a.id, a.kind, a.stale
+      FROM public.project_artifacts a
+     WHERE a.project_id = p_project
+       AND a.kind IN (SELECT jsonb_array_elements_text(rules -> 'downstream' -> p_kind))
+     ORDER BY a.kind, a.version DESC
+  ), flagged AS (
+    UPDATE public.project_artifacts a SET stale = true
+      FROM latest l WHERE a.id = l.id AND NOT l.stale
+    RETURNING a.kind
+  )
+  SELECT coalesce(array_agg(kind ORDER BY kind), '{}') INTO staled FROM flagged;
+
+  DELETE FROM public.project_artifacts
+   WHERE project_id = p_project AND kind = p_kind AND version <= v - (rules ->> 'max_versions')::integer;
+
+  RETURN jsonb_build_object('kind', p_kind, 'version', v, 'staled', to_jsonb(staled));
+END $function$;
+
 -- resolve_published_site  [SECURITY DEFINER]
 CREATE OR REPLACE FUNCTION public.resolve_published_site(p_username text DEFAULT NULL::text, p_slug text DEFAULT NULL::text, p_host text DEFAULT NULL::text)
  RETURNS TABLE(project_id text, version integer, main_file text, legacy boolean)
@@ -757,6 +904,38 @@ AS $function$
   ORDER BY p.custom_domain_verified DESC NULLS LAST
   LIMIT 1
 $function$;
+
+-- set_project_stage  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.set_project_stage(p_project text, p_stage text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  cur     text;
+  blocked jsonb := '[]'::jsonb;
+BEGIN
+  PERFORM public.vx_stage_access(p_project);
+  IF public.vx_stage_rank(p_stage) IS NULL THEN
+    RAISE EXCEPTION 'unknown stage: %', coalesce(p_stage, '(null)') USING ERRCODE = '22023';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended('vx_artifacts:' || p_project, 0));
+
+  SELECT stage INTO cur FROM public.projects WHERE id = p_project;
+  IF public.vx_stage_rank(p_stage) > public.vx_stage_rank(cur) THEN
+    blocked := public.vx_stage_blockers(p_project, p_stage);
+  END IF;
+  IF jsonb_array_length(blocked) > 0 THEN
+    RETURN jsonb_build_object('ok', false, 'stage', cur, 'blocked_by', blocked);
+  END IF;
+
+  IF cur IS DISTINCT FROM p_stage THEN
+    UPDATE public.projects SET stage = p_stage WHERE id = p_project;
+  END IF;
+  RETURN jsonb_build_object('ok', true, 'stage', p_stage, 'blocked_by', '[]'::jsonb);
+END $function$;
 
 -- set_updated_at
 CREATE OR REPLACE FUNCTION public.set_updated_at()
@@ -833,6 +1012,112 @@ BEGIN
   RETURN NEXT;
 END;
 $function$;
+
+-- vx_stage_access
+CREATE OR REPLACE FUNCTION public.vx_stage_access(p_project text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ STABLE
+AS $function$
+DECLARE
+  r   text := coalesce(auth.role(), 'postgres');
+  uid uuid := auth.uid();
+BEGIN
+  IF r IN ('anon', 'authenticated') THEN
+    IF uid IS NULL OR NOT EXISTS (
+      SELECT 1 FROM public.projects p
+       WHERE p.id = p_project
+         AND (p.user_id = uid OR EXISTS (
+               SELECT 1 FROM public.project_members m
+                WHERE m.project_id = p.id AND m.user_id = uid AND m.status = 'accepted'))
+    ) THEN
+      RAISE EXCEPTION 'project not found or not allowed' USING ERRCODE = '42501';
+    END IF;
+    RETURN false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.projects WHERE id = p_project) THEN
+    RAISE EXCEPTION 'project not found' USING ERRCODE = 'P0002';
+  END IF;
+  RETURN true;
+END $function$;
+
+-- vx_stage_blockers
+CREATE OR REPLACE FUNCTION public.vx_stage_blockers(p_project text, p_stage text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE
+AS $function$
+DECLARE
+  rules   jsonb := public.vx_stage_rules();
+  result  jsonb;
+BEGIN
+  SELECT coalesce(jsonb_agg(jsonb_build_object('kind', t.k, 'reason', t.reason) ORDER BY t.ord), '[]'::jsonb)
+    INTO result
+    FROM (
+      SELECT r.k, r.ord,
+             CASE
+               WHEN a.version IS NULL THEN 'missing'
+               WHEN a.stale THEN 'stale'
+               WHEN (rules -> 'required_flags' ->> r.k) IS NOT NULL
+                    AND coalesce(a.data ->> (rules -> 'required_flags' ->> r.k), '') <> 'true'
+                 THEN 'flag:' || (rules -> 'required_flags' ->> r.k)
+             END AS reason
+        FROM jsonb_array_elements_text(rules -> 'requires' -> p_stage) WITH ORDINALITY AS r(k, ord)
+        LEFT JOIN LATERAL (
+          SELECT x.version, x.stale, x.data FROM public.project_artifacts x
+           WHERE x.project_id = p_project AND x.kind = r.k ORDER BY x.version DESC LIMIT 1
+        ) a ON true
+    ) t
+   WHERE t.reason IS NOT NULL;
+
+  IF (rules -> 'requires_published') ? p_stage
+     AND NOT EXISTS (SELECT 1 FROM public.projects WHERE id = p_project AND published_version IS NOT NULL) THEN
+    result := result || jsonb_build_array(jsonb_build_object('kind', 'published', 'reason', 'missing'));
+  END IF;
+  RETURN result;
+END $function$;
+
+-- vx_stage_rank
+CREATE OR REPLACE FUNCTION public.vx_stage_rank(p_stage text)
+ RETURNS integer
+ LANGUAGE sql
+ IMMUTABLE
+AS $function$
+  SELECT (t.ord - 1)::integer FROM jsonb_array_elements_text(public.vx_stage_rules() -> 'stages') WITH ORDINALITY AS t(v, ord) WHERE t.v = p_stage
+$function$;
+
+-- vx_stage_rules
+CREATE OR REPLACE FUNCTION public.vx_stage_rules()
+ RETURNS jsonb
+ LANGUAGE sql
+ IMMUTABLE
+AS $function$ SELECT $json$
+{
+  "stages": ["plan", "example", "build", "tweaks", "launch", "business"],
+  "kinds": ["plan", "style_spec", "manifest", "launch_checks", "business_state"],
+  "requires": {
+    "plan": [],
+    "example": ["plan"],
+    "build": ["plan", "style_spec"],
+    "tweaks": ["plan", "style_spec", "manifest"],
+    "launch": ["plan", "style_spec", "manifest", "launch_checks"],
+    "business": []
+  },
+  "requires_published": ["business"],
+  "required_flags": { "style_spec": "locked" },
+  "downstream": {
+    "plan": ["style_spec", "manifest", "launch_checks"],
+    "style_spec": ["manifest", "launch_checks"],
+    "manifest": ["launch_checks"],
+    "launch_checks": [],
+    "business_state": []
+  },
+  "client_writable": ["plan", "style_spec"],
+  "client_keepable": ["plan", "style_spec", "manifest"],
+  "max_versions": 20,
+  "max_bytes": 262144
+}
+$json$::jsonb $function$;
 
 -- zero_tiny_extra_credits
 CREATE OR REPLACE FUNCTION public.zero_tiny_extra_credits()

@@ -1,10 +1,12 @@
 // Typed client for the two AI backends:
 //   • build Worker (AI_BUILD_URL) — long streaming builds/edits, SSE
-//   • ai-chat edge function (AI_EDGE_URL) — JSON modes (brief, spec, suggest, …); stage endpoints arrive in Step 7
+//   • ai-chat edge function (AI_EDGE_URL) — JSON modes (brief, spec, suggest, …)
+// Stage runs (the guided flow) use the build Worker too: streamStage() — ai-chat prepares them, the Worker runs them and saves the result.
 // The event/field names below mirror cf-worker/core.ts + worker.ts and what editor.html sends today — change them there first.
 import { AI_BUILD_URL } from '../lib/config.ts';
 import { authedFetch, errorFromResponse, type AuthDeps } from './http.ts';
 import { SseParser, type SseMessage } from './sse.ts';
+import type { ArtifactKind, Stage } from '../lib/stages.ts';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -31,9 +33,30 @@ export interface BuildRequest {
   build_category?: string;
 }
 
+/** Body of a guided-flow stage run (ai-chat `stage` mode). The server loads the stage's input artifacts itself — never send them. */
+export interface StageRunRequest {
+  stage: Stage;
+  project_id: string;
+  /** Text-only conversation; must start and end with the user. */
+  messages: { role: 'user' | 'assistant'; content: string }[];
+  stream: true;
+}
+
+/** What the server saved when a stage run finished (`stage_done`). */
+export interface StageDone {
+  ok: boolean;
+  /** Set when the reply produced a new artifact version. null = a chat-only turn, or a failure (see `error`). */
+  artifact: { kind: ArtifactKind; version: number; staled: string[] } | null;
+  error?: string;
+}
+
 export type BuildEvent =
   | { type: 'start' }
   | { type: 'build_meta'; category: string }
+  /** A stage run started; `job_id` is its build_jobs row (resume after a refresh looks it up). */
+  | { type: 'stage_job'; job_id: string; stage: string }
+  /** The server finished parsing + saving the run's result. Always the last event of a stage run. */
+  | ({ type: 'stage_done' } & StageDone)
   | { type: 'delta'; text: string }
   | { type: 'file_start'; name: string; mode?: string }
   | { type: 'file_delta'; text: string }
@@ -80,6 +103,17 @@ export function toBuildEvent(m: SseMessage): BuildEvent {
       return { type: 'start' };
     case 'build_meta':
       return { type: 'build_meta', category: str(d.category) };
+    case 'stage_job':
+      return { type: 'stage_job', job_id: str(d.job_id), stage: str(d.stage) };
+    case 'stage_done': {
+      const a = d.artifact;
+      const artifact =
+        a && typeof a === 'object' && typeof (a as Record<string, unknown>).version === 'number'
+          ? { kind: str((a as Record<string, unknown>).kind) as ArtifactKind, version: (a as Record<string, unknown>).version as number, staled: Array.isArray((a as Record<string, unknown>).staled) ? ((a as Record<string, unknown>).staled as unknown[]).filter((x): x is string => typeof x === 'string') : [] }
+          : null;
+      const error = str(d.error);
+      return { type: 'stage_done', ok: d.ok === true, artifact, ...(error ? { error } : {}) };
+    }
     case 'delta':
       return { type: 'delta', text: str(d.text) };
     case 'file_start':
@@ -122,7 +156,16 @@ export interface StreamOptions {
 }
 
 /** POST a build and yield typed events as they arrive. Throws ApiError for HTTP failures before the stream starts. */
-export async function* streamBuild(request: BuildRequest, deps: AuthDeps, options: StreamOptions = {}): AsyncGenerator<BuildEvent> {
+export function streamBuild(request: BuildRequest, deps: AuthDeps, options: StreamOptions = {}): AsyncGenerator<BuildEvent> {
+  return streamEvents(request, deps, options);
+}
+
+/** POST a stage run (guided flow). Same events as a build, plus `stage_job` first and `stage_done` last. */
+export function streamStage(request: StageRunRequest, deps: AuthDeps, options: StreamOptions = {}): AsyncGenerator<BuildEvent> {
+  return streamEvents(request, deps, options);
+}
+
+async function* streamEvents(request: unknown, deps: AuthDeps, options: StreamOptions): AsyncGenerator<BuildEvent> {
   const res = await authedFetch(
     options.url ?? AI_BUILD_URL,
     {
@@ -167,6 +210,10 @@ export interface BuildResult {
   /** Chat text streamed so far (`delta` events) — what to show live; `message` replaces it when the build ends. */
   chat: string;
   category: string;
+  /** Stage runs: the build_jobs row (set by `stage_job`). */
+  jobId: string | null;
+  /** Stage runs: what the server saved (set by `stage_done`). null until then. */
+  stageDone: StageDone | null;
   suggestions: unknown[];
   /** The server said `done`. false = the stream was cut off (see `error` / `maxTokensHit`). */
   completed: boolean;
@@ -184,6 +231,8 @@ export function emptyBuildResult(): BuildResult {
     message: '',
     chat: '',
     category: '',
+    jobId: null,
+    stageDone: null,
     suggestions: [],
     completed: false,
     maxTokensHit: false,
@@ -195,6 +244,12 @@ export function applyBuildEvent(result: BuildResult, event: BuildEvent): void {
   switch (event.type) {
     case 'build_meta':
       result.category = event.category;
+      break;
+    case 'stage_job':
+      result.jobId = event.job_id;
+      break;
+    case 'stage_done':
+      result.stageDone = { ok: event.ok, artifact: event.artifact, ...(event.error ? { error: event.error } : {}) };
       break;
     case 'delta':
       result.chat += event.text;

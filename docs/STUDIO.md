@@ -34,8 +34,11 @@ studio/
     api/ai.ts           BuildRequest, BuildEvent union, streamBuild() async generator, collectBuild()/applyBuildEvent() → BuildResult
     api/deps.ts         wires AuthDeps to the live Supabase session (the only api file that imports supabase)
     api/data.ts         typed reads: listMyProjects, getProject, getMyBilling (explicit columns only)
+    api/stages.ts       stage engine I/O (Step 7): getStageState, saveArtifact, keepArtifact, moveToStage, cancelStageRun — see docs/STAGES.md
+    lib/stages.ts, types/artifacts.ts   re-exports of supabase/functions/_shared/{stages,artifacts}.ts (ONE shared source with the edge functions)
+    lib/stage-view.ts   pure view logic for the project page (stepper steps, artifact cards, job liveness) — tested
     api/system.ts       zero-cost connectivity checks used by /system
-    components/, routes/  Topbar, Splash; Home (#/), Project (#/p/:id), System (#/system), NotFound
+    components/, routes/  Topbar, Splash, StageStepper, StagePanel; Home (#/), Project (#/p/:id — stepper + stage panel), System (#/system), NotFound
   test/                 *.test.ts (unit, `npm test`), browser_e2e.mjs (manual/CI-optional)
 ```
 
@@ -45,6 +48,7 @@ studio/
 - **Routes are in the URL hash** (`/studio/#/p/abc`): GitHub Pages has no SPA fallback, so there are no real sub-paths. `supabase-js` is created with `detectSessionInUrl:false` so a hash route is never mistaken for an auth callback.
 - **Auth:** sign-in/up stays on the legacy `/auth.html`. The guard (app.tsx) sends signed-out visitors to `/auth.html?next=<studio URL>`; `auth.html` honours `next` only for `/studio/…` paths (open-redirect safe, tested in `test/auth-next.test.ts` against the real function). Billing is read from `account_billing` (own row), never `profiles`; never `select('*')` on `profiles`.
 - **Drift guards** (`test/config.test.ts`): the anon key must equal `config.js` + both `wrangler.toml`; `AI_BUILD_URL`/`PUBLISH_API` must equal editor.html's; vite `base` must equal `STUDIO_PATH`.
+- The studio imports pure modules from OUTSIDE `studio/` (`../../../supabase/functions/_shared/…`); `vite.config.ts` has `server.fs.allow` for the dev server and the Pages workflow checks out the whole repo, so builds just work. Never put a Node/Deno-only API in `_shared`.
 - Build/AI protocol: the SSE event names and request fields in `api/ai.ts` mirror `cf-worker/core.ts` / `worker.ts` and what editor.html sends — change the server first, then the types.
 
 ## Deploy pipeline

@@ -12,7 +12,7 @@
 // against Anthropic here, parses the stream with the SAME core as the edge function (core.ts is
 // byte-extracted from it), streams Vexium SSE events back to the client, and tracks usage.
 //
-// Secrets (set via `wrangler secret put`): ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY
+// Secrets (set via `wrangler secret put`): ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, STAGE_WORKER_SECRET
 // Vars (wrangler.toml): SUPABASE_URL, SUPABASE_ANON_KEY
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -22,6 +22,8 @@ import { judgeRun, reportStageDone, touchJob } from "./stage-report.ts";
 interface Env {
   ANTHROPIC_API_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** Shared with ai-chat (Supabase function secret of the same name): proves a stage_done report comes from this Worker. */
+  STAGE_WORKER_SECRET: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -186,7 +188,7 @@ export default {
         flushUsage();
         if (job) {
           // Save the result server-side even if the browser is gone (refresh/close) — that is what makes stage runs resumable.
-          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.SUPABASE_SERVICE_ROLE_KEY }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText }));
+          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.STAGE_WORKER_SECRET }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText }));
           await emit("stage_done", outcome);
         }
         await safeClose();

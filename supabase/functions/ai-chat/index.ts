@@ -1902,7 +1902,9 @@ async function usageGateMessage(userId: string): Promise<string | null> {
   return null;
 }
 
-// Constant-time comparison of the build Worker's shared secret (the service key it already holds) with ours.
+// Constant-time comparison of the build Worker's shared secret (STAGE_WORKER_SECRET, set as a Supabase function secret AND a Worker
+// secret) with the one the request carried. Missing on our side = nobody passes (fail closed). Not the service key: the edge
+// function's SUPABASE_SERVICE_ROLE_KEY is not the same string the Worker holds.
 function sameSecret(given: string | null, expected: string): boolean {
   if (!given || !expected || given.length !== expected.length) return false;
   let diff = 0;
@@ -1981,7 +1983,7 @@ async function handleStageMode(
   const deps = stageDeps();
   try {
     if (body.stage_done !== undefined) {
-      const r = await finishStageRun(body.stage_done ?? {}, userId, deps, sameSecret(workerKey, SUPABASE_SERVICE_KEY));
+      const r = await finishStageRun(body.stage_done ?? {}, userId, deps, sameSecret(workerKey, Deno.env.get("STAGE_WORKER_SECRET") ?? ""));
       return json(r.body, r.status);
     }
     if (body.stage_cancel !== undefined) {

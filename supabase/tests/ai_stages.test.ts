@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 import { emptyPlan } from '../functions/_shared/artifacts.ts';
 import { applyPut, STAGES, STAGE_IO, type ArtifactKind, type LatestArtifacts, type Stage } from '../functions/_shared/stages.ts';
 import { beginStage, cancelStageRun, cleanMessages, finishStageRun, isHttpError, type JobRow, type StageDeps, type StageRun } from '../functions/ai-chat/stage-handler.ts';
-import { ARTIFACT_CLOSE, ARTIFACT_OPEN, buildStagePrompt, canonicalJson, extractArtifact, finishStage, inputBlockers } from '../functions/ai-chat/stages.ts';
+import { ARTIFACT_CLOSE, ARTIFACT_OPEN, buildStagePrompt, canonicalJson, extractArtifact, finishStage, inputBlockers, PLAN_BRIEF } from '../functions/ai-chat/stages.ts';
 
 // ── fixtures ────────────────────────────────────────────────────────────────────────────────────────
 const OWNER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -31,11 +31,12 @@ interface World {
   latest: LatestArtifacts;
   jobs: Map<string, JobRow & { error?: string; prompt?: string; artifact_kind?: string | null }>;
   saved: { kind: ArtifactKind; data: Record<string, unknown> }[];
-  state: { credits: string | null; access: Set<string>; saveFails: boolean };
+  chat: { project_id: string; stage: Stage; role: 'user' | 'assistant'; content: string; user_id: string | null; job_id: string }[];
+  state: { credits: string | null; access: Set<string>; saveFails: boolean; chatFails: boolean };
 }
 
 function makeWorld(latest: LatestArtifacts = {}): World {
-  const w: World = { latest, jobs: new Map(), saved: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false }, deps: undefined as unknown as StageDeps };
+  const w: World = { latest, jobs: new Map(), saved: [], chat: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false, chatFails: false }, deps: undefined as unknown as StageDeps };
   let n = 0;
   w.deps = {
     async getProjectAccess(projectId, userId) { return w.state.access.has(`${projectId}:${userId}`) ? { name: 'Bean There', stage: 'plan' } : null; },
@@ -58,6 +59,15 @@ function makeWorld(latest: LatestArtifacts = {}): World {
       w.latest = r.latest;
       w.saved.push({ kind, data });
       return { version: r.version, staled: r.staled };
+    },
+    async lastMessage(projectId, stage) {
+      if (w.state.chatFails) throw new Error('stage_messages down');
+      const m = w.chat.filter((x) => x.project_id === projectId && x.stage === stage).at(-1);
+      return m ? { role: m.role, content: m.content } : null;
+    },
+    async saveMessage(m) {
+      if (w.state.chatFails) throw new Error('stage_messages down');
+      w.chat.push(m);
     },
   };
   return w;
@@ -165,6 +175,30 @@ describe('buildStagePrompt — cache stability', () => {
 
   it('the no-fake-content rule is in every stage', () => {
     for (const s of STAGES) assert.match(buildStagePrompt(s, FULL()).system, /Never invent facts/);
+  });
+
+  it('PLAN: the real brief — drafts fast, never invents prices or revenue, copies the owner\'s edits back', () => {
+    const p = buildStagePrompt('plan', {});
+    assert.ok(p.system.includes(PLAN_BRIEF), 'the PLAN brief is in the cached block');
+    assert.match(PLAN_BRIEF, /Draft fast/);
+    assert.match(PLAN_BRIEF, /at most two short questions/);
+    assert.match(PLAN_BRIEF, /use ONLY prices the owner stated/);
+    assert.match(PLAN_BRIEF, /Never invent a price/);
+    assert.match(PLAN_BRIEF, /do not promise or estimate/);
+    assert.match(PLAN_BRIEF, /put nothing in "scenario" yourself/);
+    assert.match(PLAN_BRIEF, /Treat their edits as decisions/);
+    assert.match(PLAN_BRIEF, /language the owner writes in/);
+    assert.match(PLAN_BRIEF, /Never invent customers, reviews, testimonials/);
+  });
+
+  it('PLAN: the plan shape in the prompt mentions notes and the scenario rule, and the validator accepts notes', () => {
+    const { system } = buildStagePrompt('plan', {});
+    assert.match(system, /"notes"/);
+    assert.match(system, /"scenario"/);
+    const ok = finishStage('plan', reply('plan', { ...plan(), notes: 'I assumed a weekly delivery.' }));
+    assert.ok(!ok.error && ok.artifact, ok.error);
+    const tooLong = finishStage('plan', reply('plan', { ...plan(), notes: 'x'.repeat(2001) }));
+    assert.match(tooLong.error ?? '', /notes/);
   });
 
   it('canonicalJson sorts keys at every depth and keeps arrays in order', () => {
@@ -463,6 +497,94 @@ describe('finishStageRun', () => {
     assert.ok(!isHttpError(r));
     assert.deepEqual(r.body, { ok: true, artifact: null });
     assert.equal(w.saved.length, 0);
+  });
+});
+
+describe('stage chat history (stage_messages)', () => {
+  const done = (w: World, body: Record<string, unknown>) => finishStageRun(body, OWNER, w.deps, true);
+
+  it('preparing a run saves the owner\'s message (author + job), and only the last message of the conversation', async () => {
+    const w = makeWorld();
+    const run = mustRun(await begin(w, 'plan', { messages: [...msgs('first'), { role: 'assistant', content: 'hi' }, ...msgs('second')] }));
+    assert.deepEqual(w.chat, [{ project_id: PROJECT, stage: 'plan', role: 'user', content: 'second', user_id: OWNER, job_id: run.jobId }]);
+  });
+
+  it('a reply with a plan saves the chat part only — the artifact block never reaches the history', async () => {
+    const w = makeWorld();
+    const run = mustRun(await begin(w, 'plan'));
+    await done(w, { job_id: run.jobId, ok: true, message: reply('plan', plan(), 'Here is a first draft. What do you charge?') });
+    assert.equal(w.chat.length, 2);
+    assert.deepEqual(w.chat[1], { project_id: PROJECT, stage: 'plan', role: 'assistant', content: 'Here is a first draft. What do you charge?', user_id: null, job_id: run.jobId });
+    assert.ok(!w.chat[1]!.content.includes(ARTIFACT_OPEN));
+  });
+
+  it('a plan saved with no chat text still leaves a line saying so', async () => {
+    const w = makeWorld();
+    const run = mustRun(await begin(w, 'plan'));
+    await done(w, { job_id: run.jobId, ok: true, message: `${ARTIFACT_OPEN}\n${JSON.stringify(plan())}\n${ARTIFACT_CLOSE}` });
+    assert.equal(w.chat[1]!.content, "I've updated your plan.");
+  });
+
+  it('a chat-only turn is saved as the assistant\'s line', async () => {
+    const w = makeWorld();
+    const run = mustRun(await begin(w, 'plan'));
+    await done(w, { job_id: run.jobId, ok: true, message: 'What is your price range?' });
+    assert.deepEqual(w.chat.map((m) => [m.role, m.content]), [['user', 'I want to sell coffee subscriptions'], ['assistant', 'What is your price range?']]);
+  });
+
+  it('nothing is stored for the assistant when the run fails, is stopped, or the plan could not be saved', async () => {
+    const w = makeWorld();
+    const a = mustRun(await begin(w, 'plan', { messages: msgs('one') }));
+    await done(w, { job_id: a.jobId, ok: false, error: 'Stopped' });
+    const b = mustRun(await begin(w, 'plan', { messages: msgs('two') }));
+    await done(w, { job_id: b.jobId, ok: true, message: reply('plan', { schema: 1, name: '' }) });
+    w.state.saveFails = true;
+    const c = mustRun(await begin(w, 'plan', { messages: msgs('three') }));
+    await done(w, { job_id: c.jobId, ok: true, message: reply('plan', plan(), 'I changed it.') });
+    assert.deepEqual(w.chat.map((m) => m.role), ['user', 'user', 'user'], 'only the owner\'s lines remain');
+  });
+
+  it('a retry of a message that never got an answer is not saved twice; a repeated message after an answer is', async () => {
+    const w = makeWorld();
+    const a = mustRun(await begin(w, 'plan', { messages: msgs('ok') }));
+    await done(w, { job_id: a.jobId, ok: false, error: 'Network' });
+    const b = mustRun(await begin(w, 'plan', { messages: msgs('ok') }));
+    assert.equal(w.chat.length, 1, 'the retry reuses the saved line');
+    await done(w, { job_id: b.jobId, ok: true, message: 'Got it.' });
+    mustRun(await begin(w, 'plan', { messages: msgs('ok') }));
+    assert.deepEqual(w.chat.map((m) => m.role), ['user', 'assistant', 'user']);
+  });
+
+  it('each stage has its own chat', async () => {
+    const w = makeWorld(latestWith(['plan', plan()]));
+    mustRun(await begin(w, 'plan', { messages: msgs('plan talk') }));
+    mustRun(await begin(w, 'example', { messages: msgs('plan talk') }));
+    assert.deepEqual(w.chat.map((m) => m.stage), ['plan', 'example']);
+  });
+
+  it('a very long message is cut to the storage limit', async () => {
+    const w = makeWorld();
+    mustRun(await begin(w, 'plan', { messages: msgs('y'.repeat(20_000)) }));
+    assert.equal(w.chat[0]!.content.length, 20_000);
+  });
+
+  it('history that cannot be written never fails or blocks the run', async () => {
+    const w = makeWorld();
+    w.state.chatFails = true;
+    const run = mustRun(await begin(w, 'plan'));
+    const r = await done(w, { job_id: run.jobId, ok: true, message: reply('plan', plan()) });
+    assert.ok(!isHttpError(r) && r.body.ok && r.body.artifact?.version === 1);
+    assert.equal(w.jobs.get(run.jobId)!.status, 'complete');
+    assert.equal(w.chat.length, 0);
+  });
+
+  it('a refused request (no access, missing inputs, out of credits) saves no chat line', async () => {
+    const w = makeWorld();
+    await beginStage({ stage: 'plan', project_id: PROJECT, messages: msgs() }, STRANGER, w.deps);
+    await begin(w, 'example');
+    w.state.credits = 'No credits';
+    await begin(w, 'plan');
+    assert.equal(w.chat.length, 0);
   });
 });
 

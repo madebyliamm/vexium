@@ -5,6 +5,7 @@ import { AI_EDGE_URL } from '../lib/config.ts';
 import { sb } from '../lib/supabase.ts';
 import { authDeps } from './deps.ts';
 import { postJson } from './http.ts';
+import { toChatLine, type ChatLine } from '../lib/plan-view.ts';
 import { describeStageError, parseJob, parseMoveResult, rowsToLatest, type MoveOutcome, type StageJob } from '../lib/stage-view.ts';
 import { isStage, type ArtifactKind, type LatestArtifacts, type Stage } from '../lib/stages.ts';
 
@@ -92,4 +93,11 @@ export async function moveToStage(projectId: string, stage: Stage): Promise<Move
 /** The Stop button: closes the run's job; the build Worker notices on its next heartbeat (≤ ~8 s) and stops generating. */
 export async function cancelStageRun(jobId: string): Promise<void> {
   await postJson(AI_EDGE_URL, { stage_cancel: { job_id: jobId } }, authDeps);
+}
+
+/** The saved chat of one stage, oldest first (the newest 100 lines). Written by the platform only — see stage_messages. */
+export async function listStageMessages(projectId: string, stage: Stage): Promise<ChatLine[]> {
+  const { data, error } = await sb.from('stage_messages').select('id,role,content,created_at').eq('project_id', projectId).eq('stage', stage).order('created_at', { ascending: false }).limit(100);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toChatLine).filter((l): l is ChatLine => l !== null).reverse();
 }

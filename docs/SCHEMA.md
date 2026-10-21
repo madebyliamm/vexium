@@ -1,4 +1,4 @@
-# Database overview (snapshot 2026-10-12; Step 7 additions 2026-10-14)
+# Database overview (snapshot 2026-10-12; Step 7 additions 2026-10-14; Step 8 `stage_messages` 2026-10-21)
 
 Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not a migration — regenerate with `python3 scripts/export-schema.py`). All tables have RLS ON. Row counts are approximate and tiny: the DB is effectively pre-launch (5 profiles, 9 projects).
 
@@ -14,6 +14,7 @@ Full DDL, policies and functions: `supabase/schema.sql` (reference snapshot, not
 | plan_messages | 0 | **unused** (looks like an earlier planning-chat attempt) |
 | build_jobs | 118 | persisted AI build requests so a refresh can resume. **Step 7** adds the stage-run columns `stage`, `artifact_kind`, `finished_at`, `error`, `heartbeat_at` (platform-only: clients may INSERT only `project_id,user_id,status,prompt` and UPDATE only `status`, which is all the old editor does) and `status` ∈ running/complete/failed |
 | project_artifacts | – | **Step 7.** Versioned stage artifacts `(project_id, kind, version, data jsonb, stale, created_by)`; kinds plan / style_spec / manifest / launch_checks / business_state. Clients SELECT only (owner / accepted collaborator); every write is `put_project_artifact()` / `keep_project_artifact()`. View `project_artifacts_latest` = newest per kind. See `docs/STAGES.md` |
+| stage_messages | – | **Step 8.** Chat history of the guided stages `(project_id, stage, role, content, user_id, job_id, created_at)`. Written only by the platform (service role) — the user's line when a stage run is prepared, the assistant's when it succeeds; unique `(job_id, role)`. Clients: SELECT only (owner + accepted collaborators). Separate from the legacy `ai_messages` on purpose (the old editor replays those to the model) |
 | site_data | 1 | generated sites' data: rows of `(project_id, collection, data jsonb, site_user_id)` — forms, orders, `transactions` (Stripe sales) |
 | site_users | 0 | end-customers of generated sites (lower-cased email + `pbkdf2$sha256$<iters>$<salt>$<hash>` + metadata ≤ 4 KB); `password_hash` is hidden from clients |
 | site_sessions | 0 | **Step 4.** Site-user login sessions: `token_hash` (sha256 of an opaque `vxs_…` token), project, user, `expires_at` (30 days). Service role only (RLS on, no policies); cascades with the site user / project |

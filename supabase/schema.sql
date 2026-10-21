@@ -1,5 +1,5 @@
 -- Vertly / Vexium — Supabase schema SNAPSHOT (reference only, NOT a migration)
--- Generated 2026-10-14 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
+-- Generated 2026-10-21 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
 -- Extensions: pg_stat_statements, pgcrypto, plpgsql, supabase_vault, uuid-ossp
 
 -- ── account_billing  (~5 rows, RLS ON) ──────────
@@ -77,7 +77,7 @@ CREATE UNIQUE INDEX billing_history_pkey ON public.billing_history USING btree (
 ALTER TABLE public."billing_history" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own billing history" ON public."billing_history" AS PERMISSIVE FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) = user_id));
 
--- ── build_jobs  (~118 rows, RLS ON) ──────────
+-- ── build_jobs  (~114 rows, RLS ON) ──────────
 CREATE TABLE public."build_jobs" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -162,7 +162,7 @@ CREATE POLICY "notif_insert" ON public."notifications" AS PERMISSIVE FOR INSERT 
 CREATE POLICY "notif_select" ON public."notifications" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 CREATE POLICY "notif_update" ON public."notifications" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = user_id));
 
--- ── page_views  (~908 rows, RLS ON) ──────────
+-- ── page_views  (~914 rows, RLS ON) ──────────
 CREATE TABLE public."page_views" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -387,7 +387,7 @@ CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH RO
 CREATE TRIGGER projects_guard_stage BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_stage();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- ── rate_limits  (~135 rows, RLS ON) ──────────
+-- ── rate_limits  (~144 rows, RLS ON) ──────────
 CREATE TABLE public."rate_limits" (
   "key" text NOT NULL,
   "window_start" timestamp with time zone NOT NULL,
@@ -462,6 +462,34 @@ CREATE POLICY "owners can delete their site users" ON public."site_users" AS PER
 CREATE POLICY "owners can read their site users" ON public."site_users" AS PERMISSIVE FOR SELECT TO public USING ((project_id IN ( SELECT projects.id
    FROM projects
   WHERE (projects.user_id = auth.uid()))));
+
+-- ── stage_messages  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."stage_messages" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "project_id" text NOT NULL,
+  "stage" text NOT NULL,
+  "role" text NOT NULL,
+  "content" text NOT NULL,
+  "user_id" uuid,
+  "job_id" uuid,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "stage_messages_content_check" CHECK (((char_length(content) >= 1) AND (char_length(content) <= 20000))),
+  CONSTRAINT "stage_messages_job_id_fkey" FOREIGN KEY (job_id) REFERENCES build_jobs(id) ON DELETE SET NULL,
+  CONSTRAINT "stage_messages_pkey" PRIMARY KEY (id),
+  CONSTRAINT "stage_messages_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "stage_messages_role_check" CHECK ((role = ANY (ARRAY['user'::text, 'assistant'::text]))),
+  CONSTRAINT "stage_messages_stage_check" CHECK ((stage = ANY (ARRAY['plan'::text, 'example'::text, 'build'::text, 'tweaks'::text, 'launch'::text, 'business'::text]))),
+  CONSTRAINT "stage_messages_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+);
+CREATE INDEX stage_messages_chat_idx ON public.stage_messages USING btree (project_id, stage, created_at);
+CREATE UNIQUE INDEX stage_messages_job_role_uidx ON public.stage_messages USING btree (job_id, role) WHERE (job_id IS NOT NULL);
+CREATE UNIQUE INDEX stage_messages_pkey ON public.stage_messages USING btree (id);
+ALTER TABLE public."stage_messages" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "stage_messages_select" ON public."stage_messages" AS PERMISSIVE FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM projects p
+  WHERE ((p.id = stage_messages.project_id) AND ((p.user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM project_members m
+          WHERE ((m.project_id = p.id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND (m.status = 'accepted'::text)))))))));
 
 -- ── FUNCTIONS (SECURITY DEFINER marked) ────────────────────
 -- check_signup_availability  [SECURITY DEFINER]

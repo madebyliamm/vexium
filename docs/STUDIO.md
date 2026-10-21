@@ -11,7 +11,7 @@ Vite + TypeScript + Preact. Built in CI and served at **`https://vexium.ai/studi
 | `npm test` | `node --test test/*.test.ts` — Node strips the TS itself, no test framework. |
 | `npm run build` | → `studio/dist/` (base `/studio/`). |
 | `node scripts/assemble-site.mjs` | (repo root) builds `_site/` = what Pages publishes. |
-| `node studio/test/browser_e2e.mjs` | real-Chrome e2e of the assembled site (local server) or the live site (`E2E_BASE=https://vexium.ai`). Needs Chrome + `supabase` CLI + `dangerouslyDisableSandbox`; creates/deletes a throwaway user. Screenshots in `/tmp/studio-e2e/`. |
+| `node studio/test/browser_e2e.mjs` | real-Chrome e2e of the assembled site (local server) or the live site (`E2E_BASE=https://vexium.ai`). `E2E_AI=1` also sends one real PLAN message (spends model credits; default runs stub the Worker call). Needs Chrome + `supabase` CLI + `dangerouslyDisableSandbox`; creates/deletes a throwaway user. Screenshots in `/tmp/studio-e2e/`. |
 
 ## Layout
 ```
@@ -38,7 +38,10 @@ studio/
     lib/stages.ts, types/artifacts.ts   re-exports of supabase/functions/_shared/{stages,artifacts}.ts (ONE shared source with the edge functions)
     lib/stage-view.ts   pure view logic for the project page (stepper steps, artifact cards, job liveness) — tested
     api/system.ts       zero-cost connectivity checks used by /system
-    components/, routes/  Topbar, Splash, StageStepper, StagePanel; Home (#/), Project (#/p/:id — stepper + stage panel), System (#/system), NotFound
+    lib/plan-view.ts    pure logic of the PLAN screen (Step 8): card edit helpers, planProblems, splitLiveReply, historyToSend, revenue what-if maths — tested
+    lib/pending.ts      the first message of a new project, handed from Home to the PLAN screen (in memory on purpose)
+    api/data.ts         (also) createProject / renameProject — NOTE: does not enforce the legacy project limit (trial 1 / starter 3) yet — Step 14
+    components/, routes/  Topbar, Splash, StageStepper, StagePanel (+ `guided` slot); PlanStage / PlanChat / PlanCard (Step 8), NewProject; Home (#/ — "Start something new" + projects), Project (#/p/:id — stepper + stage panel), System (#/system), NotFound
   test/                 *.test.ts (unit, `npm test`), browser_e2e.mjs (manual/CI-optional)
 ```
 

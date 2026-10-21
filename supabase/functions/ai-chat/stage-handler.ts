@@ -33,6 +33,10 @@ export interface StageDeps {
   finishJob(jobId: string, patch: { status: 'complete' | 'failed'; error?: string }): Promise<void>;
   /** put_project_artifact as the platform. */
   saveArtifact(projectId: string, kind: ArtifactKind, data: Record<string, unknown>): Promise<{ version: number; staled: string[] }>;
+  /** The newest saved line of this stage's chat, or null when there is none. */
+  lastMessage(projectId: string, stage: Stage): Promise<{ role: 'user' | 'assistant'; content: string } | null>;
+  /** Appends a line to the stage's chat (stage_messages — written by the platform only). */
+  saveMessage(m: { project_id: string; stage: Stage; role: 'user' | 'assistant'; content: string; user_id: string | null; job_id: string }): Promise<void>;
 }
 
 export interface HttpError {
@@ -106,8 +110,27 @@ export async function beginStage(body: StageRequest, userId: string, deps: Stage
     artifact_kind: STAGE_IO[stage].produces,
     prompt: lastUser.slice(0, 500),
   });
+  await recordUserLine(deps, { projectId, stage, userId, jobId, content: lastUser });
   return { kind: 'run', stage, jobId, prompt, messages };
 }
+
+const MAX_LINE_CHARS = 20_000;
+
+/**
+ * Keep the stage's chat on the server so a refresh (or another device) restores it. A retry of a message that never got an answer
+ * (the last saved line is that same user message) is not saved twice. History is a convenience: failing to write it never fails a run.
+ */
+async function recordUserLine(deps: StageDeps, l: { projectId: string; stage: Stage; userId: string; jobId: string; content: string }): Promise<void> {
+  try {
+    const last = await deps.lastMessage(l.projectId, l.stage);
+    if (last && last.role === 'user' && last.content === l.content) return;
+    await deps.saveMessage({ project_id: l.projectId, stage: l.stage, role: 'user', content: l.content.slice(0, MAX_LINE_CHARS), user_id: l.userId, job_id: l.jobId });
+  } catch (e) {
+    console.error('[ai-chat] could not save the stage chat line', e);
+  }
+}
+
+const KIND_WORDS: Record<ArtifactKind, string> = { plan: 'plan', style_spec: 'style', manifest: 'built site', launch_checks: 'launch check', business_state: 'business data' };
 
 export interface StageDoneRequest {
   job_id?: unknown;
@@ -165,12 +188,23 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
     await close('failed', done.error);
     return { status: 200, body: { ok: false, artifact: null, error: done.error } };
   }
+  const recordReply = async (chat: string): Promise<void> => {
+    if (!chat) return;
+    try {
+      await deps.saveMessage({ project_id: job.project_id, stage, role: 'assistant', content: chat.slice(0, MAX_LINE_CHARS), user_id: null, job_id: job.id });
+    } catch (e) {
+      console.error('[ai-chat] could not save the stage reply', e);
+    }
+  };
   if (!done.artifact) {
+    await recordReply(done.chat);
     await close('complete');
     return { status: 200, body: { ok: true, artifact: null } };
   }
   try {
     const saved = await deps.saveArtifact(job.project_id, done.artifact.kind, done.artifact.data);
+    // The reply is only worth keeping once what it describes was actually saved (otherwise it claims changes that never happened).
+    await recordReply(done.chat || `I've updated your ${KIND_WORDS[done.artifact.kind]}.`);
     await close('complete');
     return { status: 200, body: { ok: true, artifact: { kind: done.artifact.kind, version: saved.version, staled: saved.staled } } };
   } catch (e) {

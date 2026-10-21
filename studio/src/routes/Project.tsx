@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
+import { PlanStage } from '../components/PlanStage.tsx';
 import { Splash } from '../components/Splash.tsx';
 import { StagePanel } from '../components/StagePanel.tsx';
 import { StageStepper } from '../components/StageStepper.tsx';
 import { LEGACY } from '../lib/config.ts';
+import { planHints, readPlan } from '../lib/plan-view.ts';
 import { buildSteps, jobFailedRecently, jobIsLive, type Step } from '../lib/stage-view.ts';
 import { STAGE_LABELS, describeBlocker, type ArtifactKind, type Stage } from '../lib/stages.ts';
 
@@ -15,6 +17,8 @@ export function Project({ id }: { id: string }) {
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /** The PLAN card holds edits that are not saved yet. */
+  const [planDirty, setPlanDirty] = useState(false);
   const alive = useRef(true);
 
   /** Re-read everything WITHOUT going back to the loading screen (an action shouldn't flash the page). */
@@ -92,6 +96,9 @@ export function Project({ id }: { id: string }) {
 
   const { project, artifacts, job } = state;
   const steps = buildSteps(project.stage, artifacts, project.published);
+  const planArtifact = artifacts.plan;
+  const planStage = project.stage === 'plan';
+  const hints = planStage && planArtifact && !planDirty ? planHints(readPlan(planArtifact.data, project.name || 'Untitled')) : [];
   return (
     <main class="page">
       <div class="crumbs"><a href="#/">Projects</a> / {project.name || 'Untitled'}</div>
@@ -119,6 +126,20 @@ export function Project({ id }: { id: string }) {
           busy={busy}
           onKeep={(k) => void keep(k)}
           onMove={(s) => void move(s)}
+          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : null}
+          continueNote={hints.length > 0 ? `You can continue now. You may still want to ${hints.join(', ')}.` : null}
+          guided={
+            planStage ? (
+              <PlanStage
+                projectId={project.id}
+                projectName={project.name}
+                saved={planArtifact ? { version: planArtifact.version, data: planArtifact.data } : null}
+                resumedJobId={runningJobId ?? null}
+                onChanged={() => { setNotice(null); void refresh(); }}
+                onDirtyChange={setPlanDirty}
+              />
+            ) : undefined
+          }
         />
       </div>
     </main>

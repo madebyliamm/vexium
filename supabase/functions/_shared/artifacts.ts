@@ -174,6 +174,7 @@ function validatePlan(d: Obj, e: Errors) {
     if (!isStr(x.purpose)) e.add(`${p}.purpose`, 'must be text');
   }, 30);
   checkBackend(d.backend, 'backend', e);
+  if (d.notes !== undefined && (!isStr(d.notes) || d.notes.length > 2000)) e.add('notes', 'must be text (max 2000 characters)');
   const types = ['photo', 'text', 'legal', 'product', 'domain', 'other'];
   checkList(d.launch_checklist, 'launch_checklist', e, (x, p) => {
     if (!isObj(x)) return e.add(p, 'must be an object');

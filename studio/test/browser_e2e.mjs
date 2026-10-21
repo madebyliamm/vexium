@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Step 6 "Done when" evidence: the assembled site in a real (headless) Chrome — signed-out bounce to /auth.html and back,
+// Step 6 "Done when" evidence (extended in Steps 7–8 with the stage engine and the guided PLAN screen): the assembled site in a real (headless) Chrome — signed-out bounce to /auth.html and back,
 // signed-in studio rendering with the shared tokens, routing, sign-out, legacy pages still served, repo/docs NOT served.
 //
 //   (cd studio && npm run build) && node scripts/assemble-site.mjs      # produce _site/
 //   node studio/test/browser_e2e.mjs                                    # serves _site/ on localhost and tests that
 //   E2E_BASE=https://vexium.ai node studio/test/browser_e2e.mjs         # tests the deployed site instead
+//   E2E_AI=1 node studio/test/browser_e2e.mjs                           # also sends one real PLAN message (spends model credits)
 //
 // Needs: Google Chrome, the `supabase` CLI logged in (to read the service key), network. Creates a throwaway user + one
 // project and deletes both in `finally`. Screenshots: /tmp/studio-e2e/. Use dangerouslyDisableSandbox with the Bash tool.
@@ -153,10 +154,85 @@ try {
   check('clicking a blocked stage explains what is missing and does not move', await chrome.waitFor(`document.querySelector('[data-testid=stage-notice]')?.textContent.includes('Needs your plan first')`, 3000) && (await dbStage()) === 'plan', await text('[data-testid=stage-notice]'));
   await chrome.screenshot(`${OUT}/stage-plan-empty.png`);
 
-  await put('plan', PLAN);
+  // ── 3c. the guided PLAN screen (Step 8): chat on the left, an editable plan card on the right ──────────
+  // Typing goes through the native value setter + an input event, which is what a keystroke does to a Preact input.
+  const setValue = async (sel, value, nth = 0) => {
+    await chrome.eval(`(() => { const el = document.querySelectorAll(${JSON.stringify(sel)})[${nth}]; const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : el.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(value)}); el.dispatchEvent(new Event(el.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); return true; })()`);
+    await sleep(60); // let the page re-render before the next click reads its handlers
+  };
+  const count = (sel) => chrome.eval(`document.querySelectorAll(${JSON.stringify(sel)}).length`);
+  const planRow = async () => (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.plan&select=version,data`, { headers: svc })).json?.[0];
+  const planStatus = (want) => chrome.waitFor(`document.querySelector('[data-testid=plan-status]')?.textContent === ${JSON.stringify(want)}`, 8000);
+
+  check('PLAN screen: the chat (with its greeting) sits beside the plan card', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=plan-stage] [data-testid=chat-greeting]') && !!document.querySelector('[data-testid=plan-card]')`, 8000)));
+  check('PLAN screen: no plan yet → "Not started" with a way to fill it in yourself', (await text('[data-testid=plan-status]')) === 'Not started' && (await count('[data-testid=plan-blank]')) === 1, await text('[data-testid=plan-status]'));
+  check('PLAN screen replaces the artifact list and the "on its way" note', (await count('.artifact')) === 0 && !(await text('[data-testid=stage-panel]')).includes('on its way'));
+  await click('[data-testid=plan-blank]');
+  check('"Fill it in myself" opens an unsaved card with a Home page, named after the project', await planStatus('Unsaved changes') && (await count('[data-testid=page-row]')) === 1 && (await chrome.eval(`document.querySelector('[data-testid=plan-name]').value`)) === PROJECT_NAME, await text('[data-testid=plan-status]'));
+  await setValue('[data-testid=plan-oneliner]', 'A test site');
+  await click('[data-testid=plan-save]');
+  check('Save plan → "Saved · v1" on screen and version 1 in the database', await planStatus('Saved · v1') && (await planRow())?.version === 1 && (await planRow())?.data?.one_liner === 'A test site', JSON.stringify(await planRow()).slice(0, 200));
+
+  await click('[data-testid=page-add]');
+  await click('[data-testid=plan-save]');
+  check('a page with no title or file name is refused in plain words, and nothing is sent', await chrome.waitFor(`document.querySelector('[data-testid=plan-save-error]')?.textContent.includes('Page 2 needs a title')`, 4000) && (await planRow())?.version === 1, await text('[data-testid=plan-save-error]'));
+  await setValue('[data-testid=page-title]', 'About', 1);
+  await setValue('[data-testid=page-file]', 'about.html', 1);
+  check('editing clears the message', (await count('[data-testid=plan-save-error]')) === 0);
+  await click('[data-testid=plan-save]');
+  check('after filling the page in, Save → v2 with both pages', await planStatus('Saved · v2') && (await planRow())?.version === 2 && (await planRow())?.data?.pages?.length === 2, JSON.stringify((await planRow())?.data?.pages));
+
+  check('the what-if needs a price first (button disabled)', (await chrome.eval(`document.querySelector('[data-testid=scenario-start]').disabled`)) === true);
+  await setValue('[data-testid=pricing-model]', 'subscription');
+  await click('[data-testid=price-add]');
+  await setValue('[data-testid=price-name]', 'Monthly');
+  await setValue('[data-testid=price-amount]', '12.50');
+  await setValue('[data-testid=checklist-new]', 'Photos of the dogs');
+  await click('[data-testid=checklist-add]');
+  check('a price and a checklist item are added to the card', (await count('[data-testid=price-row]')) === 1 && (await count('[data-testid=checklist-row]')) === 1);
+  await click('[data-testid=scenario-start]');
+  check('"Try a revenue what-if" shows a calculator using that price', await chrome.waitFor(`document.querySelector('[data-testid=scenario-result]')?.textContent.includes('12.50')`, 3000), await text('[data-testid=scenario-result]'));
+  await setValue('[data-testid=scenario-visitors]', '1000');
+  await setValue('[data-testid=scenario-conversion]', '2');
+  check('the calculator does the sum (1,000 × 2% × 12.50 = 250.00 a month)', /= 250(\.00)? a month/.test(await text('[data-testid=scenario-result]')), await text('[data-testid=scenario-result]'));
+  await click('[data-testid=plan-save]');
+  const v3 = await planStatus('Saved · v3') && (await planRow());
+  check('Save → v3 keeps price, checklist and the owner-chosen what-if', v3?.version === 3 && v3.data.pricing.model === 'subscription' && v3.data.pricing.items[0]?.price_cents === 1250 && v3.data.launch_checklist?.[0]?.label === 'Photos of the dogs' && v3.data.scenario?.monthly_visitors === 1000 && v3.data.scenario?.conversion_pct === 2, JSON.stringify(v3?.data).slice(0, 300));
+  check('the earlier "Needs your plan first" notice went away once a plan was saved', (await count('[data-testid=stage-notice]')) === 0);
+  check('v1 and v2 are still stored (every save is a new version)', (await jfetch(`${SB}/rest/v1/project_artifacts?project_id=eq.${PID}&kind=eq.plan&select=version`, { headers: svc })).json?.length === 3);
+  await chrome.screenshot(`${OUT}/stage-plan-card.png`);
+
+  await chrome.viewport(390, 800, true);
+  await sleep(300);
+  const pw = await chrome.eval(`(() => ({ sw: document.documentElement.scrollWidth, wide: [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 390.5).map((e) => e.tagName + '.' + e.className).slice(0, 5) }))()`);
+  check('PLAN screen has no horizontal overflow at 390px', pw.sw <= 390 && pw.wide.length === 0, JSON.stringify(pw));
+  await chrome.screenshot(`${OUT}/stage-plan-mobile.png`);
+  await chrome.viewport(1280, 800);
+  await sleep(200);
+
+  // unsaved edits keep "Continue" closed; discarding opens it again
+  await setValue('[data-testid=plan-name]', PROJECT_NAME + ' (draft)');
+  check('unsaved edits: status says so and "Continue" is held with a reason', (await text('[data-testid=plan-status]')) === 'Unsaved changes' && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-hold]'))?.includes('Save your plan changes first'), await text('[data-testid=stage-hold]'));
+  await click('[data-testid=plan-discard]');
+  check('"Discard changes" restores the saved plan and re-opens "Continue"', await planStatus('Saved · v3') && (await chrome.eval(`document.querySelector('[data-testid=plan-name]').value`)) === PROJECT_NAME && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === false);
+
+  // the conversation is stored on the server: it comes back after a reload; only the platform can write it
+  const at = (n) => new Date(Date.now() - (10 - n) * 1000).toISOString();
+  const seeded = await jfetch(`${SB}/rest/v1/stage_messages`, { method: 'POST', headers: { ...svc, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify([
+    { project_id: PID, stage: 'plan', role: 'user', content: 'A site for my dog-walking business', user_id: uid, created_at: at(1) },
+    { project_id: PID, stage: 'plan', role: 'assistant', content: "Here's a first plan. Who are your customers?", user_id: null, created_at: at(2) },
+    { project_id: PID, stage: 'plan', role: 'user', content: 'Busy people in Austin', user_id: uid, created_at: at(3) },
+  ]) });
+  const forged = await jfetch(`${SB}/rest/v1/stage_messages`, { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + SESSION.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: PID, stage: 'plan', role: 'assistant', content: 'forged', user_id: uid }) });
+  check('chat history: the owner cannot write stage_messages directly (only the platform does)', seeded.status < 300 && forged.status >= 400, `seed ${seeded.status} / owner insert ${forged.status}`);
   await reloadProject();
+  check('after a reload the chat is back, oldest first, without the greeting', await chrome.waitFor(`document.querySelectorAll('[data-testid=chat-line]').length === 3`, 8000)
+    && (await chrome.eval(`[...document.querySelectorAll('[data-testid=chat-line]')].map((l) => l.dataset.role).join()`)) === 'user,assistant,user' && (await count('[data-testid=chat-greeting]')) === 0);
+  check('…an unanswered last message offers "Try again"', (await count('[data-testid=chat-retry]')) === 1);
+  check('…and the saved plan is back too', (await text('[data-testid=plan-status]')) === 'Saved · v3' && (await chrome.eval(`document.querySelector('[data-testid=plan-name]').value`)) === PROJECT_NAME);
+  await chrome.screenshot(`${OUT}/stage-plan-chat.png`);
+
   check('after a plan is saved, EXAMPLE opens (state "open")', (await stepState('example')) === 'open', await stepState('example'));
-  check('the plan card shows "Up to date · v1"', (await text('.artifact[data-kind=plan]')).includes('Up to date · v1'), await text('.artifact[data-kind=plan]'));
   await click('[data-testid=stage-continue]');
   check('Continue moves to EXAMPLE (UI + database agree)', await chrome.waitFor(`document.querySelector('.stage[data-stage=example]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'example', await dbStage());
   check('earlier stage is marked "past"', (await stepState('plan')) === 'past');
@@ -216,7 +292,43 @@ try {
   await chrome.screenshot(`${OUT}/stage-mobile.png`);
   await chrome.viewport(1280, 800);
 
-  await chrome.eval(`location.hash = '#/p/does-not-exist'; true`);
+  // ── 3d. starting from an idea on the home screen (Step 8) ─────────────────────────────────────────────
+  // The build Worker call is stubbed to fail, so the default run spends nothing on a model; E2E_AI=1 sends it for real below.
+  const IDEA = 'A site for my dog-walking business in Austin';
+  await chrome.eval(`location.hash = '#/'; true`);
+  check('Home: "Start something new" box sits above the projects', await chrome.waitFor(`!!document.querySelector('[data-testid=new-project]')`, 8000));
+  check('"Draft my plan" stays disabled until something is typed', (await chrome.eval(`document.querySelector('[data-testid=idea-go]').disabled`)) === true);
+  await chrome.eval(`window.__realFetch = window.fetch; window.fetch = (input, init) => { const u = typeof input === 'string' ? input : input.url; return u.startsWith('https://vexium-ai-build.startafter.workers.dev') ? Promise.resolve(new Response(JSON.stringify({ error: 'e2e: build Worker stubbed' }), { status: 503, headers: { 'Content-Type': 'application/json' } })) : window.__realFetch(input, init); }; true`);
+  await setValue('[data-testid=idea-input]', IDEA);
+  await click('[data-testid=idea-go]');
+  check('"Draft my plan" creates a project and opens it', await chrome.waitFor(`/^#\\/p\\/proj_/.test(location.hash)`, 10000), await chrome.eval('location.hash'));
+  const newId = (await chrome.eval('location.hash')).replace('#/p/', '');
+  const created = (await jfetch(`${SB}/rest/v1/projects?id=eq.${newId}&select=user_id,stage,name`, { headers: svc })).json?.[0];
+  check('…the new project belongs to the user, is called Untitled and starts at PLAN', created?.user_id === uid && created.stage === 'plan' && created.name === 'Untitled', JSON.stringify(created));
+  check('…the idea went out as the first message; refused, it is back in the box with the reason shown', await chrome.waitFor(`!!document.querySelector('[data-testid=chat-error]') && document.querySelector('[data-testid=chat-input]').value === ${JSON.stringify(IDEA)}`, 10000), await text('[data-testid=chat-error]'));
+  check('…and nothing was saved: still "Not started", and the message can be sent again', (await text('[data-testid=plan-status]')) === 'Not started' && (await chrome.eval(`document.querySelector('[data-testid=chat-send]').disabled`)) === false);
+  await chrome.screenshot(`${OUT}/plan-new-project.png`);
+
+  if (process.env.E2E_AI) {
+    // The real thing (spends model credits): a vague idea → a reply and a first saved plan, all through the Worker.
+    // keep a copy of what the Worker streams, so a failed run can say why (the UI only shows a friendly sentence)
+    await chrome.eval(`window.__workerText = ''; window.fetch = async (input, init) => { const res = await window.__realFetch(input, init); const u = typeof input === 'string' ? input : input.url; if (u.startsWith('https://vexium-ai-build.startafter.workers.dev')) res.clone().text().then((t) => { window.__workerText += t; }, () => {}); return res; }; true`);
+    await click('[data-testid=chat-send]');
+    const replied = await chrome.waitFor(`document.querySelector('[data-testid=plan-status]')?.textContent.startsWith('Saved') && document.querySelectorAll('[data-testid=chat-line][data-role=assistant]').length >= 1`, 180000);
+    check('AI: the first message gets a reply and a saved plan', replied, (await text('[data-testid=plan-status]')) + ' | ' + (await text('[data-testid=chat-error]')));
+    if (!replied) info('AI worker stream: ' + JSON.stringify((await chrome.eval('window.__workerText')).slice(0, 800)));
+    if (!replied) info('AI job: ' + JSON.stringify((await jfetch(`${SB}/rest/v1/build_jobs?project_id=eq.${newId}&select=status,error,stage&order=created_at.desc&limit=1`, { headers: svc })).json));
+    const aiPlan = (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${newId}&kind=eq.plan&select=version,data`, { headers: svc })).json?.[0];
+    const reply = await chrome.eval(`[...document.querySelectorAll('[data-testid=chat-line][data-role=assistant]')].map((l) => l.textContent).join(' // ')`);
+    info('AI plan: ' + JSON.stringify(aiPlan?.data ?? null).slice(0, 1500));
+    info('AI reply: ' + reply);
+    check('AI: the plan is about the idea and has pages; the reply is short and has no markers', !!aiPlan && aiPlan.data.pages.length >= 1 && !reply.includes('[[') && reply.length < 1200, JSON.stringify(aiPlan?.data?.name ?? null));
+    check('AI: no revenue what-if the owner did not ask for', aiPlan?.data?.scenario === null, JSON.stringify(aiPlan?.data?.scenario ?? null));
+    check('AI: the project took the plan\'s name', await chrome.waitFor(`!/Untitled/.test(document.querySelector('h1')?.textContent ?? 'Untitled')`, 10000), await text('h1'));
+    await chrome.screenshot(`${OUT}/plan-ai.png`);
+  }
+
+  await chrome.eval(`if (window.__realFetch) window.fetch = window.__realFetch; location.hash = '#/p/does-not-exist'; true`);
   check('unknown project id → "Project not found"', await chrome.waitFor(`document.body.textContent.includes('Project not found')`, 8000));
   await chrome.eval(`location.hash = '#/nope/nope'; true`);
   check('unknown route → "Page not found"', await chrome.waitFor(`document.body.textContent.includes('Page not found')`, 5000));
@@ -276,6 +388,7 @@ try {
   try { if (chrome) await chrome.close(); } catch { /* ignore */ }
   try { if (local) local.server.close(); } catch { /* ignore */ }
   await jfetch(`${SB}/rest/v1/projects?id=eq.${PID}`, { method: 'DELETE', headers: svc });
+  if (uid) await jfetch(`${SB}/rest/v1/projects?user_id=eq.${uid}`, { method: 'DELETE', headers: svc }); // projects the test made through the UI
   if (uid) await jfetch(`${SB}/auth/v1/admin/users/${uid}`, { method: 'DELETE', headers: svc });
   info('cleanup: throwaway user + project deleted');
   console.log(`\n${pass} passed, ${fail} failed`);

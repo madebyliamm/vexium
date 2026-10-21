@@ -1970,6 +1970,14 @@ function stageDeps(): StageDeps {
       const out = await r.json();
       return { version: out.version as number, staled: (out.staled ?? []) as string[] };
     },
+    async lastMessage(projectId, stage) {
+      const m = (await rows(`stage_messages?project_id=eq.${enc(projectId)}&stage=eq.${enc(stage)}&select=role,content&order=created_at.desc&limit=1`))[0];
+      return m ? { role: m.role as "user" | "assistant", content: String(m.content ?? "") } : null;
+    },
+    async saveMessage(m) {
+      const r = await fetch(`${rest}/stage_messages`, { method: "POST", headers: { ...write, Prefer: "return=minimal" }, body: JSON.stringify(m) });
+      if (!r.ok) throw new Error(`stage_messages insert ${r.status}`);
+    },
   };
 }
 

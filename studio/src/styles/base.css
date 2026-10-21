@@ -109,3 +109,66 @@ h2 { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
   .tb-link { padding: 8px 9px; }
 }
 .page-head h1 + .sub { margin-top: 4px; }
+
+/* ── start a project (home) ── */
+.start { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.start-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.link-btn { font-size: 13px; font-weight: 700; color: var(--accent); }
+.link-btn:hover:not(:disabled) { text-decoration: underline; }
+.link-btn:disabled { opacity: .5; cursor: not-allowed; }
+.start textarea, .composer textarea, .plan-fields input, .plan-fields textarea, .plan-fields select {
+  width: 100%; font: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--bg); border: 0; border-radius: var(--r-sm);
+  padding: 10px 12px; box-shadow: inset 0 0 0 1px var(--b1); transition: box-shadow .15s, background .15s;
+}
+.start textarea, .composer textarea, .plan-fields textarea { resize: vertical; line-height: 1.5; }
+.start textarea:focus, .composer textarea:focus, .plan-fields input:focus, .plan-fields textarea:focus, .plan-fields select:focus { outline: none; background: var(--s1); box-shadow: inset 0 0 0 2px var(--accent); }
+.plan-fields input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--err); }
+textarea:disabled, input:disabled, select:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── plan screen: chat + editable plan card ── */
+.plan-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+.chat, .plan-card { display: flex; flex-direction: column; gap: 14px; background: var(--bg); box-shadow: none; padding: 16px; }
+.chat { position: sticky; top: 72px; }
+.chat-log { display: flex; flex-direction: column; gap: 10px; min-height: 180px; max-height: min(52vh, 480px); overflow-y: auto; padding: 2px; }
+.chat-sk { min-height: 56px; }
+.bubble { max-width: 92%; padding: 10px 14px; border-radius: var(--r); font-size: 14px; font-weight: 500; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.assistant { align-self: flex-start; background: var(--s1); box-shadow: var(--shadow-sm); }
+.bubble.user { align-self: flex-end; background: var(--a1); color: #fff; }
+.working { align-self: flex-start; font-size: 13px; font-weight: 600; color: var(--sub); display: flex; align-items: center; }
+.chat-error { align-self: stretch; }
+.retry { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.composer { display: flex; flex-direction: column; gap: 8px; }
+.composer-actions { display: flex; justify-content: flex-end; }
+.plan-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.plan-fields { border: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > span, .whatif-grid label > span, .backend label > span { font-size: 12px; font-weight: 800; letter-spacing: .01em; color: var(--sub); }
+.rows { display: flex; flex-direction: column; gap: 8px; list-style: none; }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.row > input { flex: 1 1 0; min-width: 0; }
+.row > select { flex: 0 0 auto; width: auto; }
+.price-row > input:nth-child(2) { flex: 0 0 96px; }
+.page-row { flex-wrap: wrap; }
+.page-row > input { flex: 1 1 130px; }
+.page-row > .grow { flex: 2 1 200px; }
+.icon-btn { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; line-height: 1; color: var(--sub); background: var(--s2); }
+.icon-btn:hover { background: var(--s3); color: var(--text); }
+.add { align-self: flex-start; }
+.backend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.backend label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.plan-fields .check input { width: 16px; height: 16px; flex: 0 0 auto; accent-color: var(--accent); box-shadow: none; padding: 0; }
+.check .done { text-decoration: line-through; color: var(--sub); }
+.check-row > .check { flex: 1 1 0; min-width: 0; }
+.add-row { margin-top: 2px; }
+.whatif, .whatif-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.whatif-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; align-self: stretch; }
+.whatif-grid label { display: flex; flex-direction: column; gap: 4px; }
+.whatif-result { font-size: 14px; font-weight: 600; line-height: 1.5; }
+.plan-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.plan-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 8px 0; }
+@media (max-width: 860px) {
+  .plan-grid { grid-template-columns: minmax(0, 1fr); }
+  .chat { position: static; }
+  .chat-log { max-height: 46vh; }
+}

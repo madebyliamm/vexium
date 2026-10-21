@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { LEGACY } from '../lib/config.ts';
 import { STAGE_BLURBS, artifactCards, continueBlockers } from '../lib/stage-view.ts';
 import { STAGE_LABELS, describeBlocker, nextStage, prevStage, type ArtifactKind, type LatestArtifacts, type Stage } from '../lib/stages.ts';
@@ -10,11 +11,17 @@ interface Props {
   busy: boolean;
   onKeep: (kind: ArtifactKind) => void;
   onMove: (stage: Stage) => void;
+  /** The stage's own guided screen (PLAN: chat + plan card). When set it replaces the artifact list and the "on its way" note. */
+  guided?: ComponentChildren;
+  /** Keeps "Continue" closed, with this reason (e.g. unsaved edits). */
+  holdContinue?: string | null;
+  /** A non-blocking line under "Continue". */
+  continueNote?: string | null;
 }
 
 /** The current stage: what it reads and works on (with stale state), the way forward, the way back. The guided screens plug in above the artifacts (Steps 8–12). */
-export function StagePanel({ projectId, stage, artifacts, published, busy, onKeep, onMove }: Props) {
-  const cards = artifactCards(stage, artifacts);
+export function StagePanel({ projectId, stage, artifacts, published, busy, onKeep, onMove, guided, holdContinue, continueNote }: Props) {
+  const cards = guided ? [] : artifactCards(stage, artifacts);
   const next = nextStage(stage);
   const prev = prevStage(stage);
   const blocked = continueBlockers(stage, artifacts, published);
@@ -48,10 +55,12 @@ export function StagePanel({ projectId, stage, artifacts, published, busy, onKee
         </ul>
       )}
 
-      <p class="sub soon">
-        The guided {STAGE_LABELS[stage].toLowerCase()} screen is on its way. Until then, keep building in the{' '}
-        <a class="link" href={LEGACY.editor(projectId)}>editor</a> — everything you make there carries over.
-      </p>
+      {guided ?? (
+        <p class="sub soon">
+          The guided {STAGE_LABELS[stage].toLowerCase()} screen is on its way. Until then, keep building in the{' '}
+          <a class="link" href={LEGACY.editor(projectId)}>editor</a> — everything you make there carries over.
+        </p>
+      )}
 
       <div class="panel-actions">
         {prev ? (
@@ -61,10 +70,12 @@ export function StagePanel({ projectId, stage, artifacts, published, busy, onKee
         ) : <span />}
         {next && (
           <div class="continue">
-            <button type="button" class="btn" disabled={busy || blocked.length > 0} data-testid="stage-continue" onClick={() => onMove(next)}>
+            <button type="button" class="btn" disabled={busy || blocked.length > 0 || !!holdContinue} data-testid="stage-continue" onClick={() => onMove(next)}>
               Continue to {STAGE_LABELS[next]}
             </button>
             {blocked.length > 0 && <span class="why" data-testid="stage-why">{blocked.map(describeBlocker).join('. ')}.</span>}
+            {blocked.length === 0 && holdContinue && <span class="why" data-testid="stage-hold">{holdContinue}</span>}
+            {blocked.length === 0 && !holdContinue && continueNote && <span class="why" data-testid="stage-note">{continueNote}</span>}
           </div>
         )}
       </div>

@@ -1,4 +1,5 @@
 import { listMyProjects, type ProjectSummary } from '../api/data.ts';
+import { NewProject } from '../components/NewProject.tsx';
 import { LEGACY } from '../lib/config.ts';
 import { timeAgo } from '../lib/format.ts';
 import { link } from '../lib/router.ts';
@@ -31,6 +32,7 @@ export function Home({ user }: { user: UserInfo }) {
         </div>
         <a class="btn ghost" href={LEGACY.home}>Go to dashboard</a>
       </div>
+      <NewProject userId={user.id} />
       {projects.status === 'loading' && (
         <div class="grid" aria-busy="true">
           <div class="sk" /><div class="sk" /><div class="sk" />
@@ -38,7 +40,7 @@ export function Home({ user }: { user: UserInfo }) {
       )}
       {projects.status === 'error' && <div class="error" role="alert">Couldn't load your projects: {projects.error}</div>}
       {projects.status === 'ready' && projects.data.length === 0 && (
-        <div class="notice">No projects yet. Create one from your dashboard and it will show up here.</div>
+        <div class="notice">No projects yet — start your first one above and it will show up here.</div>
       )}
       {projects.status === 'ready' && projects.data.length > 0 && (
         <div class="grid" data-testid="project-grid">

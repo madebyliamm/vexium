@@ -4,8 +4,9 @@
 //
 //   1. { stage, project_id, messages, prepare:true }   → beginStage():  access + inputs + credits checks → creates a build_jobs row
 //                                                          → returns the prompt for the build Worker to run (or an HTTP error)
-//   2. { stage_done:{ job_id, ok, message, error } }   → finishStageRun(): the Worker reports the finished run; the reply is parsed,
-//                                                          validated and saved as an artifact, the job is closed
+//   2. { stage_done:{ job_id, ok, message, files?, error } } → finishStageRun(): the Worker reports the finished run; the reply (and,
+//                                                          for EXAMPLE, the files it wrote) is parsed, validated and saved — files first,
+//                                                          then the artifact — and the job is closed
 //
 // Why the SERVER saves the result: the run keeps going in the Worker even if the browser refreshes or closes. Saving here means a
 // reloaded studio simply finds the new artifact version (and the job row says it finished) — that is resume-after-refresh.
@@ -33,6 +34,8 @@ export interface StageDeps {
   finishJob(jobId: string, patch: { status: 'complete' | 'failed'; error?: string }): Promise<void>;
   /** put_project_artifact as the platform. */
   saveArtifact(projectId: string, kind: ArtifactKind, data: Record<string, unknown>): Promise<{ version: number; staled: string[] }>;
+  /** set_project_files as the platform: merges the given site files into projects.files in one statement (other files are kept). */
+  saveFiles(projectId: string, files: Record<string, string>): Promise<void>;
   /** The newest saved line of this stage's chat, or null when there is none. */
   lastMessage(projectId: string, stage: Stage): Promise<{ role: 'user' | 'assistant'; content: string } | null>;
   /** Appends a line to the stage's chat (stage_messages — written by the platform only). */
@@ -136,7 +139,25 @@ export interface StageDoneRequest {
   job_id?: unknown;
   ok?: unknown;
   message?: unknown;
+  /** The files the run wrote (completed `<file>` blocks), name → text. Only stages that produce files use them (EXAMPLE). */
+  files?: unknown;
   error?: unknown;
+}
+
+const MAX_FILES = 40;
+
+/** `files` from the Worker → a plain name → text map, or an error string. Anything that is not text is refused outright. */
+function cleanFiles(raw: unknown): Record<string, string> | string {
+  if (raw === undefined || raw === null) return {};
+  if (typeof raw !== 'object' || Array.isArray(raw)) return 'files must be an object of name → text';
+  const entries = Object.entries(raw as Record<string, unknown>);
+  if (entries.length > MAX_FILES) return `too many files (max ${MAX_FILES})`;
+  const out: Record<string, string> = {};
+  for (const [name, text] of entries) {
+    if (typeof text !== 'string') return `file ${name.slice(0, 60)} must be text`;
+    out[name] = text;
+  }
+  return out;
 }
 
 export interface StageOutcome {
@@ -176,6 +197,11 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
     return { status: 200, body: { ok: false, artifact: null, error: 'The AI sent no reply.' } };
   }
   if (body.message.length > MAX_REPLY_CHARS) return fail(413, 'too_large', 'The reply is too large to save.');
+  const written = cleanFiles(body.files);
+  if (typeof written === 'string') {
+    await close('failed', 'The run sent files that could not be read.');
+    return fail(400, 'bad_files', written);
+  }
 
   // Access may have been removed while the run was going (collaborator removed): then nothing is saved.
   if (!(await deps.getProjectAccess(job.project_id, userId))) {
@@ -183,7 +209,7 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
     return fail(404, 'not_found', 'Project not found.');
   }
 
-  const done = finishStage(stage, body.message);
+  const done = finishStage(stage, body.message, written);
   if (done.error) {
     await close('failed', done.error);
     return { status: 200, body: { ok: false, artifact: null, error: done.error } };
@@ -202,9 +228,11 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
     return { status: 200, body: { ok: true, artifact: null } };
   }
   try {
+    // Files first, then the artifact: a new artifact version is what tells the studio "the run is done", so by then the files are there.
+    if (done.files) await deps.saveFiles(job.project_id, done.files);
     const saved = await deps.saveArtifact(job.project_id, done.artifact.kind, done.artifact.data);
     // The reply is only worth keeping once what it describes was actually saved (otherwise it claims changes that never happened).
-    await recordReply(done.chat || `I've updated your ${KIND_WORDS[done.artifact.kind]}.`);
+    await recordReply(done.chat || (done.files ? "Here's your landing page." : `I've updated your ${KIND_WORDS[done.artifact.kind]}.`));
     await close('complete');
     return { status: 200, body: { ok: true, artifact: { kind: done.artifact.kind, version: saved.version, staled: saved.staled } } };
   } catch (e) {

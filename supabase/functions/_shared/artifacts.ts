@@ -193,6 +193,20 @@ function validatePlan(d: Obj, e: Errors) {
   }
 }
 
+/**
+ * A CSS custom-property value we are willing to write into a stylesheet: short, one line, and unable to close the declaration, the
+ * rule or a comment (no semicolon, braces, angle brackets, backslash, newline, or comment opener/closer). Style specs are saved by
+ * clients and by the model, and later written into styles.css, so nothing may smuggle in a second rule.
+ */
+export function isSafeTokenValue(v: unknown): v is string {
+  return typeof v === 'string' && v.length > 0 && v.length <= 200 && !/[;{}<>\\\n\r]|\/\*|\*\//.test(v);
+}
+
+/** The only font host we load, as a URL that is safe to put inside `@import url('…')` (no quotes, parentheses, spaces or backslashes). */
+export function isSafeFontUrl(v: unknown): v is string {
+  return typeof v === 'string' && /^https:\/\/fonts\.googleapis\.com\/[A-Za-z0-9:@;=&+,._%/?!*-]{1,600}$/.test(v);
+}
+
 function validateStyleSpec(d: Obj, e: Errors) {
   if (typeof d.locked !== 'boolean') e.add('locked', 'must be true or false');
   if (!isObj(d.vibe)) e.add('vibe', 'must be an object');
@@ -205,13 +219,13 @@ function validateStyleSpec(d: Obj, e: Errors) {
   else
     for (const [k, v] of Object.entries(d.tokens)) {
       if (!/^--[a-z0-9-]+$/i.test(k)) e.add(`tokens.${k}`, 'must be a CSS custom property name like --accent');
-      else if (!isStr(v) || v.length > 200 || /[;{}<>]/.test(v)) e.add(`tokens.${k}`, 'must be a plain CSS value');
+      else if (!isSafeTokenValue(v)) e.add(`tokens.${k}`, 'must be a plain CSS value');
     }
   if (!isObj(d.fonts)) e.add('fonts', 'must be an object');
   else {
     if (!isNonEmptyStr(d.fonts.display)) e.add('fonts.display', 'is required');
     if (!isNonEmptyStr(d.fonts.body)) e.add('fonts.body', 'is required');
-    if (d.fonts.import_url !== undefined && (!isStr(d.fonts.import_url) || !/^https:\/\/fonts\.googleapis\.com\//.test(d.fonts.import_url))) {
+    if (d.fonts.import_url !== undefined && !isSafeFontUrl(d.fonts.import_url)) {
       e.add('fonts.import_url', 'must be a https://fonts.googleapis.com/ URL');
     }
   }

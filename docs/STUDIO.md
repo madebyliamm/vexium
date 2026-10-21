@@ -11,7 +11,7 @@ Vite + TypeScript + Preact. Built in CI and served at **`https://vexium.ai/studi
 | `npm test` | `node --test test/*.test.ts` — Node strips the TS itself, no test framework. |
 | `npm run build` | → `studio/dist/` (base `/studio/`). |
 | `node scripts/assemble-site.mjs` | (repo root) builds `_site/` = what Pages publishes. |
-| `node studio/test/browser_e2e.mjs` | real-Chrome e2e of the assembled site (local server) or the live site (`E2E_BASE=https://vexium.ai`). `E2E_AI=1` also sends one real PLAN message (spends model credits; default runs stub the Worker call). Needs Chrome + `supabase` CLI + `dangerouslyDisableSandbox`; creates/deletes a throwaway user. Screenshots in `/tmp/studio-e2e/`. |
+| `node studio/test/browser_e2e.mjs` | real-Chrome e2e of the assembled site (local server) or the live site (`E2E_BASE=https://vexium.ai`). `E2E_AI=1` also sends one real PLAN message and builds + locks one real EXAMPLE page (spends model credits; default runs stub the Worker call). Needs Chrome + `supabase` CLI + `dangerouslyDisableSandbox`; creates/deletes a throwaway user. Screenshots in `/tmp/studio-e2e/`. |
 
 ## Layout
 ```
@@ -40,8 +40,12 @@ studio/
     api/system.ts       zero-cost connectivity checks used by /system
     lib/plan-view.ts    pure logic of the PLAN screen (Step 8): card edit helpers, planProblems, splitLiveReply, historyToSend, revenue what-if maths — tested
     lib/pending.ts      the first message of a new project, handed from Home to the PLAN screen (in memory on purpose)
+    lib/example-view.ts pure logic of the EXAMPLE screen (Step 9): reading the saved page + style, planSave (what a Save writes), status, progress, wording — tested
+    lib/preview.ts      buildPreviewHtml: the project's files → ONE document for the sandboxed preview iframe (+ the vx-css message bridge) — tested
+    lib/style.ts        re-export of supabase/functions/_shared/style.ts (palette/fonts/density/tone presets, withVibe, deriveStyleSpec…)
+    api/example.ts      getExampleFiles (PostgREST JSON-path select — keys MUST be quoted: files->>"index.html") + setProjectFiles (RPC set_project_files)
     api/data.ts         (also) createProject / renameProject — NOTE: does not enforce the legacy project limit (trial 1 / starter 3) yet — Step 14
-    components/, routes/  Topbar, Splash, StageStepper, StagePanel (+ `guided` slot); PlanStage / PlanChat / PlanCard (Step 8), NewProject; Home (#/ — "Start something new" + projects), Project (#/p/:id — stepper + stage panel), System (#/system), NotFound
+    components/, routes/  Topbar, Splash, StageStepper, StagePanel (+ `guided` slot); PlanStage / PlanChat / PlanCard (Step 8), NewProject; ExampleStage / Preview (sandboxed iframe) / VibeControls (Step 9); Home (#/ — "Start something new" + projects), Project (#/p/:id — stepper + stage panel), System (#/system), NotFound
   test/                 *.test.ts (unit, `npm test`), browser_e2e.mjs (manual/CI-optional)
 ```
 

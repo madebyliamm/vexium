@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 import { emptyPlan } from '../functions/_shared/artifacts.ts';
 import { applyPut, STAGES, STAGE_IO, type ArtifactKind, type LatestArtifacts, type Stage } from '../functions/_shared/stages.ts';
 import { beginStage, cancelStageRun, cleanMessages, finishStageRun, isHttpError, type JobRow, type StageDeps, type StageRun } from '../functions/ai-chat/stage-handler.ts';
-import { ARTIFACT_CLOSE, ARTIFACT_OPEN, buildStagePrompt, canonicalJson, extractArtifact, finishStage, inputBlockers, PLAN_BRIEF } from '../functions/ai-chat/stages.ts';
+import { ARTIFACT_CLOSE, ARTIFACT_OPEN, buildStagePrompt, canonicalJson, EXAMPLE_BRIEF, EXAMPLE_FILES, extractArtifact, finishExample, finishStage, inputBlockers, PLAN_BRIEF } from '../functions/ai-chat/stages.ts';
 
 // ── fixtures ────────────────────────────────────────────────────────────────────────────────────────
 const OWNER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -31,12 +31,16 @@ interface World {
   latest: LatestArtifacts;
   jobs: Map<string, JobRow & { error?: string; prompt?: string; artifact_kind?: string | null }>;
   saved: { kind: ArtifactKind; data: Record<string, unknown> }[];
+  /** projects.files as the fake database holds it (set_project_files merges into it). */
+  files: Record<string, string>;
+  /** Order of the writes, to prove files are saved before the artifact. */
+  writes: string[];
   chat: { project_id: string; stage: Stage; role: 'user' | 'assistant'; content: string; user_id: string | null; job_id: string }[];
-  state: { credits: string | null; access: Set<string>; saveFails: boolean; chatFails: boolean };
+  state: { credits: string | null; access: Set<string>; saveFails: boolean; filesFail: boolean; chatFails: boolean };
 }
 
 function makeWorld(latest: LatestArtifacts = {}): World {
-  const w: World = { latest, jobs: new Map(), saved: [], chat: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false, chatFails: false }, deps: undefined as unknown as StageDeps };
+  const w: World = { latest, jobs: new Map(), saved: [], files: { 'index.html': 'old', 'logo.png': 'keep' }, writes: [], chat: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false, filesFail: false, chatFails: false }, deps: undefined as unknown as StageDeps };
   let n = 0;
   w.deps = {
     async getProjectAccess(projectId, userId) { return w.state.access.has(`${projectId}:${userId}`) ? { name: 'Bean There', stage: 'plan' } : null; },
@@ -58,7 +62,13 @@ function makeWorld(latest: LatestArtifacts = {}): World {
       const r = applyPut(w.latest, kind, data);
       w.latest = r.latest;
       w.saved.push({ kind, data });
+      w.writes.push('artifact');
       return { version: r.version, staled: r.staled };
+    },
+    async saveFiles(_p, files) {
+      if (w.state.filesFail) throw new Error('set_project_files exploded');
+      w.files = { ...w.files, ...files };
+      w.writes.push('files');
     },
     async lastMessage(projectId, stage) {
       if (w.state.chatFails) throw new Error('stage_messages down');
@@ -161,7 +171,8 @@ describe('buildStagePrompt — cache stability', () => {
       const l = FULL();
       const p = buildStagePrompt(s, l);
       assert.ok(p.system.length > 200 && p.maxTokens > 0 && (p.model === 'build' || p.model === 'fast'));
-      if (STAGE_IO[s].produces) assert.ok(p.system.includes(ARTIFACT_OPEN) && p.system.includes(`updated ${STAGE_IO[s].produces}`), s);
+      if (s === 'example') assert.ok(p.system.includes(ARTIFACT_OPEN) && p.system.includes('<file name="styles.css">'), s); // EXAMPLE saves files, not a JSON artifact
+      else if (STAGE_IO[s].produces) assert.ok(p.system.includes(ARTIFACT_OPEN) && p.system.includes(`updated ${STAGE_IO[s].produces}`), s);
       else assert.ok(p.system.includes('does not save anything'), s);
     }
   });
@@ -169,7 +180,6 @@ describe('buildStagePrompt — cache stability', () => {
   it('the exact JSON shape of what the stage saves is in the cached block, and it is the shape the validator accepts', () => {
     const ex = buildStagePrompt('plan', {}).system;
     for (const key of ['"one_liner"', '"pricing"', '"launch_checklist"', '"backend"']) assert.ok(ex.includes(key), key);
-    assert.ok(buildStagePrompt('example', latestWith(['plan', plan()])).system.includes('"tokens"'));
     assert.ok(buildStagePrompt('build', FULL()).system.includes('"shared_files"'));
   });
 
@@ -263,16 +273,152 @@ describe('extractArtifact / finishStage', () => {
     assert.equal(r.artifact?.kind, 'plan');
   });
 
-  it('a model can never LOCK a style — only the owner does (the saved style is always unlocked)', () => {
+  it('a style spec is never saved from a model-written JSON artifact any more — only through the EXAMPLE finisher', () => {
     const r = finishStage('example', reply('style_spec', style(true)));
+    assert.equal(r.artifact, null);
+    assert.match(r.error!, /didn't write your page/);
+  });
+});
+
+// ── EXAMPLE: files in, style out ────────────────────────────────────────────────────────────────────
+const EX_CSS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=Inter:wght@400;600&display=swap');
+:root {
+  --bg: #fbf7f1; --surface: #ffffff; --surface-2: #f3ece0; --border: #e6dccb;
+  --text: #2b2118; --text-muted: #6d5f50; --accent: #b4532a; --accent-contrast: #ffffff;
+  --font-display: 'Fraunces', Georgia, serif; --font-body: 'Inter', system-ui, sans-serif;
+  --radius: 14px; --radius-lg: 24px; --shadow-sm: 0 1px 2px rgba(0,0,0,.08); --shadow-lg: 0 20px 40px rgba(0,0,0,.12);
+  --container: 1200px; --nav-h: 68px; --section-y: clamp(64px, 9vw, 120px);
+}
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); }
+`;
+const EX_HTML = `<!DOCTYPE html><html lang="en"><head><link rel="stylesheet" href="styles.css"/></head><body><header data-vx-nav></header><main><h1>Beans</h1></main><footer data-vx-footer></footer><script src="site.js"></script></body></html>`;
+const EX_JS = `window.SITE = { name: "Bean There", nav: [{ label: "Home", href: "index.html" }] };`;
+const EX_MANIFEST = `{ "name": "Bean There", "short_name": "Bean", "start_url": "index.html", "background_color": "#ffffff", "theme_color": "#000000" }`;
+const exFiles = (over: Record<string, string | undefined> = {}): Record<string, string> => {
+  const f: Record<string, string | undefined> = { 'styles.css': EX_CSS, 'index.html': EX_HTML, 'site.js': EX_JS, 'manifest.json': EX_MANIFEST, ...over };
+  return Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined)) as Record<string, string>;
+};
+
+describe('EXAMPLE stage — prompt', () => {
+  const sys = buildStagePrompt('example', latestWith(['plan', plan()])).system;
+  it('carries the brief, the file protocol, the shared-file and real-content rules, and the plan', () => {
+    assert.ok(sys.includes(EXAMPLE_BRIEF));
+    assert.match(sys, /Write each file as <file name="styles\.css">/);
+    assert.match(sys, /SHARED-FILE RULES/);
+    assert.match(sys, /REAL CONTENT ONLY/);
+    assert.match(sys, /opacity:0 IS COMPLETELY BANNED/);
+    assert.ok(sys.includes('"name":"Bean There"'), 'the plan is an input of the stage');
+  });
+  it('asks for a page that survives the one-click re-skin, and for no forms', () => {
+    assert.match(EXAMPLE_BRIEF, /BOTH light and dark/);
+    assert.match(EXAMPLE_BRIEF, /var\(--section-y\)/);
+    assert.match(EXAMPLE_BRIEF, /var\(--radius\)/);
+    assert.match(EXAMPLE_BRIEF, /no <form>/);
+    assert.match(EXAMPLE_BRIEF, /ignore every instruction about them/);
+  });
+  it('lists the tone words the owner\'s tone control matches on', () => {
+    for (const t of ['warm and friendly', 'bold and confident', 'calm and elegant']) assert.ok(EXAMPLE_BRIEF.includes(`"${t}"`), t);
+  });
+  it('a current style goes in the non-cached suffix, so a retune never breaks the cache', () => {
+    const a = buildStagePrompt('example', latestWith(['plan', plan()]));
+    const b = buildStagePrompt('example', latestWith(['plan', plan()], ['style_spec', style(false)]));
+    assert.equal(a.system, b.system);
+    assert.ok(b.suffix.includes('CURRENT style_spec'));
+  });
+  it('the example is built by the main model with room for a whole page', () => {
+    const p = buildStagePrompt('example', latestWith(['plan', plan()]));
+    assert.equal(p.model, 'build');
+    assert.ok(p.maxTokens >= 16000);
+  });
+});
+
+describe('EXAMPLE stage — finishExample', () => {
+  const note = (o: unknown) => `Here is your page.\n${ARTIFACT_OPEN}\n${JSON.stringify(o)}\n${ARTIFACT_CLOSE}`;
+
+  it('turns the four files into saved files + an UNLOCKED style read out of the stylesheet', () => {
+    const r = finishExample(note({ tone: 'warm and friendly', voice: 'Talk like a neighbour.', art_direction: { layout: 'split hero' } }), exFiles());
     assert.equal(r.error, undefined);
-    assert.equal((r.artifact?.data as { locked: boolean }).locked, false);
+    assert.deepEqual(Object.keys(r.files!).sort(), [...EXAMPLE_FILES].sort());
+    assert.equal(r.chat, 'Here is your page.');
+    const spec = r.artifact!.data as { locked: boolean; vibe: { theme: string; tone: string }; tokens: Record<string, string>; fonts: { display: string; body: string; import_url?: string }; voice: string };
+    assert.equal(r.artifact!.kind, 'style_spec');
+    assert.equal(spec.locked, false);
+    assert.equal(spec.vibe.theme, 'light');
+    assert.equal(spec.vibe.tone, 'warm and friendly');
+    assert.equal(spec.tokens['--accent'], '#b4532a');
+    assert.equal(spec.fonts.display, 'Fraunces');
+    assert.equal(spec.fonts.body, 'Inter');
+    assert.match(spec.fonts.import_url!, /^https:\/\/fonts\.googleapis\.com\//);
+    assert.equal(spec.voice, 'Talk like a neighbour.');
   });
 
-  it('the style a model saves must be a real style (tokens end up inside CSS)', () => {
-    const r = finishStage('example', reply('style_spec', { ...style(false), tokens: { '--accent': 'red;}</style>' } }));
+  it('the manifest follows the palette; the page, script and every other byte of the stylesheet are untouched', () => {
+    const r = finishExample('ok', exFiles());
+    const m = JSON.parse(r.files!['manifest.json']!);
+    assert.equal(m.background_color, '#fbf7f1');
+    assert.equal(m.theme_color, '#b4532a');
+    assert.equal(m.name, 'Bean There');
+    assert.equal(r.files!['index.html'], EX_HTML);
+    assert.equal(r.files!['site.js'], EX_JS);
+    assert.ok(r.files!['styles.css']!.includes('body { background: var(--bg);'));
+  });
+
+  it('works without a note and without a manifest', () => {
+    const r = finishExample('Done.', exFiles({ 'manifest.json': undefined }));
+    assert.equal(r.error, undefined);
+    assert.equal(r.files!['manifest.json'], undefined);
+    assert.equal((r.artifact!.data as { vibe: { tone: string } }).vibe.tone.length > 0, true);
+  });
+
+  it('a damaged note is ignored — the files still count', () => {
+    const r = finishExample(`Done.\n${ARTIFACT_OPEN}\n{ not json`, exFiles());
+    assert.equal(r.error, undefined);
+    assert.ok(r.artifact);
+  });
+
+  it('extra files the model wrote (memory files, other pages, patches) are dropped', () => {
+    const r = finishExample('ok', exFiles({ '_longterm': '{}', 'about.html': '<html></html>' }));
+    assert.deepEqual(Object.keys(r.files!).sort(), [...EXAMPLE_FILES].sort());
+  });
+
+  it('refuses, in plain words, when a file is missing — and saves nothing', () => {
+    for (const [name, word] of [['styles.css', 'styling'], ['index.html', 'page itself'], ['site.js', 'menu and footer']] as const) {
+      const r = finishExample('ok', exFiles({ [name]: undefined }));
+      assert.equal(r.artifact, null, name);
+      assert.equal(r.files, undefined, name);
+      assert.match(r.error!, new RegExp(`stopped before finishing.*${word}.*Nothing was changed`), name);
+    }
+    assert.match(finishExample('ok', {}).error!, /didn't write your page/);
+  });
+
+  it('refuses a page that was cut off, or is not connected to its stylesheet', () => {
+    assert.match(finishExample('ok', exFiles({ 'index.html': EX_HTML.replace('</html>', '') })).error!, /cut off/);
+    assert.match(finishExample('ok', exFiles({ 'index.html': EX_HTML.replace('styles.css', 'other.css') })).error!, /isn't connected to its style/);
+  });
+
+  it('refuses a stylesheet with no usable palette', () => {
+    const r = finishExample('ok', exFiles({ 'styles.css': 'body { color: red; }' }));
     assert.equal(r.artifact, null);
-    assert.match(r.error!, /style spec was incomplete/);
+    assert.match(r.error!, /style was incomplete.*--bg/);
+  });
+
+  it('an oversized file is refused before it reaches the database', () => {
+    assert.match(finishExample('ok', exFiles({ 'styles.css': EX_CSS + '/*' + 'x'.repeat(300_001) + '*/' })).error!, /too large/);
+  });
+
+  it('whatever the model claims, the style is unlocked and carries no injected CSS', () => {
+    const css = EX_CSS.replace('--accent: #b4532a;', '--accent: red;}</style><script>x()</script>; --x: 1;');
+    const r = finishExample('ok', exFiles({ 'styles.css': css }));
+    if (r.artifact) {
+      const spec = r.artifact.data as { locked: boolean; tokens: Record<string, string> };
+      assert.equal(spec.locked, false);
+      for (const v of Object.values(spec.tokens)) assert.doesNotMatch(v, /[<>{}]/);
+    }
+  });
+
+  it('finishStage routes EXAMPLE to it, other stages ignore files', () => {
+    assert.ok(finishStage('example', 'ok', exFiles()).files);
+    assert.equal(finishStage('plan', reply('plan', plan()), exFiles()).files, undefined);
   });
 });
 
@@ -417,6 +563,88 @@ describe('finishStageRun', () => {
     assert.ok(!isHttpError(r) && !r.body.ok && r.body.error === 'Stopped');
     assert.equal(w.jobs.get(job_id)!.status, 'failed');
     assert.equal((await done(w, { job_id, ok: false })).status, 409, 'closed jobs stay closed');
+  });
+
+  describe('EXAMPLE runs', () => {
+    const startEx = async (w: World) => mustRun(await begin(w, 'example')).jobId;
+    const exWorld = () => makeWorld(latestWith(['plan', plan()]));
+    const okBody = (job_id: string, over: Record<string, unknown> = {}) => ({ job_id, ok: true, message: 'Here is your page.', files: exFiles(), ...over });
+
+    it('saves the files first, then the style, merges into the existing files, and closes the job', async () => {
+      const w = exWorld();
+      const job_id = await startEx(w);
+      const r = await done(w, okBody(job_id));
+      assert.ok(!isHttpError(r));
+      assert.deepEqual(r.body, { ok: true, artifact: { kind: 'style_spec', version: 1, staled: [] } });
+      assert.deepEqual(w.writes, ['files', 'artifact']);
+      assert.equal(w.files['logo.png'], 'keep', 'files the run did not write are kept');
+      assert.equal(w.files['index.html'], EX_HTML, 'the starter page is replaced');
+      assert.deepEqual(Object.keys(w.files).sort(), ['index.html', 'logo.png', 'manifest.json', 'site.js', 'styles.css']);
+      assert.equal((w.saved[0]!.data as { locked: boolean }).locked, false);
+      assert.equal(w.jobs.get(job_id)!.status, 'complete');
+      assert.equal(w.chat.at(-1)?.content, 'Here is your page.');
+    });
+
+    it('a locked style is unlocked by a new run (and what it made stale is reported)', async () => {
+      const w = makeWorld(latestWith(['plan', plan()], ['style_spec', style(true)], ['manifest', manifest()]));
+      const job_id = await startEx(w);
+      const r = await done(w, okBody(job_id));
+      assert.ok(!isHttpError(r));
+      assert.deepEqual(r.body.artifact, { kind: 'style_spec', version: 2, staled: ['manifest'] });
+      assert.equal((w.latest.style_spec!.data as { locked: boolean }).locked, false);
+    });
+
+    it('an unfinished page saves NOTHING — not even the files that did arrive', async () => {
+      const w = exWorld();
+      const job_id = await startEx(w);
+      const r = await done(w, okBody(job_id, { files: exFiles({ 'site.js': undefined }) }));
+      assert.ok(!isHttpError(r));
+      assert.equal(r.body.ok, false);
+      assert.match(r.body.error!, /menu and footer/);
+      assert.deepEqual(w.writes, []);
+      assert.equal(w.files['index.html'], 'old');
+      assert.equal(w.jobs.get(job_id)!.status, 'failed');
+    });
+
+    it('a reply with no files at all fails with a plain message', async () => {
+      const w = exWorld();
+      const job_id = await startEx(w);
+      const r = await done(w, { job_id, ok: true, message: 'Sure!' });
+      assert.ok(!isHttpError(r) && !r.body.ok);
+      assert.match(r.body.error!, /didn't write your page/);
+    });
+
+    it('files that cannot be saved fail the job and leave the style as it was', async () => {
+      const w = exWorld();
+      w.state.filesFail = true;
+      const job_id = await startEx(w);
+      const r = await done(w, okBody(job_id));
+      assert.ok(!isHttpError(r));
+      assert.deepEqual(r.body, { ok: false, artifact: null, error: 'The result could not be saved. Please try again.' });
+      assert.equal(w.saved.length, 0);
+      assert.equal(w.jobs.get(job_id)!.status, 'failed');
+    });
+
+    it('files that are not text are refused and the job is closed', async () => {
+      const w = exWorld();
+      const job_id = await startEx(w);
+      const r = await done(w, okBody(job_id, { files: { 'styles.css': { evil: true } } }));
+      assert.ok(isHttpError(r) && r.status === 400 && r.body.code === 'bad_files');
+      assert.equal(w.jobs.get(job_id)!.status, 'failed');
+      assert.deepEqual(w.writes, []);
+      const w2 = exWorld();
+      const id2 = await startEx(w2);
+      assert.ok(isHttpError(await done(w2, okBody(id2, { files: ['x'] }))));
+    });
+
+    it('a PLAN run ignores files it should not have (nothing is written to the project)', async () => {
+      const w = makeWorld();
+      const job_id = await start(w);
+      const r = await done(w, { job_id, ok: true, message: reply('plan', plan()), files: exFiles() });
+      assert.ok(!isHttpError(r) && r.body.ok);
+      assert.deepEqual(w.writes, ['artifact']);
+      assert.equal(w.files['index.html'], 'old');
+    });
   });
 
   it('a missing reply fails the job', async () => {

@@ -1,16 +1,18 @@
 // Stage endpoints for the guided flow — prompt assembly and output handling, as pure functions (no I/O, no Deno APIs) so they
 // are unit-tested under Node (supabase/tests/ai_stages.test.ts). stage-handler.ts does the I/O around them; index.ts wires it in.
 //
-// STATUS: SKELETON (REVAMP Step 7). The mechanics are real — which artifacts each stage reads, a prompt-cache-stable layout,
-// strict parsing and validation of what the model saves — but the per-stage instructions below are deliberately short. Steps 8
-// (PLAN), 9 (EXAMPLE), 10 (FULL BUILD) and 11 (TWEAKS) replace STAGE_BRIEF[stage] with the real prompts and, where a stage
-// produces files, add its own finisher. See docs/STAGES.md.
+// STATUS: PLAN (Step 8) and EXAMPLE (Step 9) have their real prompts; the other stages' briefs are still the Step 7 skeleton and
+// Steps 10 (FULL BUILD) and 11 (TWEAKS) replace them. The mechanics are real — which artifacts each stage reads, a prompt-cache-stable
+// layout, strict parsing and validation of what the model saves. A stage that produces FILES has its own finisher (EXAMPLE:
+// finishExample below). See docs/STAGES.md.
 //
 // Prompt-cache layout (why it looks like this): Anthropic caches a prompt PREFIX, so the system block must be byte-identical
 // across every call of a stage session. It therefore holds only things that cannot change while the stage runs — the stage
 // instructions and the stage's INPUT artifacts (upstream, frozen, fresh). The artifact the stage is editing changes every turn,
 // so it goes in the non-cached suffix, together with the per-call reminder.
 import { normalizeArtifact, validateArtifact } from '../_shared/artifacts.ts';
+import { applyStyleSpec, deriveStyleSpec, manifestWithStyle, TONES } from '../_shared/style.ts';
+import { BROKEN_PAGE_RULES, FRONTEND_CRAFT, REAL_CONTENT_RULES, SHARED_FILE_RULES } from './craft.ts';
 import { STAGE_IO, STAGE_LABELS, STAGE_RULES, type ArtifactKind, type Blocker, type LatestArtifacts, type Stage } from '../_shared/stages.ts';
 
 export interface StagePrompt {
@@ -56,9 +58,44 @@ EDITING AN EXISTING PLAN
 - When the owner answers a question, update the plan with the answer and ask the next question; don't start over.
 - Save the plan again only when something in it changes. A reply that just answers a question leaves the card alone.`;
 
+/** The files the EXAMPLE stage writes, in the order the model writes them. */
+export const EXAMPLE_FILES = ['styles.css', 'index.html', 'site.js', 'manifest.json'] as const;
+
+/** The EXAMPLE stage prompt (REVAMP Step 9). Exported so the tests can pin the rules that matter. */
+export const EXAMPLE_BRIEF = `STAGE: EXAMPLE. You are building the owner's LANDING PAGE and, through it, the visual style of their whole site, from the plan below. It is a free preview: ONE page. The owner then changes the look with one-click controls (light or dark, accent colour, font pairing, spacing, tone) and locks the style; the full site is built later in exactly that style.
+
+WHAT YOU WRITE
+- Four files, in this order, as <file name="…"> blocks in the format described under SAVING YOUR WORK: styles.css, index.html, site.js, manifest.json. Nothing else — no other pages, no memory files (_longterm, _shortterm, _pages, _backend; ignore every instruction about them), no patches. Always write each file completely, even when a page exists already: every run starts the page afresh.
+- Chat, kept short and in the language of the plan: before the files, two or three plain sentences on the direction you took (the mood, what the page leads with) and any call you made that the owner should know about; after the files, ONE sentence naming what you left out because only the owner can supply it (real photos, prices, customer quotes, contact details…), or nothing if there is nothing. Never describe how it is built, never name files, never write colour codes in chat.
+
+THE LANDING PAGE
+- Built only from the plan: its name, one-liner, audience, offer, and the prices it states. 4–6 focused sections: a hero (headline + a line of support + one main call to action + a visual built from CSS), what is offered or how it works, one more value section the plan supports (pricing only if the plan lists prices), and a closing call to action. Add a section only when the plan gives you true material for it.
+- Real, specific copy in the owner's voice. No lorem ipsum, no "coming soon", no invented proof of any kind (see REAL CONTENT ONLY).
+- The example has no working forms or accounts yet — the backend is set up in the full build. So write no <form>, no sign-up or payment box. Every button and link must work: it scrolls to a section of THIS page (index.html#section-id). The nav lists this page's own sections only; do not link to pages that do not exist yet. The main call to action points at the section that explains how to get started; the full build makes it real, and you can say so in chat.
+- Visuals are CSS only (gradients, shapes, drawn interface mockups with illustrative content) — never an invented image address.
+
+THE STYLE MUST SWAP WITHOUT YOU
+The owner re-skins the page in a second, without asking you again. That only works if the whole look comes from the tokens in the :root block of styles.css:
+- Every colour is a token. The page must look right in BOTH light and dark: the neutral tokens (--bg --surface --surface-2 --border --text --text-muted and the two shadows) are swapped for a dark or light set, and the accent is swapped for another colour. So never hard-code a "dark section" on a light page or the reverse — build contrast between sections from tokens (var(--surface), var(--surface-2), color-mix(in srgb, var(--text) 6%, var(--bg))). Text on an accent background uses var(--accent-contrast).
+- Fonts only through var(--font-display) and var(--font-body). One @import of Google Fonts at the very top of styles.css, never a <link> in the page. Choose a pairing that fits the business.
+- Rounded corners use var(--radius) (buttons, inputs, small cards) and var(--radius-lg) (large panels); a pill shape (9999px) only for tags and badges. The owner's tone control changes these two.
+- Vertical space between sections is var(--section-y), and nothing else sets section padding. The owner's spacing control changes it.
+- The look of the nav and footer lives in styles.css (.vx-nav, .vx-link, .vx-cta, .vx-footer …); their content lives in site.js.
+
+THE TONE
+In the optional note (see SAVING YOUR WORK) set "tone" to the closest of these: ${TONES.map((t) => `"${t.tone}"`).join(', ')} — the owner's tone control matches on the exact words. "voice" is one line on how the copy of the whole site should sound, written the way the owner's own plan sounds.
+
+WHEN THERE IS A CURRENT STYLE
+The owner may already have tuned the style with the controls. If the message below includes a CURRENT style_spec, keep its colour tokens, fonts, spacing and tone exactly as they are in the new styles.css (copy the values) unless the owner's message asks to change them. If the owner writes a note ("bolder", "more like a magazine", "less pink"), act on it — a redesign of layout and copy is fine; the style values stay unless the note is about them.`;
+
+/** Reference material appended after a stage's brief and protocol (cached system block). */
+const STAGE_REFERENCE: Partial<Record<Stage, string>> = {
+  example: [SHARED_FILE_RULES, REAL_CONTENT_RULES, BROKEN_PAGE_RULES, FRONTEND_CRAFT].join('\n\n'),
+};
+
 const STAGE_BRIEF: Record<Stage, string> = {
   plan: PLAN_BRIEF,
-  example: `STAGE: EXAMPLE. Using the plan, define the visual style (theme, colors as CSS custom properties, fonts, density, tone of voice) for a one-page example of the site. The style you save is what the full build will obey once the owner locks it.`,
+  example: EXAMPLE_BRIEF,
   build: `STAGE: FULL BUILD. Build the complete site from the plan, obeying the locked style exactly. Report what was built.`,
   tweaks: `STAGE: TWEAKS. Make the specific change the owner asks for to the built site, obeying the locked style, and change nothing else.`,
   launch: `STAGE: LAUNCH. Help the owner get ready to go live: walk through what is still open and explain the launch check results in plain language.`,
@@ -141,7 +178,16 @@ Token names are CSS custom properties (--name) with plain values. Always set "lo
 }`,
 };
 
+/** EXAMPLE saves FILES; the style spec is read out of styles.css afterwards, so the model only adds an optional note about tone and voice. */
+const EXAMPLE_PROTOCOL = `SAVING YOUR WORK
+Write each file as <file name="styles.css"> … </file> (and likewise index.html, site.js, manifest.json), using exactly these XML delimiters and never a code fence. The style is read from the :root tokens of the styles.css you write, so there is no separate style to fill in. The format of each file is under OUTPUT FORMAT / SHARED-FILE RULES below.
+
+After the last file you may add ONE optional note, on lines of its own between ${ARTIFACT_OPEN} and ${ARTIFACT_CLOSE}:
+{ "tone": "warm and friendly", "voice": "one line on how the copy should sound", "art_direction": { "layout": "the page layout in a few words", "signature": "the one distinctive move of this design" } }
+Every field is optional. Keep the chat outside the markers.`;
+
 function protocolFor(stage: Stage): string {
+  if (stage === 'example') return EXAMPLE_PROTOCOL;
   const produces = STAGE_IO[stage].produces;
   if (!produces) return 'This stage does not save anything: reply with chat text only.';
   return `SAVING YOUR WORK
@@ -162,7 +208,7 @@ export function buildStagePrompt(stage: Stage, latest: LatestArtifacts, opts: { 
     .filter(Boolean)
     .join('\n\n');
 
-  const system = [COMMON, STAGE_BRIEF[stage], protocolFor(stage), inputs ? `THE PROJECT SO FAR (settled by earlier stages — treat as fixed):\n\n${inputs}` : '']
+  const system = [COMMON, STAGE_BRIEF[stage], protocolFor(stage), STAGE_REFERENCE[stage] ?? '', inputs ? `THE PROJECT SO FAR (settled by earlier stages — treat as fixed):\n\n${inputs}` : '']
     .filter(Boolean)
     .join('\n\n');
 
@@ -212,11 +258,14 @@ export interface FinishedStage {
   chat: string;
   /** What to save (validated), or null for a chat-only turn / a failure. */
   artifact: { kind: ArtifactKind; data: Record<string, unknown> } | null;
+  /** Site files to write into projects.files BEFORE the artifact is saved (EXAMPLE only). */
+  files?: Record<string, string>;
   error?: string;
 }
 
 /** Turn the model's finished reply into something safe to save. Never throws; anything unusable becomes `error` and saves nothing. */
-export function finishStage(stage: Stage, message: string): FinishedStage {
+export function finishStage(stage: Stage, message: string, files: Record<string, string> = {}): FinishedStage {
+  if (stage === 'example') return finishExample(message, files);
   const x = extractArtifact(message);
   const produces = STAGE_IO[stage].produces;
   if (x.error) return { chat: x.chat, artifact: null, error: x.error };
@@ -229,4 +278,43 @@ export function finishStage(stage: Stage, message: string): FinishedStage {
   // Locking a style is the owner's decision (it freezes what the full build must obey) — a model can never lock one.
   if (produces === 'style_spec') data.locked = false;
   return { chat: x.chat, artifact: { kind: produces, data } };
+}
+
+const FILE_WORDS: Record<(typeof EXAMPLE_FILES)[number], string> = { 'styles.css': 'the styling', 'index.html': 'the page itself', 'site.js': 'the menu and footer details', 'manifest.json': 'the app details' };
+const MAX_FILE_CHARS = 300_000;
+
+/**
+ * The EXAMPLE run's result: the four files the model wrote + the style read out of them. The stylesheet is the source of truth —
+ * deriveStyleSpec() reads the style from its :root tokens, applyStyleSpec() writes the completed tokens and the single font import
+ * back into it (so file and spec can never disagree), and manifest.json follows the palette. Whatever the model wrote beyond the
+ * four files is dropped. The spec is never locked here.
+ */
+export function finishExample(message: string, written: Record<string, string>): FinishedStage {
+  const x = extractArtifact(message); // the optional tone/voice note; a damaged note is simply ignored
+  const note = x.json && typeof x.json === 'object' && !Array.isArray(x.json) ? (x.json as Record<string, unknown>) : {};
+  const fail = (why: string): FinishedStage => ({ chat: x.chat, artifact: null, error: `${why} Nothing was changed — please try again.` });
+
+  const files: Record<string, string> = {};
+  for (const name of EXAMPLE_FILES) {
+    const text = written[name];
+    if (typeof text === 'string' && text.trim()) files[name] = text;
+  }
+  const missing = EXAMPLE_FILES.filter((n) => n !== 'manifest.json' && !files[n]);
+  if (missing.length === EXAMPLE_FILES.length - 1) return fail("The AI didn't write your page.");
+  if (missing.length > 0) return fail(`The AI stopped before finishing — ${missing.map((n) => FILE_WORDS[n]).join(' and ')} ${missing.length > 1 ? 'are' : 'is'} missing.`);
+  for (const [n, t] of Object.entries(files)) if (t.length > MAX_FILE_CHARS) return fail(`${FILE_WORDS[n as (typeof EXAMPLE_FILES)[number]]} came out too large.`);
+
+  const html = files['index.html']!;
+  if (!/<\/html\s*>/i.test(html)) return fail('The page was cut off before its end.');
+  if (!/<link[^>]+href=["']styles\.css["']/i.test(html)) return fail("The page isn't connected to its style.");
+
+  const derived = deriveStyleSpec(files['styles.css']!, note);
+  if (derived.problems.length > 0) return fail(`The style was incomplete (${derived.problems.slice(0, 3).join('; ')}).`);
+  const spec = derived.spec;
+  const valid = validateArtifact('style_spec', normalizeArtifact(spec));
+  if (!valid.ok) return fail(`The style was incomplete (${valid.errors.slice(0, 3).join('; ')}).`);
+
+  files['styles.css'] = applyStyleSpec(files['styles.css']!, spec);
+  if (files['manifest.json']) files['manifest.json'] = manifestWithStyle(files['manifest.json'], spec);
+  return { chat: x.chat, files, artifact: { kind: 'style_spec', data: valid.value as unknown as Record<string, unknown> } };
 }

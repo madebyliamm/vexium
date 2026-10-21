@@ -139,6 +139,9 @@ export default {
       const heartbeat = setInterval(() => { safeWrite(encoder.encode(": hb\n\n")); flushUsage(); void pulse(); }, 8000);
       let apiError: string | null = null;
       let replyText = "";
+      let replyFiles: Record<string, string> = {};
+      let sawDone = false; // the parser said `done` = Anthropic finished normally (message_stop)
+      const emitTracked = async (event: string, data: unknown) => { if (event === "done") sawDone = true; await emit(event, data); };
       try {
         if (prep.category) await emit("build_meta", { category: prep.category });
         if (job) {
@@ -162,8 +165,9 @@ export default {
           await emit("error", { error: await aRes.text().catch(() => "Anthropic error") });
           apiError = "The AI service had a problem. Please try again.";
         } else {
-          const result = await streamBuild(aRes, filesForPatching, emit, usageAcc, runSignal);
+          const result = await streamBuild(aRes, filesForPatching, emitTracked, usageAcc, runSignal);
           replyText = result.message;
+          replyFiles = result.files;
 
           // Follow-up suggestions — ask the edge function (keeps that prompt + Haiku call on Supabase).
           if (prep.want_suggestions && !req.signal.aborted) {
@@ -188,7 +192,7 @@ export default {
         flushUsage();
         if (job) {
           // Save the result server-side even if the browser is gone (refresh/close) — that is what makes stage runs resumable.
-          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.STAGE_WORKER_SECRET }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText }));
+          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.STAGE_WORKER_SECRET }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText, files: replyFiles, finished: sawDone }));
           await emit("stage_done", outcome);
         }
         await safeClose();

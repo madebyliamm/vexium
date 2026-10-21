@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
+import { ExampleStage } from '../components/ExampleStage.tsx';
 import { PlanStage } from '../components/PlanStage.tsx';
 import { Splash } from '../components/Splash.tsx';
 import { StagePanel } from '../components/StagePanel.tsx';
@@ -19,6 +20,8 @@ export function Project({ id }: { id: string }) {
   const [notice, setNotice] = useState<string | null>(null);
   /** The PLAN card holds edits that are not saved yet. */
   const [planDirty, setPlanDirty] = useState(false);
+  /** The EXAMPLE controls hold style changes that are not saved yet. */
+  const [exampleDirty, setExampleDirty] = useState(false);
   const alive = useRef(true);
 
   /** Re-read everything WITHOUT going back to the loading screen (an action shouldn't flash the page). */
@@ -98,6 +101,8 @@ export function Project({ id }: { id: string }) {
   const steps = buildSteps(project.stage, artifacts, project.published);
   const planArtifact = artifacts.plan;
   const planStage = project.stage === 'plan';
+  const exampleStage = project.stage === 'example';
+  const styleArtifact = artifacts.style_spec;
   const hints = planStage && planArtifact && !planDirty ? planHints(readPlan(planArtifact.data, project.name || 'Untitled')) : [];
   return (
     <main class="page">
@@ -126,7 +131,7 @@ export function Project({ id }: { id: string }) {
           busy={busy}
           onKeep={(k) => void keep(k)}
           onMove={(s) => void move(s)}
-          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : null}
+          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : exampleStage && exampleDirty ? 'Save or discard your style changes first.' : null}
           continueNote={hints.length > 0 ? `You can continue now. You may still want to ${hints.join(', ')}.` : null}
           guided={
             planStage ? (
@@ -137,6 +142,14 @@ export function Project({ id }: { id: string }) {
                 resumedJobId={runningJobId ?? null}
                 onChanged={() => { setNotice(null); void refresh(); }}
                 onDirtyChange={setPlanDirty}
+              />
+            ) : exampleStage ? (
+              <ExampleStage
+                projectId={project.id}
+                saved={styleArtifact ? { version: styleArtifact.version, data: styleArtifact.data } : null}
+                resumedJobId={runningJobId ?? null}
+                onChanged={() => { setNotice(null); void refresh(); }}
+                onDirtyChange={setExampleDirty}
               />
             ) : undefined
           }

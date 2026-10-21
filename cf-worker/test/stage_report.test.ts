@@ -14,6 +14,24 @@ describe('judgeRun', () => {
     assert.equal(cut.ok, false);
     assert.match(cut.error!, /stopped before finishing/);
   });
+  it('files the run wrote travel with the result (EXAMPLE saves them next to its style)', () => {
+    const files = { 'styles.css': ':root{}', 'index.html': '<html></html>' };
+    assert.deepEqual(judgeRun({ aborted: false, apiError: null, message: 'Here it is.', files }), { ok: true, message: 'Here it is.', files });
+    assert.deepEqual(judgeRun({ aborted: false, apiError: null, message: 'Hi', files: {} }), { ok: true, message: 'Hi' }, 'no files → the field is left out');
+  });
+  it('a run that wrote files and no chat is a success only when it finished normally — a cut stream with files is not', () => {
+    const files = { 'index.html': '<html></html>' };
+    assert.deepEqual(judgeRun({ aborted: false, apiError: null, message: '', files, finished: true }), { ok: true, message: '', files });
+    const cut = judgeRun({ aborted: false, apiError: null, message: '', files, finished: false });
+    assert.equal(cut.ok, false);
+    assert.match(cut.error!, /stopped before finishing/);
+    assert.equal(judgeRun({ aborted: false, apiError: null, message: '', files: {}, finished: true }).ok, false, 'finished with nothing at all is still a failure');
+  });
+  it('Stop and API errors win over files', () => {
+    const files = { 'index.html': 'x' };
+    assert.deepEqual(judgeRun({ aborted: true, apiError: null, message: 'm', files, finished: true }), { ok: false, error: 'Stopped' });
+    assert.deepEqual(judgeRun({ aborted: false, apiError: 'boom', message: 'm', files, finished: true }), { ok: false, error: 'boom' });
+  });
 });
 
 describe('reportStageDone', () => {
@@ -32,6 +50,12 @@ describe('reportStageDone', () => {
     assert.equal(seen.url, 'https://x/ai-chat');
     assert.deepEqual(seen.init?.headers, H);
     assert.deepEqual(JSON.parse(String(seen.init?.body)), { stage_done: { job_id: 'job-1', ok: true, message: 'reply' } });
+  });
+
+  it('sends the files along with the message', async () => {
+    const seen: { init?: RequestInit } = {};
+    await reportStageDone(fake(200, { ok: true, artifact: null }, seen), 'u', H, 'job-2', { ok: true, message: 'm', files: { 'index.html': '<p>hi</p>' } });
+    assert.deepEqual(JSON.parse(String(seen.init?.body)), { stage_done: { job_id: 'job-2', ok: true, message: 'm', files: { 'index.html': '<p>hi</p>' } } });
   });
 
   it('passes a failure through with its reason', async () => {

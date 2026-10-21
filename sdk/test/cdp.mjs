@@ -48,10 +48,10 @@ export async function launch({ port = 9333 + Math.floor(Math.random() * 400) } =
     if (m.method === 'Runtime.exceptionThrown') consoleMsgs.push({ type: 'exception', text: m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text });
     for (let i = waiters.length - 1; i >= 0; i--) if (waiters[i].method === m.method) { waiters[i].resolve(m.params); waiters.splice(i, 1); }
   };
-  const send = (method, params = {}) => new Promise((resolve, reject) => {
+  const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
     const mid = ++id;
     pending.set(mid, { resolve, reject });
-    ws.send(JSON.stringify({ id: mid, method, params }));
+    ws.send(JSON.stringify(sessionId ? { id: mid, method, params, sessionId } : { id: mid, method, params }));
   });
   const once = (method, ms = 15000) => new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error('timeout waiting for ' + method)), ms);
@@ -75,6 +75,24 @@ export async function launch({ port = 9333 + Math.floor(Math.random() * 400) } =
       const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
       if (r.exceptionDetails) throw new Error('eval failed: ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text) + '\n' + expression);
       return r.result.value;
+    },
+    /**
+     * Evaluate inside an iframe that runs in its own process — a sandboxed (opaque-origin) one, which the page's own session can't see
+     * into. `match` picks it by URL substring (e.g. 'about:srcdoc'). Returns null when there is no such frame, else { eval }.
+     */
+    async frame(match = '') {
+      const { targetInfos } = await send('Target.getTargets');
+      const t = targetInfos.find((i) => i.type === 'iframe' && i.url.includes(match));
+      if (!t) return null;
+      const { sessionId } = await send('Target.attachToTarget', { targetId: t.targetId, flatten: true });
+      return {
+        async eval(expression) {
+          const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, sessionId);
+          if (r.exceptionDetails) throw new Error('frame eval failed: ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text));
+          return r.result.value;
+        },
+        async detach() { try { await send('Target.detachFromTarget', { sessionId }); } catch { /* already gone */ } },
+      };
     },
     async viewport(width, height = 800, mobile = false) {
       await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });

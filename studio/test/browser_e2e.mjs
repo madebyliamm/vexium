@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Step 6 "Done when" evidence (extended in Steps 7–8 with the stage engine and the guided PLAN screen): the assembled site in a real (headless) Chrome — signed-out bounce to /auth.html and back,
+// Step 6 "Done when" evidence (extended in Steps 7–9 with the stage engine, the guided PLAN screen and the EXAMPLE screen): the assembled site in a real (headless) Chrome — signed-out bounce to /auth.html and back,
 // signed-in studio rendering with the shared tokens, routing, sign-out, legacy pages still served, repo/docs NOT served.
 //
 //   (cd studio && npm run build) && node scripts/assemble-site.mjs      # produce _site/
@@ -236,9 +236,194 @@ try {
   await click('[data-testid=stage-continue]');
   check('Continue moves to EXAMPLE (UI + database agree)', await chrome.waitFor(`document.querySelector('.stage[data-stage=example]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'example', await dbStage());
   check('earlier stage is marked "past"', (await stepState('plan')) === 'past');
-  check('EXAMPLE panel lists the plan (from an earlier step) and the style (not made yet)', (await text('.artifact[data-kind=style_spec]')).includes('Not made yet') && (await text('.artifact[data-kind=plan]')).includes('from an earlier step'));
+  check('EXAMPLE shows the guided screen (page area + controls), not the artifact list', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=example-stage]')`, 8000)) && (await count('.artifact')) === 0);
   check('Continue is blocked on the style', (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-why]')).includes('Needs your style first'), await text('[data-testid=stage-why]'));
   await chrome.screenshot(`${OUT}/stage-example.png`);
+
+  // ── 3e. the EXAMPLE screen (Step 9): the landing page, five vibe controls that re-skin it, "Lock this style" ──
+  // The page is a sandboxed iframe (no allow-same-origin) = its own process: the driver attaches to that target to look inside.
+  const inFrame = async (expr) => { const f = await chrome.frame('about:srcdoc'); if (!f) return undefined; try { return await f.eval(expr); } finally { await f.detach(); } };
+  const waitFrame = async (expr, ms = 10000) => { const end = Date.now() + ms; while (Date.now() < end) { try { const v = await inFrame(expr); if (v) return v; } catch { /* still loading */ } await sleep(150); } return false; };
+  const cssVar = (name) => inFrame(`getComputedStyle(document.documentElement).getPropertyValue(${JSON.stringify(name)}).trim()`);
+  const bodyBg = () => inFrame(`getComputedStyle(document.body).backgroundColor`);
+  const styleRow = async () => (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.style_spec&select=version,data,stale`, { headers: svc })).json?.[0];
+  const dbFiles = async () => (await jfetch(`${SB}/rest/v1/projects?id=eq.${PID}&select=files`, { headers: svc })).json?.[0]?.files ?? {};
+  const exStatus = () => chrome.eval(`document.querySelector('[data-testid=example-stage]')?.dataset.status`);
+  const exStatusIs = (want) => chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === ${JSON.stringify(want)}`, 8000);
+  const dark = (rgb) => { const n = (rgb.match(/\d+/g) ?? []).map(Number); return n.length >= 3 && n[0] + n[1] + n[2] < 300; };
+  const continueHeld = () => chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`);
+
+  // a — nothing built yet
+  check('EXAMPLE, nothing built: a "Build my landing page" button and an optional direction box', (await count('[data-testid=example-empty]')) === 1 && (await chrome.eval(`document.querySelector('[data-testid=example-build]').disabled`)) === false && (await count('[data-testid=example-note-input]')) === 1);
+  check('…status says "Not built yet" and the controls say they appear once the page exists', (await text('[data-testid=example-status]')) === 'Not built yet' && (await count('[data-testid=vibe-waiting]')) === 1 && (await count('[data-testid=vibe-controls]')) === 0);
+
+  // b — a build that streams three files and then the connection drops (the Worker call is stubbed; no model is used)
+  const SEED_CSS_RAW = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=Inter:wght@400;600&display=swap');
+:root {
+  --bg: #f6f1e9;  --surface: #ffffff;  --surface-2: #efe8dc;  --border: #e2d8c8;
+  --text: #1f1a17;  --text-muted: #6b6258;
+  --accent: #b4532a;  --accent-contrast: #ffffff;
+  --font-display: 'Fraunces', Georgia, serif;  --font-body: 'Inter', system-ui, sans-serif;
+  --radius: 12px;  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);  --shadow-lg: 0 20px 50px -12px rgba(0,0,0,.2);
+  --container: 1200px;  --nav-h: 68px;  --section-y: clamp(80px, 12vw, 160px)
+}
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.6 }
+h1, h2 { font-family: var(--font-display); line-height: 1.15 }
+section { max-width: var(--container); margin: 0 auto; padding: var(--section-y) 24px }
+.btn { display: inline-block; background: var(--accent); color: var(--accent-contrast); padding: 12px 22px; border-radius: var(--radius); text-decoration: none }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm) }
+`;
+  const SEED_HTML = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Bean There</title><link rel="stylesheet" href="styles.css"/></head>
+<body>
+<header data-vx-nav></header>
+<main>
+<section id="hero"><h1>Bean There</h1><p>Small-batch coffee, roasted in Austin.</p><a class="btn" href="#visit">Find us</a> <a data-e2e="menu-link" href="menu.html">See the menu</a></section>
+<section id="about"><h2>Our story</h2><p>We roast every Tuesday and sell out by Friday.</p></section>
+<section id="beans"><h2>The beans</h2><div class="card"><p>Three origins, roasted light.</p></div></section>
+<section id="visit"><h2>Visit</h2><p>12 Congress Ave, Austin.</p></section>
+</main>
+<footer data-vx-footer></footer>
+<script src="site.js"></script>
+</body></html>`;
+  const SEED_JS = `window.SITE = { name: "Bean There", nav: [ { label: "Home", href: "index.html" }, { label: "Menu", href: "menu.html" }, { label: "Visit", href: "index.html#visit" } ], cta: { label: "Order", href: "#visit" }, footer: { tagline: "Coffee, slowly.", columns: [], social: [], legal: "© {year} Bean There" } };`;
+  const SEED_MANIFEST = JSON.stringify({ name: 'Bean There', short_name: 'Bean There', start_url: '/', display: 'standalone', background_color: '#000000', theme_color: '#000000' }, null, 2);
+  const stub = (files) => `(() => { const enc = new TextEncoder(); const files = ${JSON.stringify(files)}; window.__realFetch2 = window.fetch;
+    window.fetch = (input, init) => { const u = typeof input === 'string' ? input : input.url; if (!u.startsWith('https://vexium-ai-build.startafter.workers.dev')) return window.__realFetch2(input, init);
+      window.__runBody = JSON.parse(init.body); let ctl; const send = (ev, d) => ctl.enqueue(enc.encode('event: ' + ev + '\\ndata: ' + JSON.stringify(d) + '\\n\\n'));
+      const body = new ReadableStream({ start(c) { ctl = c; send('stage_job', { job_id: 'e2e-job', stage: 'example' }); send('start', {}); send('delta', { text: 'Setting up the colours.' });
+        for (const [name, content] of Object.entries(files)) send('file', { name, content }); window.__release = () => ctl.close(); } });
+      return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })); }; return true; })()`;
+  await chrome.eval(stub({ 'styles.css': SEED_CSS_RAW, 'index.html': SEED_HTML, 'site.js': SEED_JS }));
+  await setValue('[data-testid=example-note-input]', 'calm, lots of white space');
+  await click('[data-testid=example-build]');
+  check('Build: the live checklist shows 3 of 4 steps done while the last file is still coming', await chrome.waitFor(`[...document.querySelectorAll('[data-testid=example-progress] li')].map((l) => l.dataset.state).join() === 'done,done,done,active'`, 8000), await chrome.eval(`[...document.querySelectorAll('[data-testid=example-progress] li')].map((l) => l.dataset.state).join()`));
+  check('…the owner\'s direction went out as the message, for the EXAMPLE stage', (await chrome.eval(`window.__runBody?.stage + '|' + window.__runBody?.project_id + '|' + window.__runBody?.messages?.[0]?.content`)) === `example|${PID}|calm, lots of white space`, await chrome.eval(`JSON.stringify(window.__runBody)`));
+  check('…the chat line streams in, and Stop is offered', (await text('[data-testid=example-live-chat]')) === 'Setting up the colours.' && (await count('[data-testid=example-stop]')) === 1 && (await exStatus()) === 'building');
+  check('…the page already shows in the preview while it builds (sandboxed: allow-scripts only)', (await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`)) === true && (await chrome.eval(`document.querySelector('[data-testid=preview-frame]').getAttribute('sandbox')`)) === 'allow-scripts');
+  check('…the menu and footer are drawn by the Vertly SDK inside the preview', (await waitFrame(`document.querySelectorAll('.vx-nav .vx-link').length >= 3 && !!document.querySelector('.vx-footer')`, 15000)) === true, await inFrame(`document.body.innerHTML.slice(0, 200)`));
+  check('…the controls stay shut while it builds, and Continue is held', (await count('[data-testid=vibe-controls]')) === 0 && (await continueHeld()) === true);
+  await chrome.screenshot(`${OUT}/example-building.png`);
+  await chrome.eval(`window.__release(); true`);
+  check('Build, connection cut before the end: says so in plain words and returns to the empty state', await chrome.waitFor(`document.querySelector('[data-testid=example-run-error]')?.textContent.includes('interrupted') && !!document.querySelector('[data-testid=example-empty]')`, 10000), await text('[data-testid=example-run-error]'));
+  check('…nothing was saved by that run (no style, still the starter page)', (await styleRow()) === undefined && !(await dbFiles())['styles.css']);
+  await chrome.eval(`window.fetch = window.__realFetch2; true`);
+
+  // c — the page exists (as the finisher stores it); the owner sees it
+  const { applyStyleSpec, deriveStyleSpec, manifestWithStyle } = await import('../../supabase/functions/_shared/style.ts');
+  const seedSpec = deriveStyleSpec(SEED_CSS_RAW, { tone: 'warm and friendly', voice: 'Warm and plain.' }).spec;
+  const asOwner = { apikey: ANON, Authorization: 'Bearer ' + SESSION.access_token, 'Content-Type': 'application/json' };
+  const seedFiles = await jfetch(`${SB}/rest/v1/rpc/set_project_files`, { method: 'POST', headers: asOwner, body: JSON.stringify({ p_project: PID, p_files: { 'index.html': SEED_HTML, 'styles.css': applyStyleSpec(SEED_CSS_RAW, seedSpec), 'site.js': SEED_JS, 'manifest.json': manifestWithStyle(SEED_MANIFEST, seedSpec), 'menu.html': '<!DOCTYPE html><html><body><h1>Menu</h1></body></html>' } }) });
+  const seedStyle = await put('style_spec', { ...seedSpec, locked: false });
+  await jfetch(`${SB}/rest/v1/stage_messages`, { method: 'POST', headers: { ...svc, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify([{ project_id: PID, stage: 'example', role: 'assistant', content: 'I made a warm, editorial page for Bean There.', user_id: null }]) });
+  check('seed: the owner can write project files through set_project_files; the style is stored', seedFiles.status < 300 && seedStyle.status < 300, `${seedFiles.status} ${seedFiles.text.slice(0, 120)} / ${seedStyle.status} ${seedStyle.text.slice(0, 120)}`);
+  await reloadProject();
+  check('the built page is shown with the controls beside it; status "Not locked yet"', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=vibe-controls]')`, 10000)) && (await exStatus()) === 'unlocked' && (await text('[data-testid=example-status]')) === 'Not locked yet', await exStatus());
+  check('the AI\'s note about the page is shown', await chrome.waitFor(`document.querySelector('[data-testid=example-said]')?.textContent === 'I made a warm, editorial page for Bean There.'`, 8000), await text('[data-testid=example-said]'));
+  check('the preview renders the page with the stored colours', (await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`)) === true && (await bodyBg()) === 'rgb(246, 241, 233)' && (await cssVar('--accent')) === '#b4532a', `${await bodyBg()} ${await cssVar('--accent')}`);
+  check('the sandbox holds: the page can reach neither the studio window nor the studio\'s storage', (await inFrame(`(() => { let a = 'blocked', b = 'blocked'; try { parent.document.title; a = 'reached'; } catch (e) {} try { localStorage.length; b = 'reached'; } catch (e) {} return a + '/' + b; })()`)) === 'blocked/blocked', await inFrame(`1`));
+  check('Continue is blocked ("Lock your style first")', (await continueHeld()) === true && (await text('[data-testid=stage-why]')).includes('Lock your style first'), await text('[data-testid=stage-why]'));
+  await chrome.screenshot(`${OUT}/example-built.png`);
+
+  // d — the five controls re-skin the page in place: no reload, no AI, within a second or so
+  await inFrame(`window.__alive = 'yes'; true`);
+  const styleBefore = await styleRow();
+  let t0 = Date.now();
+  await click('[data-testid=vibe-theme-dark]');
+  const wentDark = await waitFrame(`(() => { const n = (getComputedStyle(document.body).backgroundColor.match(/\\d+/g) || []).map(Number); return n[0] + n[1] + n[2] < 300; })()`, 4000);
+  const darkMs = Date.now() - t0;
+  check('Theme → Dark re-skins the open page (and does it fast)', wentDark === true && darkMs < 2500, `${darkMs}ms, bg ${await bodyBg()}`);
+  check('…without reloading it (a marker set inside the page survives)', (await inFrame(`window.__alive`)) === 'yes');
+  check('…status "Unsaved changes", Continue stays closed ("Lock your style first"), Save / Discard appear', (await exStatus()) === 'unsaved' && (await continueHeld()) === true && (await text('[data-testid=stage-why]'))?.includes('Lock your style first') && (await count('[data-testid=style-save]')) === 1 && (await count('[data-testid=style-discard]')) === 1, `${await exStatus()} / ${await text('[data-testid=stage-why]')}`);
+  check('…nothing is written until Save (same style version, same stylesheet in the database)', (await styleRow()).version === styleBefore.version && (await dbFiles())['styles.css'].includes('#f6f1e9'));
+  await click('[data-testid=vibe-accent-teal]');
+  check('Colour → teal changes the accent inside the page', !!(await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase() === '#0f766e'`, 4000)) && (await inFrame(`getComputedStyle(document.querySelector('.btn')).backgroundColor`)) === 'rgb(15, 118, 110)', await cssVar('--accent'));
+  const sectionBefore = await cssVar('--section-y');
+  await click('[data-testid=vibe-density-airy]');
+  check('Spacing → Airy changes the section spacing', !!(await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--section-y').trim() !== ${JSON.stringify(sectionBefore)}`, 4000)), `${sectionBefore} → ${await cssVar('--section-y')}`);
+  const radiusBefore = await cssVar('--radius');
+  await click('[data-testid=vibe-tone-bold]');
+  check('Tone → Bold changes the corner rounding', !!(await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--radius').trim() !== ${JSON.stringify(radiusBefore)}`, 4000)), `${radiusBefore} → ${await cssVar('--radius')}`);
+  await click('[data-testid=vibe-pairing-technical]');
+  check('Fonts → Technical swaps both typefaces and loads the new ones', !!(await waitFrame(`/Space Grotesk/.test(getComputedStyle(document.documentElement).getPropertyValue('--font-display')) && /Space(\\+| )Grotesk/.test(document.getElementById('vx-style').textContent)`, 4000)), await cssVar('--font-display'));
+  check('…the page markup is untouched through all of that (same marker, same h1)', (await inFrame(`window.__alive + '|' + document.querySelector('h1').textContent`)) === 'yes|Bean There');
+  check('…each active choice is marked in the controls', (await chrome.eval(`['vibe-theme-dark', 'vibe-accent-teal', 'vibe-density-airy', 'vibe-tone-bold', 'vibe-pairing-technical'].every((t) => document.querySelector('[data-testid=' + t + ']').getAttribute('aria-pressed') === 'true')`)) === true);
+  await chrome.screenshot(`${OUT}/example-restyled.png`);
+  await setValue('[data-testid=vibe-accent-custom]', '#1a1410');
+  check('A custom colour is accepted, and one that is faint on this dark page is flagged in plain words (not forbidden)', !!(await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase() === '#1a1410'`, 4000)) && (await count('[data-testid=vibe-hints]')) === 1, await text('[data-testid=vibe-hints]'));
+  await click('[data-testid=vibe-accent-teal]');
+
+  // e — Save writes the style and the files as one new version; other pages are left alone
+  await click('[data-testid=style-save]');
+  check('Save: status goes back to "Not locked yet" and Continue is no longer held for unsaved changes', await exStatusIs('unlocked') && !(await text('[data-testid=stage-hold]'))?.includes('Save or discard'), await exStatus());
+  const afterSave = await styleRow(); const filesAfterSave = await dbFiles();
+  check('…a new style version (one more than before) holds the new look, still unlocked', afterSave.version === styleBefore.version + 1 && afterSave.data.locked === false && afterSave.data.tokens['--accent'].toLowerCase() === '#0f766e' && afterSave.data.vibe.theme === 'dark', JSON.stringify(afterSave).slice(0, 300));
+  check('…styles.css and manifest.json in the project follow (tokens, font import, theme colour)', /--accent:\s*#0f766e/i.test(filesAfterSave['styles.css']) && /Space(\+| )Grotesk/.test(filesAfterSave['styles.css']) && JSON.parse(filesAfterSave['manifest.json']).theme_color === '#0f766e' && JSON.parse(filesAfterSave['manifest.json']).background_color !== '#000000', JSON.parse(filesAfterSave['manifest.json'] ?? '{}').theme_color);
+  check('…the page and the other pages were not touched', filesAfterSave['index.html'] === SEED_HTML && filesAfterSave['menu.html'].includes('<h1>Menu</h1>') && filesAfterSave['site.js'] === SEED_JS);
+
+  // f — Lock freezes it
+  await click('[data-testid=style-lock]');
+  check('Lock this style: status "Style locked", the box says so', await exStatusIs('locked') && (await text('[data-testid=example-status]')) === 'Style locked' && (await chrome.eval(`document.querySelector('[data-testid=lock-box]').dataset.locked`)) === 'true');
+  const locked1 = await styleRow();
+  check('…stored: locked true as the next version, same look', locked1.data.locked === true && locked1.version === afterSave.version + 1 && locked1.data.tokens['--accent'].toLowerCase() === '#0f766e', JSON.stringify(locked1).slice(0, 200));
+  check('…the controls are shut (all five groups disabled) and say why', (await chrome.eval(`document.querySelectorAll('[data-testid=vibe-controls] fieldset:disabled').length`)) === 5 && (await text('[data-testid=vibe-closed]'))?.includes('locked'), await text('[data-testid=vibe-closed]'));
+  check('…"Continue" opens (the full build may start in this look)', await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000));
+  check('…asking the AI for a new page is closed too until unlocked', (await chrome.eval(`document.querySelector('[data-testid=example-redo]').disabled`)) === true && (await text('[data-testid=example-redo]')).includes('Unlock first'));
+  await chrome.screenshot(`${OUT}/example-locked.png`);
+  await reloadProject();
+  check('after a reload: still locked, page back in the saved look (dark, teal)', !!(await chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === 'locked'`, 10000)) && !!(await waitFrame(`document.querySelector('h1')`)) && dark(await bodyBg()) && (await cssVar('--accent')).toLowerCase() === '#0f766e', `${await bodyBg()} ${await cssVar('--accent')}`);
+
+  // g — Unlock, then change-and-lock in one step; Discard
+  await click('[data-testid=style-unlock]');
+  check('Unlock to change it: unlocked again as a new version, controls open', await exStatusIs('unlocked') && (await styleRow()).data.locked === false && (await styleRow()).version === locked1.version + 1 && (await chrome.eval(`document.querySelectorAll('[data-testid=vibe-controls] fieldset:disabled').length`)) === 0);
+  await click('[data-testid=vibe-theme-light]');
+  check('a changed, unlocked style offers "Save and lock this style"', (await text('[data-testid=style-lock]')) === 'Save and lock this style');
+  const vBeforeLock = (await styleRow()).version;
+  await click('[data-testid=style-lock]');
+  check('"Save and lock" is ONE new version: light theme AND locked', await exStatusIs('locked') && (await styleRow()).version === vBeforeLock + 1 && (await styleRow()).data.locked === true && (await styleRow()).data.vibe.theme === 'light', JSON.stringify((await styleRow()).data.vibe));
+  check('…and the stylesheet in the project is light again', /--bg:\s*#[0-9a-f]{6}/i.test((await dbFiles())['styles.css']) && !dark(await bodyBg()), await bodyBg());
+  await click('[data-testid=style-unlock]');
+  await exStatusIs('unlocked');
+  const accentSaved = (await cssVar('--accent')).toLowerCase();
+  await click('[data-testid=vibe-accent-red]');
+  await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase() !== ${JSON.stringify(accentSaved)}`, 4000);
+  await click('[data-testid=style-discard]');
+  check('Discard: the page returns to the saved look and the status to "Not locked yet"', await exStatusIs('unlocked') && !!(await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase() === ${JSON.stringify(accentSaved)}`, 4000)) && (await count('[data-testid=style-save]')) === 0);
+
+  // h — the preview itself: phone width, links to other pages, errors inside the page
+  await click('[data-testid=preview-phone]');
+  const frameW = () => chrome.eval(`Math.round(document.querySelector('[data-testid=preview-frame]').getBoundingClientRect().width)`); // the width eases over 0.2s
+  check('Phone view narrows the preview to a phone width', await chrome.waitFor(`Math.round(document.querySelector('[data-testid=preview-frame]').getBoundingClientRect().width) === 390`, 3000), await frameW());
+  await click('[data-testid=preview-desktop]');
+  check('Desktop view widens it again', await chrome.waitFor(`document.querySelector('[data-testid=preview-frame]').getBoundingClientRect().width > 500`, 3000), await frameW());
+  await inFrame(`document.querySelector('[data-e2e=menu-link]').click(); true`);
+  check('clicking a link to another page says that page is built in the next step (the preview does not navigate)', await chrome.waitFor(`document.querySelector('[data-testid=preview-other-page]')?.textContent.includes('menu.html')`, 4000) && (await inFrame(`document.querySelector('h1').textContent`)) === 'Bean There', await text('[data-testid=preview-other-page]'));
+  await inFrame(`setTimeout(() => { throw new Error('boom from the page'); }, 0); true`);
+  check('an error thrown by the page\'s own code is reported under the preview', await chrome.waitFor(`document.querySelector('[data-testid=preview-problem]')?.textContent.includes('boom from the page')`, 4000), await text('[data-testid=preview-problem]'));
+
+  // i — small screens
+  await chrome.viewport(390, 800, true);
+  await reloadProject();
+  await chrome.waitFor(`!!document.querySelector('[data-testid=vibe-controls]')`, 10000);
+  await waitFrame(`document.querySelector('h1')`);
+  const pe = await chrome.eval(`(() => ({ sw: document.documentElement.scrollWidth, frame: Math.round(document.querySelector('[data-testid=preview-frame]').getBoundingClientRect().width), wide: [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 390.5).map((e) => e.tagName + '.' + e.className).slice(0, 5) }))()`);
+  check('EXAMPLE screen has no horizontal overflow at 390px (controls stack under the page)', pe.sw <= 390 && pe.wide.length === 0, JSON.stringify(pe));
+  await chrome.screenshot(`${OUT}/example-mobile.png`);
+  await chrome.viewport(1280, 800);
+
+  // j — on to the full build and back
+  await chrome.viewport(1280, 800);
+  await reloadProject();
+  await chrome.waitFor(`!!document.querySelector('[data-testid=style-lock]')`, 10000);
+  await click('[data-testid=style-lock]');
+  await exStatusIs('locked');
+  await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000);
+  await click('[data-testid=stage-continue]');
+  check('Continue from a locked style moves on to BUILD', await chrome.waitFor(`document.querySelector('.stage[data-stage=build]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'build', await dbStage());
+  await click('.stage[data-stage=example]');
+  check('…and the stepper brings the owner back to EXAMPLE, locked style intact', await chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === 'locked'`, 10000) && (await dbStage()) === 'example', await exStatus());
 
   await put('style_spec', { ...STYLE, locked: false });
   await reloadProject();
@@ -326,6 +511,38 @@ try {
     check('AI: no revenue what-if the owner did not ask for', aiPlan?.data?.scenario === null, JSON.stringify(aiPlan?.data?.scenario ?? null));
     check('AI: the project took the plan\'s name', await chrome.waitFor(`!/Untitled/.test(document.querySelector('h1')?.textContent ?? 'Untitled')`, 10000), await text('h1'));
     await chrome.screenshot(`${OUT}/plan-ai.png`);
+
+    // …then the landing page from that plan, for real: build → look at it → change the vibe (no AI) → lock.
+    if (replied && aiPlan) {
+      const ai2 = (sql) => jfetch(`${SB}/rest/v1/${sql}`, { headers: svc });
+      await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]')?.disabled === false`, 10000);
+      await click('[data-testid=stage-continue]');
+      check('AI EXAMPLE: Continue moves the new project to EXAMPLE, which offers to build the page', await chrome.waitFor(`!!document.querySelector('[data-testid=example-build]')`, 15000));
+      await click('[data-testid=example-build]');
+      const built = await chrome.waitFor(`!!document.querySelector('[data-testid=vibe-controls]') && document.querySelector('[data-testid=example-stage]')?.dataset.status === 'unlocked'`, 420000);
+      check('AI EXAMPLE: the page is built and the controls open (status "Not locked yet")', built, (await text('[data-testid=example-run-error]')) + ' | ' + (await exStatus()));
+      if (!built) info('AI EXAMPLE worker stream: ' + JSON.stringify((await chrome.eval('window.__workerText')).slice(-900)));
+      if (built) {
+        const row = (await ai2(`project_artifacts_latest?project_id=eq.${newId}&kind=eq.style_spec&select=version,data`)).json?.[0];
+        const files = (await ai2(`projects?id=eq.${newId}&select=files`)).json?.[0]?.files ?? {};
+        info('AI EXAMPLE style: ' + JSON.stringify(row?.data ?? null).slice(0, 900));
+        info('AI EXAMPLE files: ' + Object.entries(files).map(([k, v]) => `${k}=${String(v).length}`).join(' '));
+        check('AI EXAMPLE: four files were written (page, styles, site.js, manifest)', ['index.html', 'styles.css', 'site.js', 'manifest.json'].every((f) => typeof files[f] === 'string' && files[f].length > 50), Object.keys(files).join());
+        check('AI EXAMPLE: the page is real (not a stub), links the stylesheet, and has no placeholder text', files['index.html']?.length > 2500 && /href="styles\.css"/.test(files['index.html']) && !/lorem ipsum|\{\{(?!VEXIUM_PROJECT_ID)/i.test(files['index.html']), String(files['index.html']?.length));
+        check('AI EXAMPLE: a StyleSpec was saved, unlocked, with colour tokens and two fonts', row?.data?.locked === false && !!row.data.tokens?.['--accent'] && !!row.data.tokens?.['--bg'] && !!row.data.fonts?.display && !!row.data.fonts?.body, JSON.stringify(row?.data?.tokens ?? null).slice(0, 200));
+        check('AI EXAMPLE: the stylesheet in the project matches the saved style (nothing "unsaved" right after a build)', (await exStatus()) === 'unlocked' && (await count('[data-testid=style-save]')) === 0);
+        check('AI EXAMPLE: the page draws in the preview with a headline and the SDK menu', !!(await waitFrame(`document.querySelector('h1')?.textContent.trim().length > 2 && document.querySelectorAll('.vx-nav .vx-link').length >= 1`, 20000)), await inFrame(`document.title`));
+        check('AI EXAMPLE: the page\'s own code reports no errors', (await count('[data-testid=preview-problem]')) === 0, await text('[data-testid=preview-problem]'));
+        await chrome.screenshot(`${OUT}/ai-example-built.png`);
+        const t1 = Date.now();
+        await click('[data-testid=vibe-theme-dark]');
+        const reskinned = await waitFrame(`(() => { const n = (getComputedStyle(document.body).backgroundColor.match(/\\d+/g) || []).map(Number); return n[0] + n[1] + n[2] < 300; })()`, 5000);
+        check('AI EXAMPLE: "Dark" re-skins the real page within seconds, without the AI', reskinned === true && Date.now() - t1 < 4000, `${Date.now() - t1}ms`);
+        await chrome.screenshot(`${OUT}/ai-example-dark.png`);
+        await click('[data-testid=style-lock]');
+        check('AI EXAMPLE: "Save and lock" stores the dark look as locked, and Continue opens', await exStatusIs('locked') && (await ai2(`project_artifacts_latest?project_id=eq.${newId}&kind=eq.style_spec&select=version,data`)).json?.[0]?.data?.locked === true && await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000));
+      }
+    }
   }
 
   await chrome.eval(`if (window.__realFetch) window.fetch = window.__realFetch; location.hash = '#/p/does-not-exist'; true`);

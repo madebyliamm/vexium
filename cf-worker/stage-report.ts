@@ -6,6 +6,8 @@
 export interface StageRunResult {
   ok: boolean;
   message?: string;
+  /** The files the run wrote (completed `<file>` blocks). Only sent when there are some — EXAMPLE saves them next to its style. */
+  files?: Record<string, string>;
   error?: string;
 }
 
@@ -15,12 +17,16 @@ export interface StageOutcome {
   error?: string;
 }
 
-/** Decide whether a finished stream counts as a successful run. The parser only reports a message once Anthropic said message_stop. */
-export function judgeRun(r: { aborted: boolean; apiError: string | null; message: string }): StageRunResult {
+/**
+ * Decide whether a finished stream counts as a successful run. The parser only reports a message once Anthropic said message_stop,
+ * so an empty message means the stream was cut — unless the run ended normally (`finished`) after writing files and no chat.
+ */
+export function judgeRun(r: { aborted: boolean; apiError: string | null; message: string; files?: Record<string, string>; finished?: boolean }): StageRunResult {
   if (r.aborted) return { ok: false, error: 'Stopped' };
   if (r.apiError) return { ok: false, error: r.apiError };
-  if (!r.message) return { ok: false, error: 'The AI stopped before finishing. Nothing was changed — please try again.' };
-  return { ok: true, message: r.message };
+  const hasFiles = !!r.files && Object.keys(r.files).length > 0;
+  if (!r.message && !(r.finished && hasFiles)) return { ok: false, error: 'The AI stopped before finishing. Nothing was changed — please try again.' };
+  return { ok: true, message: r.message, ...(hasFiles ? { files: r.files } : {}) };
 }
 
 /** POST { stage_done } to ai-chat as the user (their own Authorization header). Never throws. */
@@ -36,7 +42,7 @@ export async function reportStageDone(
     const res = await doFetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ stage_done: { job_id: jobId, ok: run.ok, message: run.message, error: run.error } }),
+      body: JSON.stringify({ stage_done: { job_id: jobId, ok: run.ok, message: run.message, files: run.files, error: run.error } }),
     });
     const body = (await res.json().catch(() => null)) as Partial<StageOutcome> & { error?: string } | null;
     if (!res.ok) return { ok: false, artifact: null, error: body?.error || unsaved.error };

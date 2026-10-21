@@ -214,7 +214,7 @@ try {
   await setValue('[data-testid=plan-name]', PROJECT_NAME + ' (draft)');
   check('unsaved edits: status says so and "Continue" is held with a reason', (await text('[data-testid=plan-status]')) === 'Unsaved changes' && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-hold]'))?.includes('Save your plan changes first'), await text('[data-testid=stage-hold]'));
   await click('[data-testid=plan-discard]');
-  check('"Discard changes" restores the saved plan and re-opens "Continue"', await planStatus('Saved · v3') && (await chrome.eval(`document.querySelector('[data-testid=plan-name]').value`)) === PROJECT_NAME && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === false);
+  check('"Discard changes" restores the saved plan and re-opens "Continue"', await planStatus('Saved · v3') && (await chrome.eval(`document.querySelector('[data-testid=plan-name]').value`)) === PROJECT_NAME && !!(await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]')?.disabled === false`, 8000))); // Continue follows the parent's state a render later — wait, don't read once
 
   // the conversation is stored on the server: it comes back after a reload; only the platform can write it
   const at = (n) => new Date(Date.now() - (10 - n) * 1000).toISOString();
@@ -422,8 +422,12 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000);
   await click('[data-testid=stage-continue]');
   check('Continue from a locked style moves on to BUILD', await chrome.waitFor(`document.querySelector('.stage[data-stage=build]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'build', await dbStage());
+  // the stepper ignores clicks while the move to BUILD is still settling (aria-disabled) — wait for it, like a person would
+  await chrome.waitFor(`document.querySelector('.stage[data-stage=example]')?.getAttribute('aria-disabled') !== 'true'`, 8000);
   await click('.stage[data-stage=example]');
-  check('…and the stepper brings the owner back to EXAMPLE, locked style intact', await chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === 'locked'`, 10000) && (await dbStage()) === 'example', await exStatus());
+  const backOnExample = !!(await chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === 'locked'`, 10000));
+  const stageAfterBack = await dbStage();
+  check('…and the stepper brings the owner back to EXAMPLE, locked style intact', backOnExample && stageAfterBack === 'example', `screen ${backOnExample ? 'locked' : await exStatus()} / db ${stageAfterBack}`);
 
   await put('style_spec', { ...STYLE, locked: false });
   await reloadProject();
@@ -546,7 +550,7 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   }
 
   await chrome.eval(`if (window.__realFetch) window.fetch = window.__realFetch; location.hash = '#/p/does-not-exist'; true`);
-  check('unknown project id → "Project not found"', await chrome.waitFor(`document.body.textContent.includes('Project not found')`, 8000));
+  check('unknown project id → "Project not found"', await chrome.waitFor(`document.body.textContent.includes('Project not found')`, 15000)); // the live site answers a lookup slower than the local one
   await chrome.eval(`location.hash = '#/nope/nope'; true`);
   check('unknown route → "Page not found"', await chrome.waitFor(`document.body.textContent.includes('Page not found')`, 5000));
 

@@ -68,6 +68,7 @@ export function LaunchStage({ projectId, projectName, artifacts, published, busy
   const gate = launchGate({
     report, reportOutdated, built: manifest !== null, products, slug,
     paymentsConnected: payments === 'loading' ? null : payments,
+    paymentsChecking: payments === 'loading',
   });
   const draftAhead = draftIsAhead({ updatedAt: info?.updatedAt ?? null, publishedAt: info?.publishedAt ?? null });
   const status = launchStatus({ published, publishing: working === 'publishing', canPublish: gate.canPublish, draftAhead });

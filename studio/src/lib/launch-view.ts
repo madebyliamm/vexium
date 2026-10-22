@@ -81,6 +81,8 @@ export function launchGate(x: {
   products: number;
   /** Stripe is ready to take payments; null = could not find out. */
   paymentsConnected: boolean | null;
+  /** The Stripe lookup is still under way (so null means "not yet", not "could not"). */
+  paymentsChecking?: boolean;
   slug: string;
 }): LaunchGate {
   const rows: ChecklistRow[] = [];
@@ -118,6 +120,9 @@ export function launchGate(x: {
   else if (pay === 'not-connected') {
     rows.push({ id: 'payments', state: 'fail', label: 'You can get paid', detail: 'Your site sells things — connect Stripe so visitors can pay you.' });
     blockers.push('Connect Stripe so your visitors can pay you.');
+  } else if (pay === 'unknown' && x.paymentsChecking) {
+    rows.push({ id: 'payments', state: 'todo', label: 'You can get paid', detail: 'Checking your Stripe connection…' });
+    blockers.push('Still checking your Stripe connection.');
   } else if (pay === 'unknown') {
     rows.push({ id: 'payments', state: 'todo', label: 'You can get paid', detail: 'Couldn’t check Stripe just now. Try again in a moment.' });
     blockers.push('Couldn’t check your Stripe connection — try again.');

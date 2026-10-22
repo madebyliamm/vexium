@@ -93,6 +93,14 @@ describe('may it go live', () => {
     assert.ok(!launchGate({ ...base, products: 0, paymentsConnected: false }).rows.some((r) => r.id === 'payments'));
   });
 
+  it('while Stripe is still being looked up it says so, not that the lookup failed', () => {
+    const g = launchGate({ ...base, products: 3, paymentsConnected: null, paymentsChecking: true });
+    assert.equal(g.canPublish, false);
+    assert.match(g.rows.find((r) => r.id === 'payments')?.detail ?? '', /Checking/);
+    assert.match(g.blockers.join(' '), /Still checking/);
+    assert.doesNotMatch(g.blockers.join(' '), /Couldn’t/);
+  });
+
   it('a bad address blocks', () => {
     const g = launchGate({ ...base, slug: 'Bad Name' });
     assert.equal(g.canPublish, false);

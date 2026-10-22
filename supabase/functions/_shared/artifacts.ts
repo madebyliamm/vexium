@@ -103,6 +103,15 @@ export interface LaunchChecks {
 }
 
 // ── BUSINESS ───────────────────────────────────────────────────────────────────────────────────────
+/** How much the numbers can be trusted: none = nothing recorded yet, early = a young site or a handful of visits, ok = enough to read. */
+export type DataLevel = 'none' | 'early' | 'ok';
+export interface BusinessInsight {
+  id: string;
+  tone: 'good' | 'info' | 'watch';
+  text: string;
+}
+/** Computed by the platform from rows that exist (page views, Stripe-webhook transactions, sign-ups, form entries) — never estimated.
+ *  The fields after `notes` arrived in Step 13 and are all optional so older saved states still validate. */
 export interface BusinessState {
   schema: 1;
   computed_at: string;
@@ -110,8 +119,40 @@ export interface BusinessState {
   visitors: number;
   signups: number;
   orders: number;
+  /** Net of refunds, in the main currency (`currency`). */
   revenue_cents: number;
+  /** Caveats the screen shows next to the numbers ("too early to read much into this"). */
   notes?: string[];
+  currency?: string;
+  views?: number;
+  /** Form entries (every collection except transactions). */
+  leads?: number;
+  data_level?: DataLevel;
+  /** Whole days since the first publish; null when unknown. */
+  live_days?: number | null;
+  /** The same counts for the period before this one. */
+  previous?: { visitors: number; views: number; signups: number; orders: number; leads: number; revenue_cents: number };
+  /** % change vs the previous period; null while the earlier number is too small to mean anything. */
+  changes?: { visitors: number | null; views: number | null; signups: number | null; orders: number | null; leads: number | null; revenue: number | null };
+  /** % of visitors who ordered, signed up or sent a form; null until 50 visitors. */
+  conversion_rate?: number | null;
+  pages?: { page: string; views: number; visitors: number }[];
+  sources?: { source: string; visitors: number }[];
+  devices?: { device: string; visitors: number }[];
+  daily?: { day: string; views: number; visitors: number }[];
+  products?: { name: string; units: number; cents: number }[];
+  lead_sources?: { collection: string; count: number }[];
+  other_currencies?: { currency: string; orders: number; net_cents: number }[];
+  recent?: { type: 'sale' | 'lead' | 'signup'; at: string; what?: string; cents?: number; currency?: string }[];
+  lifetime?: { views: number; orders: number; signups: number; leads: number };
+  /** The plan's revenue scenario next to what actually happened; null until there is a scenario and a week of data. */
+  vs_plan?: BusinessVsPlan | null;
+  insights?: BusinessInsight[];
+}
+export interface BusinessVsPlan {
+  planned: { monthly_visitors: number; conversion_pct: number; price_cents: number; monthly_revenue_cents: number };
+  /** Everything scaled to 30 days. conversion_pct / avg_order_cents are null until there is anything to divide by. */
+  actual: { monthly_visitors: number; conversion_pct: number | null; avg_order_cents: number | null; monthly_revenue_cents: number };
 }
 
 export interface ArtifactByKind {
@@ -261,6 +302,11 @@ function validateBusinessState(d: Obj, e: Errors) {
   if (!isNonEmptyStr(d.computed_at)) e.add('computed_at', 'is required');
   for (const k of ['period_days', 'visitors', 'signups', 'orders', 'revenue_cents'] as const) {
     if (!isInt(d[k]) || (d[k] as number) < 0) e.add(k, 'must be a whole number ≥ 0');
+  }
+  if (d.notes !== undefined && !isStrArray(d.notes)) e.add('notes', 'must be a list of text');
+  if (d.data_level !== undefined && !['none', 'early', 'ok'].includes(d.data_level as string)) e.add('data_level', 'must be none, early or ok');
+  for (const k of ['pages', 'sources', 'devices', 'daily', 'products', 'lead_sources', 'other_currencies', 'recent', 'insights'] as const) {
+    if (d[k] !== undefined && (!Array.isArray(d[k]) || (d[k] as unknown[]).length > 400)) e.add(k, 'must be a list of at most 400');
   }
 }
 

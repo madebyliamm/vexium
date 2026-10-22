@@ -2,7 +2,7 @@
 -- Generated 2026-10-22 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
 -- Extensions: pg_stat_statements, pgcrypto, plpgsql, supabase_vault, uuid-ossp
 
--- ── account_billing  (~5 rows, RLS ON) ──────────
+-- ── account_billing  (~6 rows, RLS ON) ──────────
 CREATE TABLE public."account_billing" (
   "user_id" uuid NOT NULL,
   "plan" text NOT NULL DEFAULT 'trial'::text,
@@ -239,7 +239,7 @@ CREATE POLICY "plan_messages_delete" ON public."plan_messages" AS PERMISSIVE FOR
 CREATE POLICY "plan_messages_insert" ON public."plan_messages" AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
 CREATE POLICY "plan_messages_select" ON public."plan_messages" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 
--- ── profiles  (~5 rows, RLS ON) ──────────
+-- ── profiles  (~6 rows, RLS ON) ──────────
 CREATE TABLE public."profiles" (
   "id" uuid NOT NULL,
   "username" text,
@@ -268,7 +268,7 @@ CREATE POLICY "profiles_update_own" ON public."profiles" AS PERMISSIVE FOR UPDAT
 CREATE TRIGGER set_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_profiles_public_email BEFORE INSERT OR UPDATE OF email, show_email ON public.profiles FOR EACH ROW EXECUTE FUNCTION profiles_sync_public_email();
 
--- ── project_artifacts  (~0 rows, RLS ON) ──────────
+-- ── project_artifacts  (~4 rows, RLS ON) ──────────
 CREATE TABLE public."project_artifacts" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -371,7 +371,7 @@ CREATE POLICY "project_members_update" ON public."project_members" AS PERMISSIVE
   WHERE (projects.user_id = auth.uid())))));
 CREATE TRIGGER on_invite_notify AFTER INSERT ON public.project_members FOR EACH ROW EXECUTE FUNCTION handle_invite_notify();
 
--- ── projects  (~9 rows, RLS ON) ──────────
+-- ── projects  (~10 rows, RLS ON) ──────────
 CREATE TABLE public."projects" (
   "id" text NOT NULL,
   "user_id" uuid,
@@ -423,7 +423,7 @@ CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH RO
 CREATE TRIGGER projects_guard_stage BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_stage();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- ── rate_limits  (~24 rows, RLS ON) ──────────
+-- ── rate_limits  (~41 rows, RLS ON) ──────────
 CREATE TABLE public."rate_limits" (
   "key" text NOT NULL,
   "window_start" timestamp with time zone NOT NULL,
@@ -1268,6 +1268,126 @@ BEGIN
   RETURN COALESCE(v_result, '[]'::json);
 EXCEPTION WHEN OTHERS THEN
   RAISE EXCEPTION '%', SQLERRM;
+END;
+$function$;
+
+-- vx_business_stats  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.vx_business_stats(p_project text, p_days integer DEFAULT 30, p_now timestamp with time zone DEFAULT now())
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  d     integer := least(greatest(coalesce(p_days, 30), 1), 365);
+  day0  timestamptz := (date_trunc('day', p_now AT TIME ZONE 'UTC')) AT TIME ZONE 'UTC';   -- start of today, UTC
+  t0    timestamptz;   -- start of the current window
+  tp    timestamptz;   -- start of the previous window
+  out   jsonb;
+BEGIN
+  t0 := day0 - make_interval(days => d - 1);
+  tp := t0 - make_interval(days => d);
+
+  WITH
+  pv AS (
+    SELECT coalesce(nullif(visitor_id, ''), nullif(session_id, ''), id::text) AS vkey,
+           nullif(session_id, '') AS skey,
+           page, device, referrer, ts
+      FROM public.page_views
+     WHERE project_id = p_project AND ts >= tp AND ts <= p_now
+  ),
+  cur AS (SELECT * FROM pv WHERE ts >= t0),
+  prv AS (SELECT * FROM pv WHERE ts < t0),
+  tx AS (
+    SELECT created_at,
+           lower(coalesce(nullif(data ->> 'currency', ''), 'usd')) AS currency,
+           data ->> 'type' AS kind,
+           CASE WHEN (data ->> 'amount') ~ '^-?[0-9]+(\.[0-9]+)?$' THEN round((data ->> 'amount')::numeric * 100)::bigint ELSE 0 END AS cents,
+           coalesce(nullif(data ->> 'description', ''), nullif(data ->> 'product_id', ''), 'Purchase') AS what
+      FROM public.site_data
+     WHERE project_id = p_project AND collection = 'transactions' AND created_at >= tp AND created_at <= p_now
+       AND ((data ->> 'type' = 'sale' AND data ->> 'status' = 'paid') OR data ->> 'type' = 'refund')
+  ),
+  txc AS (SELECT * FROM tx WHERE created_at >= t0),
+  txp AS (SELECT * FROM tx WHERE created_at < t0),
+  su AS (SELECT created_at FROM public.site_users WHERE project_id = p_project AND created_at >= tp AND created_at <= p_now),
+  ld AS (
+    SELECT created_at, collection FROM public.site_data
+     WHERE project_id = p_project AND collection <> 'transactions' AND created_at >= tp AND created_at <= p_now
+  )
+  SELECT jsonb_build_object(
+    'days', d,
+    'window_start', t0,
+    'window_end', p_now,
+    'traffic', jsonb_build_object(
+      'views',             (SELECT count(*) FROM cur),
+      'visitors',          (SELECT count(DISTINCT vkey) FROM cur),
+      'sessions',          (SELECT count(DISTINCT skey) FROM cur),
+      'prev_views',        (SELECT count(*) FROM prv),
+      'prev_visitors',     (SELECT count(DISTINCT vkey) FROM prv),
+      'pages',   coalesce((SELECT jsonb_agg(jsonb_build_object('page', page, 'views', v, 'visitors', u) ORDER BY v DESC, page)
+                             FROM (SELECT left(page, 200) AS page, count(*) AS v, count(DISTINCT vkey) AS u FROM cur GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 8) s), '[]'::jsonb),
+      'sources', coalesce((SELECT jsonb_agg(jsonb_build_object('source', src, 'visitors', u) ORDER BY u DESC, src)
+                             FROM (SELECT left(coalesce(nullif(lower(regexp_replace(coalesce(referrer, ''), '^[a-z]+://([^/?#:]+).*$', '\1')), ''), ''), 120) AS src,
+                                          count(DISTINCT vkey) AS u
+                                     FROM cur GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 12) s), '[]'::jsonb),
+      'devices', coalesce((SELECT jsonb_agg(jsonb_build_object('device', dv, 'visitors', u) ORDER BY u DESC, dv)
+                             FROM (SELECT left(coalesce(nullif(device, ''), 'unknown'), 20) AS dv, count(DISTINCT vkey) AS u FROM cur GROUP BY 1) s), '[]'::jsonb),
+      'daily',   coalesce((SELECT jsonb_agg(jsonb_build_object('day', to_char(g.day, 'YYYY-MM-DD'),
+                                                               'views', coalesce(x.v, 0), 'visitors', coalesce(x.u, 0)) ORDER BY g.day)
+                             FROM generate_series((t0 AT TIME ZONE 'UTC')::date, (day0 AT TIME ZONE 'UTC')::date, interval '1 day') AS g(day)
+                             LEFT JOIN (SELECT (ts AT TIME ZONE 'UTC')::date AS day, count(*) AS v, count(DISTINCT vkey) AS u FROM cur GROUP BY 1) x
+                                    ON x.day = g.day::date), '[]'::jsonb)
+    ),
+    'money', jsonb_build_object(
+      'current', coalesce((SELECT jsonb_agg(jsonb_build_object('currency', currency,
+                                  'orders', n, 'gross_cents', gross, 'refunds_cents', ref, 'net_cents', gross + ref) ORDER BY gross + ref DESC, currency)
+                             FROM (SELECT currency, count(*) FILTER (WHERE kind = 'sale') AS n,
+                                          coalesce(sum(cents) FILTER (WHERE kind = 'sale'), 0) AS gross,
+                                          coalesce(sum(cents) FILTER (WHERE kind = 'refund'), 0) AS ref
+                                     FROM txc GROUP BY currency) s), '[]'::jsonb),
+      'previous', coalesce((SELECT jsonb_agg(jsonb_build_object('currency', currency,
+                                  'orders', n, 'gross_cents', gross, 'refunds_cents', ref, 'net_cents', gross + ref) ORDER BY gross + ref DESC, currency)
+                             FROM (SELECT currency, count(*) FILTER (WHERE kind = 'sale') AS n,
+                                          coalesce(sum(cents) FILTER (WHERE kind = 'sale'), 0) AS gross,
+                                          coalesce(sum(cents) FILTER (WHERE kind = 'refund'), 0) AS ref
+                                     FROM txp GROUP BY currency) s), '[]'::jsonb),
+      'products', coalesce((SELECT jsonb_agg(jsonb_build_object('name', what, 'currency', currency, 'units', n, 'cents', c) ORDER BY c DESC, what)
+                             FROM (SELECT left(what, 120) AS what, currency, count(*) AS n, sum(cents) AS c
+                                     FROM txc WHERE kind = 'sale' GROUP BY 1, 2 ORDER BY 4 DESC, 1 LIMIT 8) s), '[]'::jsonb)
+    ),
+    'signups', jsonb_build_object(
+      'current',  (SELECT count(*) FROM su WHERE created_at >= t0),
+      'previous', (SELECT count(*) FROM su WHERE created_at < t0)
+    ),
+    'leads', jsonb_build_object(
+      'current',  (SELECT count(*) FROM ld WHERE created_at >= t0),
+      'previous', (SELECT count(*) FROM ld WHERE created_at < t0),
+      'by_collection', coalesce((SELECT jsonb_agg(jsonb_build_object('collection', collection, 'count', n) ORDER BY n DESC, collection)
+                                   FROM (SELECT collection, count(*) AS n FROM ld WHERE created_at >= t0 GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 8) s), '[]'::jsonb)
+    ),
+    'lifetime', jsonb_build_object(
+      'views',   (SELECT count(*) FROM public.page_views WHERE project_id = p_project AND ts <= p_now),
+      'first_view_at', (SELECT min(ts) FROM public.page_views WHERE project_id = p_project),
+      'orders',  (SELECT count(*) FROM public.site_data WHERE project_id = p_project AND collection = 'transactions'
+                    AND data ->> 'type' = 'sale' AND data ->> 'status' = 'paid' AND created_at <= p_now),
+      'signups', (SELECT count(*) FROM public.site_users WHERE project_id = p_project AND created_at <= p_now),
+      'leads',   (SELECT count(*) FROM public.site_data WHERE project_id = p_project AND collection <> 'transactions' AND created_at <= p_now)
+    ),
+    -- Newest first; no emails or names, only what the owner needs to recognise the event.
+    'recent', coalesce((SELECT jsonb_agg(e ORDER BY (e ->> 'at') DESC) FROM (
+        (SELECT jsonb_build_object('type', 'sale', 'at', created_at, 'what', left(what, 120), 'cents', cents, 'currency', currency) AS e
+           FROM tx WHERE kind = 'sale' ORDER BY created_at DESC LIMIT 5)
+        UNION ALL
+        (SELECT jsonb_build_object('type', 'lead', 'at', created_at, 'what', collection) AS e
+           FROM ld ORDER BY created_at DESC LIMIT 5)
+        UNION ALL
+        (SELECT jsonb_build_object('type', 'signup', 'at', created_at) AS e
+           FROM su ORDER BY created_at DESC LIMIT 5)
+      ) r), '[]'::jsonb)
+  ) INTO out;
+
+  RETURN out;
 END;
 $function$;
 

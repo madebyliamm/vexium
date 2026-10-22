@@ -564,7 +564,7 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   const frameWidth = () => inFrame(`innerWidth`);
   const desktopW = await frameWidth();
   await click('[data-testid=preview-tablet]');
-  check('TWEAKS: "Tablet" shows the page at 768px wide, inside a frame that fits the screen', (await chrome.eval(`document.querySelector('.preview-stage').dataset.device`)) === 'tablet' && (await waitFrame(`innerWidth === 768`, 6000)) === true && (await chrome.eval(`(() => { const s = document.querySelector('.preview-stage').getBoundingClientRect(), d = document.querySelector('.preview-stage .device').getBoundingClientRect(); return d.left >= s.left - 1 && d.right <= s.right + 1; })()`)) === true, await frameWidth());
+  check('TWEAKS: "Tablet" shows the page at 768px wide, inside a frame that fits the screen', (await chrome.eval(`document.querySelector('.preview-stage').dataset.device`)) === 'tablet' && (await waitFrame(`innerWidth === 768`, 6000)) === true && (await chrome.eval(`(() => { const s = document.querySelector('.preview-stage').getBoundingClientRect(), d = document.querySelector('.preview-stage .device').getBoundingClientRect(); return d.left >= s.left - 1 && d.right <= s.right + 1; })()`)) === true, await chrome.eval(`(() => { const s = document.querySelector('.preview-stage').getBoundingClientRect(), d = document.querySelector('.preview-stage .device'), r = d.getBoundingClientRect(); return JSON.stringify({ device: document.querySelector('.preview-stage').dataset.device, stage: [s.left, s.right], frame: [r.left, r.right], fit: d.dataset.fit, win: innerWidth }); })()`));
   await chrome.screenshot(`${OUT}/tweaks-tablet.png`);
   await click('[data-testid=preview-phone]');
   check('TWEAKS: "Phone" shows it at 390px, so the page\'s phone layout is what you see', (await waitFrame(`innerWidth === 390`, 6000)) === true && (await chrome.eval(`document.querySelector('.preview-stage').dataset.device`)) === 'phone', await frameWidth());
@@ -584,7 +584,8 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   check('TWEAKS: "Pick something else" replaces the pick (heading), and only that one is marked', !!(await twIs(`document.querySelector('[data-testid=tweaks-pointed]')?.dataset.tag === 'h1'`, 6000)) && (await text('[data-testid=tweaks-pointed]')).includes('Heading “Bean There”') && (await pickedFrame()) === 'h1', await pickedFrame());
   check('TWEAKS: ideas for what is picked fill the box (nothing is sent until "Make the change")', await (async () => { await click('[data-testid=tweaks-idea]'); return (await chrome.eval(`document.querySelector('[data-testid=chat-input]').value.length > 3`)) === true && (await chrome.eval(`!!window.__tweakBody`)) !== true; })());
   await click('[data-testid=tweaks-unpick]');
-  check('TWEAKS: ✕ lets go of the pick, on the screen and on the page', (await count('[data-testid=tweaks-pointed]')) === 0 && !(await waitFrame(`!!document.querySelector('[data-vx-picked]')`, 1500)));
+  const stillPointed = await count('[data-testid=tweaks-pointed]'), markGone = await waitFrame(`!document.querySelector('[data-vx-picked]')`, 4000);
+  check('TWEAKS: ✕ lets go of the pick, on the screen and on the page', stillPointed === 0 && markGone === true, `pointed on screen: ${stillPointed}, mark gone from page: ${markGone}`);
   await click('[data-testid=tweaks-pick]');
   await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000);
   await inFrame(`document.querySelector('h1').click(); true`);
@@ -844,7 +845,7 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
     const mStage = async () => (await mdb(`projects?id=eq.${newId}&select=stage`))?.[0]?.stage;
     const mVersions = async () => (await mdb(`site_snapshots?project_id=eq.${newId}&select=seq,kind,label,is_current&order=seq`)) ?? [];
     const tweakDone = (ms) => chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('in your draft') || !!document.querySelector('[data-testid=chat-error]')`, ms);
-    const askTweak = async (words) => { await chrome.eval(`document.querySelector('[data-testid=tweaks-notice]')?.remove?.(); true`); await setValue('[data-testid=chat-input]', words); await click('[data-testid=chat-send]'); };
+    const askTweak = async (words) => { await chrome.waitFor(`!document.querySelector('[data-testid=tweaks-working]') && !!document.querySelector('[data-testid=chat-send]')`, 60000); await chrome.eval(`document.querySelector('[data-testid=tweaks-notice]')?.remove?.(); true`); await setValue('[data-testid=chat-input]', words); await click('[data-testid=chat-send]'); };
     const pointAt = async (selector) => {
       await click('[data-testid=tweaks-pick]');
       await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000);
@@ -864,7 +865,7 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
     await askTweak('mock-say "Hand-poured candles, made slowly"');
     check('MOCK TWEAKS: the change is made and the screen says what was updated', !!(await tweakDone(150000)) && (await text('[data-testid=tweaks-notice]'))?.includes('Updated Home.'), (await text('[data-testid=tweaks-notice]')) + ' | ' + (await text('[data-testid=chat-error]')));
     const after1 = await mFiles();
-    check('MOCK TWEAKS: only the headline changed in the draft — the new words are in, the old ones are out, the other files are as they were', after1['index.html'].includes('Hand-poured candles, made slowly') && !after1['index.html'].includes(`>${home0}<`) && Object.keys(before1).every((f) => f === 'index.html' || after1[f] === before1[f]), Object.keys(after1).filter((f) => after1[f] !== before1[f]).join());
+    check('MOCK TWEAKS: only the headline changed in the draft — the new words are in, the old ones are out, the other files are as they were', (/<h1[^>]*>([^<]*)<\/h1>/.exec(after1['index.html'])?.[1] ?? '').trim() === 'Hand-poured candles, made slowly' && Object.keys(before1).every((f) => f === 'index.html' || after1[f] === before1[f]), Object.keys(after1).filter((f) => after1[f] !== before1[f]).join());
     check('MOCK TWEAKS: the preview shows the new words', !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === 'Hand-poured candles, made slowly'`, 15000)));
     const lines1 = await chrome.eval(`[...document.querySelectorAll('[data-testid=chat-line]')].map((l) => l.dataset.role + ':' + l.textContent)`);
     check('MOCK TWEAKS: the chat has the request and a plain-words answer (no edit markup)', lines1.length === 2 && lines1[0] === 'user:mock-say "Hand-poured candles, made slowly"' && lines1[1].startsWith('assistant:') && !/<patch|<find|<replace/.test(lines1[1]), JSON.stringify(lines1));

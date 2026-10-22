@@ -16,10 +16,10 @@ export const DEVICES: readonly { id: Device; label: string; width: number | null
   { id: 'phone', label: 'Phone', width: 390, outer: 414 },
 ];
 
-/** How much to shrink a device frame so it fits the space it is shown in (never enlarged; never unreadably small). */
+/** How much to shrink a device frame so it fits the space it is shown in (never enlarged; never unreadably small; rounded DOWN, so the scaled frame can never be wider than the room). */
 export function fitScale(available: number, outer: number | null): number {
   if (outer === null || !(available > 0)) return 1;
-  return Math.max(0.4, Math.min(1, Math.round((available / outer) * 100) / 100));
+  return Math.max(0.4, Math.min(1, Math.floor((available / outer) * 100) / 100));
 }
 
 // ── what the owner pointed at ───────────────────────────────────────────────────────────────────────

@@ -64,7 +64,10 @@ export function tweakFor(system: string, request: string): string | null {
     const page = /POINTED AT THIS ELEMENT in the preview of (\S+)\./.exec(system)?.[1];
     const textJson = /- its visible text: ("(?:[^"\\]|\\.)*")/.exec(system)?.[1];
     const text = textJson ? (JSON.parse(textJson) as string) : '';
-    if (page && text && files[page]?.includes(text)) return `Changed the words.\n${patch(page, text, esc(say))}`;
+    // like a careful model: anchor on the element's own closing tag, so the same words in the <title> or the menu are left alone
+    const tag = /- element: <([a-z0-9]+)>/.exec(system)?.[1];
+    const anchored = tag ? `${text}</${tag}>` : text;
+    if (page && text && files[page]?.includes(anchored)) return `Changed the words.\n${patch(page, anchored, `${esc(say)}${tag ? `</${tag}>` : ''}`)}`;
     return 'I could not tell which words you mean — click the text you want to change first.';
   }
   const accent = /mock-accent\s+(#[0-9a-fA-F]{6})/.exec(request)?.[1];

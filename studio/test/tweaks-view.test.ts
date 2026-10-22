@@ -22,6 +22,8 @@ describe('device frames', () => {
     assert.equal(fitScale(1000, 796), 1);
     assert.equal(fitScale(398, 796), 0.5);
     assert.equal(fitScale(100, 796), 0.4);
+    assert.equal(fitScale(611, 796), 0.76); // 0.7676 rounds down, or the frame would overflow the room by a pixel or two
+    assert.ok(796 * fitScale(611, 796) <= 611);
     assert.equal(fitScale(0, 796), 1);
     assert.equal(fitScale(Number.NaN, 414), 1);
   });

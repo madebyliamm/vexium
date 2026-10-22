@@ -141,6 +141,14 @@ describe('mock Anthropic answers tweak prompts', () => {
     assert.match(r.files['index.html']!, /Candles poured with care/);
     assert.ok(!r.files['index.html']!.includes('Candles poured by hand'));
   });
+  it('"mock-say" anchors on the pointed element, so the same words in the title and the menu are left alone', () => {
+    const html = '<html><head><title>Candles</title></head><body><nav><a href="index.html">Candles</a></nav><h1>Candles</h1></body></html>';
+    const sys = `STAGE: TWEAKS\nTHE OWNER POINTED AT THIS ELEMENT in the preview of index.html. x\n- element: <h1>\n- its visible text: "Candles"\n=== index.html ===\n${html}\n=== end of index.html ===`;
+    const state = makeParse({ 'index.html': html });
+    let out = '';
+    for (const ev of processStreamBlock(tweakFor(sys, 'mock-say "Hand-poured"')!, state)) if (ev.type === 'patch_done' && ev.encoding === 'base64') out = Buffer.from(ev.content!, 'base64').toString('utf8');
+    assert.equal(out, '<html><head><title>Candles</title></head><body><nav><a href="index.html">Candles</a></nav><h1>Hand-poured</h1></body></html>');
+  });
   it('"mock-accent" moves the accent token: a new locked style comes with it', () => {
     const r = judge(tweakFor(system, 'make the accent mock-accent #2f7d4f')!);
     assert.equal(r.error, undefined);

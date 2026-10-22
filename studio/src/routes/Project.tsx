@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
 import { BuildStage } from '../components/BuildStage.tsx';
 import { ExampleStage } from '../components/ExampleStage.tsx';
+import { LaunchStage } from '../components/LaunchStage.tsx';
 import { PlanStage } from '../components/PlanStage.tsx';
 import { Splash } from '../components/Splash.tsx';
 import { StagePanel } from '../components/StagePanel.tsx';
@@ -26,6 +27,8 @@ export function Project({ id }: { id: string }) {
   const [exampleDirty, setExampleDirty] = useState(false);
   /** A TWEAKS change is being made or a version is being restored in this tab. */
   const [tweaking, setTweaking] = useState(false);
+  /** A publish, update or go-back is in flight in this tab. */
+  const [launching, setLaunching] = useState(false);
   const alive = useRef(true);
 
   /** Re-read everything WITHOUT going back to the loading screen (an action shouldn't flash the page). */
@@ -108,6 +111,7 @@ export function Project({ id }: { id: string }) {
   const exampleStage = project.stage === 'example';
   const buildStage = project.stage === 'build';
   const tweaksStage = project.stage === 'tweaks';
+  const launchStage = project.stage === 'launch';
   const styleArtifact = artifacts.style_spec;
   const hints = planStage && planArtifact && !planDirty ? planHints(readPlan(planArtifact.data, project.name || 'Untitled')) : [];
   return (
@@ -137,7 +141,7 @@ export function Project({ id }: { id: string }) {
           busy={busy}
           onKeep={(k) => void keep(k)}
           onMove={(s) => void move(s)}
-          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : exampleStage && exampleDirty ? 'Save or discard your style changes first.' : buildStage && runningJobId ? 'Your site is still being built.' : tweaksStage && (tweaking || runningJobId) ? 'Your change is still being made.' : null}
+          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : exampleStage && exampleDirty ? 'Save or discard your style changes first.' : buildStage && runningJobId ? 'Your site is still being built.' : tweaksStage && (tweaking || runningJobId) ? 'Your change is still being made.' : launchStage && launching ? 'Your site is going live.' : null}
           continueNote={hints.length > 0 ? `You can continue now. You may still want to ${hints.join(', ')}.` : null}
           guided={
             planStage ? (
@@ -176,6 +180,16 @@ export function Project({ id }: { id: string }) {
                 onKeep={(k) => void keep(k)}
                 onChanged={() => { setNotice(null); void refresh(); }}
                 onRunningChange={setTweaking}
+              />
+            ) : launchStage ? (
+              <LaunchStage
+                projectId={project.id}
+                projectName={project.name}
+                artifacts={artifacts}
+                published={project.published}
+                busy={busy}
+                onChanged={() => { setNotice(null); void refresh(); }}
+                onWorkingChange={setLaunching}
               />
             ) : undefined
           }

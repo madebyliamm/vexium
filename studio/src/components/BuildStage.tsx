@@ -8,6 +8,7 @@ import {
 import { jobIsLive } from '../lib/stage-view.ts';
 import type { ArtifactKind, LatestArtifacts } from '../lib/stages.ts';
 import { SitePreview } from './SitePreview.tsx';
+import { ReportLists } from './ReportLists.tsx';
 
 interface Props {
   projectId: string;
@@ -242,28 +243,7 @@ export function BuildStage({ projectId, artifacts, resumedJobId, busy, onKeep, o
           </div>
           {reportOutdated && <p class="sub small" data-testid="report-outdated">This report is for an older version of the site. Check again for a fresh one.</p>}
           {checkError && <div class="error" role="alert" data-testid="build-check-error">{checkError}</div>}
-          {view.fails.length > 0 && (
-            <ul class="checks fail" data-testid="report-fails">
-              {view.fails.map((c) => <li key={c.id + (c.page ?? '')}><b>{c.label}</b>{c.page && <span class="check-page"> · {c.page}</span>}{c.detail && <span class="check-detail">{c.detail}</span>}</li>)}
-            </ul>
-          )}
-          {view.warns.length > 0 && (
-            <ul class="checks warn" data-testid="report-warns">
-              {view.warns.map((c) => <li key={c.id + (c.page ?? '')}><b>{c.label}</b>{c.page && <span class="check-page"> · {c.page}</span>}{c.detail && <span class="check-detail">{c.detail}</span>}</li>)}
-            </ul>
-          )}
-          {view.openItems.length > 0 && (
-            <div data-testid="report-open">
-              <p class="sub small"><b>Still to do before you launch</b></p>
-              <ul class="checks open">{view.openItems.map((t) => <li key={t}>{t}</li>)}</ul>
-            </div>
-          )}
-          {view.passes.length > 0 && (
-            <details data-testid="report-passes">
-              <summary>{view.passes.length} {view.passes.length === 1 ? 'check' : 'checks'} passed</summary>
-              <ul class="checks pass">{view.passes.map((c) => <li key={c.id + (c.page ?? '')}>{c.label}</li>)}</ul>
-            </details>
-          )}
+          <ReportLists view={view} />
         </section>
       )}
       {!running && manifest && !view && (

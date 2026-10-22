@@ -300,3 +300,43 @@ textarea:disabled, input:disabled, select:disabled { opacity: .6; cursor: not-al
 @media (max-width: 960px) {
   .tweaks-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ── launch screen: checklist, address, live card, QR, confetti ── */
+.launch-stage { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.gate-card { display: flex; flex-direction: column; gap: 12px; background: var(--s1); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow-sm); }
+.gate-card h3 { font-size: 15px; font-weight: 800; }
+.gate { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.gate-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; font-size: 14px; line-height: 1.45; }
+.gate-icon { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; background: var(--s3); color: var(--sub); }
+.gate-row.pass .gate-icon { background: rgba(22, 163, 74, .12); color: var(--ok); }
+.gate-row.warn .gate-icon { background: var(--warn-soft); color: var(--warn); }
+.gate-row.fail .gate-icon { background: rgba(220, 38, 38, .10); color: var(--err); }
+.gate-text { min-width: 0; overflow-wrap: anywhere; }
+.gate-text .check-detail { font-size: 12px; }
+.gate-action { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.link-btn:disabled { opacity: .5; cursor: not-allowed; }
+.link-btn.danger { color: var(--err); }
+.address { display: flex; flex-direction: column; gap: 8px; }
+.address-input { display: flex; align-items: center; min-width: 0; background: var(--s2); border-radius: var(--r-sm); }
+.address-prefix { padding: 0 0 0 14px; font-size: 14px; font-weight: 600; color: var(--sub); white-space: nowrap; }
+.address-input input { flex: 1 1 0; min-width: 0; height: 42px; padding: 0 14px 0 2px; font: inherit; font-size: 14px; font-weight: 700; color: var(--text); background: transparent; border: 0; border-radius: var(--r-sm); }
+.address-input:focus-within { background: var(--s1); box-shadow: inset 0 0 0 2px var(--accent); }
+.address-input input:focus { outline: none; }
+.address-input:has(input[aria-invalid='true']) { box-shadow: inset 0 0 0 2px var(--err); }
+.launch-go { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn.big { height: 48px; padding: 0 28px; font-size: 15px; }
+.why-list { list-style: none; flex: 1 1 100%; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 600; color: var(--sub); }
+.why-list li::before { content: '• '; }
+.live-card { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: var(--s1); border-radius: var(--r); padding: 22px; box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(22, 163, 74, .35); }
+.live-main { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; flex: 1 1 280px; }
+.live-title { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.live-url { max-width: 100%; font-size: clamp(16px, 3.4vw, 22px); font-weight: 800; color: var(--accent); overflow-wrap: anywhere; }
+.live-url:hover { text-decoration: underline; }
+.live-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.qr { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; }
+.qr svg { width: 148px; height: 148px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--b2); background: #fff; }
+.offline { margin-top: 6px; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; left: var(--x); width: 8px; height: 14px; border-radius: 2px; background: hsl(var(--h), 80%, 58%); opacity: 0; animation: confetti-fall 2.4s ease-out var(--d) 1 forwards; transform: rotate(calc(var(--i) * 31deg)); }
+@keyframes confetti-fall { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(240px) rotate(540deg); } }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }

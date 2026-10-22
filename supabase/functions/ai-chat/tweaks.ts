@@ -12,7 +12,7 @@
 // verifier: a tweak may not introduce a NEW failing check (a missing stylesheet link, a broken link, a cut-off script…).
 import { normalizeArtifact, validateArtifact, type StyleSpec } from '../_shared/artifacts.ts';
 import type { LatestArtifacts } from '../_shared/stages.ts';
-import { applyStyleSpec, deriveStyleSpec, manifestWithStyle } from '../_shared/style.ts';
+import { applyStyleSpec, deriveStyleSpec, manifestWithStyle, parseTokens } from '../_shared/style.ts';
 import { inputsFrom, verifyStored } from './build-handler.ts';
 import { jsBalanceProblem } from './html-lite.ts';
 import { scanPage, type PageScan } from './site-derive.ts';
@@ -73,10 +73,14 @@ const clip = (s: string, n: number): string => (s.length > n ? `${s.slice(0, n -
  * The style_spec a stylesheet now describes, when its tokens or fonts are not the saved style's (the lock is kept); null when the
  * style did not move; a reason string when the stylesheet no longer holds a usable style.
  */
-export function styleMoved(css: string, current: StyleSpec): StyleSpec | string | null {
+export function styleMoved(css: string, current: StyleSpec, opts: { declaredOnly?: boolean } = {}): StyleSpec | string | null {
   const derived = deriveStyleSpec(css, { tone: current.vibe.tone, voice: current.voice, art_direction: current.art_direction });
   if (derived.problems.length > 0) return derived.problems.slice(0, 2).join('; ');
-  const spec: StyleSpec = { ...derived.spec, locked: current.locked };
+  // A tweak writes the standard tokens the model left out back into its stylesheet. An undo / redo / restore puts a saved stylesheet
+  // back byte for byte, so its style may only claim the tokens that file declares (or the launch report says the two disagree).
+  const declared = opts.declaredOnly ? parseTokens(css) : null;
+  const tokens = declared ? Object.fromEntries(Object.entries(derived.spec.tokens).filter(([k]) => k in declared)) : derived.spec.tokens;
+  const spec: StyleSpec = { ...derived.spec, tokens, locked: current.locked };
   if (canonicalJson({ t: spec.tokens, f: spec.fonts }) === canonicalJson({ t: current.tokens, f: current.fonts })) return null;
   const valid = validateArtifact('style_spec', normalizeArtifact(spec));
   return valid.ok ? valid.value : valid.errors.slice(0, 2).join('; ');

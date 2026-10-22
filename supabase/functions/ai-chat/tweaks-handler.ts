@@ -13,7 +13,17 @@ import { manifestWithStyle } from '../_shared/style.ts';
 import { inputsFrom, saveLaunchReport, verifyStored } from './build-handler.ts';
 import { requestLabel, takeCheckpoint } from './checkpoints.ts';
 import type { StageDeps } from './stage-handler.ts';
+import { canonicalJson } from './stages.ts';
 import { finishTweaks, styleMoved } from './tweaks.ts';
+
+/** The same JSON, whatever its spacing and key order? */
+const sameJson = (a: string, b: string): boolean => {
+  try {
+    return canonicalJson(JSON.parse(a)) === canonicalJson(JSON.parse(b));
+  } catch {
+    return a === b;
+  }
+};
 
 export type TweakDeps = Pick<StageDeps, 'getLatestArtifacts' | 'getProjectFiles' | 'saveArtifact' | 'saveFiles' | 'snapshot'>;
 
@@ -116,15 +126,17 @@ export async function moveHistory(body: { project_id?: unknown; action?: unknown
       let site = files;
       let style = inputs.style;
       let manifestVersion = latest.manifest.version;
-      const moved2 = typeof files['styles.css'] === 'string' ? styleMoved(files['styles.css'], inputs.style) : null;
+      const moved2 = typeof files['styles.css'] === 'string' ? styleMoved(files['styles.css'], inputs.style, { declaredOnly: true }) : null;
       if (moved2 && typeof moved2 !== 'string') {
         style = moved2;
         await deps.saveArtifact(projectId, 'style_spec', moved2 as unknown as Record<string, unknown>);
         manifestVersion = (await deps.saveArtifact(projectId, 'manifest', latest.manifest.data)).version;
+        // manifest.json follows the palette — but only when its colours really differ: re-writing the same values would change the
+        // file's text, and an undo must give back the saved version exactly.
         const m = files['manifest.json'];
         if (typeof m === 'string') {
           const next = manifestWithStyle(m, moved2);
-          if (next !== m) {
+          if (!sameJson(m, next)) {
             await deps.saveFiles(projectId, { 'manifest.json': next });
             site = { ...files, 'manifest.json': next };
           }

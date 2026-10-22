@@ -229,6 +229,15 @@ describe('finishTweaks', () => {
       assert.ok(typeof moved === 'object' && moved !== null);
       assert.equal(moved.locked, false);
     });
+    it('styleMoved with declaredOnly: the style claims only the tokens the file declares (a saved stylesheet is put back byte for byte)', () => {
+      const css = SITE.files['styles.css']!;
+      const bare = css.replace(/\s*--surface-2:[^;]*;/, '').replace(/\s*--surface:[^;]*;/, '').replace(/\s*--border:[^;]*;/, '').replace(/--accent: #b4532a/i, '--accent: #123456');
+      assert.ok(!/--surface\s*:/.test(bare) && !/--border\s*:/.test(bare));
+      const full = styleMoved(bare, styleOf(css));
+      const lean = styleMoved(bare, styleOf(css), { declaredOnly: true });
+      assert.ok(typeof full === 'object' && full !== null && '--surface' in full.tokens, 'a tweak fills the missing standard tokens in (and writes them back)');
+      assert.ok(typeof lean === 'object' && lean !== null && !('--surface' in lean.tokens) && lean.tokens['--accent'] === '#123456');
+    });
   });
 });
 
@@ -467,6 +476,23 @@ describe('moveHistory', () => {
     assert.equal((w.d.latest.style_spec!.data as { locked: boolean }).locked, true);
     assert.match(w.d.files['manifest.json']!, /#6b21a8/i);
     assert.equal(w.d.latest.launch_checks!.stale, false);
+  });
+
+  it('a stylesheet that does not declare every standard token still gets a clean report (the style claims only what the file has)', async () => {
+    const css = SITE.files['styles.css']!.replace(/\s*--surface-2:[^;]*;/, '').replace(/\s*--surface:[^;]*;/, '').replace(/\s*--border:[^;]*;/, '').replace(/--accent: #b4532a/i, '--accent: #6b21a8');
+    const w = historyWorld({ moved: true, seq: 3, kind: 'tweak', label: 'Purple' }, { 'styles.css': css, 'manifest.json': JSON.stringify({ ...JSON.parse(SITE.files['manifest.json']!), theme_color: '#6b21a8' }) });
+    const r = await moveHistory({ project_id: PROJECT, action: 'restore', seq: 3 }, OWNER, w.deps);
+    assert.deepEqual([r.body.checked, r.body.fails], [true, 0]);
+    assert.ok(!('--surface' in (w.d.latest.style_spec!.data as { tokens: Record<string, string> }).tokens));
+  });
+
+  it('a manifest.json whose colours already follow the style is left exactly as it was saved (no re-spacing)', async () => {
+    const m = JSON.stringify({ ...JSON.parse(SITE.files['manifest.json']!), theme_color: '#6b21a8' }); // compact: manifestWithStyle would pretty-print it
+    const css = SITE.files['styles.css']!.replace(/--accent: #b4532a/i, '--accent: #6b21a8');
+    const w = historyWorld({ moved: true, seq: 3, kind: 'tweak', label: 'Purple' }, { 'styles.css': css, 'manifest.json': m });
+    await moveHistory({ project_id: PROJECT, action: 'restore', seq: 3 }, OWNER, w.deps);
+    assert.equal(w.d.files['manifest.json'], m);
+    assert.ok(!w.d.log.includes('files:manifest.json'));
   });
 
   it('a check that cannot be refreshed still reports the move', async () => {

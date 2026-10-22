@@ -95,7 +95,12 @@ try {
   const siteFiles = async () => (await row()).files ?? {};
   const versions = async () => (await rest(`site_snapshots?project_id=eq.${PID}&select=seq,kind,label,is_current&order=seq`, { headers: mine })).json ?? [];
   const chat = async () => (await rest(`stage_messages?project_id=eq.${PID}&stage=eq.tweaks&select=role,content,job_id&order=created_at.asc`, { headers: mine })).json ?? [];
-  const history = (action, seq, token = owner.token) => jfetch(EDGE, { method: 'POST', headers: user(token), body: JSON.stringify({ tweaks_history: { project_id: PID, action, ...(seq === undefined ? {} : { seq }) } }) });
+  const history = async (action, seq, token = owner.token) => {
+    const t0 = Date.now();
+    const res = await jfetch(EDGE, { method: 'POST', headers: user(token), body: JSON.stringify({ tweaks_history: { project_id: PID, action, ...(seq === undefined ? {} : { seq }) } }) });
+    if (process.env.E2E_TIMING) console.log(`TIMING ${action} ${Date.now() - t0}ms checked=${res.json?.checked} fails=${res.json?.fails}`);
+    return res;
+  };
   const tweak = (content, extra = {}, token = owner.token, project = PID) => runStage({ stage: 'tweaks', project_id: project, messages: [{ role: 'user', content }], ...extra }, token);
   const changedFiles = (a, b) => Object.keys({ ...a, ...b }).filter((f) => a[f] !== b[f]).sort();
 

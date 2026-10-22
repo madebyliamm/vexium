@@ -36,15 +36,19 @@ interface World {
   /** Order of the writes, to prove files are saved before the artifact. */
   writes: string[];
   chat: { project_id: string; stage: Stage; role: 'user' | 'assistant'; content: string; user_id: string | null; job_id: string }[];
+  /** Checkpoints taken (take_site_snapshot), in order. */
+  snapshots: { kind: string; label: string }[];
   state: { credits: string | null; access: Set<string>; saveFails: boolean; filesFail: boolean; chatFails: boolean };
 }
 
 function makeWorld(latest: LatestArtifacts = {}): World {
-  const w: World = { latest, jobs: new Map(), saved: [], files: { 'index.html': 'old', 'logo.png': 'keep' }, writes: [], chat: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false, filesFail: false, chatFails: false }, deps: undefined as unknown as StageDeps };
+  const w: World = { latest, jobs: new Map(), saved: [], files: { 'index.html': 'old', 'logo.png': 'keep' }, writes: [], chat: [], snapshots: [], state: { credits: null, access: new Set([`${PROJECT}:${OWNER}`]), saveFails: false, filesFail: false, chatFails: false }, deps: undefined as unknown as StageDeps };
   let n = 0;
   w.deps = {
     async getProjectAccess(projectId, userId) { return w.state.access.has(`${projectId}:${userId}`) ? { name: 'Bean There', stage: 'plan' } : null; },
     async getLatestArtifacts() { return w.latest; },
+    async getProjectFiles() { return { ...w.files }; },
+    async snapshot(_p, kind, label) { w.snapshots.push({ kind, label }); return { seq: w.snapshots.length, created: true }; },
     async usageGate() { return w.state.credits; },
     async createJob(j) {
       for (const job of w.jobs.values()) if (job.project_id === j.project_id && job.stage && job.status === 'running') job.status = 'failed';
@@ -172,6 +176,7 @@ describe('buildStagePrompt — cache stability', () => {
       const p = buildStagePrompt(s, l);
       assert.ok(p.system.length > 200 && p.maxTokens > 0 && (p.model === 'build' || p.model === 'fast'));
       if (s === 'example') assert.ok(p.system.includes(ARTIFACT_OPEN) && p.system.includes('<file name="styles.css">'), s); // EXAMPLE saves files, not a JSON artifact
+      else if (s === 'tweaks') assert.ok(p.system.includes('<patch name=') && !p.system.includes(ARTIFACT_OPEN), s); // TWEAKS saves patches to the site's files
       else if (STAGE_IO[s].produces) assert.ok(p.system.includes(ARTIFACT_OPEN) && p.system.includes(`updated ${STAGE_IO[s].produces}`), s);
       else assert.ok(p.system.includes('does not save anything'), s);
     }

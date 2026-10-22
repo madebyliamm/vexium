@@ -156,7 +156,8 @@ export default {
       let replyText = "";
       let replyFiles: Record<string, string> = {};
       let sawDone = false; // the parser said `done` = Anthropic finished normally (message_stop)
-      const emitTracked = async (event: string, data: unknown) => { if (event === "done") sawDone = true; await emit(event, data); };
+      let patchesFailed = 0; // patch blocks where no edit matched the file — TWEAKS refuses the whole change when any failed
+      const emitTracked = async (event: string, data: unknown) => { if (event === "done") sawDone = true; if (event === "patch_failed") patchesFailed++; await emit(event, data); };
       try {
         if (prep.category) await emit("build_meta", { category: prep.category });
         if (job) {
@@ -164,7 +165,7 @@ export default {
           await pulse(); // first heartbeat before the (long) Anthropic call, so the studio sees a live run straight away
         }
 
-        const aRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aRes = await fetch(env.ANTHROPIC_BASE_URL ? `${env.ANTHROPIC_BASE_URL.replace(/\/+$/, "")}/v1/messages` : "https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -207,7 +208,7 @@ export default {
         flushUsage();
         if (job) {
           // Save the result server-side even if the browser is gone (refresh/close) — that is what makes stage runs resumable.
-          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.STAGE_WORKER_SECRET }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText, files: replyFiles, finished: sawDone }));
+          const outcome = await reportStageDone(fetch, AI_CHAT_URL, { ...sbHeaders, "x-vx-worker-key": env.STAGE_WORKER_SECRET }, job.id, judgeRun({ aborted: runSignal.aborted, apiError, message: replyText, files: replyFiles, finished: sawDone, patchesFailed }));
           await emit("stage_done", outcome);
         }
         await safeClose();

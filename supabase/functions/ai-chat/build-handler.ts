@@ -21,6 +21,7 @@ import type { LatestArtifacts } from '../_shared/stages.ts';
 import { MAX_BUILD_PAGES, navPages, planBuild, type BuildPage, type BuildSpec } from './build-plan.ts';
 import { BUILD_PAGE_MAX_TOKENS, buildSystem, fixPrompt, pageFromReply, pagePrompt, type BuildContext } from './build-prompts.ts';
 import { assembleSite, finishStylesheet } from './site-derive.ts';
+import { takeCheckpoint } from './checkpoints.ts';
 import type { JobRow, StageDeps } from './stage-handler.ts';
 import { inputBlockers } from './stages.ts';
 import { repairable, verifySite, type Problem, type VerifyResult } from './verifier.ts';
@@ -56,7 +57,7 @@ export interface Usage {
   cacheRead: number;
 }
 
-export interface BuildDeps extends Pick<StageDeps, 'getProjectAccess' | 'getLatestArtifacts' | 'getJob' | 'finishJob' | 'saveArtifact' | 'saveMessage' | 'usageGate'> {
+export interface BuildDeps extends Pick<StageDeps, 'getProjectAccess' | 'getLatestArtifacts' | 'getJob' | 'finishJob' | 'saveArtifact' | 'saveMessage' | 'usageGate' | 'snapshot'> {
   /** The Anthropic model id the pages are written with (the cost of a call depends on it). */
   modelId: string;
   /** projects.files as it is now: name → text (non-text values are left out). */
@@ -103,7 +104,7 @@ function shortReason(s: string): string {
 
 // ── the inputs of a build ─────────────────────────────────────────────────────────────────────────
 
-interface Inputs {
+export interface Inputs {
   plan: Plan;
   style: StyleSpec;
   versions: { plan: number; style_spec: number };
@@ -119,7 +120,7 @@ async function loadInputs(job: JobRow, deps: BuildDeps): Promise<Inputs | string
   return inputsFrom(latest, files);
 }
 
-function inputsFrom(latest: LatestArtifacts, files: Record<string, string>): Inputs | string {
+export function inputsFrom(latest: LatestArtifacts, files: Record<string, string>): Inputs | string {
   const plan = latest.plan, style = latest.style_spec;
   if (!plan || !style) return 'The plan or the style is missing.';
   const p = validateArtifact('plan', normalizeArtifact(plan.data)), s = validateArtifact('style_spec', normalizeArtifact(style.data));
@@ -156,7 +157,7 @@ function currentPages(steps: StepRow[], spec: BuildSpec): { html: Record<string,
   return { html, errors };
 }
 
-function otherFileNames(files: Record<string, string>, spec: BuildSpec): string[] {
+export function otherFileNames(files: Record<string, string>, spec: BuildSpec): string[] {
   const own = new Set([...spec.pages.map((p) => p.file), 'styles.css', 'site.js', 'manifest.json', '_backend']);
   return Object.keys(files).filter((n) => !own.has(n) && !n.startsWith('_'));
 }
@@ -425,6 +426,7 @@ export async function completeBuild(body: { job_id?: unknown }, deps: BuildDeps)
   try {
     // Files first, then the manifest, then the report: a new manifest version is what tells the studio "the build is done".
     await deps.commitSite(job.project_id, assembled.files, assembled.remove);
+    await takeCheckpoint(deps, job.project_id, 'stage', 'Full build');
     manifestVersion = (await deps.saveArtifact(job.project_id, 'manifest', m.value as unknown as Record<string, unknown>)).version;
     const checks = launchChecksFor(result, manifestVersion);
     const c = validateArtifact('launch_checks', normalizeArtifact(checks));
@@ -475,14 +477,24 @@ export async function recheckSite(body: { project_id?: unknown }, userId: string
   const inputs = inputsFrom(latest, files);
   if (typeof inputs === 'string') return refuse(409, 'stage_inputs', inputs);
 
+  const result = verifyStored(inputs, files);
+  const saved = await saveLaunchReport(deps, projectId, result, manifest.version);
+  if (typeof saved === 'string') return refuse(500, 'check_failed', saved);
+  return reply({ ok: true, version: saved, site_ok: result.ok, ...countProblems(result) });
+}
+
+/** The verifier's verdict on the site exactly as it is saved: its pages, styles.css, site.js, manifest.json and `_backend`. */
+export function verifyStored(inputs: Inputs, files: Record<string, string>): VerifyResult {
   const published: Record<string, string> = {};
   for (const n of [...inputs.spec.pages.map((p) => p.file), 'styles.css', 'site.js', 'manifest.json', '_backend']) if (typeof files[n] === 'string') published[n] = files[n]!;
-  const result = verifySite({ plan: inputs.plan, spec: inputs.spec, style: inputs.style, files: published, otherFiles: otherFileNames(files, inputs.spec) });
-  const checks = launchChecksFor(result, manifest.version);
-  const c = validateArtifact('launch_checks', normalizeArtifact(checks));
-  if (!c.ok) return refuse(500, 'check_failed', 'The report could not be saved.');
-  const saved = await deps.saveArtifact(projectId, 'launch_checks', c.value as unknown as Record<string, unknown>);
-  return reply({ ok: true, version: saved.version, site_ok: result.ok, ...countProblems(result) });
+  return verifySite({ plan: inputs.plan, spec: inputs.spec, style: inputs.style, files: published, otherFiles: otherFileNames(files, inputs.spec) });
+}
+
+/** Saves a new launch report for `manifestVersion`; its version, or why it could not be saved. */
+export async function saveLaunchReport(deps: Pick<BuildDeps, 'saveArtifact'>, projectId: string, result: VerifyResult, manifestVersion: number): Promise<number | string> {
+  const c = validateArtifact('launch_checks', normalizeArtifact(launchChecksFor(result, manifestVersion)));
+  if (!c.ok) return 'The report could not be saved.';
+  return (await deps.saveArtifact(projectId, 'launch_checks', c.value as unknown as Record<string, unknown>)).version;
 }
 
 // ── dispatch ──────────────────────────────────────────────────────────────────────────────────────

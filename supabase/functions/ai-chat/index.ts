@@ -6,6 +6,7 @@ import { buildComponentLibraryPrompt, categoriesForBuild } from "./components.ts
 import { BROKEN_PAGE_RULES, FRONTEND_CRAFT, REAL_CONTENT_RULES, SHARED_FILE_RULES } from "./craft.ts";
 import { recheckSite, runBuildOp, stepInsertRows, type BuildDeps, type NewStep, type StepPatch, type StepRow } from "./build-handler.ts";
 import { beginStage, cancelStageRun, finishStageRun, isHttpError, type JobRow, type StageDeps } from "./stage-handler.ts";
+import { moveHistory, type HistoryDeps, type MoveResult } from "./tweaks-handler.ts";
 import type { ArtifactKind, LatestArtifacts } from "../_shared/stages.ts";
 
 const ANTHROPIC_API_KEY  = Deno.env.get("ANTHROPIC_API_KEY")!;
@@ -1865,6 +1866,20 @@ function stageDeps(): StageDeps {
       }
       return out;
     },
+    async getProjectFiles(projectId) {
+      const p = (await rows(`projects?id=eq.${enc(projectId)}&select=files&limit=1`))[0];
+      const out: Record<string, string> = {};
+      for (const [name, text] of Object.entries((p?.files ?? {}) as Record<string, unknown>)) if (typeof text === "string") out[name] = text;
+      return out;
+    },
+    async snapshot(projectId, kind, label) {
+      const r = await fetch(`${rest}/rpc/take_site_snapshot`, {
+        method: "POST", headers: write, body: JSON.stringify({ p_project: projectId, p_kind: kind, p_label: label }),
+      });
+      if (!r.ok) throw new Error(`take_site_snapshot ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+      const out = await r.json();
+      return { seq: out.seq as number, created: out.created === true };
+    },
     usageGate: usageGateMessage,
     async createJob(job) {
       // One live stage run per project: anything still 'running' is superseded.
@@ -1933,13 +1948,9 @@ function buildDeps(): BuildDeps {
     saveArtifact: stage.saveArtifact,
     saveMessage: stage.saveMessage,
     usageGate: stage.usageGate,
+    snapshot: stage.snapshot,
     modelId: MODEL_BUILD,
-    async getProjectFiles(projectId) {
-      const p = (await rows(`projects?id=eq.${enc(projectId)}&select=files&limit=1`))[0];
-      const out: Record<string, string> = {};
-      for (const [name, text] of Object.entries((p?.files ?? {}) as Record<string, unknown>)) if (typeof text === "string") out[name] = text;
-      return out;
-    },
+    getProjectFiles: stage.getProjectFiles,
     async listSteps(jobId) {
       return (await rows(`build_steps?job_id=eq.${enc(jobId)}&select=job_id,project_id,seq,kind,file,label,status,attempt,detail,cost_cents,output&order=seq.asc`))
         .map((r) => ({ ...r, cost_cents: Number(r.cost_cents ?? 0) })) as unknown as StepRow[];
@@ -1972,6 +1983,33 @@ function buildDeps(): BuildDeps {
   };
 }
 
+// TWEAKS history (tweaks-handler.ts): undo / redo / restore through the platform-only database functions.
+function historyDeps(): HistoryDeps {
+  const rest = `${SUPABASE_URL}/rest/v1`;
+  const write = { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" };
+  const stage = stageDeps();
+  return {
+    getProjectAccess: stage.getProjectAccess,
+    getLatestArtifacts: stage.getLatestArtifacts,
+    getProjectFiles: stage.getProjectFiles,
+    saveArtifact: stage.saveArtifact,
+    saveFiles: stage.saveFiles,
+    async moveHistory(projectId, action, seq) {
+      const r = await fetch(`${rest}/rpc/move_site_history`, {
+        method: "POST", headers: write, body: JSON.stringify({ p_project: projectId, p_action: action, p_seq: seq }),
+      });
+      if (!r.ok) throw new Error(`move_site_history ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+      return await r.json() as MoveResult;
+    },
+    async supersedeRunning(projectId, reason) {
+      await fetch(`${rest}/build_jobs?project_id=eq.${encodeURIComponent(projectId)}&stage=not.is.null&status=eq.running`, {
+        method: "PATCH", headers: { ...write, Prefer: "return=minimal" },
+        body: JSON.stringify({ status: "failed", error: reason, finished_at: new Date().toISOString() }),
+      });
+    },
+  };
+}
+
 // The Worker's build operations (a Cloudflare Workflow calls these once per step): authenticated by the shared secret alone — a
 // Workflow outlives the owner's login token, and every operation names its job, which names the user and project.
 async function handleBuildOp(op: Record<string, unknown>, workerKey: string | null): Promise<Response> {
@@ -1988,7 +2026,7 @@ async function handleBuildOp(op: Record<string, unknown>, workerKey: string | nu
 }
 
 async function handleStageMode(
-  body: { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; project_id?: string; messages?: unknown },
+  body: { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; tweaks_history?: Record<string, unknown>; project_id?: string; messages?: unknown; pointed?: unknown },
   userId: string,
   prepareMode: boolean,
   workerKey: string | null,
@@ -2009,6 +2047,11 @@ async function handleStageMode(
       const r = await recheckSite(body.build_recheck ?? {}, userId, buildDeps());
       return json(r.body, r.status);
     }
+    // Undo / redo / "go back to this version" in the TWEAKS stage: the owner's own request, no AI.
+    if (body.tweaks_history !== undefined) {
+      const r = await moveHistory(body.tweaks_history ?? {}, userId, historyDeps());
+      return json(r.body, r.status);
+    }
     // Stage runs execute in the build Worker (no wall-clock limit); this function only prepares them.
     if (!prepareMode) return json({ error: "Stage runs go through the build Worker.", code: "use_worker" }, 400);
     const run = await beginStage(body, userId, deps);
@@ -2019,7 +2062,7 @@ async function handleStageMode(
     return json({
       kind: "run",
       payload: buildAnthropicPayload(model, run.prompt.system, run.messages, run.prompt.maxTokens, true, run.prompt.suffix),
-      files_for_patching: {},
+      files_for_patching: run.filesForPatching ?? {},
       user_id: userId,
       category: "",
       job: { id: run.jobId, stage: run.stage },
@@ -2080,6 +2123,8 @@ serve(async (req) => {
     stage_done?: Record<string, unknown>;    // build Worker → us: a stage run finished (reply to parse + save)
     stage_cancel?: Record<string, unknown>;  // the studio's Stop button: close a running stage job
     build_recheck?: Record<string, unknown>; // the studio's "Check again": verify the saved site, save a fresh launch report
+    tweaks_history?: Record<string, unknown>; // the studio's undo / redo / restore: move along the site's checkpoints
+    pointed?: unknown;                       // TWEAKS: the element the owner pointed at in the preview
   };
   try { body = await req.json(); }
   catch {
@@ -2099,8 +2144,8 @@ serve(async (req) => {
   const prepareMode = body.prepare === true;
 
   // ── STAGE MODE (the studio's guided flow; the old editor never sends these fields) ──
-  if (body.stage !== undefined || body.stage_done !== undefined || body.stage_cancel !== undefined || body.build_recheck !== undefined) {
-    return await handleStageMode(body as { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; project_id?: string; messages?: unknown }, userId, prepareMode, req.headers.get("x-vx-worker-key"));
+  if (body.stage !== undefined || body.stage_done !== undefined || body.stage_cancel !== undefined || body.build_recheck !== undefined || body.tweaks_history !== undefined) {
+    return await handleStageMode(body as { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; tweaks_history?: Record<string, unknown>; project_id?: string; messages?: unknown; pointed?: unknown }, userId, prepareMode, req.headers.get("x-vx-worker-key"));
   }
 
   // ── SUGGEST MODE (build Worker → us, after a build, to fetch follow-up suggestions) ──

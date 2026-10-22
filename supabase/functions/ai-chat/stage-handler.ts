@@ -11,7 +11,10 @@
 // Why the SERVER saves the result: the run keeps going in the Worker even if the browser refreshes or closes. Saving here means a
 // reloaded studio simply finds the new artifact version (and the job row says it finished) — that is resume-after-refresh.
 import { isStage, describeBlocker, STAGE_IO, type ArtifactKind, type LatestArtifacts, type Stage } from '../_shared/stages.ts';
+import { takeCheckpoint, type CheckpointDeps } from './checkpoints.ts';
 import { buildStagePrompt, finishStage, inputBlockers, type StagePrompt } from './stages.ts';
+import { applyTweak } from './tweaks-handler.ts';
+import { cleanPointed, tweakContext, type Pointed } from './tweaks-prompt.ts';
 
 export interface JobRow {
   id: string;
@@ -23,10 +26,12 @@ export interface JobRow {
   prompt?: string | null;
 }
 
-export interface StageDeps {
+export interface StageDeps extends CheckpointDeps {
   /** The project's name + current stage if the user owns it or is an ACCEPTED collaborator; null otherwise (not found = no access). */
   getProjectAccess(projectId: string, userId: string): Promise<{ name: string; stage: string } | null>;
   getLatestArtifacts(projectId: string): Promise<LatestArtifacts>;
+  /** projects.files as it is now: name → text (non-text values are left out). */
+  getProjectFiles(projectId: string): Promise<Record<string, string>>;
   /** An error message when the user is out of credits / their trial ended; null when they may run AI. */
   usageGate(userId: string): Promise<string | null>;
   /** Supersedes any older running stage job of the project, then inserts the new one. Returns its id. */
@@ -54,6 +59,8 @@ export interface StageRequest {
   stage?: unknown;
   project_id?: unknown;
   messages?: unknown;
+  /** TWEAKS: the element the owner pointed at in the preview (untrusted — cleanPointed). */
+  pointed?: unknown;
 }
 
 export interface StageRun {
@@ -62,6 +69,8 @@ export interface StageRun {
   jobId: string;
   prompt: StagePrompt;
   messages: { role: 'user' | 'assistant'; content: string }[];
+  /** TWEAKS: the site's text files the run may patch (name → text). The Worker applies the model's patches to exactly these. */
+  filesForPatching?: Record<string, string>;
 }
 
 /** FULL BUILD is not one model call but a Cloudflare Workflow of many (build-handler.ts): the Worker is told only which job to run. */
@@ -100,12 +109,16 @@ export async function beginStage(body: StageRequest, userId: string, deps: Stage
   const projectId = body.project_id;
   const messages = cleanMessages(body.messages);
   if (typeof messages === 'string') return fail(400, 'bad_messages', messages);
+  const pointed = stage === 'tweaks' ? cleanPointed(body.pointed) : null;
+  if (typeof pointed === 'string') return fail(400, 'bad_pointed', pointed);
 
   const project = await deps.getProjectAccess(projectId, userId);
   if (!project) return fail(404, 'not_found', 'Project not found.');
 
   const latest = await deps.getLatestArtifacts(projectId);
   const blocked = inputBlockers(stage, latest);
+  // A tweak changes the BUILT site: besides the plan and the locked style (the stage's inputs), the build must exist.
+  if (stage === 'tweaks' && !latest.manifest) blocked.push({ kind: 'manifest', reason: 'missing' });
   if (blocked.length) {
     return fail(409, 'stage_inputs', blocked.map(describeBlocker).join('. ') + '.', { blocked_by: blocked });
   }
@@ -123,7 +136,24 @@ export async function beginStage(body: StageRequest, userId: string, deps: Stage
   });
   await recordUserLine(deps, { projectId, stage, userId, jobId, content: lastUser });
   if (stage === 'build') return { kind: 'workflow', stage, jobId };
+  if (stage === 'tweaks') return await beginTweak({ projectName: project.name, projectId, jobId, latest, messages, pointed }, deps);
   return { kind: 'run', stage, jobId, prompt: buildStagePrompt(stage, latest, { projectName: project.name }), messages };
+}
+
+/** A tweak run: the checkpoint "before your changes", then the prompt with the site's current text and the chosen element. */
+async function beginTweak(
+  i: { projectName: string; projectId: string; jobId: string; latest: LatestArtifacts; messages: StageRun['messages']; pointed: Pointed | null },
+  deps: StageDeps,
+): Promise<StageRun> {
+  const files = await deps.getProjectFiles(i.projectId);
+  // The site as the owner has it now, kept so that an undo can come back to it (nothing is taken when it is already the newest checkpoint).
+  await takeCheckpoint(deps, i.projectId, 'baseline', 'Before your changes');
+  const manifest = i.latest.manifest!.data as { pages?: { file?: unknown; title?: unknown }[] };
+  const pages = (manifest.pages ?? []).filter((p) => typeof p.file === 'string').map((p) => ({ file: String(p.file), title: typeof p.title === 'string' ? p.title : String(p.file) }));
+  const context = tweakContext({ files, pages, pointed: i.pointed });
+  const filesForPatching: Record<string, string> = {};
+  for (const name of context.shown) filesForPatching[name] = files[name]!;
+  return { kind: 'run', stage: 'tweaks', jobId: i.jobId, prompt: buildStagePrompt('tweaks', i.latest, { projectName: i.projectName, extra: context.text }), messages: i.messages, filesForPatching };
 }
 
 const MAX_LINE_CHARS = 20_000;
@@ -150,6 +180,8 @@ export interface StageDoneRequest {
   message?: unknown;
   /** The files the run wrote (completed `<file>` blocks), name → text. Only stages that produce files use them (EXAMPLE). */
   files?: unknown;
+  /** How many patch blocks matched nothing in the file they named (counted by the Worker; TWEAKS refuses the change when any did). */
+  patch_failed?: unknown;
   error?: unknown;
 }
 
@@ -173,6 +205,8 @@ export interface StageOutcome {
   ok: boolean;
   /** What was saved (null for a chat-only turn or a failure). */
   artifact: { kind: ArtifactKind; version: number; staled: string[] } | null;
+  /** TWEAKS: the files the change touched. */
+  changed?: string[];
   error?: string;
 }
 
@@ -218,6 +252,24 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
     return fail(404, 'not_found', 'Project not found.');
   }
 
+  if (stage === 'tweaks') {
+    const pf = typeof body.patch_failed === 'number' && Number.isFinite(body.patch_failed) ? Math.max(0, Math.floor(body.patch_failed)) : 0;
+    const t = await applyTweak({ projectId: job.project_id, request: job.prompt ?? '', message: body.message, written, patchFailed: pf }, deps);
+    if (!t.ok) {
+      await close('failed', t.error ?? 'The change was not made.');
+      return { status: 200, body: { ok: false, artifact: null, error: t.error ?? 'The change was not made.' } };
+    }
+    if (t.chat) {
+      try {
+        await deps.saveMessage({ project_id: job.project_id, stage, role: 'assistant', content: t.chat.slice(0, MAX_LINE_CHARS), user_id: null, job_id: job.id });
+      } catch (e) {
+        console.error('[ai-chat] could not save the stage reply', e);
+      }
+    }
+    await close('complete');
+    return { status: 200, body: { ok: true, artifact: t.artifact, changed: t.changed } };
+  }
+
   const done = finishStage(stage, body.message, written);
   if (done.error) {
     await close('failed', done.error);
@@ -239,6 +291,7 @@ export async function finishStageRun(body: StageDoneRequest, userId: string, dep
   try {
     // Files first, then the artifact: a new artifact version is what tells the studio "the run is done", so by then the files are there.
     if (done.files) await deps.saveFiles(job.project_id, done.files);
+    if (done.files && stage === 'example') await takeCheckpoint(deps, job.project_id, 'stage', 'Example page');
     const saved = await deps.saveArtifact(job.project_id, done.artifact.kind, done.artifact.data);
     // The reply is only worth keeping once what it describes was actually saved (otherwise it claims changes that never happened).
     await recordReply(done.chat || (done.files ? "Here's your landing page." : `I've updated your ${KIND_WORDS[done.artifact.kind]}.`));

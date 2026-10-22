@@ -27,6 +27,11 @@ describe('judgeRun', () => {
     assert.match(cut.error!, /stopped before finishing/);
     assert.equal(judgeRun({ aborted: false, apiError: null, message: '', files: {}, finished: true }).ok, false, 'finished with nothing at all is still a failure');
   });
+  it('counts patches that matched nothing, so a tweak can be thrown away whole', () => {
+    const files = { 'index.html': 'x' };
+    assert.deepEqual(judgeRun({ aborted: false, apiError: null, message: 'm', files, finished: true, patchesFailed: 2 }), { ok: true, message: 'm', files, patch_failed: 2 });
+    assert.deepEqual(judgeRun({ aborted: false, apiError: null, message: 'm', patchesFailed: 0 }), { ok: true, message: 'm' }, 'none failed → the field is left out');
+  });
   it('Stop and API errors win over files', () => {
     const files = { 'index.html': 'x' };
     assert.deepEqual(judgeRun({ aborted: true, apiError: null, message: 'm', files, finished: true }), { ok: false, error: 'Stopped' });
@@ -56,6 +61,13 @@ describe('reportStageDone', () => {
     const seen: { init?: RequestInit } = {};
     await reportStageDone(fake(200, { ok: true, artifact: null }, seen), 'u', H, 'job-2', { ok: true, message: 'm', files: { 'index.html': '<p>hi</p>' } });
     assert.deepEqual(JSON.parse(String(seen.init?.body)), { stage_done: { job_id: 'job-2', ok: true, message: 'm', files: { 'index.html': '<p>hi</p>' } } });
+  });
+
+  it('sends the patch count and passes back what changed', async () => {
+    const seen: { init?: RequestInit } = {};
+    const out = await reportStageDone(fake(200, { ok: true, artifact: { kind: 'launch_checks', version: 4, staled: [] }, changed: ['index.html'] }, seen), 'u', H, 'j', { ok: true, message: 'm', files: { 'index.html': 'x' }, patch_failed: 1 });
+    assert.deepEqual(out, { ok: true, artifact: { kind: 'launch_checks', version: 4, staled: [] }, changed: ['index.html'] });
+    assert.equal(JSON.parse(String(seen.init?.body)).stage_done.patch_failed, 1);
   });
 
   it('passes a failure through with its reason', async () => {

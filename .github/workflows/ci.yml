@@ -47,4 +47,4 @@ jobs:
         with:
           node-version: 24
       - name: Run unit suites
-        run: node --test supabase/tests/site_api.test.ts supabase/tests/auth_gate.test.ts supabase/tests/stages.test.ts supabase/tests/ai_stages.test.ts sdk/test/sdk_v1.test.ts 'publisher/test/*.test.ts' cf-worker/test/stream_parser.test.ts cf-worker/test/stage_report.test.ts
+        run: node --test 'supabase/tests/*.test.ts' sdk/test/sdk_v1.test.ts 'publisher/test/*.test.ts' 'cf-worker/test/*.test.ts'

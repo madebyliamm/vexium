@@ -6,6 +6,7 @@
 import { AI_BUILD_URL } from '../lib/config.ts';
 import { authedFetch, errorFromResponse, type AuthDeps } from './http.ts';
 import { SseParser, type SseMessage } from './sse.ts';
+import type { PickedElement } from '../lib/preview.ts';
 import type { ArtifactKind, Stage } from '../lib/stages.ts';
 
 export interface ChatMessage {
@@ -39,6 +40,8 @@ export interface StageRunRequest {
   project_id: string;
   /** Text-only conversation; must start and end with the user. */
   messages: { role: 'user' | 'assistant'; content: string }[];
+  /** TWEAKS only: the element the owner clicked in the preview (the server re-cleans it). */
+  pointed?: PickedElement;
   stream: true;
 }
 
@@ -48,6 +51,8 @@ export interface StageDone {
   /** Set when the reply produced a new artifact version. null = a chat-only turn, or a failure (see `error`). */
   artifact: { kind: ArtifactKind; version: number; staled: string[] } | null;
   error?: string;
+  /** TWEAKS: the site files the change touched (empty / absent for a chat-only turn or a failure). */
+  changed?: string[];
 }
 
 export type BuildEvent =
@@ -112,7 +117,8 @@ export function toBuildEvent(m: SseMessage): BuildEvent {
           ? { kind: str((a as Record<string, unknown>).kind) as ArtifactKind, version: (a as Record<string, unknown>).version as number, staled: Array.isArray((a as Record<string, unknown>).staled) ? ((a as Record<string, unknown>).staled as unknown[]).filter((x): x is string => typeof x === 'string') : [] }
           : null;
       const error = str(d.error);
-      return { type: 'stage_done', ok: d.ok === true, artifact, ...(error ? { error } : {}) };
+      const changed = Array.isArray(d.changed) ? d.changed.filter((x): x is string => typeof x === 'string') : [];
+      return { type: 'stage_done', ok: d.ok === true, artifact, ...(error ? { error } : {}), ...(changed.length > 0 ? { changed } : {}) };
     }
     case 'delta':
       return { type: 'delta', text: str(d.text) };
@@ -249,7 +255,7 @@ export function applyBuildEvent(result: BuildResult, event: BuildEvent): void {
       result.jobId = event.job_id;
       break;
     case 'stage_done':
-      result.stageDone = { ok: event.ok, artifact: event.artifact, ...(event.error ? { error: event.error } : {}) };
+      result.stageDone = { ok: event.ok, artifact: event.artifact, ...(event.error ? { error: event.error } : {}), ...(event.changed ? { changed: event.changed } : {}) };
       break;
     case 'delta':
       result.chat += event.text;

@@ -4,6 +4,7 @@
 // products and sign-in forms the page hosts) and answers with a small but complete page in the real reply format, streamed like the API.
 // The owner's note steers it: `mock-slow` makes every page take ~40 s (so a test can press Stop mid-build), `mock-credit` answers
 // like an account that is out of credit (HTTP 402). `mock-flaw` in a page's purpose: see pageFor.
+// TWEAKS prompts (the system text contains "STAGE: TWEAKS") are answered from the owner's last message: see tweakFor.
 // What it proves is the plumbing — Workflow steps, ai-chat operations, verifier, repair loop, atomic save — NOT the quality of a model's pages.
 
 interface Msg { role: string; content: unknown }
@@ -44,6 +45,41 @@ export function pageFor(system: string, prompt: string): { file: string; html: s
   };
 }
 
+/**
+ * A TWEAKS reply, steered by a `mock-` word in the owner's last message (the files and the pointed element are read back out of the
+ * prompt the platform built, so the patches match the page text exactly like a careful model's would):
+ *   mock-say "New words"   replaces the pointed element's text with the new words
+ *   mock-accent #2f7d4f    changes the --accent token in styles.css
+ *   mock-bad-find          a patch that matches nothing (the platform must throw the whole change away)
+ *   mock-hook              renames a form field (the platform must refuse: forms are set up in the Plan)
+ *   anything else          a question, no edit
+ */
+export function tweakFor(system: string, request: string): string | null {
+  if (!/STAGE: TWEAKS/.test(system)) return null;
+  const files: Record<string, string> = {};
+  for (const m of system.matchAll(/^=== (\S+) ===\n([\s\S]*?)\n=== end of \1 ===$/gm)) files[m[1]!] = m[2]!;
+  const patch = (name: string, find: string, replace: string): string => `<patch name="${name}"><find>${find}</find><replace>${replace}</replace></patch>`;
+  const say = /mock-say\s+"([^"]+)"/.exec(request)?.[1];
+  if (say) {
+    const page = /POINTED AT THIS ELEMENT in the preview of (\S+)\./.exec(system)?.[1];
+    const textJson = /- its visible text: ("(?:[^"\\]|\\.)*")/.exec(system)?.[1];
+    const text = textJson ? (JSON.parse(textJson) as string) : '';
+    if (page && text && files[page]?.includes(text)) return `Changed the words.\n${patch(page, text, esc(say))}`;
+    return 'I could not tell which words you mean — click the text you want to change first.';
+  }
+  const accent = /mock-accent\s+(#[0-9a-fA-F]{6})/.exec(request)?.[1];
+  if (accent) {
+    const current = /--accent:\s*#[0-9a-fA-F]{3,8}/.exec(files['styles.css'] ?? '')?.[0];
+    return current ? `Changed the accent colour.\n${patch('styles.css', current, `--accent: ${accent}`)}` : 'I could not find the accent colour.';
+  }
+  if (/mock-bad-find/.test(request)) return `Changed it.\n${patch('index.html', '<h1>This text is not on the page at all</h1>', '<h1>Hello</h1>')}`;
+  if (/mock-hook/.test(request)) {
+    const page = Object.keys(files).find((f) => files[f]!.includes('name="message"'));
+    return page ? `Renamed the field.\n${patch(page, 'name="message"', 'name="note"')}` : 'There is no form here.';
+  }
+  return 'Which part of the page would you like to change? Click it in the preview and tell me what you want.';
+}
+
 const sse = (event: string, data: unknown): Uint8Array => new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
 export default {
@@ -55,9 +91,12 @@ export default {
     const system = flat(body.system);
     const prompt = flat(body.messages?.[0]?.content);
     if (/mock-credit/.test(prompt)) return new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    const slow = /mock-slow/.test(prompt);
-    const page = pageFor(system, prompt);
-    const reply = page ? `<file name="${page.file}">\n${page.html}\n</file>` : 'Nothing to build.';
+    const last = [...(body.messages ?? [])].reverse().find((m) => m.role === 'user');
+    const request = flat(last?.content);
+    const slow = /mock-slow/.test(prompt) || /mock-slow/.test(request);
+    const tweak = tweakFor(system, request);
+    const page = tweak === null ? pageFor(system, prompt) : null;
+    const reply = tweak ?? (page ? `<file name="${page.file}">\n${page.html}\n</file>` : 'Nothing to build.');
     const tokensIn = Math.ceil((system.length + prompt.length) / 4);
     // the system block is "cached" after the first call of a build: bill it as a cache read, like the real API does
     const cached = /x-mock-cold/.test(prompt) ? 0 : tokensIn - Math.ceil(prompt.length / 4);

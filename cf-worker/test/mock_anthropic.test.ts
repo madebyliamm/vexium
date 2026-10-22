@@ -8,7 +8,12 @@ import { planBuild } from '../../supabase/functions/ai-chat/build-plan.ts';
 import { assembleSite, finishStylesheet } from '../../supabase/functions/ai-chat/site-derive.ts';
 import { verifySite } from '../../supabase/functions/ai-chat/verifier.ts';
 import { EXAMPLE_CSS, HOME, STYLE } from '../../supabase/tests/site_fixtures.ts';
-import mock, { pageFor } from '../mock/anthropic.ts';
+import mock, { pageFor, tweakFor } from '../mock/anthropic.ts';
+import { makeParse, processStreamBlock } from '../core.ts';
+import { buildStagePrompt } from '../../supabase/functions/ai-chat/stages.ts';
+import { finishTweaks } from '../../supabase/functions/ai-chat/tweaks.ts';
+import { cleanPointed, tweakContext } from '../../supabase/functions/ai-chat/tweaks-prompt.ts';
+import { builtSite, latestOf, PLAN as BUILT_PLAN } from '../../supabase/tests/built_site.ts';
 import { callModel } from '../model.ts';
 
 const SHOP_PLAN: Plan = {
@@ -101,5 +106,64 @@ describe('mock Anthropic, against the real prompts and verifier', () => {
     assert.deepEqual(Object.keys(r.files), ['shop.html']);
     assert.match(r.files['shop.html']!, /^\s*<!DOCTYPE html>/);
     assert.ok(r.usage.out > 50 && r.usage.cacheRead > 0, JSON.stringify(r.usage));
+  });
+});
+
+describe('mock Anthropic answers tweak prompts', () => {
+  const site = builtSite();
+  const latest = latestOf(site.manifest);
+  const pointed = cleanPointed({ page: 'index.html', selector: 'main > section.hero > h1', tag: 'h1', text: 'Candles poured by hand', html: '<h1>Candles poured by hand</h1>' }) as NonNullable<ReturnType<typeof cleanPointed>> & object;
+  const prompt = buildStagePrompt('tweaks', latest, { projectName: 'Wick & Co', extra: tweakContext({ files: site.files, pages: BUILT_PLAN.pages, pointed }).text });
+  const system = prompt.system + prompt.suffix;
+
+  /** The reply, through the build Worker's own patch parser, to the final text of every file it touched. */
+  function patched(reply: string): { written: Record<string, string>; failed: number } {
+    const state = makeParse({ ...site.files });
+    const written: Record<string, string> = {};
+    let failed = 0;
+    for (const ev of processStreamBlock(reply, state)) {
+      if (ev.type === 'patch_done' && ev.encoding === 'base64') written[ev.name!] = Buffer.from(ev.content!, 'base64').toString('utf8');
+      if (ev.type === 'patch_done' && ev.encoding === 'failed') failed++;
+    }
+    return { written, failed };
+  }
+  const judge = (reply: string) => {
+    const r = patched(reply);
+    return finishTweaks({ message: 'm', written: r.written, patchFailed: r.failed, files: site.files, latest });
+  };
+
+  it('only answers the tweak prompt', () => {
+    assert.equal(tweakFor('STAGE: PLAN', 'mock-say "x"'), null);
+  });
+  it('"mock-say" changes the words of the element that was pointed at', () => {
+    const r = judge(tweakFor(system, 'mock-say "Candles poured with care"')!);
+    assert.equal(r.error, undefined);
+    assert.match(r.files['index.html']!, /Candles poured with care/);
+    assert.ok(!r.files['index.html']!.includes('Candles poured by hand'));
+  });
+  it('"mock-accent" moves the accent token: a new locked style comes with it', () => {
+    const r = judge(tweakFor(system, 'make the accent mock-accent #2f7d4f')!);
+    assert.equal(r.error, undefined);
+    assert.equal(r.style?.tokens['--accent'], '#2f7d4f');
+    assert.equal(r.style?.locked, true);
+  });
+  it('"mock-bad-find" is a patch that matches nothing: the whole change is thrown away', () => {
+    const r = judge(tweakFor(system, 'mock-bad-find')!);
+    assert.match(r.error!, /none of it was made/);
+  });
+  it('"mock-hook" renames a form field: refused, forms are set up in the Plan', () => {
+    assert.match(judge(tweakFor(system, 'mock-hook')!).error!, /form, a sign-in box or a buy button/);
+  });
+  it('anything else is a question and no edit', () => {
+    const r = judge(tweakFor(system, 'make it nicer')!);
+    assert.equal(r.error, undefined);
+    assert.deepEqual(r.files, {});
+  });
+  it('over the wire, a tweak request gets the patch reply (the owner\'s LAST message steers it)', async () => {
+    const body = { model: 'm', max_tokens: 100, stream: true, system: [{ type: 'text', text: prompt.system }, { type: 'text', text: prompt.suffix }], messages: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Hello.' }, { role: 'user', content: 'mock-accent #2f7d4f' }] };
+    const res = await mock.fetch(new Request('https://mock.test/v1/messages', { method: 'POST', body: JSON.stringify(body) }));
+    const text = await res.text();
+    assert.match(text, /patch name=\\"styles\.css\\"/);
+    assert.match(text, /--accent: #2f7d4f/);
   });
 });

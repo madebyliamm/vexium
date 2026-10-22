@@ -36,6 +36,7 @@ interface World {
   steps: StepRow[];
   files: Record<string, string>;
   commits: { files: Record<string, string>; remove: string[] }[];
+  snapshots: { kind: string; label: string }[];
   saved: { kind: ArtifactKind; data: Record<string, unknown> }[];
   billed: { user: string; usage: Usage; model: string }[];
   chat: { stage: string; role: string; content: string }[];
@@ -47,7 +48,7 @@ function world(over: { plan?: Plan; locked?: boolean; note?: string } = {}): Wor
   const latest = [['plan', over.plan ?? PLAN], ['style_spec', { ...STYLE, locked: over.locked ?? true }]].reduce((l, [k, d]) => applyPut(l, k as ArtifactKind, d as Record<string, unknown>).latest, {} as LatestArtifacts);
   const w: World = {
     latest, jobs: new Map(), steps: [], files: { 'index.html': '<html><body>the approved example</body></html>', 'styles.css': EXAMPLE_CSS, 'site.js': '', 'logo.png': 'x', 'old.html': '<html><body>an old page</body></html>' },
-    commits: [], saved: [], billed: [], chat: [], state: { credits: null, access: true, commitFails: false }, jobId: '', deps: undefined as unknown as BuildDeps,
+    commits: [], snapshots: [], saved: [], billed: [], chat: [], state: { credits: null, access: true, commitFails: false }, jobId: '', deps: undefined as unknown as BuildDeps,
   };
   w.jobId = '00000000-0000-4000-8000-000000000001';
   w.jobs.set(w.jobId, { id: w.jobId, project_id: PROJECT, user_id: OWNER, stage: 'build', status: 'running', prompt: over.note ?? 'Build my site' });
@@ -61,6 +62,7 @@ function world(over: { plan?: Plan; locked?: boolean; note?: string } = {}): Wor
     async saveArtifact(_p, kind, data) { const r = applyPut(w.latest, kind, data); w.latest = r.latest; w.saved.push({ kind, data }); return { version: r.version, staled: r.staled }; },
     async saveMessage(m) { w.chat.push(m); },
     async getProjectFiles() { return { ...w.files }; },
+    async snapshot(_p, kind, label) { w.snapshots.push({ kind, label }); return { seq: w.snapshots.length, created: true }; },
     async listSteps(jobId) { return w.steps.filter((s) => s.job_id === jobId).sort((a, b) => a.seq - b.seq).map((s) => ({ ...s })); },
     async insertSteps(rows: NewStep[]) {
       for (const r of rows) {

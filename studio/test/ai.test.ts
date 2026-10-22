@@ -188,6 +188,15 @@ test('toBuildEvent understands stage_job and stage_done (incl. a failed run and 
   assert.deepEqual(toBuildEvent({ event: 'stage_done', data: '{}' }), { type: 'stage_done', ok: false, artifact: null });
 });
 
+test('stage_done carries the files a TWEAKS change touched (junk dropped, empty left out) into the folded result', () => {
+  const done = toBuildEvent({ event: 'stage_done', data: JSON.stringify({ ok: true, artifact: null, changed: ['index.html', 7, 'styles.css'] }) });
+  assert.deepEqual(done, { type: 'stage_done', ok: true, artifact: null, changed: ['index.html', 'styles.css'] });
+  assert.deepEqual(toBuildEvent({ event: 'stage_done', data: JSON.stringify({ ok: true, artifact: null, changed: [] }) }), { type: 'stage_done', ok: true, artifact: null });
+  const r = emptyBuildResult();
+  applyBuildEvent(r, done);
+  assert.deepEqual(r.stageDone, { ok: true, artifact: null, changed: ['index.html', 'styles.css'] });
+});
+
 test('streamStage posts the stage request to the build Worker and folds the run into a result (any chunking)', async () => {
   const seen: Request[] = [];
   const r = await collectBuild(streamStage(STAGE_REQUEST, deps(fakeFetch(STAGE_RUN, { size: 5, seen }), 'user-token')));

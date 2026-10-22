@@ -545,19 +545,133 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   await click('[data-testid=stage-back]');
   check('Back goes to TWEAKS', await chrome.waitFor(`document.querySelector('.stage[data-stage=tweaks]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'tweaks', await dbStage());
   check('BUSINESS stays blocked until something is published', (await stepState('business')) === 'blocked');
+
+  // ── 3g. the TWEAKS screen (Step 11): the site beside a chat — point at something, say what to change, undo it ──
+  // The Worker call is stubbed (no model); the test plays the server's part of a change (writes the draft, saves the checkpoint and the chat
+  // lines) with the service key, exactly the rows ai-chat writes in production. Undo / redo / "go back to this" are REAL calls to ai-chat.
+  // E2E_MOCK_BUILD=1 below runs a real change through the Worker with the stand-in model.
+  const twIs = (expr, ms = 8000) => chrome.waitFor(expr, ms);
+  const NOW_TEXT = () => text('[data-testid=tweaks-now]');
+  const pickedFrame = () => inFrame(`[...document.querySelectorAll('[data-vx-picked]')].map((e) => e.tagName.toLowerCase()).join()`);
+  check('TWEAKS: the guided screen replaces the artifact list — the site, the history bar and the chat', !!(await twIs(`!!document.querySelector('[data-testid=tweaks-stage]') && !!document.querySelector('[data-testid=tweaks-chat]') && !!document.querySelector('[data-testid=site-preview]')`, 12000)) && (await count('.artifact')) === 0);
+  check('TWEAKS: the site is shown with its own page tab, and nothing is live yet ("Draft")', !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`, 15000)) && (await text('[data-testid=tweaks-draft]')) === 'Draft · not live yet' && (await text('[data-testid=tweaks-draft-note]')).includes('once you publish'), await text('[data-testid=tweaks-draft]'));
+  check('TWEAKS: the chat greets the owner and the pointer says nothing is picked', (await count('[data-testid=tweaks-greeting]')) === 1 && (await count('[data-testid=tweaks-nothing-picked]')) === 1 && (await count('[data-testid=tweaks-ideas]')) === 1);
+  check('TWEAKS: no saved version yet → undo and redo are off and the bar says so', (await chrome.eval(`document.querySelector('[data-testid=tweaks-undo]').disabled && document.querySelector('[data-testid=tweaks-redo]').disabled`)) === true && (await NOW_TEXT()).includes('No saved versions yet'), await NOW_TEXT());
+  check('TWEAKS: the launch report is shown beside it, with a way to check again', (await count('[data-testid=tweaks-report]')) === 1 && (await count('[data-testid=tweaks-recheck]')) === 1);
   await chrome.screenshot(`${OUT}/stage-tweaks.png`);
+
+  // device frames: the page is laid out at the device's real width, whatever room the screen has
+  const frameWidth = () => inFrame(`innerWidth`);
+  const desktopW = await frameWidth();
+  await click('[data-testid=preview-tablet]');
+  check('TWEAKS: "Tablet" shows the page at 768px wide, inside a frame that fits the screen', (await chrome.eval(`document.querySelector('.preview-stage').dataset.device`)) === 'tablet' && (await waitFrame(`innerWidth === 768`, 6000)) === true && (await chrome.eval(`(() => { const s = document.querySelector('.preview-stage').getBoundingClientRect(), d = document.querySelector('.preview-stage .device').getBoundingClientRect(); return d.left >= s.left - 1 && d.right <= s.right + 1; })()`)) === true, await frameWidth());
+  await chrome.screenshot(`${OUT}/tweaks-tablet.png`);
+  await click('[data-testid=preview-phone]');
+  check('TWEAKS: "Phone" shows it at 390px, so the page\'s phone layout is what you see', (await waitFrame(`innerWidth === 390`, 6000)) === true && (await chrome.eval(`document.querySelector('.preview-stage').dataset.device`)) === 'phone', await frameWidth());
+  await chrome.screenshot(`${OUT}/tweaks-phone.png`);
+  await click('[data-testid=preview-desktop]');
+  check('TWEAKS: "Desktop" gives the page the whole width again', (await waitFrame(`innerWidth === ${desktopW}`, 6000)) === true, `${await frameWidth()} vs ${desktopW}`);
+
+  // pointing: while it is on, a click chooses what is under it and does nothing else
+  await click('[data-testid=tweaks-pick]');
+  check('TWEAKS: "Point at something" turns pointing on (the page gets a crosshair, the button says Cancel)', !!(await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000)) && (await text('[data-testid=tweaks-pick]')).trim() === 'Cancel' && (await chrome.eval(`document.querySelector('.preview-stage').dataset.picking`)) === 'true');
+  await inFrame(`document.querySelector('[data-e2e=about-link]').click(); true`);
+  check('TWEAKS: pointing at a link picks it — it does NOT follow the link', !!(await twIs(`document.querySelector('[data-testid=tweaks-pointed]')?.dataset.tag === 'a'`, 6000)) && (await count('[data-testid=preview-missing-page]')) === 0 && (await inFrame(`document.querySelector('h1')?.textContent`)) === 'Bean There', await text('[data-testid=tweaks-pointing]'));
+  check('TWEAKS: …it says in words what was picked and marks it on the page; pointing turns itself off', (await text('[data-testid=tweaks-pointed]')).includes('Link “About us”') && (await pickedFrame()) === 'a' && (await chrome.eval(`document.querySelector('.preview-stage').dataset.picking`)) === 'false');
+  await click('[data-testid=tweaks-pick]');
+  await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000);
+  await inFrame(`document.querySelector('h1').click(); true`);
+  check('TWEAKS: "Pick something else" replaces the pick (heading), and only that one is marked', !!(await twIs(`document.querySelector('[data-testid=tweaks-pointed]')?.dataset.tag === 'h1'`, 6000)) && (await text('[data-testid=tweaks-pointed]')).includes('Heading “Bean There”') && (await pickedFrame()) === 'h1', await pickedFrame());
+  check('TWEAKS: ideas for what is picked fill the box (nothing is sent until "Make the change")', await (async () => { await click('[data-testid=tweaks-idea]'); return (await chrome.eval(`document.querySelector('[data-testid=chat-input]').value.length > 3`)) === true && (await chrome.eval(`!!window.__tweakBody`)) !== true; })());
+  await click('[data-testid=tweaks-unpick]');
+  check('TWEAKS: ✕ lets go of the pick, on the screen and on the page', (await count('[data-testid=tweaks-pointed]')) === 0 && !(await waitFrame(`!!document.querySelector('[data-vx-picked]')`, 1500)));
+  await click('[data-testid=tweaks-pick]');
+  await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000);
+  await inFrame(`document.querySelector('h1').click(); true`);
+  await twIs(`document.querySelector('[data-testid=tweaks-pointed]')?.dataset.tag === 'h1'`, 6000);
+
+  // a change: the request carries the words and the picked element; while it runs the screen is locked and Stop is offered
+  const stubTweaks = () => chrome.eval(`(() => { const enc = new TextEncoder(); window.__realFetch4 = window.__realFetch4 || window.fetch; window.__tweakBody = null;
+    window.fetch = (input, init) => { const u = typeof input === 'string' ? input : input.url; if (!u.startsWith('https://vexium-ai-build.startafter.workers.dev')) return window.__realFetch4(input, init);
+      window.__tweakBody = JSON.parse(init.body); let ctl; const send = (ev, d) => ctl.enqueue(enc.encode('event: ' + ev + '\\ndata: ' + JSON.stringify(d) + '\\n\\n'));
+      const body = new ReadableStream({ start(c) { ctl = c; send('stage_job', { job_id: 'e2e-tweak-job', stage: 'tweaks' }); send('start', {}); send('delta', { text: 'Making the title bigger.' }); send('file_start', { name: 'index.html', mode: 'patch' });
+        window.__finish = (changed) => { send('stage_done', { ok: true, artifact: null, changed }); ctl.close(); }; window.__cut = () => ctl.close(); } });
+      return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })); }; return true; })()`);
+  await stubTweaks();
+  await setValue('[data-testid=chat-input]', 'Make the title bigger');
+  await click('[data-testid=chat-send]');
+  check('TWEAKS: the request names the stage, the project, the words, and the element that was picked', !!(await chrome.waitFor(`!!window.__tweakBody`, 6000)) && await chrome.eval(`(() => { const b = window.__tweakBody; return b.stage === 'tweaks' && b.project_id === ${JSON.stringify(PID)} && b.stream === true && b.messages[b.messages.length - 1].role === 'user' && b.messages[b.messages.length - 1].content === 'Make the title bigger' && b.pointed.tag === 'h1' && b.pointed.page === 'index.html' && b.pointed.text === 'Bean There' && b.pointed.html.includes('<h1'); })()`), JSON.stringify(await chrome.eval('window.__tweakBody')).slice(0, 300));
+  check('TWEAKS: while it runs the chat shows the words arriving and "Making the change…"', !!(await twIs(`document.querySelector('[data-testid=tweaks-working]')?.textContent.includes('Making the change')`, 6000)) && (await text('[data-testid=chat-live]')) === 'Making the title bigger.', await text('[data-testid=tweaks-working]'));
+  check('TWEAKS: …the box, the pointer, undo/redo and "Continue" are shut, and Stop is offered', (await chrome.eval(`['chat-input', 'tweaks-pick', 'tweaks-undo', 'tweaks-redo'].every((t) => document.querySelector('[data-testid=' + t + ']').disabled)`)) === true && (await count('[data-testid=chat-stop]')) === 1 && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true && (await text('[data-testid=stage-hold]'))?.includes('still being made'), await text('[data-testid=stage-hold]'));
+  await chrome.screenshot(`${OUT}/tweaks-running.png`);
+
+  // the server's part: the version before, the changed draft, the version after, and the two chat lines
+  const before = await dbFiles();
+  const NEW_HOME = before['index.html'].replace('<h1>Bean There</h1>', '<h1>Bean There Roasters</h1>');
+  const snap = (kind, label) => rpcSvc('take_site_snapshot', { p_project: PID, p_kind: kind, p_label: label });
+  const s1 = await snap('baseline', 'Your site as it was built');
+  await sbWrite('PATCH', `projects?id=eq.${PID}`, { files: { ...before, 'index.html': NEW_HOME } });
+  const s2 = await snap('tweak', 'Make the title bigger');
+  const said = await sbWrite('POST', 'stage_messages', [
+    { project_id: PID, stage: 'tweaks', role: 'user', content: 'Make the title bigger', user_id: uid, created_at: new Date(Date.now() - 2000).toISOString() },
+    { project_id: PID, stage: 'tweaks', role: 'assistant', content: 'Done — the title is bigger.', user_id: null, created_at: new Date(Date.now() - 1000).toISOString() },
+  ]);
+  check('TWEAKS (setup): the platform saved the versions, the changed draft and the conversation', s1.status < 300 && s2.status < 300 && s1.json?.created === true && s2.json?.created === true && said.status < 300, `${s1.text} / ${s2.text} / ${said.status}`);
+  await chrome.eval(`window.__finish(['index.html']); true`);
+  check('TWEAKS: when the run ends the screen says what was updated — and that it is a draft that can be undone', !!(await twIs(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('Updated Home.')`, 12000)) && (await text('[data-testid=tweaks-notice]')).includes('undo it any time'), await text('[data-testid=tweaks-notice]'));
+  check('TWEAKS: the preview shows the change at once, on the same page', !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There Roasters'`, 12000)) && (await chrome.eval(`document.querySelector('[data-testid=site-tab].on')?.dataset.page`)) === 'index.html');
+  check('TWEAKS: the pick is let go after a change; the chat is the stored conversation (no greeting)', (await count('[data-testid=tweaks-pointed]')) === 0 && (await chrome.eval(`[...document.querySelectorAll('[data-testid=chat-line]')].map((l) => l.dataset.role + ':' + l.textContent).join('|')`)) === 'user:Make the title bigger|assistant:Done — the title is bigger.' && (await count('[data-testid=tweaks-greeting]')) === 0);
+  check('TWEAKS: the box, pointer and undo open again; the bar names the version you are on', (await chrome.eval(`document.querySelector('[data-testid=chat-input]').disabled === false && document.querySelector('[data-testid=tweaks-pick]').disabled === false && document.querySelector('[data-testid=tweaks-undo]').disabled === false && document.querySelector('[data-testid=tweaks-redo]').disabled === true`)) === true && (await NOW_TEXT()).includes('Make the title bigger'), await NOW_TEXT());
+  check('TWEAKS: the earlier versions are listed, newest first, with this one marked', !!(await twIs(`document.querySelectorAll('[data-testid=tweaks-version]').length === 2`, 6000)) && (await chrome.eval(`[...document.querySelectorAll('[data-testid=tweaks-version]')].map((v) => v.dataset.seq + (v.dataset.current === 'true' ? '*' : '')).join()`)) === `${s2.json.seq}*,${s1.json.seq}`, await chrome.eval(`[...document.querySelectorAll('[data-testid=tweaks-version]')].map((v) => v.dataset.seq).join()`));
+  await chrome.screenshot(`${OUT}/tweaks-done.png`);
+
+  // undo / redo / go back — real calls to ai-chat, which moves the draft along the saved versions
+  await click('[data-testid=tweaks-undo]');
+  check('TWEAKS: Undo puts the old words back in the draft and in the preview, and says so', !!(await twIs(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Undone')`, 15000)) && (await dbFiles())['index.html'] === before['index.html'] && !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`, 12000)), await text('[data-testid=tweaks-notice]'));
+  check('TWEAKS: …now Redo is open and Undo is not (this is the oldest version)', (await twIs(`document.querySelector('[data-testid=tweaks-redo]')?.disabled === false && document.querySelector('[data-testid=tweaks-undo]')?.disabled === true`, 8000)) !== false && (await NOW_TEXT()).includes('Your site as it was built'), await NOW_TEXT());
+  await click('[data-testid=tweaks-redo]');
+  check('TWEAKS: Redo brings the change back', !!(await twIs(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Redone')`, 15000)) && (await dbFiles())['index.html'] === NEW_HOME && !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There Roasters'`, 12000)), await text('[data-testid=tweaks-notice]'));
+  await chrome.eval(`document.querySelector('[data-testid=tweaks-versions]').open = true; true`);
+  await click(`[data-testid=tweaks-version][data-seq="${s1.json.seq}"] [data-testid=tweaks-restore]`);
+  check('TWEAKS: "Go back to this" on an earlier version restores exactly that version', !!(await twIs(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('Your site is back at')`, 15000)) && (await dbFiles())['index.html'] === before['index.html'] && !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`, 12000)), await text('[data-testid=tweaks-notice]'));
+  check('TWEAKS: undo and restore leave the other files and the project\'s stage alone', (await dbFiles())['site.js'] === before['site.js'] && (await dbFiles())['styles.css'] === before['styles.css'] && (await dbStage()) === 'tweaks');
+
+  // a connection cut mid-change: said in plain words, nothing is claimed
+  await chrome.eval(`window.fetch = window.__realFetch4; true`);
+  await stubTweaks();
+  await setValue('[data-testid=chat-input]', 'Make the button purple');
+  await click('[data-testid=chat-send]');
+  await twIs(`!!document.querySelector('[data-testid=tweaks-working]')`, 6000);
+  await chrome.eval(`window.__cut(); true`);
+  check('TWEAKS: a run cut off before the end says it was interrupted, claims no change, and gives the message back', !!(await twIs(`document.querySelector('[data-testid=chat-error]')?.textContent.includes('interrupted')`, 12000)) && (await count('[data-testid=tweaks-notice]')) === 0 && (await chrome.eval(`document.querySelector('[data-testid=chat-input]').value`)) === 'Make the button purple', await text('[data-testid=chat-error]'));
+  await chrome.eval(`window.fetch = window.__realFetch4; true`);
+  await setValue('[data-testid=chat-input]', '');
+
+  // the same screen on a phone
+  await chrome.viewport(390, 800, true);
+  await sleep(500);
+  const tm = await chrome.eval(`(() => ({ sw: document.documentElement.scrollWidth, wide: [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 390.5 && !e.closest('.preview-stage')).map((e) => e.tagName + '.' + e.className).slice(0, 5) }))()`);
+  check('TWEAKS screen has no horizontal overflow at 390px', tm.sw <= 390 && tm.wide.length === 0, JSON.stringify(tm));
+  await chrome.screenshot(`${OUT}/tweaks-mobile.png`);
+  await chrome.viewport(1280, 800);
+  await sleep(300);
 
   // editing the plan makes everything built from it stale — flagged in the stepper, the cards, and the way forward
   await put('plan', { ...PLAN, name: PROJECT_NAME + ' (edited)' });
   await reloadProject();
   check('after a plan edit the stepper flags the stages whose result is out of date', (await chrome.eval(`[...document.querySelectorAll('.stage.attention')].map(e => e.dataset.stage).sort().join()`)) === 'build,example,tweaks', await chrome.eval(`[...document.querySelectorAll('.stage.attention')].map(e => e.dataset.stage).join()`));
-  check('the TWEAKS panel shows the built site as "Out of date" with a "Keep as is" button', (await text('.artifact[data-kind=manifest]')).includes('Out of date') && (await text('.artifact[data-kind=manifest]')).includes('Keep as is'), await text('.artifact[data-kind=manifest]'));
+  check('the TWEAKS screen says the built site is out of date and offers "Keep it as it is"', (await count('[data-testid=tweaks-outdated]')) === 1 && (await count('[data-testid=tweaks-keep-site]')) === 1, await text('[data-testid=tweaks-stage]'));
+  check('…and while the style is out of date no change can be made (box and pointer shut, the way out is right there)', (await count('[data-testid=tweaks-blocker]')) === 1 && (await count('[data-testid=tweaks-keep-style]')) === 1 && (await chrome.eval(`document.querySelector('[data-testid=chat-input]').disabled && document.querySelector('[data-testid=tweaks-pick]').disabled`)) === true, await text('[data-testid=tweaks-blocker]'));
   check('LAUNCH is blocked again ("out of date")', (await stepState('launch')) === 'blocked' && (await text('[data-testid=stage-why]')).includes('out of date'), await text('[data-testid=stage-why]'));
   check('the current stage was NOT yanked away from the user', (await dbStage()) === 'tweaks');
   await chrome.screenshot(`${OUT}/stage-stale.png`);
-  await chrome.eval(`document.querySelector('.artifact[data-kind=style_spec] button').click(); true`);
-  check('"Keep as is" on the style clears its flag in the UI and the database', await chrome.waitFor(`!document.querySelector('.artifact[data-kind=style_spec]')?.textContent.includes('Out of date')`, 8000)
-    && (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.style_spec&select=stale`, { headers: svc })).json?.[0]?.stale === false);
+  await click('[data-testid=tweaks-keep-style]');
+  check('"Keep style as it is" clears its flag in the UI and the database, and the box opens for changes again', await chrome.waitFor(`!document.querySelector('[data-testid=tweaks-keep-style]') && !document.querySelector('[data-testid=tweaks-blocker]')`, 8000)
+    && (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.style_spec&select=stale`, { headers: svc })).json?.[0]?.stale === false
+    && (await chrome.eval(`document.querySelector('[data-testid=chat-input]').disabled`)) === false);
+  await click('[data-testid=tweaks-keep-site]');
+  check('"Keep it as it is" on the built site clears its flag too', await chrome.waitFor(`!document.querySelector('[data-testid=tweaks-outdated]')`, 8000)
+    && (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.manifest&select=stale`, { headers: svc })).json?.[0]?.stale === false);
 
   // a stage run in progress (started before this page load) — shown, stoppable; a dead one is not shown as live
   const nowIso = () => new Date().toISOString();
@@ -722,6 +836,83 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
     const lastBuild = (await jfetch(`${SB}/rest/v1/build_jobs?project_id=eq.${newId}&stage=eq.build&select=id&order=created_at.desc&limit=1`, { headers: svc })).json?.[0];
     const fixSteps = lastBuild ? ((await jfetch(`${SB}/rest/v1/build_steps?job_id=eq.${lastBuild.id}&kind=eq.fix&select=file,status`, { headers: svc })).json ?? []) : [];
     check('MOCK BUILD: the launch checks caught the broken contact page and it was repaired before saving', fixSteps.some((f) => f.file === 'contact.html' && f.status === 'done'), JSON.stringify(fixSteps));
+
+    // ── TWEAKS through the real Worker, ai-chat, finisher and database, with the stand-in model: words, then a colour, then the failures ──
+    const mdb = async (path) => (await jfetch(`${SB}/rest/v1/${path}`, { headers: svc })).json;
+    const mFiles = async () => (await mdb(`projects?id=eq.${newId}&select=files`))?.[0]?.files ?? {};
+    const mArt = async (kind) => (await mdb(`project_artifacts_latest?project_id=eq.${newId}&kind=eq.${kind}&select=version,data,stale`))?.[0];
+    const mStage = async () => (await mdb(`projects?id=eq.${newId}&select=stage`))?.[0]?.stage;
+    const mVersions = async () => (await mdb(`site_snapshots?project_id=eq.${newId}&select=seq,kind,label,is_current&order=seq`)) ?? [];
+    const tweakDone = (ms) => chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('in your draft') || !!document.querySelector('[data-testid=chat-error]')`, ms);
+    const askTweak = async (words) => { await chrome.eval(`document.querySelector('[data-testid=tweaks-notice]')?.remove?.(); true`); await setValue('[data-testid=chat-input]', words); await click('[data-testid=chat-send]'); };
+    const pointAt = async (selector) => {
+      await click('[data-testid=tweaks-pick]');
+      await waitFrame(`document.documentElement.hasAttribute('data-vx-picking')`, 6000);
+      await inFrame(`document.querySelector(${JSON.stringify(selector)}).click(); true`);
+      return !!(await chrome.waitFor(`!!document.querySelector('[data-testid=tweaks-pointed]')`, 6000));
+    };
+
+    await click('[data-testid=stage-continue]');
+    check('MOCK TWEAKS: Continue from BUILD opens the TWEAKS screen with the built site', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=tweaks-stage]') && !!document.querySelector('[data-testid=site-frame]')`, 20000)) && (await mStage()) === 'tweaks', await mStage());
+    const home0 = await waitFrame(`document.querySelector('h1')?.textContent.trim()`, 20000);
+    check('MOCK TWEAKS: the built home page is in the preview, and the build is already saved as the first version', typeof home0 === 'string' && home0.length > 2 && !!(await chrome.waitFor(`document.querySelectorAll('[data-testid=tweaks-version]').length === 0 && /Full build/.test(document.querySelector('[data-testid=tweaks-now]')?.textContent ?? '')`, 10000)) && (await mVersions()).length === 1, `${home0} | ${await text('[data-testid=tweaks-now]')} | ${JSON.stringify(await mVersions())}`);
+    await chrome.screenshot(`${OUT}/mock-tweaks-start.png`);
+
+    // 1. words: point at the headline, say what it should say
+    const before1 = await mFiles();
+    check('MOCK TWEAKS: pointing at the headline picks it', await pointAt('h1') && (await text('[data-testid=tweaks-pointed]')).includes(home0.slice(0, 10)), await text('[data-testid=tweaks-pointing]'));
+    await askTweak('mock-say "Hand-poured candles, made slowly"');
+    check('MOCK TWEAKS: the change is made and the screen says what was updated', !!(await tweakDone(150000)) && (await text('[data-testid=tweaks-notice]'))?.includes('Updated Home.'), (await text('[data-testid=tweaks-notice]')) + ' | ' + (await text('[data-testid=chat-error]')));
+    const after1 = await mFiles();
+    check('MOCK TWEAKS: only the headline changed in the draft — the new words are in, the old ones are out, the other files are as they were', after1['index.html'].includes('Hand-poured candles, made slowly') && !after1['index.html'].includes(`>${home0}<`) && Object.keys(before1).every((f) => f === 'index.html' || after1[f] === before1[f]), Object.keys(after1).filter((f) => after1[f] !== before1[f]).join());
+    check('MOCK TWEAKS: the preview shows the new words', !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === 'Hand-poured candles, made slowly'`, 15000)));
+    const lines1 = await chrome.eval(`[...document.querySelectorAll('[data-testid=chat-line]')].map((l) => l.dataset.role + ':' + l.textContent)`);
+    check('MOCK TWEAKS: the chat has the request and a plain-words answer (no edit markup)', lines1.length === 2 && lines1[0] === 'user:mock-say "Hand-poured candles, made slowly"' && lines1[1].startsWith('assistant:') && !/<patch|<find|<replace/.test(lines1[1]), JSON.stringify(lines1));
+    const vs1 = await mVersions();
+    check('MOCK TWEAKS: the change is a saved version after the build, and it is where the site is now', vs1.length === 2 && vs1[0].kind === 'stage' && vs1[1].kind === 'tweak' && vs1[1].is_current === true && !vs1[0].is_current, JSON.stringify(vs1));
+    const rep1 = await mArt('launch_checks'), man1 = await mArt('manifest');
+    check('MOCK TWEAKS: the launch report was re-run on the changed site (it is for the current build of the site)', rep1?.data?.manifest_version === man1?.version && !man1?.stale && (await count('[data-testid=tweaks-outdated]')) === 0, JSON.stringify({ r: rep1?.data?.manifest_version, m: man1?.version }));
+    check('MOCK TWEAKS: the pick was let go, the box is open again, "Continue" is open', (await count('[data-testid=tweaks-pointed]')) === 0 && (await chrome.eval(`document.querySelector('[data-testid=chat-input]').disabled`)) === false && !!(await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]')?.disabled === false`, 8000)));
+    await chrome.screenshot(`${OUT}/mock-tweaks-words.png`);
+
+    // 2. a question is not an edit: an answer, no new version
+    await askTweak('what else could I change here?');
+    check('MOCK TWEAKS: a question gets an answer and changes nothing (same files, no new version, no "updated" notice)', !!(await chrome.waitFor(`document.querySelectorAll('[data-testid=chat-line]').length === 4`, 90000)) && (await count('[data-testid=tweaks-notice]')) === 0 && JSON.stringify(await mFiles()) === JSON.stringify(after1) && (await mVersions()).length === 2, (await chrome.eval(`document.querySelectorAll('[data-testid=chat-line]').length`)) + ' lines');
+
+    // 3. a change that cannot be applied is thrown away whole
+    await askTweak('mock-bad-find please');
+    check('MOCK TWEAKS: an edit that does not fit the page is refused in plain words and NOTHING is half-applied', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=chat-error]')`, 90000)) && JSON.stringify(await mFiles()) === JSON.stringify(after1) && (await mVersions()).length === 2, (await text('[data-testid=chat-error]')));
+    // 4. a change that would break the site's forms is refused (forms belong to the plan)
+    await askTweak('mock-hook please');
+    check('MOCK TWEAKS: a change that would break a form is refused too, and the draft is untouched', !!(await chrome.waitFor(`document.querySelector('[data-testid=chat-error]')?.textContent !== ${JSON.stringify(await text('[data-testid=chat-error]'))} || (document.querySelectorAll('[data-testid=chat-line]').length >= 8 && !document.querySelector('[data-testid=tweaks-working]'))`, 90000)) && JSON.stringify(await mFiles()) === JSON.stringify(after1) && (await mVersions()).length === 2, (await text('[data-testid=chat-error]')));
+
+    // 5. colour: no pointing, the whole site — the stylesheet, the saved style and the manifest follow, nothing is left "out of date"
+    await askTweak('mock-accent #2f7d4f');
+    check('MOCK TWEAKS: a colour change updates the stylesheet', !!(await tweakDone(150000)) && /--accent:\s*#2f7d4f/i.test((await mFiles())['styles.css'] ?? ''), (await text('[data-testid=tweaks-notice]')) + ' | ' + (await text('[data-testid=chat-error]')));
+    const style2 = await mArt('style_spec'), man2 = await mArt('manifest'), rep2 = await mArt('launch_checks');
+    check('MOCK TWEAKS: …the saved style has the new colour and is still locked, and nothing is flagged out of date', style2?.data?.tokens?.['--accent']?.toLowerCase() === '#2f7d4f' && style2.data.locked === true && !style2.stale && !man2?.stale && rep2?.data?.manifest_version === man2?.version && (await count('[data-testid=tweaks-outdated]')) === 0 && (await count('[data-testid=tweaks-blocker]')) === 0, JSON.stringify({ a: style2?.data?.tokens?.['--accent'], l: style2?.data?.locked, s: [style2?.stale, man2?.stale], r: rep2?.data?.manifest_version, m: man2?.version }));
+    const accentNow = await waitFrame(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase() === '#2f7d4f'`, 15000);
+    check('MOCK TWEAKS: …and the preview already uses it', accentNow === true);
+    check('MOCK TWEAKS: that is a third version in the history', (await mVersions()).length === 3);
+    await chrome.screenshot(`${OUT}/mock-tweaks-colour.png`);
+
+    // 6. undo twice (colour, then words), redo once, go back to the build
+    await click('[data-testid=tweaks-undo]');
+    check('MOCK TWEAKS: Undo takes the colour back — in the draft, the saved style and the preview', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Undone')`, 30000)) && !/--accent:\s*#2f7d4f/i.test((await mFiles())['styles.css'] ?? '') && (await mArt('style_spec'))?.data?.tokens?.['--accent']?.toLowerCase() !== '#2f7d4f' && (await mFiles())['index.html'] === after1['index.html'], await text('[data-testid=tweaks-notice]'));
+    await click('[data-testid=tweaks-undo]');
+    check('MOCK TWEAKS: a second Undo takes the words back', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-undo]')?.disabled === true`, 30000)) && JSON.stringify(await mFiles()) === JSON.stringify(before1) && !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === ${JSON.stringify(home0)}`, 15000)), await text('[data-testid=tweaks-notice]'));
+    check('MOCK TWEAKS: the draft is exactly the freshly built site again (every file as it was)', JSON.stringify(await mFiles()) === JSON.stringify(before1));
+    await click('[data-testid=tweaks-redo]');
+    check('MOCK TWEAKS: Redo brings the words back', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Redone')`, 30000)) && (await mFiles())['index.html'] === after1['index.html'] && !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === 'Hand-poured candles, made slowly'`, 15000)), await text('[data-testid=tweaks-notice]'));
+    // a new change after going back drops the redo branch (the colour version) — the line stays a line
+    await askTweak('mock-accent #8a3b12');
+    check('MOCK TWEAKS: a new change made after going back replaces the versions that were ahead (still three versions, newest is current)', !!(await tweakDone(150000)) && (await mVersions()).length === 3 && (await mVersions())[2].is_current === true && /#8a3b12/i.test((await mFiles())['styles.css'] ?? ''), JSON.stringify(await mVersions()));
+    await chrome.eval(`document.querySelector('[data-testid=tweaks-versions]').open = true; true`);
+    const firstSeq = (await mVersions())[0].seq;
+    await click(`[data-testid=tweaks-version][data-seq="${firstSeq}"] [data-testid=tweaks-restore]`);
+    check('MOCK TWEAKS: "Go back to this" on the build returns the whole site to it', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('Your site is back at')`, 30000)) && JSON.stringify(await mFiles()) === JSON.stringify(before1), await text('[data-testid=tweaks-notice]'));
+    check('MOCK TWEAKS: and none of this published anything (the draft is all that moved)', (await mdb(`projects?id=eq.${newId}&select=published_at,published_version,published_files`))?.[0]?.published_at == null);
+    await chrome.screenshot(`${OUT}/mock-tweaks-end.png`);
   }
 
   await chrome.eval(`if (window.__realFetch) window.fetch = window.__realFetch; location.hash = '#/p/does-not-exist'; true`);

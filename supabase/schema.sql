@@ -1,5 +1,5 @@
 -- Vertly / Vexium — Supabase schema SNAPSHOT (reference only, NOT a migration)
--- Generated 2026-10-21 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
+-- Generated 2026-10-22 by scripts/export-schema.py from project ciuqhxrxcznmgorjeumz
 -- Extensions: pg_stat_statements, pgcrypto, plpgsql, supabase_vault, uuid-ossp
 
 -- ── account_billing  (~5 rows, RLS ON) ──────────
@@ -198,7 +198,7 @@ CREATE POLICY "notif_insert" ON public."notifications" AS PERMISSIVE FOR INSERT 
 CREATE POLICY "notif_select" ON public."notifications" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 CREATE POLICY "notif_update" ON public."notifications" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = user_id));
 
--- ── page_views  (~916 rows, RLS ON) ──────────
+-- ── page_views  (~918 rows, RLS ON) ──────────
 CREATE TABLE public."page_views" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -423,7 +423,7 @@ CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH RO
 CREATE TRIGGER projects_guard_stage BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_stage();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- ── rate_limits  (~19 rows, RLS ON) ──────────
+-- ── rate_limits  (~24 rows, RLS ON) ──────────
 CREATE TABLE public."rate_limits" (
   "key" text NOT NULL,
   "window_start" timestamp with time zone NOT NULL,
@@ -474,6 +474,34 @@ CREATE UNIQUE INDEX site_sessions_pkey ON public.site_sessions USING btree (toke
 CREATE INDEX site_sessions_user_idx ON public.site_sessions USING btree (site_user_id);
 ALTER TABLE public."site_sessions" ENABLE ROW LEVEL SECURITY;
 
+-- ── site_snapshots  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."site_snapshots" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "project_id" text NOT NULL,
+  "seq" integer NOT NULL,
+  "kind" text NOT NULL,
+  "label" text NOT NULL,
+  "files" jsonb NOT NULL,
+  "is_current" boolean NOT NULL DEFAULT false,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "site_snapshots_files_check" CHECK ((jsonb_typeof(files) = 'object'::text)),
+  CONSTRAINT "site_snapshots_kind_check" CHECK ((kind = ANY (ARRAY['stage'::text, 'tweak'::text, 'baseline'::text]))),
+  CONSTRAINT "site_snapshots_label_check" CHECK (((char_length(label) >= 1) AND (char_length(label) <= 200))),
+  CONSTRAINT "site_snapshots_pkey" PRIMARY KEY (id),
+  CONSTRAINT "site_snapshots_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "site_snapshots_project_seq_key" UNIQUE (project_id, seq),
+  CONSTRAINT "site_snapshots_seq_check" CHECK ((seq > 0))
+);
+CREATE UNIQUE INDEX site_snapshots_current_idx ON public.site_snapshots USING btree (project_id) WHERE is_current;
+CREATE UNIQUE INDEX site_snapshots_pkey ON public.site_snapshots USING btree (id);
+CREATE UNIQUE INDEX site_snapshots_project_seq_key ON public.site_snapshots USING btree (project_id, seq);
+ALTER TABLE public."site_snapshots" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "site_snapshots_select" ON public."site_snapshots" AS PERMISSIVE FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM projects p
+  WHERE ((p.id = site_snapshots.project_id) AND ((p.user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM project_members m
+          WHERE ((m.project_id = p.id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND (m.status = 'accepted'::text)))))))));
+
 -- ── site_users  (~0 rows, RLS ON) ──────────
 CREATE TABLE public."site_users" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -499,7 +527,7 @@ CREATE POLICY "owners can read their site users" ON public."site_users" AS PERMI
    FROM projects
   WHERE (projects.user_id = auth.uid()))));
 
--- ── stage_messages  (~1 rows, RLS ON) ──────────
+-- ── stage_messages  (~0 rows, RLS ON) ──────────
 CREATE TABLE public."stage_messages" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -887,6 +915,56 @@ BEGIN
   RETURN jsonb_build_object('kind', p_kind, 'version', latest, 'cleared', cleared);
 END $function$;
 
+-- move_site_history  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.move_site_history(p_project text, p_action text, p_seq integer DEFAULT NULL::integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  cur     public.site_snapshots%ROWTYPE;
+  target  public.site_snapshots%ROWTYPE;
+  keys    text[];
+BEGIN
+  IF NOT public.vx_stage_access(p_project) THEN
+    RAISE EXCEPTION 'move_site_history is for the platform only' USING ERRCODE = '42501';
+  END IF;
+  IF p_action IS NULL OR p_action NOT IN ('undo', 'redo', 'restore') THEN
+    RAISE EXCEPTION 'unknown action' USING ERRCODE = '22023';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended('vx_site_history:' || p_project, 0));
+
+  SELECT * INTO cur FROM public.site_snapshots WHERE project_id = p_project AND is_current;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('moved', false, 'reason', 'no_history');
+  END IF;
+
+  IF p_action = 'undo' THEN
+    SELECT * INTO target FROM public.site_snapshots WHERE project_id = p_project AND seq < cur.seq ORDER BY seq DESC LIMIT 1;
+  ELSIF p_action = 'redo' THEN
+    SELECT * INTO target FROM public.site_snapshots WHERE project_id = p_project AND seq > cur.seq ORDER BY seq ASC LIMIT 1;
+  ELSE
+    IF p_seq IS NULL THEN RAISE EXCEPTION 'restore needs a checkpoint' USING ERRCODE = '22023'; END IF;
+    SELECT * INTO target FROM public.site_snapshots WHERE project_id = p_project AND seq = p_seq;
+  END IF;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('moved', false, 'reason', CASE p_action WHEN 'restore' THEN 'not_found' ELSE 'nothing_to_' || p_action END);
+  END IF;
+  IF target.id = cur.id THEN
+    RETURN jsonb_build_object('moved', false, 'reason', 'already_here', 'seq', cur.seq);
+  END IF;
+
+  SELECT coalesce(array_agg(k), '{}') INTO keys
+    FROM jsonb_object_keys(public.vx_site_text_files((SELECT files FROM public.projects WHERE id = p_project))) AS k;
+  UPDATE public.projects SET files = (coalesce(files, '{}'::jsonb) - keys) || target.files WHERE id = p_project;
+
+  UPDATE public.site_snapshots SET is_current = false WHERE id = cur.id;
+  UPDATE public.site_snapshots SET is_current = true WHERE id = target.id;
+  RETURN jsonb_build_object('moved', true, 'seq', target.seq, 'label', target.label, 'kind', target.kind);
+END $function$;
+
 -- profiles_sync_public_email
 CREATE OR REPLACE FUNCTION public.profiles_sync_public_email()
  RETURNS trigger
@@ -1111,6 +1189,54 @@ CREATE OR REPLACE FUNCTION public.set_updated_at()
 AS $function$
 begin new.updated_at = now(); return new; end; $function$;
 
+-- take_site_snapshot  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.take_site_snapshot(p_project text, p_kind text, p_label text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  cur     public.site_snapshots%ROWTYPE;
+  now_f   jsonb;
+  next_n  integer;
+  have    boolean;
+BEGIN
+  IF NOT public.vx_stage_access(p_project) THEN
+    RAISE EXCEPTION 'take_site_snapshot is for the platform only' USING ERRCODE = '42501';
+  END IF;
+  IF p_kind IS NULL OR p_kind NOT IN ('stage', 'tweak', 'baseline') THEN
+    RAISE EXCEPTION 'unknown checkpoint kind' USING ERRCODE = '22023';
+  END IF;
+  IF p_label IS NULL OR char_length(btrim(p_label)) = 0 THEN
+    RAISE EXCEPTION 'a checkpoint needs a label' USING ERRCODE = '22023';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended('vx_site_history:' || p_project, 0));
+
+  SELECT public.vx_site_text_files(files) INTO now_f FROM public.projects WHERE id = p_project;
+  SELECT * INTO cur FROM public.site_snapshots WHERE project_id = p_project AND is_current;
+  have := FOUND;
+  IF have AND cur.files = now_f THEN
+    RETURN jsonb_build_object('seq', cur.seq, 'created', false);
+  END IF;
+
+  -- A new change made from an earlier point: the checkpoints after "you are here" are the redo branch, and they go.
+  IF have THEN
+    DELETE FROM public.site_snapshots WHERE project_id = p_project AND seq > cur.seq;
+    UPDATE public.site_snapshots SET is_current = false WHERE id = cur.id;
+    next_n := cur.seq + 1;
+  ELSE
+    SELECT coalesce(max(seq), 0) + 1 INTO next_n FROM public.site_snapshots WHERE project_id = p_project;
+  END IF;
+
+  INSERT INTO public.site_snapshots (project_id, seq, kind, label, files, is_current)
+  VALUES (p_project, next_n, p_kind, left(btrim(p_label), 200), now_f, true);
+
+  DELETE FROM public.site_snapshots WHERE project_id = p_project AND seq <= next_n - 40;
+  RETURN jsonb_build_object('seq', next_n, 'created', true);
+END $function$;
+
 -- vexium_site_query  [SECURITY DEFINER]
 CREATE OR REPLACE FUNCTION public.vexium_site_query(p_project_id text, p_query text)
  RETURNS json
@@ -1177,6 +1303,18 @@ BEGIN
   retry_after := GREATEST(1, ceil(extract(epoch FROM (v_window + make_interval(secs => p_window_seconds) - now())))::integer);
   RETURN NEXT;
 END;
+$function$;
+
+-- vx_site_text_files
+CREATE OR REPLACE FUNCTION public.vx_site_text_files(p_files jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO 'public'
+AS $function$
+  SELECT coalesce(jsonb_object_agg(key, value), '{}'::jsonb)
+    FROM jsonb_each(coalesce(p_files, '{}'::jsonb))
+   WHERE key ~ '^([A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(html|css|js|json)|_backend)$' AND jsonb_typeof(value) = 'string';
 $function$;
 
 -- vx_stage_access

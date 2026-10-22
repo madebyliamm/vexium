@@ -1,8 +1,8 @@
 // Stage endpoints for the guided flow — prompt assembly and output handling, as pure functions (no I/O, no Deno APIs) so they
 // are unit-tested under Node (supabase/tests/ai_stages.test.ts). stage-handler.ts does the I/O around them; index.ts wires it in.
 //
-// STATUS: PLAN (Step 8) and EXAMPLE (Step 9) have their real prompts; the other stages' briefs are still the Step 7 skeleton and
-// Steps 10 (FULL BUILD) and 11 (TWEAKS) replace them. The mechanics are real — which artifacts each stage reads, a prompt-cache-stable
+// STATUS: PLAN (Step 8), EXAMPLE (Step 9) and TWEAKS (Step 11, prompt pieces in tweaks-prompt.ts) have their real prompts; FULL BUILD's
+// are in build-prompts.ts; LAUNCH and BUSINESS are still the Step 7 skeleton. The mechanics are real — which artifacts each stage reads, a prompt-cache-stable
 // layout, strict parsing and validation of what the model saves. A stage that produces FILES has its own finisher (EXAMPLE:
 // finishExample below). See docs/STAGES.md.
 //
@@ -13,6 +13,7 @@
 import { normalizeArtifact, validateArtifact } from '../_shared/artifacts.ts';
 import { applyStyleSpec, deriveStyleSpec, manifestWithStyle, TONES } from '../_shared/style.ts';
 import { BROKEN_PAGE_RULES, FRONTEND_CRAFT, REAL_CONTENT_RULES, SHARED_FILE_RULES } from './craft.ts';
+import { TWEAKS_BRIEF, TWEAKS_PROTOCOL, TWEAKS_REFERENCE } from './tweaks-prompt.ts';
 import { STAGE_IO, STAGE_LABELS, STAGE_RULES, type ArtifactKind, type Blocker, type LatestArtifacts, type Stage } from '../_shared/stages.ts';
 
 export interface StagePrompt {
@@ -91,6 +92,7 @@ The owner may already have tuned the style with the controls. If the message bel
 /** Reference material appended after a stage's brief and protocol (cached system block). */
 const STAGE_REFERENCE: Partial<Record<Stage, string>> = {
   example: [SHARED_FILE_RULES, REAL_CONTENT_RULES, BROKEN_PAGE_RULES, FRONTEND_CRAFT].join('\n\n'),
+  tweaks: TWEAKS_REFERENCE,
 };
 
 const STAGE_BRIEF: Record<Stage, string> = {
@@ -99,7 +101,7 @@ const STAGE_BRIEF: Record<Stage, string> = {
   // Never sent to a model as one prompt: FULL BUILD is a Workflow of per-page calls (build-prompts.ts, build-handler.ts). This line only
   // keeps the generic prompt builder total.
   build: `STAGE: FULL BUILD. Build the complete site from the plan, obeying the locked style exactly. Report what was built.`,
-  tweaks: `STAGE: TWEAKS. Make the specific change the owner asks for to the built site, obeying the locked style, and change nothing else.`,
+  tweaks: TWEAKS_BRIEF,
   launch: `STAGE: LAUNCH. Help the owner get ready to go live: walk through what is still open and explain the launch check results in plain language.`,
   business: `STAGE: BUSINESS. Act as the owner's business partner, grounded ONLY in the real data you are given. If there is not enough data yet, say so plainly instead of guessing.`,
 };
@@ -109,7 +111,7 @@ const STAGE_RUN: Record<Stage, { model: 'build' | 'fast'; maxTokens: number }> =
   plan: { model: 'fast', maxTokens: 4000 },
   example: { model: 'build', maxTokens: 24000 },
   build: { model: 'build', maxTokens: 24000 },
-  tweaks: { model: 'fast', maxTokens: 12000 },
+  tweaks: { model: 'build', maxTokens: 8000 },
   launch: { model: 'fast', maxTokens: 4000 },
   business: { model: 'fast', maxTokens: 4000 },
 };
@@ -190,6 +192,7 @@ Every field is optional. Keep the chat outside the markers.`;
 
 function protocolFor(stage: Stage): string {
   if (stage === 'example') return EXAMPLE_PROTOCOL;
+  if (stage === 'tweaks') return TWEAKS_PROTOCOL;
   const produces = STAGE_IO[stage].produces;
   if (!produces) return 'This stage does not save anything: reply with chat text only.';
   return `SAVING YOUR WORK
@@ -200,7 +203,7 @@ ${ARTIFACT_SHAPES[produces] ?? '{ "schema": 1 }'}`;
 }
 
 /** Assemble the cache-stable prompt for one AI run of `stage`. Precondition: inputBlockers(stage, latest) is empty. */
-export function buildStagePrompt(stage: Stage, latest: LatestArtifacts, opts: { projectName?: string } = {}): StagePrompt {
+export function buildStagePrompt(stage: Stage, latest: LatestArtifacts, opts: { projectName?: string; extra?: string } = {}): StagePrompt {
   const io = STAGE_IO[stage];
   const inputs = io.inputs
     .map((kind) => {
@@ -217,7 +220,10 @@ export function buildStagePrompt(stage: Stage, latest: LatestArtifacts, opts: { 
   const cur = io.worksOn ? latest[io.worksOn] : undefined;
   const parts: string[] = [];
   if (opts.projectName) parts.push(`Project name: ${opts.projectName}`);
-  if (io.worksOn) {
+  if (stage === 'tweaks') {
+    // A tweak works on the site's files (opts.extra shows them), not on the manifest JSON.
+    if (opts.extra) parts.push(opts.extra);
+  } else if (io.worksOn) {
     parts.push(
       cur
         ? `CURRENT ${io.worksOn} (version ${cur.version}${cur.stale ? ', OUT OF DATE — an earlier stage changed after it was made' : ''}):\n${canonicalJson(cur.data)}`

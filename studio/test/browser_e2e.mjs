@@ -422,6 +422,109 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000);
   await click('[data-testid=stage-continue]');
   check('Continue from a locked style moves on to BUILD', await chrome.waitFor(`document.querySelector('.stage[data-stage=build]')?.dataset.state === 'current'`, 8000) && (await dbStage()) === 'build', await dbStage());
+  // ── 3f. the FULL BUILD screen (Step 10): start → live checklist → Stop → build again → launch report + the whole site, page by page ──
+  // The Worker call is stubbed (no model, no Workflow). The test plays the Worker's part: it writes the job, the checklist rows and the
+  // finished site with the service key — the same rows ai-chat writes in production. E2E_AI=1 below runs the real thing.
+  const iso = () => new Date().toISOString();
+  const bsIs = (want, ms = 8000) => chrome.waitFor(`document.querySelector('[data-testid=build-stage]')?.dataset.status === ${JSON.stringify(want)}`, ms);
+  const bsStatus = () => chrome.eval(`document.querySelector('[data-testid=build-stage]')?.dataset.status`);
+  const sbWrite = (method, path, body, prefer = 'return=minimal') => jfetch(`${SB}/rest/v1/${path}`, { method, headers: { ...svc, 'Content-Type': 'application/json', Prefer: prefer }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const newBuildJob = async () => {
+    const j = (await sbWrite('POST', 'build_jobs', { project_id: PID, user_id: uid, status: 'running', prompt: 'e2e build', stage: 'build', artifact_kind: 'manifest', heartbeat_at: iso() }, 'return=representation')).json?.[0]?.id;
+    const beat = setInterval(() => { void sbWrite('PATCH', `build_jobs?id=eq.${j}&status=eq.running`, { heartbeat_at: iso() }); }, 5000); // the Worker stamps a heartbeat every few seconds
+    return { id: j, stopBeat: () => clearInterval(beat) };
+  };
+  const addSteps = (job, rows) => sbWrite('POST', 'build_steps', rows.map(([seq, kind, file, label, status, extra]) => ({ job_id: job, project_id: PID, seq, kind, file, label, status, ...(extra ?? {}) })));
+  const setStep = (job, seq, patch) => sbWrite('PATCH', `build_steps?job_id=eq.${job}&seq=eq.${seq}`, patch);
+  const stubBuildStart = (jobId) => chrome.eval(`(() => { window.__realFetch3 = window.__realFetch3 || window.fetch; window.__buildBody = null;
+    window.fetch = (input, init) => { const u = typeof input === 'string' ? input : input.url; if (!u.startsWith('https://vexium-ai-build.startafter.workers.dev')) return window.__realFetch3(input, init);
+      window.__buildBody = JSON.parse(init.body); return Promise.resolve(new Response(JSON.stringify({ ok: true, job_id: ${JSON.stringify(jobId)}, stage: 'build' }), { status: 200, headers: { 'Content-Type': 'application/json' } })); }; return true; })()`);
+  const CHECKLIST = [[0, 'prepare', null, 'Setting up the shared files', 'done'], [1, 'page', 'index.html', 'Home page', 'done'], [2, 'page', 'about.html', 'About page', 'running'], [100, 'verify', null, 'Checking links, forms and checkout', 'pending'], [101, 'save', null, 'Saving your site', 'pending']];
+
+  check('BUILD: the guided screen replaces the artifact list — "Ready to build", a direction box and one button', await bsIs('ready') && (await count('[data-testid=build-start]')) === 1 && (await count('[data-testid=build-note-input]')) === 1 && (await count('.artifact')) === 0 && (await text('[data-testid=build-status]')) === 'Ready to build', await bsStatus());
+  check('BUILD: nothing in the way (plan, fresh locked style) → no blocker message', (await count('[data-testid=build-blocker]')) === 0);
+  await chrome.screenshot(`${OUT}/build-ready.png`);
+
+  // run 1 — start, watch it go, Stop
+  const run1 = await newBuildJob();
+  await addSteps(run1.id, CHECKLIST);
+  await stubBuildStart(run1.id);
+  await setValue('[data-testid=build-note-input]', 'keep the copy short');
+  await click('[data-testid=build-start]');
+  check('BUILD: "Build my full site" asks the Worker for a build of this project with the owner\'s direction', !!(await chrome.waitFor(`!!window.__buildBody`, 5000)) && await chrome.eval(`window.__buildBody.stage === 'build' && window.__buildBody.project_id === ${JSON.stringify(PID)} && window.__buildBody.messages[0].content === 'keep the copy short' && window.__buildBody.stream === true`), JSON.stringify(await chrome.eval('window.__buildBody')));
+  check('BUILD: the screen switches to the live checklist', !!(await chrome.waitFor(`!!document.querySelector('[data-testid=build-running]') && document.querySelectorAll('[data-testid=build-progress] li').length === 5`, 10000)), await bsStatus());
+  const ls = () => chrome.eval(`[...document.querySelectorAll('[data-testid=build-progress] li')].map((l) => l.dataset.state).join()`);
+  check('BUILD: checklist order is setup, pages, check, save — with each step\'s state', (await ls()) === 'done,done,active,todo,todo' && (await chrome.eval(`document.querySelector('[data-testid=build-progress]').textContent`)).includes('About page'), await ls());
+  check('BUILD: the headline says how many pages are done; the bar shows 2 of 5 steps', (await text('[data-testid=build-headline]')).includes('1 of 2 done') && (await chrome.eval(`document.querySelector('[data-testid=build-bar]').getAttribute('aria-valuenow')`)) === '40', await text('[data-testid=build-headline]'));
+  check('BUILD: while it runs there is a Stop button, the project banner, and "Continue" is closed', (await count('[data-testid=build-stop]')) === 1 && (await count('[data-testid=job-running]')) === 1 && (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === true);
+  await chrome.screenshot(`${OUT}/build-running.png`);
+  await setStep(run1.id, 2, { status: 'done', cost_cents: 3.5 });
+  await setStep(run1.id, 100, { status: 'running', detail: 'Looking at 2 pages' });
+  check('BUILD: the checklist follows the database within a few seconds (pages done → "Checking links…")', !!(await chrome.waitFor(`document.querySelector('[data-testid=build-headline]')?.textContent.includes('Checking links, forms and checkout')`, 9000)) && (await ls()) === 'done,done,done,active,todo', await ls());
+  check('BUILD: the cost so far is shown as it builds', (await text('[data-testid=build-cost]')).includes('$0.04'), await text('[data-testid=build-cost]'));
+  await click('[data-testid=build-stop]');
+  check('BUILD: Stop closes the run; the screen says it did not finish, that nothing was saved, and offers the button again', !!(await bsIs('failed', 12000)) && (await count('[data-testid=build-start]')) === 1 && (await count('[data-testid=build-running]')) === 0 && (await text('[data-testid=build-failed]'))?.includes('Nothing was saved'), await bsStatus());
+  check('BUILD: …the job is closed as "Stopped" in the database and no site was written', (await jfetch(`${SB}/rest/v1/build_jobs?id=eq.${run1.id}&select=status,error`, { headers: svc })).json?.[0]?.error === 'Stopped' && !(await dbFiles())['about.html']);
+  run1.stopBeat();
+
+  // run 2 — start again; the Worker finishes the site
+  const run2 = await newBuildJob();
+  await addSteps(run2.id, CHECKLIST);
+  await stubBuildStart(run2.id);
+  await click('[data-testid=build-start]');
+  check('BUILD: starting again (no direction) sends the default message', !!(await chrome.waitFor(`!!window.__buildBody`, 5000)) && (await chrome.eval(`window.__buildBody.messages[0].content`)) === 'Build my site');
+  check('BUILD: …and the checklist is back', !!(await chrome.waitFor(`document.querySelectorAll('[data-testid=build-progress] li').length === 5`, 10000)));
+  await chrome.eval(`window.fetch = window.__realFetch3; true`); // later steps talk to the real backend
+
+  const ABOUT_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>About</title><link rel="stylesheet" href="styles.css"/></head><body><header data-vx-nav></header><main><section><h1>About us</h1><p>Two friends and a roaster.</p><a data-e2e="home-link" href="index.html">Back home</a></section></main><footer data-vx-footer></footer><script src="site.js"></script></body></html>`;
+  const HOME_HTML = SEED_HTML.replace('menu.html', 'about.html').replace('See the menu', 'About us').replace('<a data-e2e="menu-link"', '<a data-e2e="about-link"')
+    .replace('</main>', '<p><a data-e2e="gone-link" href="gone.html">Old page</a></p></main>');
+  await sbWrite('PATCH', `projects?id=eq.${PID}`, { files: { ...(await dbFiles()), 'index.html': HOME_HTML, 'about.html': ABOUT_HTML } });
+  const mput = await put('manifest', { schema: 1, built_at: iso(), pages: [{ file: 'index.html', title: 'Home', in_nav: true }, { file: 'about.html', title: 'About', in_nav: true }], shared_files: ['styles.css', 'site.js'], backend: { collections: [], products: [], forms: ['contact'], auth: false }, cost_cents: 43 });
+  const mver = mput.json?.version;
+  const lput = await put('launch_checks', { schema: 1, checked_at: iso(), manifest_version: mver, ok: false, open_items: ['Add your real opening hours'], checks: [
+    { id: 'links', label: 'Every link goes somewhere', status: 'fail', detail: 'index.html links to gone.html, which is not a page of this site.', page: 'index.html' },
+    { id: 'alt', label: 'Images have descriptions', status: 'warn', detail: 'One image has no description.' },
+    { id: 'forms', label: 'The contact form is connected', status: 'pass' },
+  ] });
+  check('BUILD (setup): the finished site, manifest and report were saved as the platform would', mput.status < 300 && lput.status < 300 && Number.isInteger(mver), `${mput.status} ${mput.text.slice(0, 120)} / ${lput.status} ${lput.text.slice(0, 120)}`);
+  await sbWrite('PATCH', `build_jobs?id=eq.${run2.id}`, { status: 'complete', finished_at: iso() });
+  run2.stopBeat();
+  check('BUILD: when the run ends the screen shows the built site ("Built"), no longer the checklist', !!(await bsIs('built', 15000)) && (await count('[data-testid=build-running]')) === 0, (await bsStatus()) + ' | ' + (await chrome.eval(`document.body.innerText.slice(0, 80).replace(/\\s+/g, ' ')`)) + ' | ' + JSON.stringify(chrome.consoleMsgs.filter((m) => m.type === 'exception' || m.type === 'error').slice(-3)));
+  check('BUILD: the summary names the pages, the form and the cost of the build', (await text('[data-testid=build-summary]')) === '2 pages · 1 form · Build cost $0.43', await text('[data-testid=build-summary]'));
+  check('BUILD: the launch report says what failed (with the page), what is worth a look and what is left to do', (await text('[data-testid=build-report]')).includes('1 problem to fix, 1 thing worth a look') && (await text('[data-testid=report-fails]')).includes('gone.html') && (await text('[data-testid=report-warns]')).includes('no description') && (await text('[data-testid=report-open]')).includes('opening hours') && (await chrome.eval(`document.querySelector('[data-testid=build-report]').dataset.ok`)) === 'false', await text('[data-testid=build-report]'));
+  check('BUILD: passed checks are tucked away until asked for', (await count('[data-testid=report-passes]')) === 1 && (await text('[data-testid=report-passes] summary')) === '1 check passed');
+  check('BUILD: the preview has one tab per page, home first, and shows the home page', await chrome.waitFor(`document.querySelectorAll('[data-testid=site-tab]').length === 2`, 15000) && (await chrome.eval(`[...document.querySelectorAll('[data-testid=site-tab]')].map((t) => t.textContent).join()`)) === 'Home,About' && !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`, 15000)), await inFrame(`document.title`));
+  check('BUILD: the page is styled by the project\'s stylesheet and has the SDK menu', !!(await waitFrame(`document.querySelectorAll('.vx-nav .vx-link').length >= 1`, 15000)) && (await bodyBg()) !== 'rgba(0, 0, 0, 0)', await bodyBg());
+  await chrome.screenshot(`${OUT}/build-built.png`);
+  await click('[data-testid=site-tab][data-page="about.html"]');
+  check('BUILD: clicking a tab shows that page', !!(await waitFrame(`document.querySelector('h1')?.textContent === 'About us'`, 15000)) && (await chrome.eval(`document.querySelector('[data-testid=site-frame]').dataset.page`)) === 'about.html');
+  await inFrame(`document.querySelector('[data-e2e=home-link]').click(); true`);
+  check('BUILD: clicking a link between two pages inside the preview moves to that page (and tab)', !!(await waitFrame(`document.querySelector('h1')?.textContent === 'Bean There'`, 15000)) && (await chrome.eval(`document.querySelector('[data-testid=site-tab].on').dataset.page`)) === 'index.html');
+  await inFrame(`document.querySelector('[data-e2e=gone-link]').click(); true`);
+  check('BUILD: a link to a page that does not exist stays put and says so', !!(await chrome.waitFor(`document.querySelector('[data-testid=preview-missing-page]')?.textContent.includes('gone.html')`, 5000)) && (await inFrame(`document.querySelector('h1').textContent`)) === 'Bean There', await text('[data-testid=preview-missing-page]'));
+  check('BUILD: "Build it again" is offered, with the old site kept until the new one is complete', (await count('[data-testid=build-redo]')) === 1 && (await text('[data-testid=build-redo-box]')).includes('stays until'));
+
+  // "Check again" asks the real ai-chat to verify the saved site and save a fresh report
+  const reportBefore = (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.launch_checks&select=version,data`, { headers: svc })).json?.[0];
+  await click('[data-testid=build-recheck]');
+  const reportAfter = await (async () => { const end = Date.now() + 25000; while (Date.now() < end) { const r = (await jfetch(`${SB}/rest/v1/project_artifacts_latest?project_id=eq.${PID}&kind=eq.launch_checks&select=version,data`, { headers: svc })).json?.[0]; if (r && r.version > reportBefore.version) return r; await sleep(500); } return null; })();
+  check('BUILD: "Check again" saves a new report for this version of the site', !!reportAfter && reportAfter.data.manifest_version === mver && Array.isArray(reportAfter.data.checks) && reportAfter.data.checks.length > 0, JSON.stringify(reportAfter?.data ?? null).slice(0, 300));
+  if (reportAfter) {
+    check('BUILD: …and the screen shows that report instead (same verdict as the saved one)', !!(await chrome.waitFor(`document.querySelector('[data-testid=build-report]')?.dataset.ok === ${JSON.stringify(String(reportAfter.data.ok))}`, 12000)) && !(await text('[data-testid=build-report]')).includes('gone.html is'), await text('[data-testid=build-report]'));
+    info('BUILD recheck report: ' + JSON.stringify(reportAfter.data.checks.filter((c) => c.status !== 'pass').map((c) => `${c.status}:${c.id}`)).slice(0, 300));
+  }
+
+  check('BUILD: after the build, the way forward (TWEAKS) is open', (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === false);
+
+  await chrome.viewport(390, 800, true);
+  await sleep(400);
+  const bm = await chrome.eval(`(() => ({ sw: document.documentElement.scrollWidth, wide: [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 390.5).map((e) => e.tagName + '.' + e.className).slice(0, 5) }))()`);
+  check('BUILD screen has no horizontal overflow at 390px', bm.sw <= 390 && bm.wide.length === 0, JSON.stringify(bm));
+  await chrome.screenshot(`${OUT}/build-mobile.png`);
+  await chrome.viewport(1280, 800);
+  await sleep(200);
+
   // the stepper ignores clicks while the move to BUILD is still settling (aria-disabled) — wait for it, like a person would
   await chrome.waitFor(`document.querySelector('.stage[data-stage=example]')?.getAttribute('aria-disabled') !== 'true'`, 8000);
   await click('.stage[data-stage=example]');
@@ -498,6 +601,53 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
   check('…and nothing was saved: still "Not started", and the message can be sent again', (await text('[data-testid=plan-status]')) === 'Not started' && (await chrome.eval(`document.querySelector('[data-testid=chat-send]').disabled`)) === false);
   await chrome.screenshot(`${OUT}/plan-new-project.png`);
 
+  // ── the FULL BUILD screen driven through the real Worker/Workflow (E2E_AI=1: a real model; E2E_MOCK_BUILD=1: the stand-in model) ──
+  const realBuild = async ({ id, planned, tag, shot }) => {
+    const ai2 = (sql) => jfetch(`${SB}/rest/v1/${sql}`, { headers: svc });
+    // The whole site from the plan and the locked style, through the real Workflow: it builds every page, the verifier checks it.
+    // Starts on a project at EXAMPLE with a locked style: Continue moves to BUILD. `planned` = the file names the plan lists.
+    await click('[data-testid=stage-continue]');
+    check(tag + ': ' + 'Continue moves on to BUILD, which offers to build the full site', await chrome.waitFor(`!!document.querySelector('[data-testid=build-start]')`, 15000));
+    const t0 = Date.now();
+    await click('[data-testid=build-start]');
+    check(tag + ': ' + 'the build starts and shows its checklist', !!(await chrome.waitFor(`document.querySelectorAll('[data-testid=build-progress] li').length >= 3`, 90000)), (await text('[data-testid=build-start-error]')) + ' | ' + (await bsStatus()));
+    await chrome.screenshot(`${OUT}/${shot}-running.png`);
+    const finished = await chrome.waitFor(`['built', 'failed'].includes(document.querySelector('[data-testid=build-stage]')?.dataset.status)`, 30 * 60 * 1000);
+    const builtOk = (await bsStatus()) === 'built';
+    check(tag + ': ' + 'the build finishes ("Built")', !!finished && builtOk, (await bsStatus()) + ' | ' + (await text('[data-testid=job-failed]')) + ' | ' + (await text('[data-testid=build-start-error]')));
+    info(`${tag}: took ${Math.round((Date.now() - t0) / 1000)}s`);
+    const lastJob = (await ai2(`build_jobs?project_id=eq.${id}&stage=eq.build&select=id,status,error&order=created_at.desc&limit=1`)).json?.[0];
+    info(tag + ' job: ' + JSON.stringify(lastJob));
+    if (lastJob?.id) info(tag + ' steps: ' + JSON.stringify(((await ai2(`build_steps?job_id=eq.${lastJob.id}&select=seq,kind,file,status,attempt,detail,cost_cents&order=seq`)).json ?? []).map((s) => `${s.seq}:${s.kind}:${s.file ?? ''}:${s.status}:a${s.attempt}:${s.cost_cents}${s.detail ? ':' + s.detail.slice(0, 60) : ''}`)));
+    if (builtOk) {
+      const man = (await ai2(`project_artifacts_latest?project_id=eq.${id}&kind=eq.manifest&select=version,data`)).json?.[0];
+      const rep = (await ai2(`project_artifacts_latest?project_id=eq.${id}&kind=eq.launch_checks&select=version,data`)).json?.[0];
+      const site = (await ai2(`projects?id=eq.${id}&select=files`)).json?.[0]?.files ?? {};
+                const built = (man?.data?.pages ?? []).map((p) => p.file);
+      info(tag + ' manifest: ' + JSON.stringify(man?.data ?? null).slice(0, 700));
+      info(tag + ' report: ' + JSON.stringify((rep?.data?.checks ?? []).filter((c) => c.status !== 'pass')).slice(0, 1200));
+      check(tag + ': ' + 'every page in the plan was built (and no others)', planned.length >= 1 && planned.every((f) => built.includes(f)) && built.length === planned.length, `plan ${planned.join()} / built ${built.join()}`);
+      check(tag + ': ' + 'every page, the stylesheet and site.js are real files in the project', [...planned, 'styles.css', 'site.js'].every((f) => typeof site[f] === 'string' && site[f].length > 400), Object.entries(site).map(([k, v]) => `${k}=${String(v).length}`).join(' '));
+      const text2 = planned.map((f) => site[f] ?? '').join('\n') + (site['site.js'] ?? '');
+      check(tag + ': ' + 'zero placeholder content (no lorem ipsum, TODO, "coming soon", unfilled {{ }}, example.com)', !/lorem ipsum|\bTODO\b|coming soon|insert .{0,20} here|example\.com|\{\{(?!VEXIUM_PROJECT_ID)/i.test(text2), (text2.match(/lorem ipsum|\bTODO\b|coming soon|insert .{0,20} here|example\.com|\{\{(?!VEXIUM_PROJECT_ID)/i) ?? [''])[0]);
+      check(tag + ': ' + 'the launch report is saved for this version of the site and has no failures', !!rep && rep.data.manifest_version === man.version && rep.data.ok === true && rep.data.checks.every((c) => c.status !== 'fail'), JSON.stringify(rep?.data?.checks?.filter((c) => c.status === 'fail') ?? null).slice(0, 400));
+      check(tag + ': ' + 'the screen shows the passing report', (await chrome.eval(`document.querySelector('[data-testid=build-report]')?.dataset.ok`)) === 'true', await text('[data-testid=build-report]'));
+      check(tag + ': ' + 'the cost of the build was counted (manifest and screen agree)', typeof man?.data?.cost_cents === 'number' && man.data.cost_cents > 0 && (await text('[data-testid=build-summary]')).includes('Build cost'), `${man?.data?.cost_cents} / ${await text('[data-testid=build-summary]')}`);
+      check(tag + ': ' + 'the preview has a tab for every page and each one draws a headline', await (async () => {
+        const tabs = await chrome.eval(`[...document.querySelectorAll('[data-testid=site-tab]')].map((t) => t.dataset.page)`);
+        if (tabs.length !== planned.length) return false;
+        for (const f of tabs) {
+          await click(`[data-testid=site-tab][data-page="${f}"]`);
+          if (!(await waitFrame(`document.querySelector('h1')?.textContent.trim().length > 2 && document.querySelectorAll('.vx-nav .vx-link').length >= 1`, 20000))) return false;
+        }
+        return true;
+      })());
+      check(tag + ': ' + 'no page reports an error in the preview', (await count('[data-testid=preview-problem]')) === 0, await text('[data-testid=preview-problem]'));
+      await chrome.screenshot(`${OUT}/${shot}-built.png`);
+      check(tag + ': ' + 'Continue is open to TWEAKS', (await chrome.eval(`document.querySelector('[data-testid=stage-continue]').disabled`)) === false);
+    }
+  };
+
   if (process.env.E2E_AI) {
     // The real thing (spends model credits): a vague idea → a reply and a first saved plan, all through the Worker.
     // keep a copy of what the Worker streams, so a failed run can say why (the UI only shows a friendly sentence)
@@ -545,8 +695,33 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
         await chrome.screenshot(`${OUT}/ai-example-dark.png`);
         await click('[data-testid=style-lock]');
         check('AI EXAMPLE: "Save and lock" stores the dark look as locked, and Continue opens', await exStatusIs('locked') && (await ai2(`project_artifacts_latest?project_id=eq.${newId}&kind=eq.style_spec&select=version,data`)).json?.[0]?.data?.locked === true && await chrome.waitFor(`document.querySelector('[data-testid=stage-continue]').disabled === false`, 8000));
+
+        await realBuild({ id: newId, planned: aiPlan.data.pages.map((p) => p.file), tag: 'AI BUILD', shot: 'ai-build' });
       }
     }
+  } else if (process.env.E2E_MOCK_BUILD) {
+    // The real Workflow, ai-chat, verifier and database, with the pages written by a stand-in for the model (cf-worker/mock/anthropic.ts,
+    // deployed by hand for the run — docs/INFRA.md "Testing the build without credit"). Spends no credit; proves the screen against a live build.
+    await chrome.eval(`window.fetch = window.__realFetch; true`);
+    const MOCK_PAGES = [
+      { file: 'index.html', title: 'Home', purpose: 'Introduce the candles' },
+      { file: 'shop.html', title: 'Shop', purpose: 'Buy a candle' },
+      { file: 'contact.html', title: 'Contact', purpose: 'Get in touch mock-flaw' }, // the stand-in breaks this page's first attempt → the repair loop runs
+      { file: 'about.html', title: 'About', purpose: 'Who pours the candles' },
+    ];
+    const mockPlan = { ...PLAN, name: 'Wick & Co', one_liner: 'Hand-poured soy candles', audience: 'People who like a warm room', offer: 'Small-batch candles', pricing: { model: 'one_time', items: [{ name: 'Amber candle', price_cents: 2400 }] }, pages: MOCK_PAGES, backend: { collections: [], products: ['Amber candle'], forms: ['contact'], auth: false } };
+    const example = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Wick & Co</title><link rel="stylesheet" href="styles.css"/></head><body><header data-vx-nav></header><main><section id="top"><h1>Candles poured by hand</h1><p>Small-batch soy candles, poured one at a time and shipped to your door.</p><a href="#top">See the candles</a></section></main><footer data-vx-footer></footer><script src="site.js"></script></body></html>';
+    const seed = async (kind, data) => rpcSvc('put_project_artifact', { p_project: newId, p_kind: kind, p_data: data });
+    await seed('plan', mockPlan);
+    await seed('style_spec', STYLE);
+    await jfetch(`${SB}/rest/v1/projects?id=eq.${newId}`, { method: 'PATCH', headers: { ...svc, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ files: { 'index.html': example, 'styles.css': ':root { --bg: #ffffff; --text: #111111; --accent: #7c3aed; }\nbody { background: var(--bg); color: var(--text); }\n' } }) });
+    await reloadProject();
+    await click('[data-testid=stage-continue]');
+    check('MOCK BUILD: Continue from the plan opens EXAMPLE with the locked style', await chrome.waitFor(`document.querySelector('[data-testid=example-stage]')?.dataset.status === 'locked'`, 15000), await exStatus());
+    await realBuild({ id: newId, planned: MOCK_PAGES.map((p) => p.file), tag: 'MOCK BUILD', shot: 'mock-build' });
+    const lastBuild = (await jfetch(`${SB}/rest/v1/build_jobs?project_id=eq.${newId}&stage=eq.build&select=id&order=created_at.desc&limit=1`, { headers: svc })).json?.[0];
+    const fixSteps = lastBuild ? ((await jfetch(`${SB}/rest/v1/build_steps?job_id=eq.${lastBuild.id}&kind=eq.fix&select=file,status`, { headers: svc })).json ?? []) : [];
+    check('MOCK BUILD: the launch checks caught the broken contact page and it was repaired before saving', fixSteps.some((f) => f.file === 'contact.html' && f.status === 'done'), JSON.stringify(fixSteps));
   }
 
   await chrome.eval(`if (window.__realFetch) window.fetch = window.__realFetch; location.hash = '#/p/does-not-exist'; true`);

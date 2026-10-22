@@ -247,8 +247,9 @@ Builds only the landing page + a style spec (tokens, fonts, tone). Vibe controls
 - **Next action (Step 10):** read `docs/STAGES.md` (EXAMPLE section + "Resume after refresh") and `ai-chat/stages.ts` `finishExample`/`craft.ts`. FULL BUILD input = fresh `plan` + LOCKED `style_spec`; the example's `styles.css`/`site.js`/`manifest.json`/`index.html` are already in the project — the build must reuse `styles.css` as the single token source and not restyle (re-apply `applyStyleSpec` on the result as a safety net). Files per run are capped (`stage_done.files` ≤ 40; `set_project_files` ≤ 20/call, 600k per file → chunk writes). Replace `STAGE_BRIEF.build` + `STAGE_RUN.build`, add a build finisher next to `finishExample`, run pages in parallel per the spec, and move the run off `waitUntil`.
 
 
-### Step 10 — FULL BUILD stage — `TODO`
+### Step 10 — FULL BUILD stage — `IN PROGRESS`
 Parallel per-page builds from Plan + StyleSpec with shared files; real backend wiring (collections, products, forms, auth) from the plan; progress checklist UI; **launch verifier** (headless load + link/form/checkout checks, placeholder/fake-content scan) that auto-fixes or reports; cost accounting per build. **Done when:** a plan produces a complete multi-page site with zero placeholder content and a passing verifier report.
+**Design (chosen 2026-10-21; Anthropic credit still empty → deterministic parts unit-tested, model path tested with a mock Anthropic):** Cloudflare **Workflow** (`BuildWorkflow`) runs the long build off `waitUntil`; ai-chat `build_step` ops (worker-key authenticated) keep all prompt/derive/verify logic on Supabase; `build_steps` table = race-free progress checklist; platform-only `commit_site_build` RPC commits all files atomically at the end (so Stop leaves the project untouched); `site.js` / `_backend` / manifest are DERIVED from plan+style (never model-written); static verifier + one AI repair round.
 **Handoff notes:** _(fill in)_
 
 ### Step 11 — TWEAKS stage — `TODO`

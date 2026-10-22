@@ -12,20 +12,22 @@
 // against Anthropic here, parses the stream with the SAME core as the edge function (core.ts is
 // byte-extracted from it), streams Vexium SSE events back to the client, and tracks usage.
 //
+// FULL BUILD (Step 10) does not run here: ai-chat answers its prepare with `kind: "workflow"`, this Worker starts a BuildWorkflow
+// instance (workflow.ts, the same Worker script) and returns at once. The instance outlives the request, the browser and the login.
+//
 // Secrets (set via `wrangler secret put`): ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, STAGE_WORKER_SECRET
-// Vars (wrangler.toml): SUPABASE_URL, SUPABASE_ANON_KEY
+// Vars (wrangler.toml): SUPABASE_URL, SUPABASE_ANON_KEY (optional: BUILD_CONCURRENCY, ANTHROPIC_BASE_URL for tests)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { streamBuild, tokensToCents } from "./core.ts";
 import { judgeRun, reportStageDone, touchJob } from "./stage-report.ts";
+import { aiChatOp, type PortsEnv } from "./build-ports.ts";
 
-interface Env {
-  ANTHROPIC_API_KEY: string;
-  SUPABASE_SERVICE_ROLE_KEY: string;
-  /** Shared with ai-chat (Supabase function secret of the same name): proves a stage_done report comes from this Worker. */
-  STAGE_WORKER_SECRET: string;
-  SUPABASE_URL: string;
-  SUPABASE_ANON_KEY: string;
+export { BuildWorkflow } from "./workflow.ts";
+
+interface Env extends PortsEnv {
+  /** Starts a FULL BUILD (wrangler.toml [[workflows]]). */
+  BUILD_WORKFLOW: { create(opts: { id: string; params: unknown }): Promise<unknown> };
 }
 
 const CORS: Record<string, string> = {
@@ -96,6 +98,19 @@ export default {
     // The edge function may answer directly (rate limit, validation error, onboarding handled inline).
     if (prep && prep.kind === "response") {
       return new Response(JSON.stringify(prep.body), { status: prep.status || 200, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+    // FULL BUILD: a long, parallel run. ai-chat has created the job; a Workflow instance (same id) does the work and reports to ai-chat
+    // itself, so this answers straight away and the studio follows the job's progress by polling.
+    if (prep && prep.kind === "workflow" && prep.job && typeof prep.job.id === "string") {
+      try {
+        await env.BUILD_WORKFLOW.create({ id: prep.job.id, params: { job_id: prep.job.id } });
+      } catch (e) {
+        console.error("[build] could not start the workflow", String(e));
+        // Close the job, or the studio would wait on a run that never began.
+        try { await aiChatOp(env, { op: "fail", job_id: prep.job.id, error: "The build could not be started. Please try again." }, fetch, (m) => new Error(m)); } catch { /* the stale heartbeat shows it as dead */ }
+        return json({ error: "The build could not be started. Please try again." }, 502);
+      }
+      return json({ ok: true, job_id: prep.job.id, stage: prep.job.stage });
     }
     if (!prep || prep.kind !== "run" || !prep.payload) {
       return json({ error: "Unexpected prepare result" }, 502);

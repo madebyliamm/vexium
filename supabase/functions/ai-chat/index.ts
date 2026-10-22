@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildComponentLibraryPrompt, categoriesForBuild } from "./components.ts";
 import { BROKEN_PAGE_RULES, FRONTEND_CRAFT, REAL_CONTENT_RULES, SHARED_FILE_RULES } from "./craft.ts";
+import { recheckSite, runBuildOp, stepInsertRows, type BuildDeps, type NewStep, type StepPatch, type StepRow } from "./build-handler.ts";
 import { beginStage, cancelStageRun, finishStageRun, isHttpError, type JobRow, type StageDeps } from "./stage-handler.ts";
 import type { ArtifactKind, LatestArtifacts } from "../_shared/stages.ts";
 
@@ -22,7 +23,8 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
 const DEFAULT_PRICING = { input: 300, output: 1500 };
 
 // Cache write costs 25% more than base input; cache read costs 10% of base input.
-function tokensToCents(
+// The cost of one call in cents, unrounded (FULL BUILD keeps the fraction in its cost accounting).
+function tokensCostExact(
   input: number,
   output: number,
   model?: string,
@@ -30,12 +32,22 @@ function tokensToCents(
   cacheRead = 0,
 ): number {
   const p = (model && MODEL_PRICING[model]) || DEFAULT_PRICING;
-  return Math.round(
+  return (
     (input      / 1_000_000) * p.input +
     (cacheWrite / 1_000_000) * p.input * 1.25 +
     (cacheRead  / 1_000_000) * p.input * 0.10 +
     (output     / 1_000_000) * p.output
   );
+}
+
+function tokensToCents(
+  input: number,
+  output: number,
+  model?: string,
+  cacheWrite = 0,
+  cacheRead = 0,
+): number {
+  return Math.round(tokensCostExact(input, output, model, cacheWrite, cacheRead));
 }
 
 // Resolve the signed-in user from the Bearer token by asking GoTrue (auth.getUser equivalent). This function is
@@ -1868,7 +1880,7 @@ function stageDeps(): StageDeps {
       return (await r.json())[0].id as string;
     },
     async getJob(jobId) {
-      return ((await rows(`build_jobs?id=eq.${enc(jobId)}&select=id,project_id,user_id,stage,status&limit=1`))[0] as unknown as JobRow | undefined) ?? null;
+      return ((await rows(`build_jobs?id=eq.${enc(jobId)}&select=id,project_id,user_id,stage,status,prompt&limit=1`))[0] as unknown as JobRow | undefined) ?? null;
     },
     async finishJob(jobId, patch) {
       await fetch(`${rest}/build_jobs?id=eq.${enc(jobId)}&status=eq.running`, {
@@ -1901,8 +1913,82 @@ function stageDeps(): StageDeps {
   };
 }
 
+// FULL BUILD (build-handler.ts): the stage deps plus the build_steps checklist, project files, billing and the atomic site commit.
+function buildDeps(): BuildDeps {
+  const rest = `${SUPABASE_URL}/rest/v1`;
+  const read = { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` };
+  const write = { ...read, "Content-Type": "application/json" };
+  const enc = encodeURIComponent;
+  const rows = async (path: string): Promise<Record<string, unknown>[]> => {
+    const r = await fetch(`${rest}/${path}`, { headers: read });
+    if (!r.ok) throw new Error(`${path.split("?")[0]} ${r.status}`);
+    return await r.json();
+  };
+  const stage = stageDeps();
+  return {
+    getProjectAccess: stage.getProjectAccess,
+    getLatestArtifacts: stage.getLatestArtifacts,
+    getJob: stage.getJob,
+    finishJob: stage.finishJob,
+    saveArtifact: stage.saveArtifact,
+    saveMessage: stage.saveMessage,
+    usageGate: stage.usageGate,
+    modelId: MODEL_BUILD,
+    async getProjectFiles(projectId) {
+      const p = (await rows(`projects?id=eq.${enc(projectId)}&select=files&limit=1`))[0];
+      const out: Record<string, string> = {};
+      for (const [name, text] of Object.entries((p?.files ?? {}) as Record<string, unknown>)) if (typeof text === "string") out[name] = text;
+      return out;
+    },
+    async listSteps(jobId) {
+      return (await rows(`build_steps?job_id=eq.${enc(jobId)}&select=job_id,project_id,seq,kind,file,label,status,attempt,detail,cost_cents,output&order=seq.asc`))
+        .map((r) => ({ ...r, cost_cents: Number(r.cost_cents ?? 0) })) as unknown as StepRow[];
+    },
+    async insertSteps(steps: NewStep[]) {
+      const r = await fetch(`${rest}/build_steps?on_conflict=job_id,seq`, {
+        method: "POST", headers: { ...write, Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify(stepInsertRows(steps)),
+      });
+      if (!r.ok) throw new Error(`build_steps insert ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+    },
+    async updateStep(jobId: string, seq: number, patch: StepPatch) {
+      const { started, finished, ...cols } = patch;
+      const now = new Date().toISOString();
+      const r = await fetch(`${rest}/build_steps?job_id=eq.${enc(jobId)}&seq=eq.${seq}`, {
+        method: "PATCH", headers: { ...write, Prefer: "return=minimal" },
+        body: JSON.stringify({ ...cols, ...(started ? { started_at: now } : {}), ...(finished ? { finished_at: now } : {}) }),
+      });
+      if (!r.ok) throw new Error(`build_steps update ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+    },
+    async bill(userId, usage, modelId) {
+      await incrementUsage(userId, usage.in, usage.out, modelId, usage.cacheWrite, usage.cacheRead);
+      return tokensCostExact(usage.in, usage.out, modelId, usage.cacheWrite, usage.cacheRead);
+    },
+    async commitSite(projectId, files, remove) {
+      const r = await fetch(`${rest}/rpc/commit_site_build`, {
+        method: "POST", headers: write, body: JSON.stringify({ p_project: projectId, p_files: files, p_remove: remove }),
+      });
+      if (!r.ok) throw new Error(`commit_site_build ${r.status} ${(await r.text().catch(() => "")).slice(0, 200)}`);
+    },
+  };
+}
+
+// The Worker's build operations (a Cloudflare Workflow calls these once per step): authenticated by the shared secret alone — a
+// Workflow outlives the owner's login token, and every operation names its job, which names the user and project.
+async function handleBuildOp(op: Record<string, unknown>, workerKey: string | null): Promise<Response> {
+  const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+  if (!sameSecret(workerKey, Deno.env.get("STAGE_WORKER_SECRET") ?? "")) return json({ error: "Only the build service can do that.", code: "forbidden" }, 403);
+  try {
+    const r = await runBuildOp(op && typeof op === "object" ? op : {}, buildDeps());
+    return json(r.body, r.status);
+  } catch (e) {
+    console.error("[ai-chat] build op failed", e);
+    // `detail` goes to the Worker only (the secret above): it lands in the Workflow's step history, not in front of a user.
+    return json({ error: "The build step failed.", code: "build_failed", detail: String((e as Error)?.message ?? e).slice(0, 300) }, 500);
+  }
+}
+
 async function handleStageMode(
-  body: { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; project_id?: string; messages?: unknown },
+  body: { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; project_id?: string; messages?: unknown },
   userId: string,
   prepareMode: boolean,
   workerKey: string | null,
@@ -1918,10 +2004,17 @@ async function handleStageMode(
       const r = await cancelStageRun(body.stage_cancel ?? {}, userId, deps);
       return json(r.body, r.status);
     }
+    // "Check again": the owner's own request, answered here (no AI call, so no Worker).
+    if (body.build_recheck !== undefined) {
+      const r = await recheckSite(body.build_recheck ?? {}, userId, buildDeps());
+      return json(r.body, r.status);
+    }
     // Stage runs execute in the build Worker (no wall-clock limit); this function only prepares them.
     if (!prepareMode) return json({ error: "Stage runs go through the build Worker.", code: "use_worker" }, 400);
     const run = await beginStage(body, userId, deps);
     if (isHttpError(run)) return json(run.body, run.status);
+    // FULL BUILD runs as a Workflow of many calls: the Worker only needs to know which job to run.
+    if (run.kind === "workflow") return json({ kind: "workflow", job: { id: run.jobId, stage: run.stage }, user_id: userId });
     const model = run.prompt.model === "fast" ? MODEL_FAST : MODEL_BUILD;
     return json({
       kind: "run",
@@ -1941,6 +2034,13 @@ async function handleStageMode(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS });
+
+  // FULL BUILD operations come from the Worker's Workflow with the shared secret and no user login (see handleBuildOp).
+  const workerKey = req.headers.get("x-vx-worker-key");
+  if (workerKey) {
+    const peek = await req.clone().json().catch(() => null) as { build_op?: Record<string, unknown> } | null;
+    if (peek && peek.build_op !== undefined) return await handleBuildOp(peek.build_op, workerKey);
+  }
 
   const userId = await verifiedUserId(req.headers.get("Authorization"));
   if (!userId) {
@@ -1979,6 +2079,7 @@ serve(async (req) => {
     stage?: unknown;                         // studio stage run (REVAMP Step 7) — see stage-handler.ts
     stage_done?: Record<string, unknown>;    // build Worker → us: a stage run finished (reply to parse + save)
     stage_cancel?: Record<string, unknown>;  // the studio's Stop button: close a running stage job
+    build_recheck?: Record<string, unknown>; // the studio's "Check again": verify the saved site, save a fresh launch report
   };
   try { body = await req.json(); }
   catch {
@@ -1987,14 +2088,19 @@ serve(async (req) => {
     });
   }
 
+  // Build operations are the Worker's alone (the secret header is checked at the top); a login is not a substitute for it.
+  if ((body as { build_op?: unknown }).build_op !== undefined) {
+    return new Response(JSON.stringify({ error: "Only the build service can do that.", code: "forbidden" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+
   // prepare mode: the Cloudflare build Worker asks us to assemble the Anthropic request (all the
   // prompt logic) but NOT call it — so the Worker can run it with no wall-clock timeout. The two
   // streaming sites below (onboarding gate + main build) return the payload as JSON when set.
   const prepareMode = body.prepare === true;
 
   // ── STAGE MODE (the studio's guided flow; the old editor never sends these fields) ──
-  if (body.stage !== undefined || body.stage_done !== undefined || body.stage_cancel !== undefined) {
-    return await handleStageMode(body as { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; project_id?: string; messages?: unknown }, userId, prepareMode, req.headers.get("x-vx-worker-key"));
+  if (body.stage !== undefined || body.stage_done !== undefined || body.stage_cancel !== undefined || body.build_recheck !== undefined) {
+    return await handleStageMode(body as { stage?: unknown; stage_done?: Record<string, unknown>; stage_cancel?: Record<string, unknown>; build_recheck?: Record<string, unknown>; project_id?: string; messages?: unknown }, userId, prepareMode, req.headers.get("x-vx-worker-key"));
   }
 
   // ── SUGGEST MODE (build Worker → us, after a build, to fetch follow-up suggestions) ──

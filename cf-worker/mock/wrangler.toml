@@ -1,0 +1,6 @@
+# A stand-in for Anthropic's API, used only to test the FULL BUILD Workflow without credit. Deploy, test, then `wrangler delete`.
+#   npx wrangler deploy --config cf-worker/mock/wrangler.toml
+#   npx wrangler delete --config cf-worker/mock/wrangler.toml
+name = "vexium-mock-anthropic"
+main = "anthropic.ts"
+compatibility_date = "2024-11-01"

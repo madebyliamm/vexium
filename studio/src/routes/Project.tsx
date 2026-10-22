@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
+import { BuildStage } from '../components/BuildStage.tsx';
 import { ExampleStage } from '../components/ExampleStage.tsx';
 import { PlanStage } from '../components/PlanStage.tsx';
 import { Splash } from '../components/Splash.tsx';
@@ -102,6 +103,7 @@ export function Project({ id }: { id: string }) {
   const planArtifact = artifacts.plan;
   const planStage = project.stage === 'plan';
   const exampleStage = project.stage === 'example';
+  const buildStage = project.stage === 'build';
   const styleArtifact = artifacts.style_spec;
   const hints = planStage && planArtifact && !planDirty ? planHints(readPlan(planArtifact.data, project.name || 'Untitled')) : [];
   return (
@@ -131,7 +133,7 @@ export function Project({ id }: { id: string }) {
           busy={busy}
           onKeep={(k) => void keep(k)}
           onMove={(s) => void move(s)}
-          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : exampleStage && exampleDirty ? 'Save or discard your style changes first.' : null}
+          holdContinue={planStage && planDirty ? 'Save your plan changes first.' : exampleStage && exampleDirty ? 'Save or discard your style changes first.' : buildStage && runningJobId ? 'Your site is still being built.' : null}
           continueNote={hints.length > 0 ? `You can continue now. You may still want to ${hints.join(', ')}.` : null}
           guided={
             planStage ? (
@@ -150,6 +152,15 @@ export function Project({ id }: { id: string }) {
                 resumedJobId={runningJobId ?? null}
                 onChanged={() => { setNotice(null); void refresh(); }}
                 onDirtyChange={setExampleDirty}
+              />
+            ) : buildStage ? (
+              <BuildStage
+                projectId={project.id}
+                artifacts={artifacts}
+                resumedJobId={runningJobId ?? null}
+                busy={busy}
+                onKeep={(k) => void keep(k)}
+                onChanged={() => { setNotice(null); void refresh(); }}
               />
             ) : undefined
           }

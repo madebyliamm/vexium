@@ -19,6 +19,8 @@ export interface JobRow {
   user_id: string;
   stage: string | null;
   status: string;
+  /** What the owner typed to start the run (first 500 characters) — FULL BUILD reads it back as the owner's note. */
+  prompt?: string | null;
 }
 
 export interface StageDeps {
@@ -62,6 +64,13 @@ export interface StageRun {
   messages: { role: 'user' | 'assistant'; content: string }[];
 }
 
+/** FULL BUILD is not one model call but a Cloudflare Workflow of many (build-handler.ts): the Worker is told only which job to run. */
+export interface StageWorkflow {
+  kind: 'workflow';
+  stage: Stage;
+  jobId: string;
+}
+
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_CHARS = 20_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -84,7 +93,7 @@ export function cleanMessages(raw: unknown): { role: 'user' | 'assistant'; conte
   return out;
 }
 
-export async function beginStage(body: StageRequest, userId: string, deps: StageDeps): Promise<StageRun | HttpError> {
+export async function beginStage(body: StageRequest, userId: string, deps: StageDeps): Promise<StageRun | StageWorkflow | HttpError> {
   if (!isStage(body.stage)) return fail(400, 'bad_stage', 'Unknown stage.');
   const stage = body.stage;
   if (typeof body.project_id !== 'string' || !body.project_id || body.project_id.length > 200) return fail(400, 'bad_project', 'project_id is required.');
@@ -104,7 +113,6 @@ export async function beginStage(body: StageRequest, userId: string, deps: Stage
   const limit = await deps.usageGate(userId);
   if (limit) return fail(402, 'usage_limit', limit);
 
-  const prompt = buildStagePrompt(stage, latest, { projectName: project.name });
   const lastUser = messages[messages.length - 1]!.content;
   const jobId = await deps.createJob({
     project_id: projectId,
@@ -114,7 +122,8 @@ export async function beginStage(body: StageRequest, userId: string, deps: Stage
     prompt: lastUser.slice(0, 500),
   });
   await recordUserLine(deps, { projectId, stage, userId, jobId, content: lastUser });
-  return { kind: 'run', stage, jobId, prompt, messages };
+  if (stage === 'build') return { kind: 'workflow', stage, jobId };
+  return { kind: 'run', stage, jobId, prompt: buildStagePrompt(stage, latest, { projectName: project.name }), messages };
 }
 
 const MAX_LINE_CHARS = 20_000;

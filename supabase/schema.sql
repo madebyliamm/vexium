@@ -77,7 +77,7 @@ CREATE UNIQUE INDEX billing_history_pkey ON public.billing_history USING btree (
 ALTER TABLE public."billing_history" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own billing history" ON public."billing_history" AS PERMISSIVE FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) = user_id));
 
--- ── build_jobs  (~114 rows, RLS ON) ──────────
+-- ── build_jobs  (~118 rows, RLS ON) ──────────
 CREATE TABLE public."build_jobs" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -101,6 +101,42 @@ CREATE UNIQUE INDEX build_jobs_pkey ON public.build_jobs USING btree (id);
 CREATE INDEX build_jobs_project_idx ON public.build_jobs USING btree (project_id, created_at DESC);
 ALTER TABLE public."build_jobs" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users manage own build jobs" ON public."build_jobs" AS PERMISSIVE FOR ALL TO public USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
+
+-- ── build_steps  (~0 rows, RLS ON) ──────────
+CREATE TABLE public."build_steps" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "job_id" uuid NOT NULL,
+  "project_id" text NOT NULL,
+  "seq" integer NOT NULL,
+  "kind" text NOT NULL,
+  "file" text,
+  "label" text NOT NULL,
+  "status" text NOT NULL DEFAULT 'pending'::text,
+  "attempt" integer NOT NULL DEFAULT 0,
+  "detail" text,
+  "cost_cents" numeric(10,2) NOT NULL DEFAULT 0,
+  "output" text,
+  "started_at" timestamp with time zone,
+  "finished_at" timestamp with time zone,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "build_steps_job_id_fkey" FOREIGN KEY (job_id) REFERENCES build_jobs(id) ON DELETE CASCADE,
+  CONSTRAINT "build_steps_job_seq_key" UNIQUE (job_id, seq),
+  CONSTRAINT "build_steps_kind_check" CHECK ((kind = ANY (ARRAY['prepare'::text, 'page'::text, 'fix'::text, 'verify'::text, 'save'::text]))),
+  CONSTRAINT "build_steps_label_check" CHECK (((char_length(label) >= 1) AND (char_length(label) <= 200))),
+  CONSTRAINT "build_steps_output_check" CHECK (((output IS NULL) OR (char_length(output) <= 600000))),
+  CONSTRAINT "build_steps_pkey" PRIMARY KEY (id),
+  CONSTRAINT "build_steps_project_id_fkey" FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  CONSTRAINT "build_steps_status_check" CHECK ((status = ANY (ARRAY['pending'::text, 'running'::text, 'done'::text, 'failed'::text, 'skipped'::text])))
+);
+CREATE UNIQUE INDEX build_steps_job_seq_key ON public.build_steps USING btree (job_id, seq);
+CREATE UNIQUE INDEX build_steps_pkey ON public.build_steps USING btree (id);
+CREATE INDEX build_steps_project_idx ON public.build_steps USING btree (project_id, created_at DESC);
+ALTER TABLE public."build_steps" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "build_steps_select" ON public."build_steps" AS PERMISSIVE FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM projects p
+  WHERE ((p.id = build_steps.project_id) AND ((p.user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM project_members m
+          WHERE ((m.project_id = p.id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND (m.status = 'accepted'::text)))))))));
 
 -- ── feedback  (~1 rows, RLS ON) ──────────
 CREATE TABLE public."feedback" (
@@ -162,7 +198,7 @@ CREATE POLICY "notif_insert" ON public."notifications" AS PERMISSIVE FOR INSERT 
 CREATE POLICY "notif_select" ON public."notifications" AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() = user_id));
 CREATE POLICY "notif_update" ON public."notifications" AS PERMISSIVE FOR UPDATE TO public USING ((auth.uid() = user_id));
 
--- ── page_views  (~914 rows, RLS ON) ──────────
+-- ── page_views  (~916 rows, RLS ON) ──────────
 CREATE TABLE public."page_views" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -387,7 +423,7 @@ CREATE TRIGGER projects_guard_owner BEFORE UPDATE ON public.projects FOR EACH RO
 CREATE TRIGGER projects_guard_stage BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION projects_guard_stage();
 CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- ── rate_limits  (~144 rows, RLS ON) ──────────
+-- ── rate_limits  (~19 rows, RLS ON) ──────────
 CREATE TABLE public."rate_limits" (
   "key" text NOT NULL,
   "window_start" timestamp with time zone NOT NULL,
@@ -463,7 +499,7 @@ CREATE POLICY "owners can read their site users" ON public."site_users" AS PERMI
    FROM projects
   WHERE (projects.user_id = auth.uid()))));
 
--- ── stage_messages  (~0 rows, RLS ON) ──────────
+-- ── stage_messages  (~1 rows, RLS ON) ──────────
 CREATE TABLE public."stage_messages" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "project_id" text NOT NULL,
@@ -516,6 +552,68 @@ BEGIN
   RETURN jsonb_build_object('username_taken', username_taken, 'email_taken', email_taken);
 END;
 $function$;
+
+-- commit_site_build  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.commit_site_build(p_project text, p_files jsonb, p_remove jsonb DEFAULT '[]'::jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  k       text;
+  v       jsonb;
+  n       integer := 0;
+  total   bigint  := 0;
+  gone    text[]  := '{}';
+BEGIN
+  -- true = platform (service role / postgres). A signed-in user gets false (or an error for a stranger) and is refused below.
+  IF NOT public.vx_stage_access(p_project) THEN
+    RAISE EXCEPTION 'commit_site_build is for the platform only' USING ERRCODE = '42501';
+  END IF;
+  IF p_files IS NULL OR jsonb_typeof(p_files) <> 'object' THEN
+    RAISE EXCEPTION 'files must be a JSON object of name -> text' USING ERRCODE = '22023';
+  END IF;
+  IF p_remove IS NULL OR jsonb_typeof(p_remove) <> 'array' THEN
+    RAISE EXCEPTION 'remove must be a JSON array of file names' USING ERRCODE = '22023';
+  END IF;
+
+  FOR k, v IN SELECT key, value FROM jsonb_each(p_files) LOOP
+    n := n + 1;
+    IF k !~ '^([A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(html|css|js|json)|_backend)$' THEN
+      RAISE EXCEPTION 'file name not allowed: %', left(k, 80) USING ERRCODE = '22023';
+    END IF;
+    IF jsonb_typeof(v) <> 'string' THEN
+      RAISE EXCEPTION 'file % must be text', k USING ERRCODE = '22023';
+    END IF;
+    IF length(v #>> '{}') > 600000 THEN
+      RAISE EXCEPTION 'file % is too large', k USING ERRCODE = '54000';
+    END IF;
+    total := total + length(v #>> '{}');
+  END LOOP;
+  IF n = 0 THEN RAISE EXCEPTION 'nothing to commit' USING ERRCODE = '22023'; END IF;
+  IF n > 80 OR total > 6000000 THEN
+    RAISE EXCEPTION 'too many or too large files in one build' USING ERRCODE = '54000';
+  END IF;
+
+  -- Only plain pages can be removed, and never one this same build writes.
+  FOR k IN SELECT jsonb_array_elements_text(p_remove) LOOP
+    IF k !~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.html$' THEN
+      RAISE EXCEPTION 'only pages can be removed: %', left(k, 80) USING ERRCODE = '22023';
+    END IF;
+    IF NOT (p_files ? k) THEN gone := gone || k; END IF;
+  END LOOP;
+  IF coalesce(array_length(gone, 1), 0) > 80 THEN
+    RAISE EXCEPTION 'too many files to remove' USING ERRCODE = '54000';
+  END IF;
+
+  -- One UPDATE = one atomic step: the stale pages go and the new files arrive together; everything else (images, memory files) stays.
+  UPDATE public.projects SET files = (coalesce(files, '{}'::jsonb) - gone) || p_files WHERE id = p_project;
+  RETURN jsonb_build_object(
+    'saved',   (SELECT coalesce(jsonb_agg(key ORDER BY key), '[]'::jsonb) FROM jsonb_object_keys(p_files) AS key),
+    'removed', to_jsonb(gone)
+  );
+END $function$;
 
 -- delete_own_account  [SECURITY DEFINER]
 CREATE OR REPLACE FUNCTION public.delete_own_account()
@@ -932,6 +1030,46 @@ AS $function$
   ORDER BY p.custom_domain_verified DESC NULLS LAST
   LIMIT 1
 $function$;
+
+-- set_project_files  [SECURITY DEFINER]
+CREATE OR REPLACE FUNCTION public.set_project_files(p_project text, p_files jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  k     text;
+  v     jsonb;
+  n     integer := 0;
+  total integer := 0;
+BEGIN
+  PERFORM public.vx_stage_access(p_project);
+  IF p_files IS NULL OR jsonb_typeof(p_files) <> 'object' THEN
+    RAISE EXCEPTION 'files must be a JSON object of name -> text' USING ERRCODE = '22023';
+  END IF;
+  FOR k, v IN SELECT key, value FROM jsonb_each(p_files) LOOP
+    n := n + 1;
+    IF k !~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(html|css|js|json)$' THEN
+      RAISE EXCEPTION 'file name not allowed: %', left(k, 80) USING ERRCODE = '22023';
+    END IF;
+    IF jsonb_typeof(v) <> 'string' THEN
+      RAISE EXCEPTION 'file % must be text', k USING ERRCODE = '22023';
+    END IF;
+    IF length(v #>> '{}') > 600000 THEN
+      RAISE EXCEPTION 'file % is too large', k USING ERRCODE = '54000';
+    END IF;
+    total := total + length(v #>> '{}');
+  END LOOP;
+  IF n = 0 THEN RETURN jsonb_build_object('saved', '[]'::jsonb); END IF;
+  IF n > 20 OR total > 1500000 THEN
+    RAISE EXCEPTION 'too many or too large files in one call' USING ERRCODE = '54000';
+  END IF;
+
+  -- `||` replaces the given keys and keeps every other file as it is; one UPDATE = atomic per row.
+  UPDATE public.projects SET files = coalesce(files, '{}'::jsonb) || p_files WHERE id = p_project;
+  RETURN jsonb_build_object('saved', (SELECT coalesce(jsonb_agg(key ORDER BY key), '[]'::jsonb) FROM jsonb_object_keys(p_files) AS key));
+END $function$;
 
 -- set_project_stage  [SECURITY DEFINER]
 CREATE OR REPLACE FUNCTION public.set_project_stage(p_project text, p_stage text)

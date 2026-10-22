@@ -845,6 +845,7 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
     const mStage = async () => (await mdb(`projects?id=eq.${newId}&select=stage`))?.[0]?.stage;
     const mVersions = async () => (await mdb(`site_snapshots?project_id=eq.${newId}&select=seq,kind,label,is_current&order=seq`)) ?? [];
     const tweakDone = (ms) => chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('in your draft') || !!document.querySelector('[data-testid=chat-error]')`, ms);
+    const settled = () => chrome.waitFor(`document.querySelector('[data-testid=tweaks-stage]')?.dataset.busy === 'false'`, 40000); // a notice shows before the files and the history are re-read; clicks are ignored until then
     const askTweak = async (words) => { await chrome.waitFor(`!document.querySelector('[data-testid=tweaks-working]') && !!document.querySelector('[data-testid=chat-send]')`, 60000); await chrome.eval(`document.querySelector('[data-testid=tweaks-notice]')?.remove?.(); true`); await setValue('[data-testid=chat-input]', words); await click('[data-testid=chat-send]'); };
     const pointAt = async (selector) => {
       await click('[data-testid=tweaks-pick]');
@@ -898,19 +899,20 @@ section { max-width: var(--container); margin: 0 auto; padding: var(--section-y)
     await chrome.screenshot(`${OUT}/mock-tweaks-colour.png`);
 
     // 6. undo twice (colour, then words), redo once, go back to the build
-    await click('[data-testid=tweaks-undo]');
+    await settled(); await click('[data-testid=tweaks-undo]');
     check('MOCK TWEAKS: Undo takes the colour back — in the draft, the saved style and the preview', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Undone')`, 30000)) && !/--accent:\s*#2f7d4f/i.test((await mFiles())['styles.css'] ?? '') && (await mArt('style_spec'))?.data?.tokens?.['--accent']?.toLowerCase() !== '#2f7d4f' && (await mFiles())['index.html'] === after1['index.html'], await text('[data-testid=tweaks-notice]'));
+    await settled(); info('MOCK TWEAKS report after 1st Undo: ' + JSON.stringify((await mArt('launch_checks'))?.data?.problems?.filter?.((p) => p.severity === 'fail') ?? (await mArt('launch_checks'))?.data).slice(0, 700));
     await click('[data-testid=tweaks-undo]');
     check('MOCK TWEAKS: a second Undo takes the words back', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-undo]')?.disabled === true`, 30000)) && JSON.stringify(await mFiles()) === JSON.stringify(before1) && !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === ${JSON.stringify(home0)}`, 15000)), await text('[data-testid=tweaks-notice]'));
     check('MOCK TWEAKS: the draft is exactly the freshly built site again (every file as it was)', JSON.stringify(await mFiles()) === JSON.stringify(before1));
-    await click('[data-testid=tweaks-redo]');
+    await settled(); await click('[data-testid=tweaks-redo]');
     check('MOCK TWEAKS: Redo brings the words back', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.startsWith('Redone')`, 30000)) && (await mFiles())['index.html'] === after1['index.html'] && !!(await waitFrame(`document.querySelector('h1')?.textContent.trim() === 'Hand-poured candles, made slowly'`, 15000)), await text('[data-testid=tweaks-notice]'));
     // a new change after going back drops the redo branch (the colour version) — the line stays a line
     await askTweak('mock-accent #8a3b12');
     check('MOCK TWEAKS: a new change made after going back replaces the versions that were ahead (still three versions, newest is current)', !!(await tweakDone(150000)) && (await mVersions()).length === 3 && (await mVersions())[2].is_current === true && /#8a3b12/i.test((await mFiles())['styles.css'] ?? ''), JSON.stringify(await mVersions()));
     await chrome.eval(`document.querySelector('[data-testid=tweaks-versions]').open = true; true`);
     const firstSeq = (await mVersions())[0].seq;
-    await click(`[data-testid=tweaks-version][data-seq="${firstSeq}"] [data-testid=tweaks-restore]`);
+    await settled(); await click(`[data-testid=tweaks-version][data-seq="${firstSeq}"] [data-testid=tweaks-restore]`);
     check('MOCK TWEAKS: "Go back to this" on the build returns the whole site to it', !!(await chrome.waitFor(`document.querySelector('[data-testid=tweaks-notice]')?.textContent.includes('Your site is back at')`, 30000)) && JSON.stringify(await mFiles()) === JSON.stringify(before1), await text('[data-testid=tweaks-notice]'));
     check('MOCK TWEAKS: and none of this published anything (the draft is all that moved)', (await mdb(`projects?id=eq.${newId}&select=published_at,published_version,published_files`))?.[0]?.published_at == null);
     await chrome.screenshot(`${OUT}/mock-tweaks-end.png`);

@@ -247,7 +247,7 @@ export function TweaksStage({ projectId, artifacts, published, resumedJobId, bus
   const locked = running || moving || busy;
 
   return (
-    <div class="tweaks-stage" data-testid="tweaks-stage">
+    <div class="tweaks-stage" data-testid="tweaks-stage" data-busy={locked}>
       <div class="plan-head">
         <h2>Fine-tune your site</h2>
         <span class="pill" data-testid="tweaks-draft" title={draftNote(published)}>{published ? 'Draft · live site unchanged' : 'Draft · not live yet'}</span>

@@ -5,6 +5,7 @@
 // The owner's note steers it: `mock-slow` makes every page take ~40 s (so a test can press Stop mid-build), `mock-credit` answers
 // like an account that is out of credit (HTTP 402). `mock-flaw` in a page's purpose: see pageFor.
 // TWEAKS prompts (the system text contains "STAGE: TWEAKS") are answered from the owner's last message: see tweakFor.
+// BUSINESS PARTNER prompts (non-streaming, system contains "BUSINESS PARTNER") are answered from the FACTS table: see partnerFor.
 // What it proves is the plumbing — Workflow steps, ai-chat operations, verifier, repair loop, atomic save — NOT the quality of a model's pages.
 
 interface Msg { role: string; content: unknown }
@@ -83,6 +84,28 @@ export function tweakFor(system: string, request: string): string | null {
   return 'Which part of the page would you like to change? Click it in the preview and tell me what you want.';
 }
 
+/**
+ * A BUSINESS PARTNER reply (JSON text), built from the FACTS table the prompt carries so its numbers are real. Steered by the site's NAME
+ * (the one thing a test controls): `mock-invent` adds a recommendation with a made-up number (the platform must drop it), `mock-nojson`
+ * answers in prose. The default "apply" carries `mock-accent #b45309`, which the TWEAKS mock turns into a real, visible change.
+ */
+export function partnerFor(system: string): string | null {
+  if (!/BUSINESS PARTNER/.test(system)) return null;
+  const name = /^Name: (.*)$/m.exec(system)?.[1] ?? '';
+  if (/mock-nojson/.test(name)) return 'You are doing great, keep going!';
+  const facts: Record<string, string> = {};
+  for (const m of system.slice(system.indexOf('FACTS (id: statement)')).matchAll(/^([a-z]+(?:\.[a-z0-9_]+)?): (.*)$/gm)) facts[m[1]!] = m[2]!;
+  const visitors = /Visitors: (\d+)/.exec(facts.visitors ?? '')?.[1] ?? '0';
+  const orders = /Orders: (\d+)/.exec(facts.orders ?? '')?.[1] ?? '0';
+  const recs: Record<string, unknown>[] = [
+    { id: 'stand-out', title: 'Make your main buttons stand out more', why: `You had ${visitors} visitors and ${orders} orders, so it is worth making the next step easier to see.`, cites: ['visitors', 'orders'], apply: 'Make the main buttons stand out more. mock-accent #b45309' },
+  ];
+  const src = /^Visitors from (.+): (\d+)/.exec(facts['source.1'] ?? '');
+  if (src) recs.push({ id: 'share-more', title: `Share your site where ${src[1]} visitors find you`, why: `${src[2]} visitors came from ${src[1]}, so that is a place people already like.`, cites: ['source.1'], apply: null });
+  if (/mock-invent/.test(name)) recs.push({ id: 'big-goal', title: 'Aim for 5000 visitors next month', why: 'That would be 400% better than now.', cites: ['visitors'], apply: null });
+  return JSON.stringify({ headline: `You had ${visitors} visitors in this period.`, recommendations: recs });
+}
+
 const sse = (event: string, data: unknown): Uint8Array => new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
 export default {
@@ -93,7 +116,15 @@ export default {
     if (!body) return new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'bad json' } }), { status: 400 });
     const system = flat(body.system);
     const prompt = flat(body.messages?.[0]?.content);
-    if (/mock-credit/.test(prompt)) return new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (/mock-credit/.test(prompt) || (/BUSINESS PARTNER/.test(system) && /mock-credit/.test(system))) return new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (body.stream !== true) {
+      // The business partner calls the API without streaming and gets plain JSON back.
+      const partner = partnerFor(system);
+      if (partner !== null) {
+        const usage = { input_tokens: Math.ceil((system.length + prompt.length) / 4), output_tokens: Math.ceil(partner.length / 4) };
+        return new Response(JSON.stringify({ id: 'msg_mock', type: 'message', role: 'assistant', model: 'mock', content: [{ type: 'text', text: partner }], stop_reason: 'end_turn', usage }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
     const last = [...(body.messages ?? [])].reverse().find((m) => m.role === 'user');
     const request = flat(last?.content);
     const slow = /mock-slow/.test(prompt) || /mock-slow/.test(request);

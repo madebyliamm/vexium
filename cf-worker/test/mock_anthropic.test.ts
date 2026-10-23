@@ -8,7 +8,9 @@ import { planBuild } from '../../supabase/functions/ai-chat/build-plan.ts';
 import { assembleSite, finishStylesheet } from '../../supabase/functions/ai-chat/site-derive.ts';
 import { verifySite } from '../../supabase/functions/ai-chat/verifier.ts';
 import { EXAMPLE_CSS, HOME, STYLE } from '../../supabase/tests/site_fixtures.ts';
-import mock, { pageFor, tweakFor } from '../mock/anthropic.ts';
+import mock, { pageFor, partnerFor, tweakFor } from '../mock/anthropic.ts';
+import { factsOf, groundAdvice, parseReply, partnerPrompt } from '../../supabase/functions/_shared/advice.ts';
+import { buildBusinessState, type RawStats } from '../../supabase/functions/_shared/business.ts';
 import { makeParse, processStreamBlock } from '../core.ts';
 import { buildStagePrompt } from '../../supabase/functions/ai-chat/stages.ts';
 import { finishTweaks } from '../../supabase/functions/ai-chat/tweaks.ts';
@@ -173,5 +175,48 @@ describe('mock Anthropic answers tweak prompts', () => {
     const text = await res.text();
     assert.match(text, /patch name=\\"styles\.css\\"/);
     assert.match(text, /--accent: #2f7d4f/);
+  });
+});
+
+describe('mock model — BUSINESS PARTNER', () => {
+  const stats: RawStats = {
+    days: 30,
+    traffic: { views: 400, visitors: 120, prev_visitors: 80, sources: [{ source: 'www.google.com', visitors: 60 }], pages: [{ page: '/', views: 250, visitors: 110 }] },
+    money: { current: [{ currency: 'usd', orders: 5, gross_cents: 12500, refunds_cents: 0, net_cents: 12500 }], previous: [], products: [] },
+    lifetime: { views: 900, first_view_at: '2026-09-01T00:00:00Z', orders: 12, signups: 0, leads: 0 },
+  };
+  const facts = factsOf(buildBusinessState({ stats, now: new Date('2026-10-24T12:00:00Z'), firstLiveAt: new Date('2026-09-01T00:00:00Z') }));
+  const promptFor = (name: string) => partnerPrompt({ name, plan: null, manifest: null, facts }).system;
+
+  it('only answers the partner prompt', () => {
+    assert.equal(partnerFor('STAGE: PLAN'), null);
+  });
+  it('its default reply survives the platform\'s grounding rules (real numbers, real fact ids)', () => {
+    const g = groundAdvice(parseReply(partnerFor(promptFor('Beanery'))!), facts);
+    assert.deepEqual(g.dropped, []);
+    assert.deepEqual(g.recommendations.map((r) => r.id), ['stand-out', 'share-more']);
+    assert.match(g.recommendations[0]!.apply!, /mock-accent #b45309/);
+    assert.match(g.recommendations[0]!.why, /120 visitors and 5 orders/);
+  });
+  it('"mock-invent" in the name adds a recommendation the platform must drop', () => {
+    const g = groundAdvice(parseReply(partnerFor(promptFor('Beanery mock-invent'))!), facts);
+    assert.deepEqual(g.recommendations.map((r) => r.id), ['stand-out', 'share-more']);
+    assert.equal(g.dropped.length, 1);
+  });
+  it('"mock-nojson" answers in prose', () => {
+    assert.equal(parseReply(partnerFor(promptFor('Beanery mock-nojson'))!), null);
+  });
+  it('over HTTP without streaming it returns the plain JSON message the edge function reads', async () => {
+    const res = await mock.fetch(new Request('https://mock/v1/messages', { method: 'POST', body: JSON.stringify({ model: 'x', system: promptFor('Beanery'), messages: [{ role: 'user', content: 'Here is how my business is doing.' }] }) }));
+    assert.equal(res.status, 200);
+    const out = await res.json();
+    assert.equal(out.content[0].type, 'text');
+    assert.ok(parseReply(out.content[0].text));
+    assert.ok(out.usage.input_tokens > 0 && out.usage.output_tokens > 0);
+  });
+  it('"mock-credit" in the name answers like an account without credit', async () => {
+    const res = await mock.fetch(new Request('https://mock/v1/messages', { method: 'POST', body: JSON.stringify({ model: 'x', system: promptFor('Beanery mock-credit'), messages: [{ role: 'user', content: 'hi' }] }) }));
+    assert.equal(res.status, 400);
+    assert.match((await res.json()).error.message, /credit balance/);
   });
 });

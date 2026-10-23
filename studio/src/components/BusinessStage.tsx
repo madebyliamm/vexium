@@ -9,7 +9,9 @@ import {
 } from '../lib/business-view.ts';
 import { timeAgo } from '../lib/format.ts';
 import { draftIsAhead, launchGate, productCount, publishErrorText, siteAddress } from '../lib/launch-view.ts';
+import { setPendingTweak } from '../lib/pending.ts';
 import type { LatestArtifacts, Stage } from '../lib/stages.ts';
+import { PartnerPanel } from './PartnerPanel.tsx';
 
 interface Props {
   projectId: string;
@@ -30,7 +32,8 @@ const TONE_ICON = { good: '✓', info: 'i', watch: '!' } as const;
 /**
  * The BUSINESS screen: how the live site is doing — visitors, sales, sign-ups, where people come from — straight from the server's
  * `business_state` (never estimated here), the plan's scenario next to what actually happened, and the two things an owner does next:
- * Edit site (→ TWEAKS) and Update live site (publishes the current draft). No AI in this chunk.
+ * Edit site (→ TWEAKS) and Update live site (publishes the current draft). Under the numbers, the AI business partner (PartnerPanel) turns
+ * them into next steps; its Apply sends a suggested site change to TWEAKS.
  */
 export function BusinessStage({ projectId, artifacts, published, busy, onMove, onChanged }: Props) {
   const alive = useRef(true);
@@ -219,6 +222,14 @@ export function BusinessStage({ projectId, artifacts, published, busy, onMove, o
               </li>
             ))}
           </ul>
+
+          <PartnerPanel
+            projectId={projectId}
+            state={state}
+            busy={busy || updating}
+            refreshNumbers={() => load(period, true)}
+            onApply={(instruction) => { setPendingTweak(projectId, instruction); onMove('tweaks'); }}
+          />
 
           <section class="card chart-card" aria-label="Visitors each day" data-testid="biz-chart">
             <div class="chart-head">

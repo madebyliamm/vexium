@@ -19,7 +19,7 @@ export const STAGE_BLURBS: Record<Stage, string> = {
   build: 'Build the whole site from your plan, in your locked style, with no placeholder content.',
   tweaks: 'Point at anything in the preview and say what to change.',
   launch: 'Run the final checks, then put it live on your own address.',
-  business: 'See how it is doing — visitors, sales and sign-ups next to your plan — and change it any time.',
+  business: 'See how it is doing next to your plan, get suggestions you can apply in one click, and change it any time.',
 };
 
 /** A row of `project_artifacts_latest` (explicit columns) → the engine's LatestArtifacts. Unknown kinds and non-object data are ignored. */

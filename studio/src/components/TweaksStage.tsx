@@ -6,6 +6,7 @@ import { ApiError } from '../api/http.ts';
 import { cancelStageRun, listStageMessages } from '../api/stages.ts';
 import { listSiteHistory, moveHistory, type HistoryAction } from '../api/tweaks.ts';
 import { readManifest, readReport, reportView } from '../lib/build-view.ts';
+import { takePendingTweak } from '../lib/pending.ts';
 import type { ChatLine } from '../lib/plan-view.ts';
 import type { PickedElement } from '../lib/preview.ts';
 import type { ArtifactKind, LatestArtifacts } from '../lib/stages.ts';
@@ -200,6 +201,14 @@ export function TweaksStage({ projectId, artifacts, published, resumedJobId, bus
     },
     [running, moving, lines, picked, projectId, reloadChat, loadFiles, loadVersions, onChanged],
   );
+
+  // A change the business partner suggested ("Apply" on the BUSINESS screen) goes out as soon as the chat is ready, as if the owner had
+  // typed it. It waits (for a few minutes at most) while a run is going or the site needs "keep it" first.
+  useEffect(() => {
+    if (!loaded || manifest === null || blocker !== null || running || moving) return;
+    const suggested = takePendingTweak(projectId);
+    if (suggested) void send(suggested);
+  }, [loaded, manifest !== null, blocker, running, moving]);
 
   const stop = async () => {
     const id = jobId ?? resumedJobId;

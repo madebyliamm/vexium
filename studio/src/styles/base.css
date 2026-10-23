@@ -407,3 +407,19 @@ textarea:disabled, input:disabled, select:disabled { opacity: .6; cursor: not-al
 .activity-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .biz-notes { list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .biz-notes li::before { content: '• '; }
+
+/* ── business partner (Step 13, chunk C) ── */
+.partner { display: flex; flex-direction: column; gap: 12px; }
+.partner-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.partner-body { display: flex; flex-direction: column; gap: 14px; transition: opacity .15s; }
+.partner-body.is-loading { opacity: .55; }
+.partner-headline { font-size: 15px; font-weight: 700; line-height: 1.5; }
+.recs { list-style: none; display: flex; flex-direction: column; gap: 12px; counter-reset: rec; }
+.rec { counter-increment: rec; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 14px 48px; position: relative; background: var(--s2); border-radius: var(--r); }
+.rec::before { content: counter(rec); position: absolute; left: 14px; top: 14px; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; background: var(--accent-soft); color: var(--accent); }
+.rec h4 { font-size: 14px; font-weight: 800; line-height: 1.4; }
+.rec-why { font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--sub); }
+.rec-evidence { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.rec-evidence li { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-full); background: var(--s1); border: 1px solid var(--b2); }
+.rec-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.partner-basis { margin: 0; }

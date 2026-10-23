@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { cancelStageRun, getLatestStageJob, getStageState, keepArtifact, moveToStage, StageError, type StageState } from '../api/stages.ts';
 import { BuildStage } from '../components/BuildStage.tsx';
+import { BusinessStage } from '../components/BusinessStage.tsx';
 import { ExampleStage } from '../components/ExampleStage.tsx';
 import { LaunchStage } from '../components/LaunchStage.tsx';
 import { PlanStage } from '../components/PlanStage.tsx';
@@ -112,6 +113,7 @@ export function Project({ id }: { id: string }) {
   const buildStage = project.stage === 'build';
   const tweaksStage = project.stage === 'tweaks';
   const launchStage = project.stage === 'launch';
+  const businessStage = project.stage === 'business';
   const styleArtifact = artifacts.style_spec;
   const hints = planStage && planArtifact && !planDirty ? planHints(readPlan(planArtifact.data, project.name || 'Untitled')) : [];
   return (
@@ -190,6 +192,15 @@ export function Project({ id }: { id: string }) {
                 busy={busy}
                 onChanged={() => { setNotice(null); void refresh(); }}
                 onWorkingChange={setLaunching}
+              />
+            ) : businessStage ? (
+              <BusinessStage
+                projectId={project.id}
+                artifacts={artifacts}
+                published={project.published}
+                busy={busy}
+                onMove={(s) => void move(s)}
+                onChanged={() => { setNotice(null); void refresh(); }}
               />
             ) : undefined
           }
